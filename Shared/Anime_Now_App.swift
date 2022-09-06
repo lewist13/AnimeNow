@@ -9,12 +9,23 @@ import SwiftUI
 
 @main
 struct Anime_Now_App: App {
-    let persistenceController = PersistenceController.shared
-
     var body: some Scene {
+        #if os(iOS)
+        WindowGroup {
+            ContentView(
+                store: .init(
+                    initialState: .init(),
+                    reducer: ContentCore.reducer,
+                    environment: .init(
+                        animeList: .kitsu
+                    )
+                )
+            )
+        }
+        #else
         WindowGroup {
             ContentView()
-                .environment(\.managedObjectContext, persistenceController.container.viewContext)
         }
+        #endif
     }
 }
