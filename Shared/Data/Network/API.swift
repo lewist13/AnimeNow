@@ -10,29 +10,24 @@ import URLRouting
 import ComposableArchitecture
 import SociableWeaver
 
-protocol APIEndpoint: Equatable {
-    static var router: AnyParserPrinter<URLRequestData, Self> { get }
-    static var baseURL: URL { get }
-    static func applyHeaders(request: inout URLRequest)
-}
-
-protocol APIRouter: Equatable {
-    associatedtype T: APIEndpoint
-    static var router: AnyParserPrinter<URLRequestData, T> { get }
-    static var baseURL: URL { get }
-    static func applyHeaders(request: inout URLRequest)
+protocol APIRoute {
+    associatedtype Endpoint
+    var baseURL: URL { get }
+    var router: AnyParserPrinter<URLRequestData, Endpoint> { get }
+    func applyHeaders(request: inout URLRequest)
 }
 
 enum API {
-    static func request<E: APIEndpoint, O: Decodable>(
-        _ endpoint: E,
-        _ outputType: O.Type? = nil
-    ) -> Effect<O?, Error> {
-        guard var request = try? E.router.baseURL(E.baseURL.absoluteString).request(for: endpoint) else {
+    static func request<Router: APIRoute, Output: Decodable>(
+        _ router: Router,
+        _ endpoint: Router.Endpoint,
+        _ outputType: Output.Type? = nil
+    ) -> Effect<Output?, Error> {
+        guard var request = try? router.router.baseURL(router.baseURL.absoluteString).request(for: endpoint) else {
             return .init(error: URLError(.badURL))
         }
 
-        E.applyHeaders(request: &request)
+        router.applyHeaders(request: &request)
 
         return URLSession.shared.dataTaskPublisher(for: request)
             .tryMap { (data, response) in

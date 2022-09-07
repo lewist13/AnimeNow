@@ -10,11 +10,15 @@ import ComposableArchitecture
 import Parsing
 import URLRouting
 
-struct AnimeListClient {
-    let name: () -> String
-    let authenticate: () -> Void
+struct ListClient {
+    let name: () -> AnimeLists
+    let authenticate: () -> Effect<Void, Error>
     let trendingAnime: () -> Effect<[Anime], Error>
 }
 
-extension AnimeListClient {
+extension ListClient {
+    enum AnimeLists: String {
+        case kitsu
+        case mock
+    }
 }

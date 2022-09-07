@@ -20,7 +20,7 @@ enum HomeCore {
     }
 
     struct Environment {
-        let animeList: AnimeListClient
+        let animeList: ListClient
     }
 }
 

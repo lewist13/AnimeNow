@@ -19,14 +19,11 @@ struct HomeView: View {
                 store.stateless
             ) { viewStore in
                 ScrollView(.vertical) {
-                    VStack(alignment: .leading) {
-                        // Trending Items
-                        trendingItems(
-                            store: store.scope(
-                                state: \.trendingAnime
-                            )
+                    trendingItems(
+                        store: store.scope(
+                            state: \.trendingAnime
                         )
-                    }
+                    )
                 }
                 .onAppear {
                     viewStore.send(.onAppear)
@@ -42,8 +39,8 @@ struct HomeView: View {
 extension HomeView {
     @ViewBuilder
     func trendingItems(store: Store<[Anime], HomeCore.Action>) -> some View {
-        Group {
-            Text("Trending Shows")
+        VStack(alignment: .leading) {
+            Text("Trending")
                 .font(.system(size: 21))
                 .bold()
                 .padding(.horizontal)

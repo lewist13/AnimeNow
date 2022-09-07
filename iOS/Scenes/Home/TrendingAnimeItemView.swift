@@ -48,13 +48,7 @@ struct TrendingAnimeItemView: View {
 struct TrendingAnimeItemView_Previews: PreviewProvider {
     static var previews: some View {
         TrendingAnimeItemView(
-            anime: .init(
-                id: "0",
-                title: "Naruto Shippuden",
-                description: "demo",
-                posterImage: URL(string: "https://media.kitsu.io/anime/poster_images/1555/large.jpg")!,
-                coverImage: URL(string: "https://media.kitsu.io/anime/cover_images/1555/large.jpg")!
-            )
+            anime: .narutoShippuden
         )
     }
 }

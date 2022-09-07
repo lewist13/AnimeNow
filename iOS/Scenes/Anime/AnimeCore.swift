@@ -1,29 +1,27 @@
 //
-//  SearchCore.swift
+//  AnimeCore.swift
 //  Anime Now!
 //
-//  Created Erik Bautista on 9/4/22.
+//  Created Erik Bautista on 9/6/22.
 //  Copyright © 2022. All rights reserved.
 //
 
 import ComposableArchitecture
 
-enum SearchCore {
-    struct State: Equatable {
-        
-    }
+enum AnimeCore {
+    typealias State = Anime
 
     enum Action: Equatable {
         case onAppear
     }
 
     struct Environment {
-        var animeList: ListClient
+
     }
 }
 
-extension SearchCore {
-    static var reducer: Reducer<SearchCore.State, SearchCore.Action, SearchCore.Environment> {
+extension AnimeCore {
+    static var reducer: Reducer<AnimeCore.State, AnimeCore.Action, AnimeCore.Environment> {
         .init { state, action, environment in
             return .none
         }

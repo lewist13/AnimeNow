@@ -21,7 +21,7 @@ enum ContentCore {
     }
 
     struct Environment {
-        let animeList: AnimeListClient
+        let animeList: ListClient
     }
 }
 
