@@ -8,16 +8,6 @@
 import Foundation
 import SociableWeaver
 
-
-//protocol GraphQLCreateQueryObject: Decodable {
-//    associatedtype Output: Weavable
-//    static func createQuery(_ name: String, _ arguments: ArgumentOptions) -> Output
-//}
-//
-//protocol GraphQLArgumentOptions {}
-
-// Used in argument enums
-
 protocol GraphQLArgument {
     func getValue() -> ArgumentValueRepresentable
     var description: String { get }
@@ -32,48 +22,60 @@ protocol GraphQLQueryObject {
     static func createQueryObject(_ name: CodingKey) -> Object
 }
 
-//protocol GraphQLQueryObject: GraphQLArgumentOptions {
-//    static func createQueryObject(_ name: CodingKey, _ arguments: ArgumentOptions) -> Object
-//}
-
 protocol GraphQLQuery: Decodable, GraphQLArgumentOptions {
     static func createQuery(_ arguments: ArgumentOptions) -> Weave
 }
 
-struct GraphQLResponse<T: GraphQLQuery>: Decodable {
-    let data: T
-
-    enum CodingKeys: String, CodingKey {
-        case data
+enum GraphQL {
+    struct Paylod: Codable, Equatable {
+        let query: String
+        var operationName: String? = nil
+        var variables: [String: String] = [:]
     }
 
-    init(from decoder: Decoder) throws {
-        let values = try decoder.container(keyedBy: CodingKeys.self)
-        let dictionary = try values.decode([String: T].self, forKey: .data)
-        var queryName = String(describing: T.self)
-        queryName = queryName.prefix(1).lowercased() + queryName.dropFirst()
+    struct Response<T: GraphQLQuery>: Decodable {
+        let data: T
+    }
 
-        guard let value = dictionary[queryName] else {
-            throw DecodingError.valueNotFound(
-                T.self,
-                .init(
-                    codingPath: [CodingKeys.data],
-                    debugDescription: "Could not parse data"
-                )
-            )
+    struct NodeList<T: Decodable>: Decodable {
+        let nodes: [T]
+        let pageInfo: PageInfo
+
+        enum CodingKeys: String, CodingKey {
+            case nodes
+            case pageInfo
         }
-        self.data = value
+
+        init(from decoder: Decoder) throws {
+            let values = try decoder.container(keyedBy: CodingKeys.self)
+            let throwables = try values.decode([Throwable<T>].self, forKey: .nodes)
+            nodes = throwables.compactMap { try? $0.result.get() }
+            pageInfo = try values.decode(PageInfo.self, forKey: .pageInfo)
+        }
+    }
+
+    struct PageInfo: Decodable, GraphQLQueryObject {
+        let endCursor: String?
+        let hasNextPage: Bool
+        let hasPreviousPage: Bool
+        let startCursor: String?
+
+        static func createQueryObject(
+            _ name: CodingKey
+        ) -> Object {
+            Object(name) {
+                Field(PageInfo.CodingKeys.endCursor)
+                Field(PageInfo.CodingKeys.hasNextPage)
+                Field(PageInfo.CodingKeys.hasPreviousPage)
+                Field(PageInfo.CodingKeys.startCursor)
+            }
+        }
     }
 }
 
-struct GraphQLPaylod: Codable, Equatable {
-    let query: String
-    var operationName: String? = nil
-    var variables: [String: String] = [:]
-}
 
 extension Weave {
-    func encode(removeOperation: Bool = true) -> String {
+    public func format(removeOperation: Bool = true) -> String {
         if (removeOperation) {
             let output = String("\(self)".split(separator: "{", maxSplits: 1, omittingEmptySubsequences: true).last ?? "")
             return  "{\(output)"

@@ -25,12 +25,12 @@ extension ListClient {
                 let query = GlobalTrending.createQuery(
                     .init()
                 )
-                    .encode(removeOperation: true)
+                    .format()
                 let endpoint = KitsuRoute.Endpoint.graphql(.init(query: query))
-                let response = API.request(router, endpoint, GraphQLResponse<GlobalTrending>.self)
+                let response = API.request(router, endpoint, GraphQL.Response<GlobalTrending>.self)
 
                 return response
-                    .map { $0?.data.nodes ?? [] }
+                    .map { $0?.data.globalTrending.nodes ?? [] }
                     .map { (animes: [Anime]) in
                         animes.map { anime in
                             Anime_Now_.Anime(
@@ -39,7 +39,36 @@ extension ListClient {
                                 description: anime.description.en,
                                 posterImage: URL(string: anime.posterImage?.original.url ?? "/")!,
                                 coverImage: URL(string: anime.bannerImage?.original.url ?? "/")!,
-                                categories: anime.categories.nodes.map { $0.title.en }
+                                categories: anime.categories.nodes.map { $0.title.en },
+                                status: .init(rawValue: anime.status.rawValue)!
+                            )
+                        }
+                    }
+                    .eraseToEffect()
+            },
+            recentlyReleasedAnime: {
+                let query = AnimeByStatus.createQuery(
+                    .init(
+                        first: 20,
+                        status: .CURRENT
+                    )
+                )
+                    .format()
+                let endpoint = KitsuRoute.Endpoint.graphql(.init(query: query))
+                let response = API.request(router, endpoint, GraphQL.Response<AnimeByStatus>.self)
+
+                return response
+                    .map { $0?.data.animeByStatus.nodes ?? [] }
+                    .map { (animes: [Anime]) in
+                        animes.map { anime in
+                            Anime_Now_.Anime(
+                                id: anime.id,
+                                title: anime.titles.translated ?? anime.titles.romanized ?? anime.titles.canonical,
+                                description: anime.description.en,
+                                posterImage: URL(string: anime.posterImage?.original.url ?? "/")!,
+                                coverImage: URL(string: anime.bannerImage?.original.url ?? "/")!,
+                                categories: anime.categories.nodes.map { $0.title.en },
+                                status: .init(rawValue: anime.status.rawValue)!
                             )
                         }
                     }
@@ -53,7 +82,7 @@ extension ListClient {
 
 fileprivate class KitsuRoute: APIRoute {
     enum Endpoint: Equatable {
-        case graphql(GraphQLPaylod)
+        case graphql(GraphQL.Paylod)
     }
 
     let router: AnyParserPrinter<URLRequestData, Endpoint> = {
@@ -63,7 +92,7 @@ fileprivate class KitsuRoute: APIRoute {
                 Path {
                     "graphql"
                 }
-                Body(.json(GraphQLPaylod.self))
+                Body(.json(GraphQL.Paylod.self))
             }
         }
         .eraseToAnyParserPrinter()
@@ -87,9 +116,8 @@ fileprivate class KitsuRoute: APIRoute {
 // MARK: Kitsu Queries
 
 fileprivate extension ListClient {
-    struct GlobalTrending: GraphQLQuery, ListNodes {
-        var nodes: [Anime]
-        var pageInfo: PageInfo
+    struct GlobalTrending: GraphQLQuery {
+        let globalTrending: GraphQL.NodeList<Anime>
 
         enum Argument: GraphQLArgument {
             case mediaType(MediaType)
@@ -128,8 +156,8 @@ fileprivate extension ListClient {
         ) -> Weave {
             Weave(.query) {
                 Object(GlobalTrending.self) {
-                    Anime.createQueryObject(CodingKeys.nodes)
-                    PageInfo.createQueryObject(CodingKeys.pageInfo)
+                    Anime.createQueryObject(GraphQL.NodeList<Anime>.CodingKeys.nodes)
+                    GraphQL.PageInfo.createQueryObject(GraphQL.NodeList<Anime>.CodingKeys.pageInfo)
                 }
                 .argument(Argument.mediaType(.ANIME))
                 .argument(Argument.first(arguments.first))
@@ -137,9 +165,8 @@ fileprivate extension ListClient {
         }
     }
 
-    struct SearchAnimeByTitle: GraphQLQuery, ListNodes {
-        let nodes: [Anime]
-        let pageInfo: PageInfo
+    struct SearchAnimeByTitle: GraphQLQuery {
+        let searchAnimeByTitle: GraphQL.NodeList<Anime>
 
         enum Argument: GraphQLArgument {
             case title(String)
@@ -174,11 +201,54 @@ fileprivate extension ListClient {
         ) -> Weave {
             Weave(.query) {
                 Object(SearchAnimeByTitle.self) {
-                    Anime.createQueryObject(CodingKeys.nodes, false)
-                    PageInfo.createQueryObject(CodingKeys.pageInfo)
+                    Anime.createQueryObject(GraphQL.NodeList<Anime>.CodingKeys.nodes, false)
+                    GraphQL.PageInfo.createQueryObject(GraphQL.NodeList<Anime>.CodingKeys.pageInfo)
                 }
                 .argument(Argument.title(arguments.title))
                 .argument(Argument.first(arguments.first))
+            }
+        }
+    }
+
+    struct AnimeByStatus: GraphQLQuery {
+        let animeByStatus: GraphQL.NodeList<Anime>
+
+        struct ArgumentOptions {
+            let first: Int
+            let status: Anime.Status
+        }
+
+        enum Argument: GraphQLArgument {
+            case first(Int)
+            case status(Anime.Status)
+
+            func getValue() -> ArgumentValueRepresentable {
+                switch self {
+                case .first(let int):
+                    return int
+                case .status(let status):
+                    return status
+                }
+            }
+
+            var description: String {
+                switch self {
+                case .first:
+                    return "first"
+                case .status:
+                    return "status"
+                }
+            }
+        }
+
+        static func createQuery(_ arguments: ArgumentOptions) -> Weave {
+            Weave(.query) {
+                Object(Self.self) {
+                    Anime.createQueryObject(GraphQL.NodeList<Anime>.CodingKeys.nodes)
+                    GraphQL.PageInfo.createQueryObject(GraphQL.NodeList<Anime>.CodingKeys.pageInfo)
+                }
+                .argument(Argument.first(arguments.first))
+                .argument(Argument.status(arguments.status))
             }
         }
     }
@@ -186,19 +256,7 @@ fileprivate extension ListClient {
 
 // MARK: Kitsu GraphQL Models
 
-fileprivate protocol ListNodes: Decodable {
-    associatedtype Item: Decodable
-    var nodes: [Item] { get }
-    var pageInfo: ListClient.PageInfo { get }
-}
-
 fileprivate extension ListClient {
-
-    struct EpisodeConnection: ListNodes {
-        var nodes: [Episode]
-        var pageInfo: PageInfo
-    }
-
     struct CategoryConnection: Decodable, GraphQLQueryObject {
         let nodes: [Category]
 
@@ -227,24 +285,6 @@ fileprivate extension ListClient {
         let en: String
     }
 
-    struct PageInfo: Decodable, GraphQLQueryObject {
-        let endCursor: String?
-        let hasNextPage: Bool
-        let hasPreviousPage: Bool
-        let startCursor: String?
-
-        static func createQueryObject(
-            _ name: CodingKey
-        ) -> Object {
-            Object(name) {
-                Field(PageInfo.CodingKeys.endCursor)
-                Field(PageInfo.CodingKeys.hasNextPage)
-                Field(PageInfo.CodingKeys.hasPreviousPage)
-                Field(PageInfo.CodingKeys.startCursor)
-            }
-        }
-    }
-
     struct Episode: Decodable {
         let anime: Anime
         let description: Localization
@@ -270,8 +310,10 @@ fileprivate extension ListClient {
     }
 
     struct ImageView: Decodable, GraphQLQueryObject {
-        let name, url: String
-        let height, width: Int?
+        let name: String
+        let url: String
+        let height: Int?
+        let width: Int?
 
         static func createQueryObject(
             _ name: CodingKey
@@ -279,6 +321,8 @@ fileprivate extension ListClient {
             Object(name) {
                 Field(CodingKeys.name)
                 Field(CodingKeys.url)
+                Field(CodingKeys.width)
+                Field(CodingKeys.height)
             }
         }
     }
@@ -314,7 +358,7 @@ fileprivate extension ListClient {
         let titles: Titles
         let averageRating: Float?
         let averageRatingRank: Int?
-        let status: Status?
+        let status: Status
 
         // Anime Only
 
@@ -322,11 +366,11 @@ fileprivate extension ListClient {
         let youtubeTrailerVideoId: String?
         let episodeCount: Int?
         let episodeLenght: Int?
-        let episodes: EpisodeConnection?
+        let episodes: GraphQL.NodeList<Episode>?
         let totalLenght: Int?
         let subtype: Subtype?
 
-        enum Status: String, Decodable {
+        enum Status: String, Decodable, EnumRawValueRepresentable {
             case TBA
             case FINISHED
             case CURRENT

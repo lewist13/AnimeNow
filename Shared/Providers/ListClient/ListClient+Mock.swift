@@ -19,7 +19,8 @@ extension ListClient {
                         .attackOnTitan
                     ]
                 )
-            }
+            },
+            recentlyReleasedAnime: { .none }
         )
     }()
 }

@@ -1,5 +1,5 @@
 //
-//  TrendingAnimeItemView.swift
+//  AnimeItemView.swift
 //  Anime Now! (iOS)
 //
 //  Created by Erik Bautista on 9/4/22.
@@ -8,7 +8,7 @@
 import SwiftUI
 import Kingfisher
 
-struct TrendingAnimeItemView: View {
+struct AnimeItemView: View {
     let anime: Anime
 
     @ScaledMetric var size: CGFloat = 1.0
@@ -26,7 +26,7 @@ struct TrendingAnimeItemView: View {
                         colors: [
                             .clear,
                             .clear,
-                            .black
+                            .black.opacity(0.85)
                         ],
                         startPoint: .top,
                         endPoint: .bottom
@@ -41,14 +41,15 @@ struct TrendingAnimeItemView: View {
                 .padding(12)
         }
         .cornerRadius(12)
-        .frame(width: 150 * size, height: 225 * size)
+        .aspectRatio(2/3, contentMode: .fill)
     }
 }
 
 struct TrendingAnimeItemView_Previews: PreviewProvider {
     static var previews: some View {
-        TrendingAnimeItemView(
+        AnimeItemView(
             anime: .narutoShippuden
         )
+        .fixedSize()
     }
 }

@@ -14,6 +14,15 @@ struct Anime: Hashable {
     let posterImage: URL
     let coverImage: URL
     let categories: [String]
+    let status: Status
+
+    enum Status: String {
+        case TBA
+        case FINISHED
+        case CURRENT
+        case UPCOMING
+        case UNRELEASED
+    }
 }
 
 extension Anime {
@@ -27,7 +36,8 @@ extension Anime {
             "Ninja",
             "Fantasy World",
             "Action"
-        ]
+        ],
+        status: .FINISHED
     )
 
     static let attackOnTitan = Anime(
@@ -40,6 +50,7 @@ extension Anime {
             "Post Apocalypse",
             "Violence",
             "Action"
-        ]
+        ],
+        status: .CURRENT
     )
 }

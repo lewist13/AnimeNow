@@ -12,7 +12,7 @@ struct EpisodeList {
     let nextPage: URL
 }
 
-struct Episode: Codable {
+struct Episode: Equatable {
     let name: String
     let description: String
     let thumbnail: URL

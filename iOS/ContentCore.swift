@@ -21,7 +21,7 @@ enum ContentCore {
     }
 
     struct Environment {
-        let animeList: ListClient
+        let listClient: ListClient
     }
 }
 
@@ -32,7 +32,7 @@ extension ContentCore {
             action: /ContentCore.Action.home,
             environment: { global in
                 HomeCore.Environment(
-                    animeList: global.animeList
+                    listClient: global.listClient
                 )
             }
         ),
@@ -41,7 +41,7 @@ extension ContentCore {
             action: /ContentCore.Action.search,
             environment: { global in
                 SearchCore.Environment(
-                    animeList: global.animeList
+                    animeList: global.listClient
                 )
             }
         ),

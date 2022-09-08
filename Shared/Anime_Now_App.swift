@@ -17,10 +17,11 @@ struct Anime_Now_App: App {
                     initialState: .init(),
                     reducer: ContentCore.reducer,
                     environment: .init(
-                        animeList: .kitsu
+                        listClient: .kitsu
                     )
                 )
             )
+            .preferredColorScheme(.dark)
         }
         #else
         WindowGroup {

@@ -7,13 +7,12 @@
 
 import Foundation
 import ComposableArchitecture
-import Parsing
-import URLRouting
 
 struct ListClient {
     let name: () -> AnimeLists
     let authenticate: () -> Effect<Void, Error>
     let trendingAnime: () -> Effect<[Anime], Error>
+    let recentlyReleasedAnime: () -> Effect<[Anime], Error>
 }
 
 extension ListClient {

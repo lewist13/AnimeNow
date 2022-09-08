@@ -18,19 +18,33 @@ struct HomeView: View {
             WithViewStore(
                 store.stateless
             ) { viewStore in
-                ScrollView(.vertical) {
-                    trendingItems(
-                        store: store.scope(
-                            state: \.trendingAnime
+                ScrollView(.vertical, showsIndicators: false) {
+                    VStack(spacing: 24) {
+                        animeItems(
+                            title: "Trending This Week",
+                            store: store.scope(
+                                state: \.trendingAnime
+                            )
                         )
-                    )
+
+//                        currentlyWatchingEpisodes(
+//                            store: store.scope(
+//                                state: \.currentlyWatchingEpisodes
+//                            )
+//                        )
+
+                        animeItems(
+                            title: "Recently Released",
+                            store: store.scope(
+                                state: \.recentlyReleasedAnime
+                            )
+                        )
+                    }
                 }
                 .onAppear {
                     viewStore.send(.onAppear)
                 }
             }
-            .navigationViewStyle(.stack)
-            .navigationBarTitleDisplayMode(.inline)
             .navigationTitle("Anime Now!")
         }
     }
@@ -38,19 +52,50 @@ struct HomeView: View {
 
 extension HomeView {
     @ViewBuilder
-    func trendingItems(store: Store<[Anime], HomeCore.Action>) -> some View {
+    func animeItems(
+        title: String,
+        store: Store<[Anime], HomeCore.Action>
+    ) -> some View {
         VStack(alignment: .leading) {
-            Text("Trending")
+            Text(title)
+                .font(.system(size: 22))
+                .bold()
+                .padding(.horizontal)
+
+            WithViewStore(store) { viewStore in
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(alignment: .top) {
+                        ForEach(viewStore.state, id: \.self) { anime in
+                            AnimeItemView(anime: anime)
+                                .frame(width: 150)
+                                .onTapGesture {
+                                    viewStore.send(.tappedAnime)
+                                }
+                        }
+                    }
+                    .padding(.horizontal)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    func currentlyWatchingEpisodes(
+        store: Store<[Episode], HomeCore.Action>
+    ) -> some View {
+        VStack(alignment: .leading) {
+            Text("Currently Watching")
                 .font(.system(size: 21))
                 .bold()
                 .padding(.horizontal)
 
             WithViewStore(store) { viewStore in
-                ScrollView(.horizontal) {
+                ScrollView(.horizontal, showsIndicators: false) {
                     HStack(alignment: .top) {
-                        ForEach(viewStore.state, id: \.self) { anime in
-                            TrendingAnimeItemView(anime: anime)
-                        }
+//                        ForEach(viewStore.state, id: \.self) { anime in
+//                            AnimeItemView(anime: anime)
+//                                .frame(width: 150)
+//                        }
                     }
                     .padding(.horizontal)
                 }
@@ -66,7 +111,7 @@ struct HomeView_Previews: PreviewProvider {
                 initialState: .init(),
                 reducer: HomeCore.reducer,
                 environment: .init(
-                    animeList: .mock
+                    listClient: .mock
                 )
             )
         )
