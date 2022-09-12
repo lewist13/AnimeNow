@@ -12,7 +12,7 @@ struct ContentView: View {
     let store: Store<ContentCore.State, ContentCore.Action>
 
     var body: some View {
-        TabView {
+//        TabView {
 
             // MARK: Home View
 
@@ -22,22 +22,32 @@ struct ContentView: View {
                     action: ContentCore.Action.home
                 )
             )
-            .tabItem {
-                Label("Home", systemImage: "house")
-            }
+//            .tabItem {
+//                Label("Home", systemImage: "house")
+//            }
 
             // MARK: Search View
 
-            SearchView(
-                store: store.scope(
-                    state: \.search,
-                    action: ContentCore.Action.search
-                )
-            )
-            .tabItem {
-                Label("Search", systemImage: "magnifyingglass")
-            }
-        }
+//            SearchView(
+//                store: store.scope(
+//                    state: \.search,
+//                    action: ContentCore.Action.search
+//                )
+//            )
+//            .tabItem {
+//                Label("Search", systemImage: "magnifyingglass")
+//            }
+//
+//            SettingsView(
+//                store: store.scope(
+//                    state: \.settings,
+//                    action: ContentCore.Action.settings
+//                )
+//            )
+//            .tabItem {
+//                Label("Settings", systemImage: "gearshape")
+//            }
+//        }
     }
 }
 
@@ -52,5 +62,6 @@ struct ContentView_Previews: PreviewProvider {
                 )
             )
         )
+        .preferredColorScheme(.dark)
     }
 }

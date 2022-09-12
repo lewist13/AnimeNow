@@ -12,16 +12,18 @@ enum ContentCore {
     struct State: Equatable {
         var home = HomeCore.State()
         var search = SearchCore.State()
+        var settings = SettingsCore.State()
     }
 
     enum Action: Equatable {
         case onAppear
         case home(HomeCore.Action)
         case search(SearchCore.Action)
+        case settings(SettingsCore.Action)
     }
 
     struct Environment {
-        let listClient: ListClient
+        let listClient: AnimeListClient
     }
 }
 
@@ -44,6 +46,11 @@ extension ContentCore {
                     animeList: global.listClient
                 )
             }
+        ),
+        SettingsCore.reducer.pullback(
+            state: \.settings,
+            action: /ContentCore.Action.settings,
+            environment: { _ in .init() }
         ),
         .init { state, action, environment in
             return .none

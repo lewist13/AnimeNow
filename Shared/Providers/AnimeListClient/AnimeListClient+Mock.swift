@@ -1,5 +1,5 @@
 //
-//  ListClient+Mock.swift
+//  AnimeListClient+Mock.swift
 //  Anime Now!
 //
 //  Created by Erik Bautista on 9/4/22.
@@ -7,12 +7,11 @@
 
 import Foundation
 
-extension ListClient {
+extension AnimeListClient {
     static let mock: Self = {
         return Self(
-            name: { .mock },
             authenticate: { .none },
-            trendingAnime: {
+            topTrendingAnime: {
                 .init(
                     value: [
                         .narutoShippuden,
@@ -20,7 +19,11 @@ extension ListClient {
                     ]
                 )
             },
-            recentlyReleasedAnime: { .none }
+            topUpcomingAnime: { .none },
+            topAiringAnime: { .none },
+            highestRatedAnime: { .none },
+            mostPopularAnime: { .none },
+            episodes: { _ in .none }
         )
     }()
 }

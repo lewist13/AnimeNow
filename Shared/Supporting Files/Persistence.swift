@@ -16,7 +16,7 @@ public class Persistence {
     private init() {
         let bundle = Bundle(for: Persistence.self)
 
-        guard let databaseURL = bundle.url(forResource: "Anime_Now_", withExtension: "momd") else {
+        guard let databaseURL = bundle.url(forResource: "AnimeNow", withExtension: "momd") else {
             fatalError("Failed to find data model")
         }
 

@@ -11,15 +11,15 @@ import Kingfisher
 struct AnimeItemView: View {
     let anime: Anime
 
-    @ScaledMetric var size: CGFloat = 1.0
+    var namespace: Namespace.ID
 
     var body: some View {
         ZStack(alignment: .bottomLeading) {
-            KFImage(anime.posterImage)
-                .setProcessor(BlurImageProcessor.init(blurRadius: 0.5))
+            KFImage(anime.posterImage.largest?.link)
                 .cacheMemoryOnly()
+                .setProcessors([RoundCornerImageProcessor(cornerRadius: 12)])
                 .fade(duration: 0.5)
-                .resizable(capInsets: .init(), resizingMode: .stretch)
+                .resizable()
                 .shadow(color: .black.opacity(0.2), radius: 14, x: 0, y: 0)
                 .overlay(
                     LinearGradient(
@@ -32,24 +32,29 @@ struct AnimeItemView: View {
                         endPoint: .bottom
                     )
                 )
+//                .matchedGeometryEffect(id: "\(anime.id)-image", in: namespace, isSource: true)
 
             Text(anime.title)
-                .font(.body)
+                .font(.system(size: 13))
                 .bold()
                 .multilineTextAlignment(.leading)
                 .foregroundColor(.white)
                 .padding(12)
+//                .matchedGeometryEffect(id: "\(anime.id)-name", in: namespace, isSource: true)
         }
         .cornerRadius(12)
-        .aspectRatio(2/3, contentMode: .fill)
+        .aspectRatio(2/3, contentMode: .fit)
     }
 }
 
 struct TrendingAnimeItemView_Previews: PreviewProvider {
+    @Namespace static var namespace
+
     static var previews: some View {
         AnimeItemView(
-            anime: .narutoShippuden
+            anime: .narutoShippuden,
+            namespace: namespace
         )
-        .fixedSize()
+        .frame(height: 200)
     }
 }

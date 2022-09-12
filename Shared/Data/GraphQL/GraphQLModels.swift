@@ -18,9 +18,9 @@ protocol GraphQLArgumentOptions {
     associatedtype Argument: GraphQLArgument
 }
 
-protocol GraphQLQueryObject {
-    static func createQueryObject(_ name: CodingKey) -> Object
-}
+//protocol GraphQLQueryObject {
+//    static func createQueryObject(_ name: CodingKey) -> Object
+//}
 
 protocol GraphQLQuery: Decodable, GraphQLArgumentOptions {
     static func createQuery(_ arguments: ArgumentOptions) -> Weave
@@ -33,7 +33,7 @@ enum GraphQL {
         var variables: [String: String] = [:]
     }
 
-    struct Response<T: GraphQLQuery>: Decodable {
+    struct Response<T: Decodable>: Decodable {
         let data: T
     }
 
@@ -54,7 +54,7 @@ enum GraphQL {
         }
     }
 
-    struct PageInfo: Decodable, GraphQLQueryObject {
+    struct PageInfo: Decodable {
         let endCursor: String?
         let hasNextPage: Bool
         let hasPreviousPage: Bool

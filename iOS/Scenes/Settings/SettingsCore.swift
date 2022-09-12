@@ -1,15 +1,17 @@
 //
-//  AnimeCore.swift
+//  SettingsCore.swift
 //  Anime Now!
 //
-//  Created Erik Bautista on 9/6/22.
+//  Created Erik Bautista on 9/8/22.
 //  Copyright © 2022. All rights reserved.
 //
 
 import ComposableArchitecture
 
-enum AnimeCore {
-    typealias State = Anime
+enum SettingsCore {
+    struct State: Equatable {
+        
+    }
 
     enum Action: Equatable {
         case onAppear
@@ -20,8 +22,8 @@ enum AnimeCore {
     }
 }
 
-extension AnimeCore {
-    static var reducer: Reducer<AnimeCore.State, AnimeCore.Action, AnimeCore.Environment> {
+extension SettingsCore {
+    static var reducer: Reducer<SettingsCore.State, SettingsCore.Action, SettingsCore.Environment> {
         .init { state, action, environment in
             return .none
         }

@@ -1,5 +1,5 @@
 //
-//  Anime_Now_App.swift
+//  AnimeNowApp.swift
 //  Shared
 //
 //  Created by Erik Bautista on 9/2/22.
@@ -8,7 +8,7 @@
 import SwiftUI
 
 @main
-struct Anime_Now_App: App {
+struct AnimeNowApp: App {
     var body: some Scene {
         #if os(iOS)
         WindowGroup {

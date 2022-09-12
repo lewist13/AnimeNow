@@ -18,7 +18,7 @@ enum SearchCore {
     }
 
     struct Environment {
-        var animeList: ListClient
+        var animeList: AnimeListClient
     }
 }
 

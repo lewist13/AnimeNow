@@ -18,13 +18,20 @@ protocol APIRoute {
 }
 
 enum API {
+    enum Error: Swift.Error, Equatable {
+        case badURL
+        case badServerResponse(String)
+        case authenticationFailed
+        case parsingFailed(String)
+    }
+
     static func request<Router: APIRoute, Output: Decodable>(
         _ router: Router,
         _ endpoint: Router.Endpoint,
         _ outputType: Output.Type? = nil
-    ) -> Effect<Output?, Error> {
+    ) -> Effect<Output?, API.Error> {
         guard var request = try? router.router.baseURL(router.baseURL.absoluteString).request(for: endpoint) else {
-            return .init(error: URLError(.badURL))
+            return .init(error: .badURL)
         }
 
         router.applyHeaders(request: &request)
@@ -33,7 +40,7 @@ enum API {
             .tryMap { (data, response) in
                 guard let httpResponse = response as? HTTPURLResponse,
                       httpResponse.statusCode == 200 else {
-                    throw URLError(.badServerResponse)
+                    throw API.Error.badServerResponse(String(decoding: data, as: UTF8.self))
                 }
 
                 guard let outputType = outputType else {
@@ -44,10 +51,10 @@ enum API {
                     let output = try JSONDecoder().decode(outputType.self, from: data)
                     return output
                 } catch {
-                    print("Failed to parse response: \(String(data: data, encoding: .utf8) ?? "")")
-                    throw error
+                    throw API.Error.parsingFailed("\(error)")
                 }
             }
+            .mapError { $0 as? API.Error ?? .badServerResponse("Error received from server.") }
             .eraseToEffect()
     }
 }
