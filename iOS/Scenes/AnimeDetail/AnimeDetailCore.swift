@@ -12,16 +12,17 @@ import ComposableArchitecture
 enum AnimeDetailCore {
     typealias LoadableEpisodes = LoadableState<IdentifiedArrayOf<Episode>>
 
-    enum ViewType {
-        case episodes(LoadableEpisodes)
-        case movie
-    }
-
     struct State: Equatable {
         let anime: Anime
-        var episodes: LoadableEpisodes = .loading
+        var episodes = LoadableEpisodes.preparing
+//        var videoType: SourceType
 
-        var moreInfo: Set<Episode.ID> = .init()
+        var moreInfo = Set<Episode.ID>()
+
+        enum VideoType {
+            case episodes(LoadableEpisodes)
+            case movie
+        }
     }
 
     enum Action: Equatable {
@@ -32,15 +33,11 @@ enum AnimeDetailCore {
     }
 
     struct Environment {
-        let listClient: AnimeListClient
+        let animeClient: AnimeClient
     }
 }
 
 extension AnimeDetailCore.State {
-    var finishedLoading: Bool {
-        episodes.loaded
-    }
-
     var format: Anime.Format {
         anime.format
     }
@@ -54,7 +51,8 @@ extension AnimeDetailCore {
                 if state.anime.status == .upcoming {
                     break
                 }
-                return environment.listClient.episodes(state.anime.id)
+                state.episodes = .loading
+                return environment.animeClient.getEpisodes(state.anime.id)
                     .subscribe(on: DispatchQueue.global(qos: .userInteractive))
                     .receive(on: DispatchQueue.main)
                     .catchToEffect()

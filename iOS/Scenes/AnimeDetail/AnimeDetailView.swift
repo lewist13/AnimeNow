@@ -20,7 +20,14 @@ struct AnimeDetailView: View {
         ScrollView(.vertical, showsIndicators: false) {
             topContainer
             infoContainer
-            episodesContainer
+
+            WithViewStore(
+                store.scope(state: \.anime.status)
+            ) { statusViewStore in
+                if statusViewStore.state != .upcoming {
+                    episodesContainer
+                }
+            }
         }
         .frame(maxWidth: .infinity)
         .edgesIgnoringSafeArea(.top)
@@ -149,7 +156,7 @@ extension AnimeDetailView {
             Section {
                 LazyVStack {
                     Text(anime.description)
-                        .font(.callout)
+                        .font(.body)
                         .foregroundColor(.white)
                         .lineLimit(expandSummary ? nil : 5)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -169,6 +176,20 @@ extension AnimeDetailView {
                                 }
                             }
                         )
+                }
+
+                if anime.state.studios.count > 0 {
+                    VStack(alignment: .leading) {
+                        Text("Studios")
+                            .bold()
+                            .foregroundColor(Color.gray)
+                        CompressableText(
+                            array: anime.state.studios,
+                            max: 3
+                        )
+                    }
+                    .font(.callout)
+                    .padding(.vertical)
                 }
             } header: {
                 HStack(alignment: .center, spacing: 12) {
@@ -199,53 +220,39 @@ extension AnimeDetailView {
     @ViewBuilder
     var episodesContainer: some View {
         WithViewStore(
-            store.scope(state: \.anime.status)
-        ) { statusViewStore in
-            if statusViewStore.state != .upcoming {
-                WithViewStore(
-                    store.scope(state: \.episodes)
-                ) { episodesViewStore in
-                    Section {
-                        if case .loading = episodesViewStore.state {
-                            RoundedRectangle(cornerRadius: 16)
-                                .episodeFrame()
-                                .foregroundColor(Color.gray.opacity(0.2))
-                                .shimmering()
-                        } else if case let .success(episodes) = episodesViewStore.state {
-                            LazyVStack {
-                                ForEach(episodes, id: \.id) { episode in
-                                    generateEpisodeItem(episode)
-                                        .onAppear {
-                                            if episodes.last == episode {
-                                                // Check and see if there are more episodes to load.
-                                            }
-                                        }
-                                }
-                            }
-                        } else {
-                            ZStack {
-                                RoundedRectangle(cornerRadius: 16)
-                                    .episodeFrame()
-                                    .foregroundColor(Color.gray.opacity(0.2))
-                                
-                                Label("Failed to load.", systemImage: "exclamationmark.triangle.fill")
-                                    .font(.title3.bold())
-                                    .foregroundColor(Color.red)
-                            }
+            store.scope(state: \.episodes)
+        ) { episodesViewStore in
+            Section {
+                if episodesViewStore.state.isLoading == true {
+                    episodeShimmeringView
+                } else if case let .success(episodes) = episodesViewStore.state {
+                    LazyVStack {
+                        ForEach(episodes, id: \.id) { episode in
+                            generateEpisodeItem(episode)
                         }
-                    } header: {
-                        buildSubHeading(title: "Episodes")
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.vertical, 6)
-                            .background(Color.black)
                     }
-                    .frame(maxWidth: .infinity)
-                    .padding(.horizontal)
+                } else {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 16)
+                            .episodeFrame()
+                            .foregroundColor(Color.gray.opacity(0.2))
+
+                        Label("Failed to load.", systemImage: "exclamationmark.triangle.fill")
+                            .font(.title3.bold())
+                            .foregroundColor(Color.red)
+                    }
                 }
+            } header: {
+                buildSubHeading(title: "Episodes")
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.vertical, 6)
+                    .background(Color.black)
             }
+            .frame(maxWidth: .infinity)
+            .padding(.horizontal)
         }
     }
-    
+
     @ViewBuilder
     private func generateEpisodeItem(
         _ episode: Episode
@@ -254,9 +261,7 @@ extension AnimeDetailView {
             KFImage(episode.thumbnail.largest?.link)
                 .cacheMemoryOnly()
                 .placeholder {
-                    Rectangle()
-                        .foregroundColor(Color.gray.opacity(0.25))
-                        .shimmering()
+                    episodeShimmeringView
                 }
                 .fade(duration: 0.5)
                 .resizable()
@@ -277,7 +282,7 @@ extension AnimeDetailView {
                 Text(episode.name)
                     .font(.title2.bold())
                 HStack {
-                    Text("E\(episode.number) \u{2022} \(episode.lengthFormatted)")
+                    Text("E\(episode.number)" + (episode.length != nil ? " \u{2022} \(episode.lengthFormatted)" : ""))
                         .font(.callout.bold())
                 }
             }
@@ -314,6 +319,14 @@ extension AnimeDetailView {
             }
         }
     }
+
+    @ViewBuilder
+    private var episodeShimmeringView: some View {
+        RoundedRectangle(cornerRadius: 16)
+            .episodeFrame()
+            .foregroundColor(Color.gray.opacity(0.2))
+            .shimmering()
+    }
 }
 
 extension AnimeDetailView {
@@ -329,8 +342,8 @@ extension View {
     fileprivate func episodeFrame() -> some View {
         self
             .aspectRatio(16/9, contentMode: .fill)
+            .frame(maxWidth: .infinity, alignment: .center)
             .cornerRadius(16)
-            .frame(maxWidth: .infinity)
     }
 }
 
@@ -359,10 +372,8 @@ struct AnimeView_Previews: PreviewProvider {
                     anime: .narutoShippuden,
                     episodes: .success(.init(uniqueElements: Episode.demoEpisodes))
                 ),
-                reducer: AnimeDetailCore.reducer,
-                environment: .init(
-                    listClient: .mock
-                )
+                reducer: .empty,
+                environment: ()
             ),
             namespace: namespace
         )

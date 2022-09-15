@@ -8,19 +8,17 @@
 
 import Foundation
 import ComposableArchitecture
-import UIKit
 
 enum HomeCore {
     typealias LoadableAnime = LoadableState<IdentifiedArrayOf<Anime>>
     struct State: Equatable {
-        var currentlyWatchingEpisodes: [Episode] = []
-        var topTrendingAnime: LoadableAnime = .loading
-        var topAiringAnime: LoadableAnime = .loading
-        var topUpcomingAnime: LoadableAnime = .loading
-        var highestRatedAnime: LoadableAnime = .loading
-        var mostPopularAnime: LoadableAnime = .loading
+        var topTrendingAnime: LoadableAnime = .preparing
+        var topAiringAnime: LoadableAnime = .preparing
+        var topUpcomingAnime: LoadableAnime = .preparing
+        var highestRatedAnime: LoadableAnime = .preparing
+        var mostPopularAnime: LoadableAnime = .preparing
 
-        var onAppearedCalled = false
+        var currentlyWatchingEpisodes: [Episode] = []
 
         var animeDetail: AnimeDetailCore.State? = nil
     }
@@ -34,7 +32,7 @@ enum HomeCore {
     }
 
     struct Environment {
-        let listClient: AnimeListClient
+        let animeClient: AnimeClient
     }
 }
 
@@ -43,42 +41,41 @@ extension HomeCore {
         AnimeDetailCore.reducer.optional().pullback(
             state: \.animeDetail,
             action: /HomeCore.Action.animeDetail,
-            environment: { env in .init(listClient: env.listClient) }
+            environment: { env in .init(animeClient: env.animeClient) }
         ),
         .init { state, action, environment in
             switch (action) {
             case .onAppear:
-                if state.onAppearedCalled {
-                    break
+                if state.topAiringAnime.hasInitialized {
+                   break
                 }
-                state.onAppearedCalled = true
                 state.topTrendingAnime = .loading
                 state.topAiringAnime = .loading
                 state.topUpcomingAnime = .loading
                 state.highestRatedAnime = .loading
                 state.mostPopularAnime = .loading
                 return .merge(
-                    environment.listClient.topTrendingAnime()
+                    environment.animeClient.getTopTrendingAnime()
                         .subscribe(on: DispatchQueue.global(qos: .userInteractive))
                         .receive(on: DispatchQueue.main)
                         .catchToEffect()
                         .map { HomeCore.Action.fetchedAnime(keyPath: \.topTrendingAnime, result: $0) },
-                    environment.listClient.topUpcomingAnime()
+                    environment.animeClient.getTopUpcomingAnime()
                         .subscribe(on: DispatchQueue.global(qos: .userInteractive))
                         .receive(on: DispatchQueue.main)
                         .catchToEffect()
                         .map { HomeCore.Action.fetchedAnime(keyPath: \.topUpcomingAnime, result: $0) },
-                    environment.listClient.topAiringAnime()
+                    environment.animeClient.getTopAiringAnime()
                         .subscribe(on: DispatchQueue.global(qos: .userInteractive))
                         .receive(on: DispatchQueue.main)
                         .catchToEffect()
                         .map { HomeCore.Action.fetchedAnime(keyPath: \.topAiringAnime, result: $0) },
-                    environment.listClient.highestRatedAnime()
+                    environment.animeClient.getHighestRatedAnime()
                         .subscribe(on: DispatchQueue.global(qos: .userInteractive))
                         .receive(on: DispatchQueue.main)
                         .catchToEffect()
                         .map { HomeCore.Action.fetchedAnime(keyPath: \.highestRatedAnime, result: $0) },
-                    environment.listClient.mostPopularAnime()
+                    environment.animeClient.getMostPopularAnime()
                         .subscribe(on: DispatchQueue.global(qos: .userInteractive))
                         .receive(on: DispatchQueue.main)
                         .catchToEffect()

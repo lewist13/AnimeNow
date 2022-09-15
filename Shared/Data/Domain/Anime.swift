@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import NonEmpty
 
 struct Anime: Hashable, Identifiable {
     let id: AnimeListID
@@ -17,15 +16,27 @@ struct Anime: Hashable, Identifiable {
     let categories: [String]
     let status: Status
     let format: Format
+    let studios: [String]
 
     enum AnimeListID: Hashable {
         case kitsu(String)
+        case anilist(String)
         case myanimelist(String)
-        case enime(String)
+
+        var value: String {
+            switch self {
+            case .kitsu(let id):
+                return id
+            case .anilist(let id):
+                return id
+            case .myanimelist(let id):
+                return id
+            }
+        }
     }
 
     enum Format {
-        case show
+        case tv
         case movie
     }
 
@@ -123,7 +134,9 @@ extension Anime {
             "Action"
         ],
         status: .finished,
-        format: .show
+        format: .tv,
+        studios: "TV Tokyo, Aniplex, KSS, Rakuonsha, TV Tokyo Music, Shueisha, TV Tokyo, Aniplex, KSS, Rakuonsha, TV Tokyo Music, Shueisha"
+            .split(separator: ",").map({ String($0).trimmingCharacters(in: .whitespacesAndNewlines) })
     )
 
     static let attackOnTitan = Anime(
@@ -138,7 +151,8 @@ extension Anime {
             "Action"
         ],
         status: .current,
-        format: .show
+        format: .tv,
+        studios: ["Wit Studio", "MAPPA"]
     )
 
     static let empty = Anime(
@@ -149,6 +163,7 @@ extension Anime {
         coverImage: [],
         categories: [],
         status: .tba,
-        format: .show
+        format: .tv,
+        studios: []
     )
 }

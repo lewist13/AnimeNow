@@ -17,13 +17,15 @@ struct AnimeNowApp: App {
                     initialState: .init(),
                     reducer: ContentCore.reducer,
                     environment: .init(
-                        listClient: .kitsu
+                        animeClient: .live(),
+                        mainRunLoop: .main,
+                        userDefaultsClient: .live
                     )
                 )
             )
             .preferredColorScheme(.dark)
         }
-        #else
+        #elseif os(macOS)
         WindowGroup {
             ContentView()
         }

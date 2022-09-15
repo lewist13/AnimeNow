@@ -24,7 +24,7 @@ struct SearchView_Previews: PreviewProvider {
                 initialState: .init(),
                 reducer: SearchCore.reducer,
                 environment: .init(
-                    animeList: .mock
+                    animeClient: .mock
                 )
             )
         )

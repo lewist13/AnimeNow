@@ -1,5 +1,5 @@
 //
-//  AnimeListClient+Kitsu.swift
+//  ListClient+Kitsu.swift
 //  Anime Now!
 //
 //  Created by Erik Bautista on 9/3/22.
@@ -14,12 +14,11 @@ import SociableWeaver
 
 // MARK: Live
 
-extension AnimeListClient {
+extension ListClient {
     static let kitsu: Self = {
         let router = KitsuRoute()
 
         return Self(
-            authenticate: { .none },
             topTrendingAnime: {
                 let query = GlobalTrending.createQuery(
                     .init(
@@ -107,29 +106,12 @@ extension AnimeListClient {
                     .map(convertKitsuAnimeToAnime(animes:))
                     .eraseToEffect()
             },
-            episodes: { animeId in
-                guard case let .kitsu(animeId) = animeId else {
-                    return Effect.none
-                }
-                let query = FetchEpisodesFromAnime.createQuery(
-                    .init(
-                        id: animeId
-                    )
-                )
-                    .format()
-                let endpoint = KitsuRoute.Endpoint.graphql(.init(query: query))
-                let response = API.request(router, endpoint, GraphQL.Response<FetchEpisodesFromAnime>.self)
-
-                return response
-                    .map { $0?.data.findAnimeById.episodes.nodes ?? [] }
-                    .map(convertKitsuEpisodeToEpisode(episodes:))
-                    .eraseToEffect()
-            }
+            search: { _ in .none }
         )
     }()
 }
 
-private func sortBasedOnAvgRank(animes: [AnimeListClient.Anime]) -> [AnimeListClient.Anime] {
+private func sortBasedOnAvgRank(animes: [ListClient.Anime]) -> [ListClient.Anime] {
     animes.sorted(by: { lhs, rhs in
         if let lhsRank = lhs.averageRatingRank, let rhsRank = rhs.averageRatingRank {
             return lhsRank < rhsRank
@@ -141,7 +123,7 @@ private func sortBasedOnAvgRank(animes: [AnimeListClient.Anime]) -> [AnimeListCl
     })
 }
 
-private func sortBasedOnUserRank(animes: [AnimeListClient.Anime]) -> [AnimeListClient.Anime] {
+private func sortBasedOnUserRank(animes: [ListClient.Anime]) -> [ListClient.Anime] {
     animes.sorted(by: { lhs, rhs in
         if let lhsRank = lhs.userCountRank, let rhsRank = rhs.userCountRank {
             return lhsRank < rhsRank
@@ -153,7 +135,7 @@ private func sortBasedOnUserRank(animes: [AnimeListClient.Anime]) -> [AnimeListC
     })
 }
 
-private func convertKitsuAnimeToAnime(animes: [AnimeListClient.Anime]) -> [Anime] {
+private func convertKitsuAnimeToAnime(animes: [ListClient.Anime]) -> [Anime] {
     animes.compactMap { anime in
         if anime.subtype == .MUSIC {
             return nil
@@ -187,12 +169,13 @@ private func convertKitsuAnimeToAnime(animes: [AnimeListClient.Anime]) -> [Anime
             coverImage: .init(coverImageSizes),
             categories: anime.categories.nodes.compactMap { $0.title.en },
             status: .init(rawValue: anime.status.rawValue.lowercased())!,
-            format: anime.subtype == .MOVIE ? .movie : .show
+            format: anime.subtype == .MOVIE ? .movie : .tv,
+            studios: anime.productions.nodes.map({ $0.company.name }).removingDuplicates()
         )
     }
 }
 
-private func convertImageViewToImage(imageView: AnimeListClient.ImageView) -> Anime.Image? {
+private func convertImageViewToImage(imageView: ListClient.ImageView) -> Anime.Image? {
     guard let url = URL(string: imageView.url) else { return nil }
 
     let name = imageView.name
@@ -210,29 +193,6 @@ private func convertImageViewToImage(imageView: AnimeListClient.ImageView) -> An
         return nil
     }
 }
-
-private func convertKitsuEpisodeToEpisode(episodes: [AnimeListClient.Episode]) -> [Episode] {
-    episodes.map { episode in
-        var thumbnailSizes: [Anime.Image] = []
-
-        if let originalUrl = episode.thumbnail?.original.url,
-           let originalImage = URL(string: originalUrl) {
-            thumbnailSizes.append(.original(originalImage))
-        }
-
-        thumbnailSizes.append(contentsOf: (episode.thumbnail?.views ?? []).compactMap(convertImageViewToImage(imageView:)))
-
-        return Episode(
-            id: episode.id,
-            name: episode.titles.translated ?? episode.titles.romanized ?? episode.titles.canonical ?? "Episode \(episode.number)",
-            number: episode.number,
-            description: episode.description.en ?? "Description not available for this episode.",
-            thumbnail: thumbnailSizes,
-            length: episode.length
-        )
-    }
-}
-
 
 // MARK: API Endpoints
 
@@ -271,7 +231,7 @@ fileprivate class KitsuRoute: APIRoute {
 
 // MARK: Kitsu Queries
 
-fileprivate extension AnimeListClient {
+fileprivate extension ListClient {
     struct GlobalTrending: GraphQLQuery {
         let globalTrending: GraphQL.NodeList<Anime>
 
@@ -442,50 +402,57 @@ fileprivate extension AnimeListClient {
             }
         }
     }
-
-    struct FetchEpisodesFromAnime: GraphQLQuery {
-        let findAnimeById: EpisodesContainer
-
-        struct EpisodesContainer: Decodable {
-            let episodes: EpisodeConnection
-        }
-
-        struct ArgumentOptions {
-            let id: String
-        }
-
-        enum Argument: GraphQLArgument {
-            case id(String)
-
-            func getValue() -> ArgumentValueRepresentable {
-                switch self {
-                case .id(let str):
-                    return str
-                }
-            }
-
-            var description: String {
-                switch self {
-                case .id:
-                    return "id"
-                }
-            }
-        }
-
-        static func createQuery(_ arguments: ArgumentOptions) -> Weave {
-            Weave(.query) {
-                Object("findAnimeById") {
-                    EpisodeConnection.createQueryObject("episodes")
-                }
-                .argument(Argument.id(arguments.id))
-            }
-        }
-    }
 }
 
 // MARK: Kitsu GraphQL Models
 
-fileprivate extension AnimeListClient {
+fileprivate extension ListClient {
+    struct MediaProductionConnection: Decodable {
+        let nodes: [MediaProduction]
+
+        static func createQueryObject(
+            _ name: CodingKey
+        ) -> Object {
+            Object(name) {
+                MediaProduction.createQueryObject(CodingKeys.nodes)
+            }
+            .argument(key: "first", value: 20)
+        }
+    }
+
+    struct MediaProduction: Decodable {
+        let company: Producer
+        let role: Role
+
+        enum Role: String, Decodable {
+            case PRODUCER
+            case LICENSOR
+            case STUDIO
+            case SERIALIZATION
+        }
+
+        static func createQueryObject(
+            _ name: CodingKey
+        ) -> Object {
+            Object(name) {
+                Producer.createQueryObject(CodingKeys.company)
+                Field(CodingKeys.role)
+            }
+        }
+    }
+
+    struct Producer: Decodable {
+        let name: String
+
+        static func createQueryObject(
+            _ name: CodingKey
+        ) -> Object {
+            Object(name) {
+                Field(CodingKeys.name)
+            }
+        }
+    }
+
     struct CategoryConnection: Decodable {
         let nodes: [Category]
 
@@ -512,43 +479,6 @@ fileprivate extension AnimeListClient {
 
     struct Localization: Decodable {
         let en: String?
-    }
-
-    struct EpisodeConnection: Decodable {
-        let nodes: [Episode]
-        let pageInfo: GraphQL.PageInfo
-
-        static func createQueryObject(
-            _ name: String
-        ) -> Object {
-            Object(name) {
-                Episode.createQueryObject(CodingKeys.nodes)
-                GraphQL.PageInfo.createQueryObject(CodingKeys.pageInfo)
-            }
-            .argument(key: "first", value: 25)
-        }
-    }
-
-    struct Episode: Decodable {
-        let id: String
-        let description: Localization
-        let length: Int
-        let number: Int
-        let thumbnail: Image?
-        let titles: Titles
-
-        static func createQueryObject(
-            _ name: CodingKey
-        ) -> Object {
-            Object(name) {
-                Field(CodingKeys.id)
-                Field(CodingKeys.description)
-                Field(CodingKeys.length)
-                Field(CodingKeys.number)
-                Image.createQueryObject(CodingKeys.thumbnail)
-                Titles.createQueryObject(CodingKeys.titles, false)
-            }
-        }
     }
 
     struct Image: Decodable {
@@ -623,12 +553,12 @@ fileprivate extension AnimeListClient {
         let averageRatingRank: Int?
         let status: Status
         let userCountRank: Int?
+        let productions: MediaProductionConnection
 
         // Anime Only
 
         let releaseSeason: ReleaseSeason?
         let youtubeTrailerVideoId: String?
-//        let episodeCount: Int?
         let totalLenght: Int?
         let subtype: Subtype?
 
@@ -658,36 +588,25 @@ fileprivate extension AnimeListClient {
 
         static func createQueryObject(
             _ name: CodingKey,
-            _ media: Bool = true,
-            _ episodesOnly: Bool = false
+            _ media: Bool = true
         ) -> Object {
             Object(name) {
                 Field(CodingKeys.id)
-                    .skip(if: episodesOnly)
                 Field(CodingKeys.slug)
-                    .skip(if: episodesOnly)
                 Field(CodingKeys.description)
-                    .skip(if: episodesOnly)
                 CategoryConnection.createQueryObject(CodingKeys.categories)
                     .slice(amount: 3)
-                    .skip(if: episodesOnly)
                 Image.createQueryObject(CodingKeys.posterImage)
-                    .skip(if: episodesOnly)
                 Image.createQueryObject(CodingKeys.bannerImage)
-                    .skip(if: episodesOnly)
                 Titles.createQueryObject(CodingKeys.titles)
-                    .skip(if: episodesOnly)
                 Field(CodingKeys.averageRating)
-                    .skip(if: episodesOnly)
                 Field(CodingKeys.averageRatingRank)
-                    .skip(if: episodesOnly)
                 Field(CodingKeys.status)
-                    .skip(if: episodesOnly)
                 Field(CodingKeys.userCountRank)
-                    .skip(if: episodesOnly)
+                MediaProductionConnection.createQueryObject(CodingKeys.productions)
 
                 Field(CodingKeys.subtype)
-                    .skip(if: media || episodesOnly)
+                    .skip(if: media)
             }
         }
     }

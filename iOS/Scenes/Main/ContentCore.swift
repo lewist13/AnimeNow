@@ -6,6 +6,7 @@
 //  Copyright © 2022. All rights reserved.
 //
 
+import Foundation
 import ComposableArchitecture
 
 enum ContentCore {
@@ -23,7 +24,9 @@ enum ContentCore {
     }
 
     struct Environment {
-        let listClient: AnimeListClient
+        let animeClient: AnimeClient
+        let mainRunLoop: AnySchedulerOf<RunLoop>
+        let userDefaultsClient: UserDefaultsClient
     }
 }
 
@@ -34,7 +37,7 @@ extension ContentCore {
             action: /ContentCore.Action.home,
             environment: { global in
                 HomeCore.Environment(
-                    listClient: global.listClient
+                    animeClient: global.animeClient
                 )
             }
         ),
@@ -43,7 +46,7 @@ extension ContentCore {
             action: /ContentCore.Action.search,
             environment: { global in
                 SearchCore.Environment(
-                    animeList: global.listClient
+                    animeClient: global.animeClient
                 )
             }
         ),

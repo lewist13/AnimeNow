@@ -13,12 +13,19 @@ struct EpisodeList {
 }
 
 struct Episode: Equatable, Identifiable {
-    let id: String
+    let id: IDType
     let name: String
     let number: Int
     let description: String
     let thumbnail: [Anime.Image]
-    let length: Int?                 // Seconds
+    let length: Int?    // in Seconds
+
+    enum IDType: Hashable {
+        case enime(String)
+        case consumet(String)
+        case zoro(String)
+        case gogoanime(String)
+    }
 }
 
 extension Episode {
@@ -48,7 +55,7 @@ extension Episode {
 
 extension Episode {
     static let empty = Episode(
-        id: "",
+        id: .enime(""),
         name: "",
         number: 0,
         description: "",
@@ -58,7 +65,7 @@ extension Episode {
 
     static let demoEpisodes: [Episode] = [
         .init(
-            id: "1",
+            id: .enime("1"),
             name: "Test 1",
             number: 0,
             description: "Helloooooo guesss what??",

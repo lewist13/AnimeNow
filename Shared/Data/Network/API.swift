@@ -25,22 +25,22 @@ enum API {
         case parsingFailed(String)
     }
 
-    static func request<Router: APIRoute, Output: Decodable>(
-        _ router: Router,
-        _ endpoint: Router.Endpoint,
+    static func request<API: APIRoute, Output: Decodable>(
+        _ api: API,
+        _ endpoint: API.Endpoint,
         _ outputType: Output.Type? = nil
-    ) -> Effect<Output?, API.Error> {
-        guard var request = try? router.router.baseURL(router.baseURL.absoluteString).request(for: endpoint) else {
+    ) -> Effect<Output?, Self.Error> {
+        guard var request = try? api.router.baseURL(api.baseURL.absoluteString).request(for: endpoint) else {
             return .init(error: .badURL)
         }
 
-        router.applyHeaders(request: &request)
+        api.applyHeaders(request: &request)
 
         return URLSession.shared.dataTaskPublisher(for: request)
             .tryMap { (data, response) in
                 guard let httpResponse = response as? HTTPURLResponse,
                       httpResponse.statusCode == 200 else {
-                    throw API.Error.badServerResponse(String(decoding: data, as: UTF8.self))
+                    throw Self.Error.badServerResponse(String(decoding: data, as: UTF8.self))
                 }
 
                 guard let outputType = outputType else {
@@ -51,10 +51,10 @@ enum API {
                     let output = try JSONDecoder().decode(outputType.self, from: data)
                     return output
                 } catch {
-                    throw API.Error.parsingFailed("\(error)")
+                    throw Self.Error.parsingFailed("Failed to parse to: \(outputType.self) - \(error)")
                 }
             }
-            .mapError { $0 as? API.Error ?? .badServerResponse("Error received from server.") }
+            .mapError { $0 as? Self.Error ?? .badServerResponse("Error received from server.") }
             .eraseToEffect()
     }
 }

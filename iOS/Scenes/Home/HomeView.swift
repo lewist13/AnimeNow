@@ -99,33 +99,36 @@ extension HomeView {
         VStack(alignment: .leading) {
             headerText(title)
 
-            ScrollView(.horizontal, showsIndicators: false) {
-                LazyHStack(alignment: .center, spacing: 12) {
-                    WithViewStore(store) { viewStore in
-                        if case .loading = viewStore.state {
-                            loadingAnimePlaceholders
-                        } else if case let .success(animes) = viewStore.state {
-                            ForEach(animes, id: \.self) { anime in
-                                AnimeItemView(
-                                    anime: anime,
-                                    namespace: animeDetailNamespace
-                                )
-                                .onTapGesture {
-                                    viewStore.send(
-                                        .animeTapped(anime),
-                                        animation: Animation.spring(
-                                            response: 0.3,
-                                            dampingFraction: 0.8
-                                        )
+            WithViewStore(store) { viewStore in
+                if case .failed = viewStore.state {
+                    failedToFetchAnimesView
+                        .padding(.horizontal)
+                } else {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        LazyHStack(alignment: .center, spacing: 12) {
+                            if viewStore.state.isLoading {
+                                loadingAnimePlaceholders
+                            } else if case let .success(animes) = viewStore.state {
+                                ForEach(animes, id: \.self) { anime in
+                                    AnimeItemView(
+                                        anime: anime,
+                                        namespace: animeDetailNamespace
                                     )
+                                    .onTapGesture {
+                                        viewStore.send(
+                                            .animeTapped(anime),
+                                            animation: Animation.spring(
+                                                response: 0.3,
+                                                dampingFraction: 0.8
+                                            )
+                                        )
+                                    }
                                 }
                             }
-                        } else {
-                            failedToFetchAnimesView
                         }
+                        .padding(.horizontal)
                     }
                 }
-                .padding(.horizontal)
             }
             .frame(height: 200)
         }
@@ -196,7 +199,7 @@ struct HomeView_Previews: PreviewProvider {
                 initialState: .init(),
                 reducer: HomeCore.reducer,
                 environment: .init(
-                    listClient: .kitsu
+                    animeClient: .mock
                 )
             )
         )

@@ -58,7 +58,9 @@ struct ContentView_Previews: PreviewProvider {
                 initialState: .init(),
                 reducer: ContentCore.reducer,
                 environment: .init(
-                    listClient: .mock
+                    animeClient: .mock,
+                    mainRunLoop: .main,
+                    userDefaultsClient: .mock
                 )
             )
         )
