@@ -16,22 +16,22 @@ import SociableWeaver
 
 extension ListClient {
     static let kitsu: Self = {
-        let router = KitsuRoute()
+        let api = KitsuAPI()
 
         return Self(
             topTrendingAnime: {
-                let query = GlobalTrending.createQuery(
+                let query = KitsuAPI.GlobalTrending.createQuery(
                     .init(
                         first: 25
                     )
                 )
                     .format()
-                let endpoint = KitsuRoute.Endpoint.graphql(
+                let endpoint = KitsuAPI.Endpoint.graphql(
                     .init(
                         query: query
                     )
                 )
-                let response = API.request(router, endpoint, GraphQL.Response<GlobalTrending>.self)
+                let response = API.request(api, endpoint, GraphQL.Response<KitsuAPI.GlobalTrending>.self)
 
                 return response
                     .map { $0?.data.globalTrending.nodes ?? [] }
@@ -39,15 +39,15 @@ extension ListClient {
                     .eraseToEffect()
             },
             topUpcomingAnime: {
-                let query = AnimeByStatus.createQuery(
+                let query = KitsuAPI.AnimeByStatus.createQuery(
                     .init(
                         first: 25,
                         status: .UPCOMING
                     )
                 )
                     .format()
-                let endpoint = KitsuRoute.Endpoint.graphql(.init(query: query))
-                let response = API.request(router, endpoint, GraphQL.Response<AnimeByStatus>.self)
+                let endpoint = KitsuAPI.Endpoint.graphql(.init(query: query))
+                let response = API.request(api, endpoint, GraphQL.Response<KitsuAPI.AnimeByStatus>.self)
 
                 return response
                     .map { $0?.data.animeByStatus.nodes ?? [] }
@@ -56,15 +56,15 @@ extension ListClient {
                     .eraseToEffect()
             },
             topAiringAnime: {
-                let query = AnimeByStatus.createQuery(
+                let query = KitsuAPI.AnimeByStatus.createQuery(
                     .init(
                         first: 25,
                         status: .CURRENT
                     )
                 )
                     .format()
-                let endpoint = KitsuRoute.Endpoint.graphql(.init(query: query))
-                let response = API.request(router, endpoint, GraphQL.Response<AnimeByStatus>.self)
+                let endpoint = KitsuAPI.Endpoint.graphql(.init(query: query))
+                let response = API.request(api, endpoint, GraphQL.Response<KitsuAPI.AnimeByStatus>.self)
 
                 return response
                     .map { $0?.data.animeByStatus.nodes ?? [] }
@@ -73,15 +73,15 @@ extension ListClient {
                     .eraseToEffect()
             },
             highestRatedAnime: {
-                let query = AnimeByStatus.createQuery(
+                let query = KitsuAPI.AnimeByStatus.createQuery(
                     .init(
                         first: 25,
                         status: .CURRENT
                     )
                 )
                     .format()
-                let endpoint = KitsuRoute.Endpoint.graphql(.init(query: query))
-                let response = API.request(router, endpoint, GraphQL.Response<AnimeByStatus>.self)
+                let endpoint = KitsuAPI.Endpoint.graphql(.init(query: query))
+                let response = API.request(api, endpoint, GraphQL.Response<KitsuAPI.AnimeByStatus>.self)
 
                 return response
                     .map { $0?.data.animeByStatus.nodes ?? [] }
@@ -90,15 +90,15 @@ extension ListClient {
                     .eraseToEffect()
             },
             mostPopularAnime: {
-                let query = AnimeByStatus.createQuery(
+                let query = KitsuAPI.AnimeByStatus.createQuery(
                     .init(
                         first: 25,
                         status: .CURRENT
                     )
                 )
                     .format()
-                let endpoint = KitsuRoute.Endpoint.graphql(.init(query: query))
-                let response = API.request(router, endpoint, GraphQL.Response<AnimeByStatus>.self)
+                let endpoint = KitsuAPI.Endpoint.graphql(.init(query: query))
+                let response = API.request(api, endpoint, GraphQL.Response<KitsuAPI.AnimeByStatus>.self)
 
                 return response
                     .map { $0?.data.animeByStatus.nodes ?? [] }
@@ -111,7 +111,7 @@ extension ListClient {
     }()
 }
 
-private func sortBasedOnAvgRank(animes: [ListClient.Anime]) -> [ListClient.Anime] {
+private func sortBasedOnAvgRank(animes: [KitsuAPI.Anime]) -> [KitsuAPI.Anime] {
     animes.sorted(by: { lhs, rhs in
         if let lhsRank = lhs.averageRatingRank, let rhsRank = rhs.averageRatingRank {
             return lhsRank < rhsRank
@@ -123,7 +123,7 @@ private func sortBasedOnAvgRank(animes: [ListClient.Anime]) -> [ListClient.Anime
     })
 }
 
-private func sortBasedOnUserRank(animes: [ListClient.Anime]) -> [ListClient.Anime] {
+private func sortBasedOnUserRank(animes: [KitsuAPI.Anime]) -> [KitsuAPI.Anime] {
     animes.sorted(by: { lhs, rhs in
         if let lhsRank = lhs.userCountRank, let rhsRank = rhs.userCountRank {
             return lhsRank < rhsRank
@@ -135,7 +135,7 @@ private func sortBasedOnUserRank(animes: [ListClient.Anime]) -> [ListClient.Anim
     })
 }
 
-private func convertKitsuAnimeToAnime(animes: [ListClient.Anime]) -> [Anime] {
+private func convertKitsuAnimeToAnime(animes: [KitsuAPI.Anime]) -> [Anime] {
     animes.compactMap { anime in
         if anime.subtype == .MUSIC {
             return nil
@@ -175,7 +175,7 @@ private func convertKitsuAnimeToAnime(animes: [ListClient.Anime]) -> [Anime] {
     }
 }
 
-private func convertImageViewToImage(imageView: ListClient.ImageView) -> Anime.Image? {
+private func convertImageViewToImage(imageView: KitsuAPI.ImageView) -> Anime.Image? {
     guard let url = URL(string: imageView.url) else { return nil }
 
     let name = imageView.name
@@ -196,7 +196,7 @@ private func convertImageViewToImage(imageView: ListClient.ImageView) -> Anime.I
 
 // MARK: API Endpoints
 
-fileprivate class KitsuRoute: APIRoute {
+fileprivate class KitsuAPI: APIRoute {
     enum Endpoint: Equatable {
         case graphql(GraphQL.Paylod)
     }
@@ -231,7 +231,7 @@ fileprivate class KitsuRoute: APIRoute {
 
 // MARK: Kitsu Queries
 
-fileprivate extension ListClient {
+fileprivate extension KitsuAPI {
     struct GlobalTrending: GraphQLQuery {
         let globalTrending: GraphQL.NodeList<Anime>
 
@@ -406,7 +406,7 @@ fileprivate extension ListClient {
 
 // MARK: Kitsu GraphQL Models
 
-fileprivate extension ListClient {
+fileprivate extension KitsuAPI {
     struct MediaProductionConnection: Decodable {
         let nodes: [MediaProduction]
 

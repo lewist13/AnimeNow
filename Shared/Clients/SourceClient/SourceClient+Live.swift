@@ -25,6 +25,8 @@ extension SourceClient {
                     provider = .init(provider: .mal, id: animeId.value)
                 }
 
+                // This retrieves all id mapping for various anime list/streaming platforms
+
                 let mappingEndpoint = EnimeAPI.Endpoint.mapping(provider)
                 let mappingResponse = API.request(enimeApi, mappingEndpoint, EnimeAPI.Anime.self)
 
@@ -86,8 +88,20 @@ extension SourceClient {
                     .mapError { $0 as? API.Error ?? .badServerResponse("Failed to fetch episodes.") }
                     .eraseToEffect()
             },
-            sources: { _ in
-                .none
+            sources: { episodeId in
+                switch episodeId {
+                case .enime(let episodeId):
+                    let endpoint = EnimeAPI.Endpoint.episode(episodeId)
+                    return API.request(enimeApi, endpoint, EnimeAPI.Episode.self)
+                        .map { $0?.sources ?? [] }
+                        .map(convertEnimeSourceToSource(sources:))
+                case .consumet(_):
+                    return .init(value: [])
+                case .zoro(_):
+                    return .init(value: [])
+                case .gogoanime(_):
+                    return .init(value: [])
+                }
             }
         )
     }()
@@ -131,6 +145,21 @@ fileprivate func convertEnimeEpisodeToEpisode(episodes: [EnimeAPI.Episode]) -> [
             description: episode.description ?? "No description available for this episode.",
             thumbnail: thumbainImages,
             length: nil
+        )
+    }
+}
+
+fileprivate func convertEnimeSourceToSource(sources: [EnimeAPI.Source]) -> [EpisodeSource] {
+    sources.compactMap { source in
+        guard let url = URL(string: source.url) else {
+            return nil
+        }
+
+        return EpisodeSource(
+            id: source.id,
+            url: url,
+            provider: source.website ?? "Unknown",
+            subbed: source.subtitle ?? true
         )
     }
 }
@@ -220,6 +249,7 @@ fileprivate class EnimeAPI: APIRoute {
     enum Endpoint: Equatable {
         case mapping(ExternalProvider)
         case fetchEpisodes(animeId: String)
+        case episode(String)
 
         struct ExternalProvider: Equatable, Decodable {
             var provider: Provider
@@ -240,6 +270,9 @@ fileprivate class EnimeAPI: APIRoute {
 
     let router: AnyParserPrinter<URLRequestData, Endpoint> = {
         OneOf {
+            Route(.case(Endpoint.episode)) {
+                Path { "episode"; Parse(.string) }
+            }
             Route(.case(Endpoint.mapping)) {
                 Path { "mapping" }
                 Parse(.memberwise(Endpoint.ExternalProvider.init)) {

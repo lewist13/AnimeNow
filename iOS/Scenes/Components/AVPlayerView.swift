@@ -20,10 +20,11 @@ struct AVPlayerCore {
         case stop
         case seek(to: CMTime)
         case setPrimaryItem(AVPlayerItem)
+        case start(media: AVPlayerItem)
     }
 
     struct State: Equatable {
-        var avAction: AVAction? = nil
+        var avAction: AVAction?
 
         var status = AVPlayer.Status.unknown
         var timeStatus = AVPlayer.TimeControlStatus.paused
@@ -52,11 +53,12 @@ extension AVPlayerCore {
             state.rate = rate
         case .currentTime(let currentTime):
             state.currentTime = currentTime
-        case .avAction(let avAction):
-            state.avAction = avAction
+        case .avAction(let action):
+            state.avAction = action
         }
         return .none
     }
+        .debugActions()
 }
 
 struct AVPlayerView: UIViewRepresentable {
@@ -76,7 +78,7 @@ class AVPlayerUIView: UIView {
 
     private let store: Store<AVPlayerCore.State, AVPlayerCore.Action>
     private let viewStore: ViewStore<AVPlayerCore.State, AVPlayerCore.Action>
-    private var cancellables: Set<AnyCancellable> = .init()
+    private var cancellables: Set<AnyCancellable> = []
 
     private var playerLayer: AVPlayerLayer { layer as! AVPlayerLayer }
     private var player = AVQueuePlayer()
@@ -85,9 +87,8 @@ class AVPlayerUIView: UIView {
 
     init(store: Store<AVPlayerCore.State, AVPlayerCore.Action>) {
         self.store = store
-        self.viewStore = ViewStore(self.store)
+        self.viewStore = ViewStore(store)
         super.init(frame: .zero)
-
         bindStore()
         playerLayer.player = player
     }
@@ -97,23 +98,31 @@ class AVPlayerUIView: UIView {
     }
 
     private func bindStore() {
-        viewStore.avAction.publisher
-            .compactMap { $0 }
-            .sink { [unowned self] action in
+        viewStore.publisher.avAction
+            .sink { [weak self] action in
+                guard let action = action else {
+                    return
+                }
                 switch action {
                 case .begin:
-                    self.observePlayerValues()
+                    self?.observePlayerValues()
                 case .play:
-                    self.player.play()
+                    self?.player.play()
                 case .pause:
-                    self.player.pause()
+                    self?.player.pause()
                 case .stop:
-                    self.player.pause()
-                    self.player.replaceCurrentItem(with: nil)
+                    self?.player.pause()
+                    self?.player.replaceCurrentItem(with: nil)
                 case .seek(to: let time):
-                    self.player.seek(to: time)
+                    self?.player.seek(to: time)
                 case .setPrimaryItem(let primaryItem):
-                    self.player.replaceCurrentItem(with: primaryItem)
+                    self?.player.replaceCurrentItem(with: primaryItem)
+                case .start(media: let media):
+                    self?.player.removeAllItems()
+                    self?.player.insert(media, after: nil)
+                    let session = AVAudioSession.sharedInstance()
+                    try? session.setCategory(.playback, mode: .moviePlayback, policy: .longFormVideo)
+                    self?.player.play()
                 }
             }
             .store(in: &cancellables)
@@ -123,24 +132,24 @@ class AVPlayerUIView: UIView {
         player.publisher(
             for: \.status
         )
-            .sink(receiveValue: { [unowned self] status in
-                self.viewStore.send(.status(status))
+            .sink(receiveValue: { [weak self] status in
+                self?.viewStore.send(.status(status))
             })
             .store(in: &cancellables)
 
         player.publisher(
             for: \.rate
         )
-            .sink { [unowned self] rate in
-                self.viewStore.send(.rate(rate))
+            .sink { [weak self] rate in
+                self?.viewStore.send(.rate(rate))
             }
             .store(in: &cancellables)
 
         player.publisher(
             for: \.timeControlStatus
         )
-            .sink { [unowned self] timeControlStatus in
-                self.viewStore.send(.timeStatus(timeControlStatus))
+            .sink { [weak self] timeControlStatus in
+                self?.viewStore.send(.timeStatus(timeControlStatus))
             }
             .store(in: &cancellables)
 
@@ -155,8 +164,8 @@ class AVPlayerUIView: UIView {
                 timescale: 1
             ),
             queue: .main
-        ) { [unowned self] time in
-            self.viewStore.send(.currentTime(time))
+        ) { [weak self] time in
+            self?.viewStore.send(.currentTime(time))
         }
     }
 }

@@ -11,12 +11,12 @@ import Foundation
 import AVFoundation
 
 enum VideoPlayerCore {
-    enum PlayerStatus {
+    enum PlayerStatus: String {
         case playing, paused, stopped
     }
 
     struct State: Equatable {
-        let source: Source
+        let sources: [EpisodeSource]
 
         var showingOverlay = true
 
@@ -28,8 +28,10 @@ enum VideoPlayerCore {
     }
 
     enum Action: Equatable {
-        case begin
+        case startPlayer
         case togglePlayback
+        case seek(to: Float)
+        case closeButtonPressed
         case close
         case player(AVPlayerCore.Action)
     }
@@ -41,19 +43,16 @@ enum VideoPlayerCore {
 
 extension VideoPlayerCore {
     static let reducer = Reducer<Self.State, Self.Action, Self.Environment>.combine(
-        AVPlayerCore.reducer.pullback(
-            state: \.avPlayerState,
-            action: /VideoPlayerCore.Action.player,
-            environment: { _ in () }
-        ),
         .init { state, action, environment in
             switch action {
-            case .begin:
-                return .merge(
+            case .startPlayer:
+                if state.playerStatus != .stopped {
+                    break
+                }
+                return .concatenate(
                     [
-                        .init(value: .player(.avAction(.begin))),
-                        .init(value: .player(.avAction(.setPrimaryItem(.init(url: state.source.url))))),
-                        .init(value: .player(.avAction(.play)))
+                        .init(value: .player(.avAction(.begin))).delay(for: 1, scheduler: DispatchQueue.main).eraseToEffect(),
+                        .init(value: .player(.avAction(.start(media: .init(url: state.sources.first!.url)))))
                     ]
                 )
             case .togglePlayback:
@@ -63,19 +62,36 @@ extension VideoPlayerCore {
                     state.avPlayerState.avAction = .pause
                     return .init(value: .player(.avAction(.pause)))
                 }
-            case .close:
+
+            case .seek(to: let val):
+                break
+            case .closeButtonPressed:
                 state.playerStatus = .stopped
-                return .init(value: .player(.avAction(.stop)))
+                return .concatenate(
+                    [
+                        .init(value: .player(.avAction(.stop))),
+                        .init(value: .close)
+                    ]
+                )
+            case .close:
+                break
             case .player(.rate(let rate)):
                 if rate > 0 {
                     state.playerStatus = .playing
                 } else {
                     state.playerStatus = .paused
                 }
-            case .player(_):
+            case .player(.status(.readyToPlay)):
+                return .init(value: .player(.avAction(.seek(to: .init(value: 5, timescale: 1)))))
+            case .player:
                 break
             }
             return .none
-        }
-    ).debug()
+        },
+        AVPlayerCore.reducer.pullback(
+            state: \.avPlayerState,
+            action: /VideoPlayerCore.Action.player,
+            environment: { _ in () }
+        )
+    )
 }

@@ -26,5 +26,7 @@ extension AnimeClient {
         .none
     } getEpisodes: { _ in
         .none
+    } getSources: { _ in
+        .none
     }
 }

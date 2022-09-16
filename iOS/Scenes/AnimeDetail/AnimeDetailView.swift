@@ -51,7 +51,11 @@ extension AnimeDetailView {
                     )
                 )
             } label: {
-                closeImage
+                Image(
+                    systemName: "xmark"
+                )
+                .font(Font.system(size: 14, weight: .black))
+                .foregroundColor(Color.white.opacity(0.9))
             }
             .buttonStyle(BlurredButtonStyle())
             .clipShape(Circle())
@@ -61,15 +65,6 @@ extension AnimeDetailView {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
-    }
-
-    @ViewBuilder
-    private var closeImage: some View {
-        Image(
-            systemName: "xmark"
-        )
-        .font(Font.system(size: 14, weight: .black))
-        .foregroundColor(Color.white.opacity(0.9))
     }
 }
 
@@ -230,6 +225,13 @@ extension AnimeDetailView {
                     LazyVStack {
                         ForEach(episodes, id: \.id) { episode in
                             generateEpisodeItem(episode)
+                                .onTapGesture {
+                                    episodesViewStore.send(
+                                        .selectedEpisode(
+                                            episode: episode
+                                        )
+                                    )
+                                }
                         }
                     }
                 } else {

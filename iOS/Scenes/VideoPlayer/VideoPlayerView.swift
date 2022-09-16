@@ -19,14 +19,15 @@ struct VideoPlayerView: View {
                     action: VideoPlayerCore.Action.player
                 )
             )
-            .ignoresSafeArea()
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             playerOverlay
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .ignoresSafeArea()
         .statusBar(hidden: true)
         .onAppear {
-            ViewStore(store.stateless).send(.begin)
+            ViewStore(store.stateless).send(.startPlayer)
         }
     }
 }
@@ -36,9 +37,11 @@ extension VideoPlayerView {
     var playerOverlay: some View {
         GeometryReader { geometry in
             VStack(alignment: .leading) {
+                topPlayerItems
                 Spacer()
                 playerControls
             }
+            .padding()
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(
                 LinearGradient(
@@ -51,7 +54,6 @@ extension VideoPlayerView {
                     endPoint: .bottom
                 )
                 .opacity(0.5)
-                .ignoresSafeArea()
             )
         }
     }
@@ -64,6 +66,37 @@ extension VideoPlayerView {
 //    var episodeInfo: some View {
 //    }
 //}
+
+// MARK: Top Player Items
+
+extension VideoPlayerView {
+    @ViewBuilder
+    var topPlayerItems: some View {
+        HStack(alignment: .center, spacing: 18) {
+            closeButton
+        }
+        .padding(.horizontal)
+    }
+
+    @ViewBuilder
+    var closeButton: some View {
+        WithViewStore(
+            store.stateless
+        ) { viewStore in
+            Button {
+                viewStore.send(.closeButtonPressed)
+            } label: {
+                Image(
+                    systemName: "xmark"
+                )
+                .font(.body.weight(.black))
+                .foregroundColor(Color.white)
+            }
+            .buttonStyle(BlurredButtonStyle())
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: RoundedCornerStyle.continuous))
+        }
+    }
+}
 
 // MARK: Player Controls
 
@@ -104,19 +137,28 @@ extension VideoPlayerView {
                 value: .constant(5),
                 in: 0...10
             )
+            .padding(.horizontal)
             Text("1:00:00")
         }
         .foregroundColor(.white)
         .font(.footnote.monospacedDigit())
+        .padding(4)
+        .padding(.horizontal)
+        .background(BlurView(style: .systemThinMaterialDark))
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: RoundedCornerStyle.continuous))
     }
 
     @ViewBuilder
     var settingsButton: some View {
         Button {
         } label: {
-            Image(systemName: "gearshape")
-                .foregroundColor(Color.white)
+            Image(
+                systemName: "gearshape"
+            )
+            .foregroundColor(Color.white)
         }
+        .buttonStyle(BlurredButtonStyle())
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: RoundedCornerStyle.continuous))
     }
 }
 
@@ -126,7 +168,7 @@ struct VideoPlayerView_Previews: PreviewProvider {
             VideoPlayerView(
                 store: .init(
                     initialState: .init(
-                        source: .mock
+                        sources: EpisodeSource.mock
                     ),
                     reducer: VideoPlayerCore.reducer,
                     environment: .init(
@@ -134,7 +176,7 @@ struct VideoPlayerView_Previews: PreviewProvider {
                     )
                 )
             )
-//            .previewInterfaceOrientation(.landscapeRight)
+            .previewInterfaceOrientation(.landscapeRight)
         } else {
             // Fallback on earlier versions
         }

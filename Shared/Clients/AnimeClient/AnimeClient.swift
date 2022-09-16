@@ -18,6 +18,7 @@ struct AnimeClient {
     let getMostPopularAnime: () -> Effect<[Anime], API.Error>
     let searchAnimes: (String) -> Effect<[Anime], API.Error>
     let getEpisodes: (Anime.ID) -> Effect<[Episode], API.Error>
+    let getSources: (Episode.ID) -> Effect<[EpisodeSource], API.Error>
 }
 
 extension AnimeClient {

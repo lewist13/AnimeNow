@@ -59,18 +59,31 @@ struct HomeView: View {
             .onAppear {
                 ViewStore(store).send(.onAppear)
             }
-            .fullScreenStore(
-                store: store.scope(
+//            .fullScreenStore(
+//                store: store.scope(
+//                    state: \.animeDetail,
+//                    action: HomeCore.Action.animeDetail
+//                )
+//            ) {
+//
+//            } destination: {
+//                AnimeDetailView(
+//                    store: $0,
+//                    namespace: animeDetailNamespace
+//                )
+//            }
+
+            IfLetStore(
+                store.scope(
                     state: \.animeDetail,
                     action: HomeCore.Action.animeDetail
                 )
             ) {
-                    
-            } destination: {
                 AnimeDetailView(
                     store: $0,
                     namespace: animeDetailNamespace
                 )
+                .background(Color.black)
             }
         }
     }

@@ -28,7 +28,6 @@ enum ContentCore {
     struct Environment {
         let animeClient: AnimeClient
         let mainRunLoop: AnySchedulerOf<RunLoop>
-        let videoPlayerClient: VideoPlayerClient
         let userDefaultsClient: UserDefaultsClient
     }
 }
@@ -58,6 +57,14 @@ extension ContentCore {
             environment: { .init(mainQueue: $0.mainRunLoop) }
         ),
         .init { state, action, environment in
+            switch action {
+            case .home(.animeDetail(.fetchedSources(.success(let episodeSources)))):
+                state.videoPlayer = .init(sources: episodeSources)
+            case .videoPlayer(.close):
+                state.videoPlayer = nil
+            default:
+                break
+            }
             return .none
         }
     )

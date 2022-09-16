@@ -36,6 +36,8 @@ extension AnimeClient {
             selectedAnimeList.provider.search(query)
         } getEpisodes: { animeId in
             selectedSource.provider.episodes(animeId)
+        } getSources: { episodeId in
+            selectedSource.provider.sources(episodeId)
         }
     }
 }

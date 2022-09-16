@@ -72,7 +72,6 @@ struct ContentView_Previews: PreviewProvider {
                 environment: .init(
                     animeClient: .mock,
                     mainRunLoop: .main,
-                    videoPlayerClient: .mock,
                     userDefaultsClient: .mock
                 )
             )

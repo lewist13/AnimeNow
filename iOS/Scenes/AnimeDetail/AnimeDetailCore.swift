@@ -29,6 +29,8 @@ enum AnimeDetailCore {
         case onAppear
         case onClose
         case fetchedEpisodes(Result<[Episode], API.Error>)
+        case selectedEpisode(episode: Episode)
+        case fetchedSources(Result<[EpisodeSource], API.Error>)
         case moreInfo(id: Episode.ID)
     }
 
@@ -57,19 +59,24 @@ extension AnimeDetailCore {
                     .receive(on: DispatchQueue.main)
                     .catchToEffect()
                     .map(Action.fetchedEpisodes)
-            case .fetchedEpisodes(let result):
-                switch result {
-                case .success(let episodes):
-                    state.episodes = .success(.init(uniqueElements: episodes))
-                case .failure:
-                    state.episodes = .failed
-                }
+            case .fetchedEpisodes(.success(let episodes)):
+                state.episodes = .success(.init(uniqueElements: episodes))
+            case .fetchedEpisodes(.failure):
+                state.episodes = .failed
             case .moreInfo(id: let id):
                if state.moreInfo.contains(id) {
                    state.moreInfo.remove(id)
                } else {
                    state.moreInfo.insert(id)
                }
+            case .selectedEpisode(episode: let episode):
+                return environment.animeClient.getSources(episode.id)
+                    .subscribe(on: DispatchQueue.global(qos: .userInteractive))
+                    .receive(on: DispatchQueue.main)
+                    .catchToEffect()
+                    .map(Action.fetchedSources)
+            case .fetchedSources:
+                break
             case .onClose:
                 break
             }
