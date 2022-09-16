@@ -54,6 +54,7 @@ extension AnimeDetailView {
                 closeImage
             }
             .buttonStyle(BlurredButtonStyle())
+            .clipShape(Circle())
             .padding(.trailing)
             .onAppear {
                 viewStore.send(.onAppear)
@@ -302,6 +303,7 @@ extension AnimeDetailView {
                     .foregroundColor(Color.white.opacity(0.9))
                 }
                 .buttonStyle(BlurredButtonStyle())
+                .clipShape(Circle())
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
                 .padding()
             }

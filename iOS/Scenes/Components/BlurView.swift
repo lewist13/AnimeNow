@@ -24,6 +24,5 @@ struct BlurredButtonStyle: ButtonStyle {
             .foregroundColor(.white)
             .padding(12)
             .background(BlurView(style: .systemThinMaterialDark))
-            .clipShape(Circle())
     }
 }

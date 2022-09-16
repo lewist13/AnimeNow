@@ -7,16 +7,18 @@
 
 import Foundation
 import ComposableArchitecture
+import CoreMedia
 
 struct VideoPlayerClient {
-    let play: (URL) -> Effect<Never, Never>
+    let play: (URL) -> Effect<Action, Never>
     let resume: () -> Effect<Never, Never>
     let pause: () -> Effect<Never, Never>
     let stop: () -> Effect<Never, Never>
+    let seek: (CMTime) -> Effect<Never, Never>
 }
 
 extension VideoPlayerClient {
     enum Action: Equatable {
-        
+        case updatedPeriodicTime(CMTime)
     }
 }

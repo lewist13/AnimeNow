@@ -22,6 +22,18 @@ struct ContentView: View {
                     action: ContentCore.Action.home
                 )
             )
+            .fullScreenStore(
+                store: store.scope(
+                    state: \.videoPlayer,
+                    action: ContentCore.Action.videoPlayer
+                ),
+                onDismiss: { },
+                destination: { videoPlayerStore in
+                    VideoPlayerView(
+                        store: videoPlayerStore
+                    )
+                }
+            )
 //            .tabItem {
 //                Label("Home", systemImage: "house")
 //            }
@@ -60,6 +72,7 @@ struct ContentView_Previews: PreviewProvider {
                 environment: .init(
                     animeClient: .mock,
                     mainRunLoop: .main,
+                    videoPlayerClient: .mock,
                     userDefaultsClient: .mock
                 )
             )

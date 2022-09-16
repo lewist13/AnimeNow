@@ -28,6 +28,10 @@
 		1327552628D2B0F400A6C525 /* VideoPlayerClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1327552428D2B0F400A6C525 /* VideoPlayerClient.swift */; };
 		1327552828D2B23900A6C525 /* VideoPlayerClient+Live.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1327552728D2B23900A6C525 /* VideoPlayerClient+Live.swift */; };
 		1327552928D2B23900A6C525 /* VideoPlayerClient+Live.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1327552728D2B23900A6C525 /* VideoPlayerClient+Live.swift */; };
+		1327552B28D2BC4600A6C525 /* VideoPlayerClient+Mock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1327552A28D2BC4600A6C525 /* VideoPlayerClient+Mock.swift */; };
+		1327552C28D2BC4600A6C525 /* VideoPlayerClient+Mock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1327552A28D2BC4600A6C525 /* VideoPlayerClient+Mock.swift */; };
+		1327553328D2C16C00A6C525 /* VideoPlayerCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1327553128D2C16C00A6C525 /* VideoPlayerCore.swift */; };
+		1327553428D2C16C00A6C525 /* AVPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1327553228D2C16C00A6C525 /* AVPlayerView.swift */; };
 		13378BA828C9B4E5000FF0D8 /* Throwable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13378BA728C9B4E5000FF0D8 /* Throwable.swift */; };
 		13378BA928C9B4E5000FF0D8 /* Throwable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13378BA728C9B4E5000FF0D8 /* Throwable.swift */; };
 		13386AE728CBFD7A005E8352 /* LoadableState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13386AE628CBFD7A005E8352 /* LoadableState.swift */; };
@@ -77,6 +81,7 @@
 		13D2846528CF08F500332556 /* XCTestDynamicOverlay in Frameworks */ = {isa = PBXBuildFile; productRef = 13D2846428CF08F500332556 /* XCTestDynamicOverlay */; };
 		13D2846728CF090700332556 /* XCTestDynamicOverlay in Frameworks */ = {isa = PBXBuildFile; productRef = 13D2846628CF090700332556 /* XCTestDynamicOverlay */; };
 		13D2846928CF090B00332556 /* SwiftUINavigation in Frameworks */ = {isa = PBXBuildFile; productRef = 13D2846828CF090B00332556 /* SwiftUINavigation */; };
+		13D68EAF28D38D1B00B0D5DB /* VideoPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13D68EAE28D38D1B00B0D5DB /* VideoPlayerView.swift */; };
 		13E4BCF028C829A80039D880 /* AnimeDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13E4BCEE28C829A80039D880 /* AnimeDetailView.swift */; };
 		13E4BCF128C829A80039D880 /* AnimeDetailCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13E4BCEF28C829A80039D880 /* AnimeDetailCore.swift */; };
 		13E512C728C79E5E00B298BA /* GraphQLModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13E512C628C79E5E00B298BA /* GraphQLModels.swift */; };
@@ -115,6 +120,9 @@
 		1327550828D2A7C400A6C525 /* UserDefaultsClient+Mock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UserDefaultsClient+Mock.swift"; sourceTree = "<group>"; };
 		1327552428D2B0F400A6C525 /* VideoPlayerClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPlayerClient.swift; sourceTree = "<group>"; };
 		1327552728D2B23900A6C525 /* VideoPlayerClient+Live.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "VideoPlayerClient+Live.swift"; sourceTree = "<group>"; };
+		1327552A28D2BC4600A6C525 /* VideoPlayerClient+Mock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "VideoPlayerClient+Mock.swift"; sourceTree = "<group>"; };
+		1327553128D2C16C00A6C525 /* VideoPlayerCore.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VideoPlayerCore.swift; sourceTree = "<group>"; };
+		1327553228D2C16C00A6C525 /* AVPlayerView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AVPlayerView.swift; sourceTree = "<group>"; };
 		13378BA728C9B4E5000FF0D8 /* Throwable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Throwable.swift; sourceTree = "<group>"; };
 		13386AE628CBFD7A005E8352 /* LoadableState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadableState.swift; sourceTree = "<group>"; };
 		13386AED28CC2892005E8352 /* ShimmerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShimmerView.swift; sourceTree = "<group>"; };
@@ -145,6 +153,7 @@
 		13C3536228C308A000A54E7E /* Anime Now!.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Anime Now!.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		13C3536828C308A000A54E7E /* Anime Now!.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Anime Now!.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		13C3536A28C308A000A54E7E /* macOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = macOS.entitlements; sourceTree = "<group>"; };
+		13D68EAE28D38D1B00B0D5DB /* VideoPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPlayerView.swift; sourceTree = "<group>"; };
 		13E4BCEE28C829A80039D880 /* AnimeDetailView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AnimeDetailView.swift; sourceTree = "<group>"; };
 		13E4BCEF28C829A80039D880 /* AnimeDetailCore.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AnimeDetailCore.swift; sourceTree = "<group>"; };
 		13E512C628C79E5E00B298BA /* GraphQLModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GraphQLModels.swift; sourceTree = "<group>"; };
@@ -200,13 +209,24 @@
 			children = (
 				1327552428D2B0F400A6C525 /* VideoPlayerClient.swift */,
 				1327552728D2B23900A6C525 /* VideoPlayerClient+Live.swift */,
+				1327552A28D2BC4600A6C525 /* VideoPlayerClient+Mock.swift */,
 			);
 			path = VideoPlayerClient;
+			sourceTree = "<group>";
+		};
+		1327553028D2C16C00A6C525 /* Player */ = {
+			isa = PBXGroup;
+			children = (
+				1327553128D2C16C00A6C525 /* VideoPlayerCore.swift */,
+				13D68EAE28D38D1B00B0D5DB /* VideoPlayerView.swift */,
+			);
+			path = Player;
 			sourceTree = "<group>";
 		};
 		13386AE928CC16F2005E8352 /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				1327553228D2C16C00A6C525 /* AVPlayerView.swift */,
 				13386AF028CC3239005E8352 /* BlurView.swift */,
 				132754FB28D2883500A6C525 /* CompressableText.swift */,
 			);
@@ -268,6 +288,7 @@
 				134E0E8D28D0EBB400A5F5E5 /* Main */,
 				137A818D28C535CF00B69503 /* Home */,
 				13E4BCED28C829A80039D880 /* AnimeDetail */,
+				1327553028D2C16C00A6C525 /* Player */,
 				13446E7E28CA4AB100F815C6 /* Settings */,
 				138066EF28C572B50012DAFB /* Search */,
 			);
@@ -614,19 +635,23 @@
 				1327550628D2A11A00A6C525 /* UserDefaultsClient+Live.swift in Sources */,
 				13FC21CA28C3976D000F0F79 /* RepositoryClient+Live.swift in Sources */,
 				1384FF7928CB93FA003B011E /* Navigation+Extension.swift in Sources */,
+				13D68EAF28D38D1B00B0D5DB /* VideoPlayerView.swift in Sources */,
 				132754FC28D2883500A6C525 /* CompressableText.swift in Sources */,
 				138066EC28C5699F0012DAFB /* AnimeItemView.swift in Sources */,
 				13FC747928CFB54600A77818 /* SourceClient+Live.swift in Sources */,
 				13386AEE28CC2892005E8352 /* ShimmerView.swift in Sources */,
+				1327552B28D2BC4600A6C525 /* VideoPlayerClient+Mock.swift in Sources */,
 				13C3536B28C308A000A54E7E /* AnimeNow.xcdatamodeld in Sources */,
 				13FC21D028C397D7000F0F79 /* ManagedModel.swift in Sources */,
 				13E512C728C79E5E00B298BA /* GraphQLModels.swift in Sources */,
 				1327552528D2B0F400A6C525 /* VideoPlayerClient.swift in Sources */,
 				132754F628D269B200A6C525 /* ListClient+AniList.swift in Sources */,
 				13650F3828D04424002E20DD /* AnimeClient+Mock.swift in Sources */,
+				1327553428D2C16C00A6C525 /* AVPlayerView.swift in Sources */,
 				13386AF128CC3239005E8352 /* BlurView.swift in Sources */,
 				13FC21CE28C397A2000F0F79 /* DomainModel.swift in Sources */,
 				13378BA828C9B4E5000FF0D8 /* Throwable.swift in Sources */,
+				1327553328D2C16C00A6C525 /* VideoPlayerCore.swift in Sources */,
 				138066EA28C55BE30012DAFB /* HomeView.swift in Sources */,
 				137A819728C53B2A00B69503 /* ContentCore.swift in Sources */,
 				13FC21F828C46E06000F0F79 /* API.swift in Sources */,
@@ -677,6 +702,7 @@
 				13FC747A28CFB54600A77818 /* SourceClient+Live.swift in Sources */,
 				1361FD2F28CE97BF00D7C569 /* Theme.swift in Sources */,
 				13FC21D328C39928000F0F79 /* RepositoryClient.swift in Sources */,
+				1327552C28D2BC4600A6C525 /* VideoPlayerClient+Mock.swift in Sources */,
 				137A819928C5454800B69503 /* Anime.swift in Sources */,
 				1327552028D2ABAE00A6C525 /* HomeCore.swift in Sources */,
 				1327552628D2B0F400A6C525 /* VideoPlayerClient.swift in Sources */,

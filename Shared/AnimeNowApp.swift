@@ -19,6 +19,7 @@ struct AnimeNowApp: App {
                     environment: .init(
                         animeClient: .live(),
                         mainRunLoop: .main,
+                        videoPlayerClient: .live,
                         userDefaultsClient: .live
                     )
                 )
