@@ -11,15 +11,16 @@ import SwiftUI
 import Combine
 import AVFoundation
 import ComposableArchitecture
+import AVKit
 
 struct AVPlayerCore {
     enum AVAction: Equatable {
-        case begin
+        case initialize
         case play
         case pause
         case stop
         case seek(to: CMTime)
-        case setPrimaryItem(AVPlayerItem)
+        case appendMedia(AVPlayerItem)
         case start(media: AVPlayerItem)
     }
 
@@ -36,7 +37,7 @@ struct AVPlayerCore {
         case avAction(AVAction?)
 
         case status(AVPlayer.Status)
-        case timeStatus(AVPlayer.TimeControlStatus)
+        case timeStatus(AVPlayer.TimeControlStatus, AVPlayer.WaitingReason?)
         case rate(Float)
         case currentTime(CMTime)
     }
@@ -47,8 +48,8 @@ extension AVPlayerCore {
         switch action {
         case .status(let status):
             state.status = status
-        case .timeStatus(let timeStamp):
-            state.timeStatus = timeStamp
+        case .timeStatus(let timeStatus, let waitingReason):
+            state.timeStatus = timeStatus
         case .rate(let rate):
             state.rate = rate
         case .currentTime(let currentTime):
@@ -58,7 +59,7 @@ extension AVPlayerCore {
         }
         return .none
     }
-        .debugActions()
+        .debug()
 }
 
 struct AVPlayerView: UIViewRepresentable {
@@ -74,14 +75,13 @@ struct AVPlayerView: UIViewRepresentable {
 }
 
 class AVPlayerUIView: UIView {
-    override static var layerClass: AnyClass { AVPlayerLayer.self }
-
     private let store: Store<AVPlayerCore.State, AVPlayerCore.Action>
     private let viewStore: ViewStore<AVPlayerCore.State, AVPlayerCore.Action>
     private var cancellables: Set<AnyCancellable> = []
 
+    private let player = AVQueuePlayer()
     private var playerLayer: AVPlayerLayer { layer as! AVPlayerLayer }
-    private var player = AVQueuePlayer()
+    override static var layerClass: AnyClass { AVPlayerLayer.self }
 
     private var timerObserver: Any? = nil
 
@@ -89,8 +89,10 @@ class AVPlayerUIView: UIView {
         self.store = store
         self.viewStore = ViewStore(store)
         super.init(frame: .zero)
+
         bindStore()
-        playerLayer.player = player
+        self.playerLayer.player = player
+        self.isUserInteractionEnabled = false
     }
 
     required init?(coder: NSCoder) {
@@ -104,31 +106,31 @@ class AVPlayerUIView: UIView {
                     return
                 }
                 switch action {
-                case .begin:
-                    self?.observePlayerValues()
+                case .initialize:
+                    self?.observePlayer()
                 case .play:
-                    self?.player.play()
+                    self?.player.playImmediately(atRate: 1.0)
                 case .pause:
                     self?.player.pause()
                 case .stop:
                     self?.player.pause()
-                    self?.player.replaceCurrentItem(with: nil)
+                    self?.player.removeAllItems()
                 case .seek(to: let time):
                     self?.player.seek(to: time)
-                case .setPrimaryItem(let primaryItem):
-                    self?.player.replaceCurrentItem(with: primaryItem)
+                case .appendMedia(let primaryItem):
+                    self?.player.insert(primaryItem, after: nil)
                 case .start(media: let media):
-                    self?.player.removeAllItems()
-                    self?.player.insert(media, after: nil)
-                    let session = AVAudioSession.sharedInstance()
-                    try? session.setCategory(.playback, mode: .moviePlayback, policy: .longFormVideo)
-                    self?.player.play()
+                    self?.player.replaceCurrentItem(with: media)
                 }
             }
             .store(in: &cancellables)
     }
 
-    private func observePlayerValues() {
+    private func observePlayer() {
+        DispatchQueue.global().async {
+            try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback, policy: .longFormVideo)
+        }
+
         player.publisher(
             for: \.status
         )
@@ -148,8 +150,13 @@ class AVPlayerUIView: UIView {
         player.publisher(
             for: \.timeControlStatus
         )
-            .sink { [weak self] timeControlStatus in
-                self?.viewStore.send(.timeStatus(timeControlStatus))
+        .zip(
+            player.publisher(
+                for: \.reasonForWaitingToPlay
+            )
+        )
+            .sink { [weak self] (timeStatus, statusWarning) in
+                self?.viewStore.send(.timeStatus(timeStatus, statusWarning))
             }
             .store(in: &cancellables)
 
@@ -166,6 +173,45 @@ class AVPlayerUIView: UIView {
             queue: .main
         ) { [weak self] time in
             self?.viewStore.send(.currentTime(time))
+        }
+    }
+}
+
+
+extension AVPlayer.Status: CustomStringConvertible, CustomDebugStringConvertible {
+    public var debugDescription: String {
+        description
+    }
+
+    public var description: String {
+        switch self {
+        case .unknown:
+            return "unknown"
+        case .readyToPlay:
+            return "readyToPlay"
+        case .failed:
+            return "failed"
+        @unknown default:
+            return "default-unknown"
+        }
+    }
+}
+
+extension AVPlayer.TimeControlStatus: CustomStringConvertible, CustomDebugStringConvertible {
+    public var debugDescription: String {
+        description
+    }
+
+    public var description: String {
+        switch self {
+        case .paused:
+            return "paused"
+        case .waitingToPlayAtSpecifiedRate:
+            return "waitingToPlayAtSpecifiedRate"
+        case .playing:
+            return "playing"
+        @unknown default:
+            return "default"
         }
     }
 }

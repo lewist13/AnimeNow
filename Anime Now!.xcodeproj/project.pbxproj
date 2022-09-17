@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1318EEE628D5374C00EB85FA /* AVKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1318EEE528D5374B00EB85FA /* AVKit.framework */; };
+		1318EEE828D5375100EB85FA /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1318EEE728D5375100EB85FA /* AVFoundation.framework */; };
 		132754F628D269B200A6C525 /* ListClient+AniList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 132754F528D269B200A6C525 /* ListClient+AniList.swift */; };
 		132754F728D269B200A6C525 /* ListClient+AniList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 132754F528D269B200A6C525 /* ListClient+AniList.swift */; };
 		132754FC28D2883500A6C525 /* CompressableText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 132754FB28D2883500A6C525 /* CompressableText.swift */; };
@@ -107,6 +109,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		1318EEE528D5374B00EB85FA /* AVKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.5.sdk/System/Library/Frameworks/AVKit.framework; sourceTree = DEVELOPER_DIR; };
+		1318EEE728D5375100EB85FA /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.5.sdk/System/Library/Frameworks/AVFoundation.framework; sourceTree = DEVELOPER_DIR; };
 		132754F528D269B200A6C525 /* ListClient+AniList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ListClient+AniList.swift"; sourceTree = "<group>"; };
 		132754FB28D2883500A6C525 /* CompressableText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompressableText.swift; sourceTree = "<group>"; };
 		132754FE28D28F5A00A6C525 /* Array+Duplicates.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Array+Duplicates.swift"; sourceTree = "<group>"; };
@@ -170,6 +174,8 @@
 			files = (
 				137A81A328C5572200B69503 /* Kingfisher in Frameworks */,
 				1395FF7528C6920E00F21FB1 /* SociableWeaver in Frameworks */,
+				1318EEE828D5375100EB85FA /* AVFoundation.framework in Frameworks */,
+				1318EEE628D5374C00EB85FA /* AVKit.framework in Frameworks */,
 				13C3537F28C311B300A54E7E /* ComposableArchitecture in Frameworks */,
 				1363011C28C5C49F0076BF0A /* TinyGraphQL in Frameworks */,
 				1384FF7728CB8D07003B011E /* SwiftUINavigation in Frameworks */,
@@ -435,6 +441,8 @@
 		13FC21D628C39FA5000F0F79 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				1318EEE728D5375100EB85FA /* AVFoundation.framework */,
+				1318EEE528D5374B00EB85FA /* AVKit.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";

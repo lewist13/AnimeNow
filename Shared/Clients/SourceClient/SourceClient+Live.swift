@@ -8,6 +8,7 @@
 import Foundation
 import ComposableArchitecture
 import URLRouting
+import Combine
 
 extension SourceClient {
     static let live: Self = {
@@ -57,6 +58,8 @@ extension SourceClient {
 //                    .mapError { $0 as? API.Error ?? .badServerResponse("Failed to get anilist anime for episodes.") }
 //                    .eraseToEffect()
 
+                // TODO: Use both enime and consumet to retrieve episode info
+
                 // Using Enime API for episode information provides a more high quality thumbnails and is faster to fetch at the moment.
 
                 return mappingResponse
@@ -91,10 +94,21 @@ extension SourceClient {
             sources: { episodeId in
                 switch episodeId {
                 case .enime(let episodeId):
-                    let endpoint = EnimeAPI.Endpoint.episode(episodeId)
-                    return API.request(enimeApi, endpoint, EnimeAPI.Episode.self)
+                    let endpoint = ConsumetAPI.Endpoint.enime(.watch(episodeId: episodeId))
+                    return API.request(consumetApi, endpoint, ConsumetAPI.StreamingLinksPayload.self)
                         .map { $0?.sources ?? [] }
-                        .map(convertEnimeSourceToSource(sources:))
+                        .map(convertConumentEnimeSourceToSource(sources:))
+//                        .map({ sources in
+//                            sources.map(<#T##(Output) -> NewOutput#>)
+//                        })
+//                        .map(convertEnimeSourceToSource(sources:))
+                        .eraseToEffect()
+
+//                    let endpoint = EnimeAPI.Endpoint.episode(episodeId)
+//                    return API.request(enimeApi, endpoint, EnimeAPI.Episode.self)
+//                        .map { $0?.sources ?? [] }
+//                        .map(convertEnimeSourceToSource(sources:))
+//                        .eraseToEffect()
                 case .consumet(_):
                     return .init(value: [])
                 case .zoro(_):
@@ -108,6 +122,17 @@ extension SourceClient {
 }
 
 // MARK: - Consumet Converters
+
+fileprivate func convertConumentEnimeSourceToSource(sources: [ConsumetAPI.StreamingLink]) -> [EpisodeSource] {
+    sources.map { streaminglink in
+        EpisodeSource(
+            id: "",
+            url: URL(string: streaminglink.url)!,
+            provider: "Unknown",
+            subbed: false
+        )
+    }
+}
 
 fileprivate func convertConsumetEpisodeToEpisode(episodes: [ConsumetAPI.Episode]) -> [Episode] {
     episodes.compactMap { episode in
@@ -169,6 +194,13 @@ fileprivate func convertEnimeSourceToSource(sources: [EnimeAPI.Source]) -> [Epis
 fileprivate class ConsumetAPI: APIRoute {
     enum Endpoint: Equatable {
         case anilist(AnilistEndpoint)
+        case enime(EnimeEndpoint)
+
+        enum EnimeEndpoint: Equatable {
+            case watch(episodeId: String)
+            case query(String)
+            case info(animeId: String)
+        }
 
         enum AnilistEndpoint: Equatable {
             case animeInfo(animeId: Int, options: AnimeInfoOptions)
@@ -192,6 +224,27 @@ fileprivate class ConsumetAPI: APIRoute {
 
     let router: AnyParserPrinter<URLRequestData, Endpoint> = {
         OneOf {
+            Route(.case(Endpoint.enime)) {
+                Path { "anime"; "enime" }
+
+                OneOf {
+                    Route(.case(Endpoint.EnimeEndpoint.query)) {
+                        Path { Parse(.string) }
+                    }
+                    Route(.case(Endpoint.EnimeEndpoint.info(animeId:))) {
+                        Path { "info" }
+                        Query {
+                            Field("id") { Parse(.string) }
+                        }
+                    }
+                    Route(.case(Endpoint.EnimeEndpoint.watch(episodeId:))) {
+                        Path { "watch" }
+                        Query {
+                            Field("episodeId") { Parse(.string) }
+                        }
+                    }
+                }
+            }
             Route(.case(Endpoint.anilist)) {
                 Path { "meta"; "anilist" }
 
@@ -238,6 +291,20 @@ fileprivate extension ConsumetAPI {
         let image: String?
         let description: String?
     }
+
+    struct StreamingLinksPayload: Decodable {
+        let headers: HeaderReferer
+        let sources: [StreamingLink]
+    }
+
+    struct HeaderReferer: Decodable {
+        let Referer: String
+    }
+
+    struct StreamingLink: Decodable {
+        let url: String
+        let isM3U8: Bool
+    }
 }
 
 // MARK: - Enime Route
@@ -250,6 +317,7 @@ fileprivate class EnimeAPI: APIRoute {
         case mapping(ExternalProvider)
         case fetchEpisodes(animeId: String)
         case episode(String)
+        case source(id: String)
 
         struct ExternalProvider: Equatable, Decodable {
             var provider: Provider
@@ -270,6 +338,9 @@ fileprivate class EnimeAPI: APIRoute {
 
     let router: AnyParserPrinter<URLRequestData, Endpoint> = {
         OneOf {
+            Route(.case(Endpoint.source(id:))) {
+                Path { "source"; Parse(.string) }
+            }
             Route(.case(Endpoint.episode)) {
                 Path { "episode"; Parse(.string) }
             }

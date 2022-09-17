@@ -11,6 +11,26 @@ import ComposableArchitecture
 struct VideoPlayerView: View {
     let store: Store<VideoPlayerCore.State, VideoPlayerCore.Action>
 
+    struct ViewState: Equatable {
+        enum PlayerStatus: String {
+            case playing, paused, stopped
+        }
+
+        let status: PlayerStatus
+        let isLoaded: Bool
+        let isPlaying: Bool
+        let isBuffering: Bool
+        let progress: Double
+
+        init(state: VideoPlayerCore.State) {
+            self.status = state.avPlayerState.rate > 0 ? .playing : .paused
+            self.isLoaded = state.avPlayerState.status == .readyToPlay
+            self.isPlaying = state.avPlayerState.timeStatus == .playing
+            self.isBuffering = state.avPlayerState.timeStatus == .waitingToPlayAtSpecifiedRate
+            self.progress = state.avPlayerState.currentTime.seconds
+        }
+    }
+
     var body: some View {
         ZStack {
             AVPlayerView(
@@ -19,6 +39,15 @@ struct VideoPlayerView: View {
                     action: VideoPlayerCore.Action.player
                 )
             )
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+            WithViewStore(
+                store.scope(state: ViewState.init(state:))
+            ) { viewState in
+                if viewState.state.isBuffering || !viewState.state.isLoaded {
+                    ProgressView()
+                }
+            }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             playerOverlay
@@ -114,13 +143,13 @@ extension VideoPlayerView {
     @ViewBuilder
     var playButton: some View {
         WithViewStore(
-            store.scope(state: \.playerStatus)
-        ) { playerStateViewStore in
+            store.scope(state: ViewState.init(state:))
+        ) { viewState in
             Button {
-                playerStateViewStore.send(.togglePlayback)
+                viewState.send(.togglePlayback)
             } label: {
                 Image(
-                    systemName: playerStateViewStore.state == .playing ? "pause.fill" : "play.fill"
+                    systemName: viewState.state.isPlaying ? "pause.fill" : "play.fill"
                 )
                 .foregroundColor(Color.white)
             }

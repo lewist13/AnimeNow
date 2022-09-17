@@ -9,6 +9,7 @@ import Foundation
 import URLRouting
 import ComposableArchitecture
 import SociableWeaver
+import Combine
 
 protocol APIRoute {
     associatedtype Endpoint
@@ -29,9 +30,10 @@ enum API {
         _ api: API,
         _ endpoint: API.Endpoint,
         _ outputType: Output.Type? = nil
-    ) -> Effect<Output?, Self.Error> {
+    ) -> AnyPublisher<Output?, Self.Error> {
         guard var request = try? api.router.baseURL(api.baseURL.absoluteString).request(for: endpoint) else {
-            return .init(error: .badURL)
+            return Fail(error: Self.Error.badURL)
+                .eraseToAnyPublisher()
         }
 
         api.applyHeaders(request: &request)
@@ -55,6 +57,6 @@ enum API {
                 }
             }
             .mapError { $0 as? Self.Error ?? .badServerResponse("Error received from server.") }
-            .eraseToEffect()
+            .eraseToAnyPublisher()
     }
 }
