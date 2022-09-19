@@ -8,6 +8,7 @@
 
 import Foundation
 import ComposableArchitecture
+import SwiftUI
 
 enum HomeCore {
     typealias LoadableAnime = LoadableState<IdentifiedArrayOf<Anime>>
@@ -26,6 +27,7 @@ enum HomeCore {
     enum Action: Equatable, BindableAction {
         case onAppear
         case animeTapped(Anime)
+        case setAnimeDetail(AnimeDetailCore.State?)
         case fetchedAnime(keyPath: WritableKeyPath<State, LoadableAnime>, result: Result<[Anime], API.Error>)
         case animeDetail(AnimeDetailCore.Action)
         case binding(BindingAction<HomeCore.State>)
@@ -33,6 +35,8 @@ enum HomeCore {
 
     struct Environment {
         let animeClient: AnimeClient
+        let mainQueue: AnySchedulerOf<DispatchQueue>
+        let mainRunLoop: AnySchedulerOf<RunLoop>
     }
 }
 
@@ -41,7 +45,13 @@ extension HomeCore {
         AnimeDetailCore.reducer.optional().pullback(
             state: \.animeDetail,
             action: /HomeCore.Action.animeDetail,
-            environment: { env in .init(animeClient: env.animeClient) }
+            environment: {
+                .init(
+                    animeClient: $0.animeClient,
+                    mainQueue: $0.mainQueue,
+                    mainRunLoop: $0.mainRunLoop
+                )
+            }
         ),
         .init { state, action, environment in
             switch (action) {
@@ -57,45 +67,60 @@ extension HomeCore {
                 return .merge(
                     environment.animeClient.getTopTrendingAnime()
                         .subscribe(on: DispatchQueue.global(qos: .userInteractive))
-                        .receive(on: DispatchQueue.main)
+                        .receive(on: environment.mainQueue)
                         .catchToEffect()
                         .map { HomeCore.Action.fetchedAnime(keyPath: \.topTrendingAnime, result: $0) },
                     environment.animeClient.getTopUpcomingAnime()
                         .subscribe(on: DispatchQueue.global(qos: .userInteractive))
-                        .receive(on: DispatchQueue.main)
+                        .receive(on: environment.mainQueue)
                         .catchToEffect()
                         .map { HomeCore.Action.fetchedAnime(keyPath: \.topUpcomingAnime, result: $0) },
                     environment.animeClient.getTopAiringAnime()
                         .subscribe(on: DispatchQueue.global(qos: .userInteractive))
-                        .receive(on: DispatchQueue.main)
+                        .receive(on: environment.mainQueue)
                         .catchToEffect()
                         .map { HomeCore.Action.fetchedAnime(keyPath: \.topAiringAnime, result: $0) },
                     environment.animeClient.getHighestRatedAnime()
                         .subscribe(on: DispatchQueue.global(qos: .userInteractive))
-                        .receive(on: DispatchQueue.main)
+                        .receive(on: environment.mainQueue)
                         .catchToEffect()
                         .map { HomeCore.Action.fetchedAnime(keyPath: \.highestRatedAnime, result: $0) },
                     environment.animeClient.getMostPopularAnime()
                         .subscribe(on: DispatchQueue.global(qos: .userInteractive))
-                        .receive(on: DispatchQueue.main)
+                        .receive(on: environment.mainQueue)
                         .catchToEffect()
                         .map { HomeCore.Action.fetchedAnime(keyPath: \.mostPopularAnime, result: $0) }
                     )
+            case .fetchedAnime(let keyPath, .success(let anime)):
+                state[keyPath: keyPath] = .success(.init(uniqueElements: anime))
+            case .fetchedAnime(let keyPath, .failure(let error)):
+                print(error)
+                state[keyPath: keyPath] = .failed
+
+            // Anime Detail
+
+            case .setAnimeDetail(let animeMaybe):
+                state.animeDetail = animeMaybe
             case .animeTapped(let anime):
-                state.animeDetail = .init(anime: anime)
-            case .fetchedAnime(let keyPath, let result):
-                switch result {
-                case .success(let anime):
-                    state[keyPath: keyPath] = .success(.init(uniqueElements: anime))
-                case .failure(let error):
-                    print(error)
-                    state[keyPath: keyPath] = .failed
-                }
-            case .binding(_):
+                return .init(value: .setAnimeDetail(.init(anime: anime)))
+                    .receive(
+                        on: environment.mainQueue.animation(
+                            .spring(
+                                response: 0.4,
+                                dampingFraction: 0.8
+                            )
+                        )
+                    )
+                    .eraseToEffect()
+            case .animeDetail(.close):
+                return .init(value: .setAnimeDetail(nil))
+                    .receive(on: environment.mainQueue.animation(.linear(duration: 0.2)))
+                    .eraseToEffect()
+            case .animeDetail:
                 break
-            case .animeDetail(.onClose):
-                state.animeDetail = nil
-            case .animeDetail(_):
+
+            // Binding
+            case .binding:
                 break
             }
             return .none

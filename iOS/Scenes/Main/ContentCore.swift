@@ -27,9 +27,29 @@ enum ContentCore {
 
     struct Environment {
         let animeClient: AnimeClient
+        let mainQueue: AnySchedulerOf<DispatchQueue>
         let mainRunLoop: AnySchedulerOf<RunLoop>
+        let orientationClient: OrientationClient
         let userDefaultsClient: UserDefaultsClient
     }
+}
+
+extension ContentCore.Environment {
+    static let live = Self(
+        animeClient: .live(),
+        mainQueue: .main.eraseToAnyScheduler(),
+        mainRunLoop: .main.eraseToAnyScheduler(),
+        orientationClient: .live,
+        userDefaultsClient: .live
+    )
+
+    static let mock = Self.init(
+        animeClient: .mock,
+        mainQueue: .main.eraseToAnyScheduler(),
+        mainRunLoop: .main.eraseToAnyScheduler(),
+        orientationClient: .mock,
+        userDefaultsClient: .mock
+    )
 }
 
 extension ContentCore {
@@ -37,7 +57,12 @@ extension ContentCore {
         HomeCore.reducer.pullback(
             state: \.home,
             action: /ContentCore.Action.home,
-            environment: { .init(animeClient: $0.animeClient)
+            environment: {
+                .init(
+                    animeClient: $0.animeClient,
+                    mainQueue: $0.mainQueue,
+                    mainRunLoop: $0.mainRunLoop
+                )
             }
         ),
         SearchCore.reducer.pullback(
@@ -54,14 +79,24 @@ extension ContentCore {
         VideoPlayerCore.reducer.optional().pullback(
             state: \.videoPlayer,
             action: /ContentCore.Action.videoPlayer,
-            environment: { .init(mainQueue: $0.mainRunLoop) }
+            environment: {
+                .init(
+                    mainQueue: $0.mainRunLoop,
+                    mainRunLoop: $0.mainRunLoop,
+                    userDefaultsClient: $0.userDefaultsClient
+                )
+            }
         ),
         .init { state, action, environment in
             switch action {
             case .home(.animeDetail(.fetchedSources(.success(let episodeSources)))):
                 state.videoPlayer = .init(sources: episodeSources)
+                return environment.orientationClient.setOrientation(.landscapeRight)
+                    .fireAndForget()
             case .videoPlayer(.close):
                 state.videoPlayer = nil
+                return environment.orientationClient.setOrientation(.portrait)
+                    .fireAndForget()
             default:
                 break
             }

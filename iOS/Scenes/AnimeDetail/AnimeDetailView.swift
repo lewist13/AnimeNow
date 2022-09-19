@@ -29,9 +29,15 @@ struct AnimeDetailView: View {
                 }
             }
         }
+        .statusBar(hidden: true)
         .frame(maxWidth: .infinity)
         .edgesIgnoringSafeArea(.top)
+        .background(Color.black.ignoresSafeArea())
         .overlay(closeButton)
+        .transition(.move(edge: .bottom).combined(with: .opacity))
+        .onAppear {
+            ViewStore(store.stateless).send(.onAppear)
+        }
     }
 }
 
@@ -39,32 +45,21 @@ struct AnimeDetailView: View {
 
 extension AnimeDetailView {
     @ViewBuilder var closeButton: some View {
-        WithViewStore(
-            store.stateless
-        ) { viewStore in
-            Button {
-                viewStore.send(
-                    .onClose,
-                    animation: Animation.spring(
-                        response: 0.3,
-                        dampingFraction: 0.8
-                    )
-                )
-            } label: {
-                Image(
-                    systemName: "xmark"
-                )
-                .font(Font.system(size: 14, weight: .black))
-                .foregroundColor(Color.white.opacity(0.9))
-            }
-            .buttonStyle(BlurredButtonStyle())
-            .clipShape(Circle())
-            .padding(.trailing)
-            .onAppear {
-                viewStore.send(.onAppear)
-            }
+        Button {
+            ViewStore(store.stateless)
+                .send(.closeButtonPressed)
+        } label: {
+            Image(
+                systemName: "xmark"
+            )
+            .font(Font.system(size: 14, weight: .black))
+            .foregroundColor(Color.white.opacity(0.9))
         }
+        .buttonStyle(BlurredButtonStyle())
+        .clipShape(Circle())
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+        .padding()
+        .edgesIgnoringSafeArea(.top)
     }
 }
 

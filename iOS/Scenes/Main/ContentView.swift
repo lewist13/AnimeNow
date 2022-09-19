@@ -12,54 +12,26 @@ struct ContentView: View {
     let store: Store<ContentCore.State, ContentCore.Action>
 
     var body: some View {
-//        TabView {
+        // MARK: Home View
 
-            // MARK: Home View
-
-            HomeView(
-                store: store.scope(
-                    state: \.home,
-                    action: ContentCore.Action.home
-                )
+        HomeView(
+            store: store.scope(
+                state: \.home,
+                action: ContentCore.Action.home
             )
-            .fullScreenStore(
-                store: store.scope(
+        )
+        .overlay(
+            IfLetStore(
+                store.scope(
                     state: \.videoPlayer,
                     action: ContentCore.Action.videoPlayer
-                ),
-                onDismiss: { },
-                destination: { videoPlayerStore in
-                    VideoPlayerView(
-                        store: videoPlayerStore
-                    )
-                }
-            )
-//            .tabItem {
-//                Label("Home", systemImage: "house")
-//            }
-
-            // MARK: Search View
-
-//            SearchView(
-//                store: store.scope(
-//                    state: \.search,
-//                    action: ContentCore.Action.search
-//                )
-//            )
-//            .tabItem {
-//                Label("Search", systemImage: "magnifyingglass")
-//            }
-//
-//            SettingsView(
-//                store: store.scope(
-//                    state: \.settings,
-//                    action: ContentCore.Action.settings
-//                )
-//            )
-//            .tabItem {
-//                Label("Settings", systemImage: "gearshape")
-//            }
-//        }
+                )
+            ) {
+                VideoPlayerView(
+                    store: $0
+                )
+            }
+        )
     }
 }
 
@@ -69,11 +41,7 @@ struct ContentView_Previews: PreviewProvider {
             store: .init(
                 initialState: .init(),
                 reducer: ContentCore.reducer,
-                environment: .init(
-                    animeClient: .mock,
-                    mainRunLoop: .main,
-                    userDefaultsClient: .mock
-                )
+                environment: .mock
             )
         )
         .preferredColorScheme(.dark)

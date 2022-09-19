@@ -39,6 +39,16 @@
 		13446E8228CA4AB100F815C6 /* SettingsCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13446E8028CA4AB100F815C6 /* SettingsCore.swift */; };
 		134E0E9228D125C000A5F5E5 /* UserDefaultsClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 134E0E9128D125C000A5F5E5 /* UserDefaultsClient.swift */; };
 		134E0E9328D125C000A5F5E5 /* UserDefaultsClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 134E0E9128D125C000A5F5E5 /* UserDefaultsClient.swift */; };
+		134FAA1C28D6FAFC00B081FE /* String+Time.swift in Sources */ = {isa = PBXBuildFile; fileRef = 134FAA1B28D6FAFC00B081FE /* String+Time.swift */; };
+		134FAA1D28D6FAFC00B081FE /* String+Time.swift in Sources */ = {isa = PBXBuildFile; fileRef = 134FAA1B28D6FAFC00B081FE /* String+Time.swift */; };
+		134FAA1F28D6FBC200B081FE /* CMTime+String.swift in Sources */ = {isa = PBXBuildFile; fileRef = 134FAA1E28D6FBC200B081FE /* CMTime+String.swift */; };
+		134FAA2028D6FBC200B081FE /* CMTime+String.swift in Sources */ = {isa = PBXBuildFile; fileRef = 134FAA1E28D6FBC200B081FE /* CMTime+String.swift */; };
+		134FAA2428D762A200B081FE /* OrientationClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 134FAA2328D762A200B081FE /* OrientationClient.swift */; };
+		134FAA2528D762A200B081FE /* OrientationClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 134FAA2328D762A200B081FE /* OrientationClient.swift */; };
+		134FAA2728D7637900B081FE /* OrientationClient+Live.swift in Sources */ = {isa = PBXBuildFile; fileRef = 134FAA2628D7637900B081FE /* OrientationClient+Live.swift */; };
+		134FAA2828D7637900B081FE /* OrientationClient+Live.swift in Sources */ = {isa = PBXBuildFile; fileRef = 134FAA2628D7637900B081FE /* OrientationClient+Live.swift */; };
+		134FAA2A28D7638400B081FE /* OrientationClient+Mock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 134FAA2928D7638400B081FE /* OrientationClient+Mock.swift */; };
+		134FAA2B28D7638400B081FE /* OrientationClient+Mock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 134FAA2928D7638400B081FE /* OrientationClient+Mock.swift */; };
 		1361FD2E28CE97BF00D7C569 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1361FD2D28CE97BF00D7C569 /* Theme.swift */; };
 		1361FD2F28CE97BF00D7C569 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1361FD2D28CE97BF00D7C569 /* Theme.swift */; };
 		1363011C28C5C49F0076BF0A /* TinyGraphQL in Frameworks */ = {isa = PBXBuildFile; productRef = 1363011B28C5C49F0076BF0A /* TinyGraphQL */; };
@@ -125,6 +135,11 @@
 		13446E7F28CA4AB100F815C6 /* SettingsView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		13446E8028CA4AB100F815C6 /* SettingsCore.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SettingsCore.swift; sourceTree = "<group>"; };
 		134E0E9128D125C000A5F5E5 /* UserDefaultsClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDefaultsClient.swift; sourceTree = "<group>"; };
+		134FAA1B28D6FAFC00B081FE /* String+Time.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+Time.swift"; sourceTree = "<group>"; };
+		134FAA1E28D6FBC200B081FE /* CMTime+String.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CMTime+String.swift"; sourceTree = "<group>"; };
+		134FAA2328D762A200B081FE /* OrientationClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrientationClient.swift; sourceTree = "<group>"; };
+		134FAA2628D7637900B081FE /* OrientationClient+Live.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "OrientationClient+Live.swift"; sourceTree = "<group>"; };
+		134FAA2928D7638400B081FE /* OrientationClient+Mock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "OrientationClient+Mock.swift"; sourceTree = "<group>"; };
 		1361FD2D28CE97BF00D7C569 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		13650F3228CFE0BF002E20DD /* AnimeClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimeClient.swift; sourceTree = "<group>"; };
 		13650F3528D014B1002E20DD /* AnimeClient+Live.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AnimeClient+Live.swift"; sourceTree = "<group>"; };
@@ -246,6 +261,24 @@
 				1327550828D2A7C400A6C525 /* UserDefaultsClient+Mock.swift */,
 			);
 			path = UserDefaultsClient;
+			sourceTree = "<group>";
+		};
+		134FAA2128D7628400B081FE /* Clients */ = {
+			isa = PBXGroup;
+			children = (
+				134FAA2228D7628C00B081FE /* OrientationClient */,
+			);
+			path = Clients;
+			sourceTree = "<group>";
+		};
+		134FAA2228D7628C00B081FE /* OrientationClient */ = {
+			isa = PBXGroup;
+			children = (
+				134FAA2328D762A200B081FE /* OrientationClient.swift */,
+				134FAA2628D7637900B081FE /* OrientationClient+Live.swift */,
+				134FAA2928D7638400B081FE /* OrientationClient+Mock.swift */,
+			);
+			path = OrientationClient;
 			sourceTree = "<group>";
 		};
 		1361FD3028CE9D4100D7C569 /* SourceClient */ = {
@@ -384,6 +417,7 @@
 		13FC21C128C3960E000F0F79 /* iOS */ = {
 			isa = PBXGroup;
 			children = (
+				134FAA2128D7628400B081FE /* Clients */,
 				137A818428C5342F00B69503 /* Scenes */,
 			);
 			path = iOS;
@@ -457,6 +491,8 @@
 				13386AED28CC2892005E8352 /* ShimmerView.swift */,
 				1361FD2D28CE97BF00D7C569 /* Theme.swift */,
 				132754FE28D28F5A00A6C525 /* Array+Duplicates.swift */,
+				134FAA1B28D6FAFC00B081FE /* String+Time.swift */,
+				134FAA1E28D6FBC200B081FE /* CMTime+String.swift */,
 			);
 			path = "Supporting Files";
 			sourceTree = "<group>";
@@ -615,6 +651,7 @@
 				13E4BCF128C829A80039D880 /* AnimeDetailCore.swift in Sources */,
 				1327550928D2A7C400A6C525 /* UserDefaultsClient+Mock.swift in Sources */,
 				134E0E9228D125C000A5F5E5 /* UserDefaultsClient.swift in Sources */,
+				134FAA2A28D7638400B081FE /* OrientationClient+Mock.swift in Sources */,
 				13B14A0628D1710400BD923B /* SourceClient+Mock.swift in Sources */,
 				13FC21DF28C3A3FD000F0F79 /* Persistence.swift in Sources */,
 				13FC21C828C39762000F0F79 /* RepositoryClient.swift in Sources */,
@@ -624,6 +661,7 @@
 				1384FF7928CB93FA003B011E /* Navigation+Extension.swift in Sources */,
 				13D68EAF28D38D1B00B0D5DB /* VideoPlayerView.swift in Sources */,
 				132754FC28D2883500A6C525 /* CompressableText.swift in Sources */,
+				134FAA1F28D6FBC200B081FE /* CMTime+String.swift in Sources */,
 				138066EC28C5699F0012DAFB /* AnimeItemView.swift in Sources */,
 				13FC747928CFB54600A77818 /* SourceClient+Live.swift in Sources */,
 				13386AEE28CC2892005E8352 /* ShimmerView.swift in Sources */,
@@ -634,6 +672,8 @@
 				13650F3828D04424002E20DD /* AnimeClient+Mock.swift in Sources */,
 				1327553428D2C16C00A6C525 /* AVPlayerView.swift in Sources */,
 				13386AF128CC3239005E8352 /* BlurView.swift in Sources */,
+				134FAA2428D762A200B081FE /* OrientationClient.swift in Sources */,
+				134FAA2728D7637900B081FE /* OrientationClient+Live.swift in Sources */,
 				13FC21CE28C397A2000F0F79 /* DomainModel.swift in Sources */,
 				13378BA828C9B4E5000FF0D8 /* Throwable.swift in Sources */,
 				1327553328D2C16C00A6C525 /* VideoPlayerCore.swift in Sources */,
@@ -649,6 +689,7 @@
 				13C3536D28C308A000A54E7E /* AnimeNowApp.swift in Sources */,
 				13FC747628CFB4FB00A77818 /* SourceClient.swift in Sources */,
 				13FC21CC28C39779000F0F79 /* RepositoryClient+Mock.swift in Sources */,
+				134FAA1C28D6FAFC00B081FE /* String+Time.swift in Sources */,
 				13C3536F28C308A000A54E7E /* ContentView.swift in Sources */,
 				13446E8128CA4AB100F815C6 /* SettingsView.swift in Sources */,
 			);
@@ -668,11 +709,14 @@
 				1384FF7A28CB93FA003B011E /* Navigation+Extension.swift in Sources */,
 				1327550F28D2AACB00A6C525 /* AnimeClient+Mock.swift in Sources */,
 				1327550A28D2A7C400A6C525 /* UserDefaultsClient+Mock.swift in Sources */,
+				134FAA2528D762A200B081FE /* OrientationClient.swift in Sources */,
 				134E0E9328D125C000A5F5E5 /* UserDefaultsClient.swift in Sources */,
 				1327551128D2AACB00A6C525 /* AnimeClient.swift in Sources */,
+				134FAA2828D7637900B081FE /* OrientationClient+Live.swift in Sources */,
 				1327551228D2AAD300A6C525 /* GraphQLModels.swift in Sources */,
 				13C3536C28C308A000A54E7E /* AnimeNow.xcdatamodeld in Sources */,
 				13FC747428CFA10A00A77818 /* EpisodeSource.swift in Sources */,
+				134FAA2028D6FBC200B081FE /* CMTime+String.swift in Sources */,
 				1327550028D28F5A00A6C525 /* Array+Duplicates.swift in Sources */,
 				13C3536E28C308A000A54E7E /* AnimeNowApp.swift in Sources */,
 				13FC21D528C39928000F0F79 /* RepositoryClient+Mock.swift in Sources */,
@@ -690,7 +734,9 @@
 				1327552028D2ABAE00A6C525 /* HomeCore.swift in Sources */,
 				13FC21D228C3991F000F0F79 /* DomainModel.swift in Sources */,
 				13FC21D428C39928000F0F79 /* RepositoryClient+Live.swift in Sources */,
+				134FAA1D28D6FAFC00B081FE /* String+Time.swift in Sources */,
 				132754F728D269B200A6C525 /* ListClient+AniList.swift in Sources */,
+				134FAA2B28D7638400B081FE /* OrientationClient+Mock.swift in Sources */,
 				13FC21D128C3991C000F0F79 /* ManagedModel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -823,6 +869,7 @@
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
@@ -854,6 +901,7 @@
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;

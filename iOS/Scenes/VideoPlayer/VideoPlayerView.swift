@@ -12,22 +12,18 @@ struct VideoPlayerView: View {
     let store: Store<VideoPlayerCore.State, VideoPlayerCore.Action>
 
     struct ViewState: Equatable {
-        enum PlayerStatus: String {
-            case playing, paused, stopped
-        }
-
-        let status: PlayerStatus
         let isLoaded: Bool
         let isPlaying: Bool
         let isBuffering: Bool
-        let progress: Double
+        let currentTime: Double
+        let duration: Double
 
         init(state: VideoPlayerCore.State) {
-            self.status = state.avPlayerState.rate > 0 ? .playing : .paused
             self.isLoaded = state.avPlayerState.status == .readyToPlay
             self.isPlaying = state.avPlayerState.timeStatus == .playing
             self.isBuffering = state.avPlayerState.timeStatus == .waitingToPlayAtSpecifiedRate
-            self.progress = state.avPlayerState.currentTime.seconds
+            self.currentTime = state.avPlayerState.currentTime.seconds
+            self.duration = state.avPlayerState.duration?.seconds ?? 0
         }
     }
 
@@ -39,24 +35,20 @@ struct VideoPlayerView: View {
                     action: VideoPlayerCore.Action.player
                 )
             )
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-
-            WithViewStore(
-                store.scope(state: ViewState.init(state:))
-            ) { viewState in
-                if viewState.state.isBuffering || !viewState.state.isLoaded {
-                    ProgressView()
-                }
+            .onTapGesture {
+                ViewStore(store.stateless).send(.tappedPlayer)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+            loadingView
 
             playerOverlay
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .ignoresSafeArea()
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.black.ignoresSafeArea())
         .statusBar(hidden: true)
         .onAppear {
-            ViewStore(store.stateless).send(.startPlayer)
+            ViewStore(store.stateless).send(.onAppear)
         }
     }
 }
@@ -64,27 +56,47 @@ struct VideoPlayerView: View {
 extension VideoPlayerView {
     @ViewBuilder
     var playerOverlay: some View {
-        GeometryReader { geometry in
-            VStack(alignment: .leading) {
-                topPlayerItems
-                Spacer()
-                playerControls
+        WithViewStore(
+            store.scope(state: \.showingOverlay)
+        ) { showingOverlayViewStore in
+            Group {
+                if showingOverlayViewStore.state {
+                    GeometryReader { geometry in
+                        VStack(alignment: .leading) {
+                            topPlayerItems
+                            Spacer()
+                            playerControls
+                        }
+                        .padding()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .background(
+                            LinearGradient(
+                                colors: [
+                                    Color.black,
+                                    Color.clear,
+                                    Color.black
+                                ],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                            .opacity(0.5)
+                        )
+                    }
+                }
             }
-            .padding()
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(
-                LinearGradient(
-                    colors: [
-                        Color.black,
-                        Color.clear,
-                        Color.black
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .opacity(0.5)
-            )
         }
+    }
+
+    @ViewBuilder
+    var loadingView: some View {
+        WithViewStore(
+            store.scope(state: ViewState.init(state:))
+        ) { viewState in
+            if viewState.state.isBuffering || !viewState.state.isLoaded {
+                ProgressView()
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
@@ -161,13 +173,28 @@ extension VideoPlayerView {
     @ViewBuilder
     var seekbarView: some View {
         HStack {
-            Text("0:00:00")
-            Slider(
-                value: .constant(5),
-                in: 0...10
-            )
-            .padding(.horizontal)
-            Text("1:00:00")
+            WithViewStore(
+                store.scope(
+                    state: ViewState.init(state:)
+                )
+            ) { viewState in
+                Text(viewState.state.currentTime.timeFormatted)
+
+                Slider(
+                    value: .init(
+                        get: { viewState.state.currentTime },
+                        set: { viewState.send(.slidingSeeker($0)) }
+                    ),
+                    in: 0...viewState.state.duration,
+                    onEditingChanged: { editing in
+                        viewState.send(editing ? .startSeeking : .doneSeeking)
+                    }
+                )
+                .disabled(viewState.state.duration == 0)
+                .padding(.horizontal)
+
+                Text(viewState.state.duration.timeFormatted)
+            }
         }
         .foregroundColor(.white)
         .font(.footnote.monospacedDigit())
@@ -201,7 +228,9 @@ struct VideoPlayerView_Previews: PreviewProvider {
                     ),
                     reducer: VideoPlayerCore.reducer,
                     environment: .init(
-                        mainQueue: .main
+                        mainQueue: .main.eraseToAnyScheduler(),
+                        mainRunLoop: .main.eraseToAnyScheduler(),
+                        userDefaultsClient: .mock
                     )
                 )
             )

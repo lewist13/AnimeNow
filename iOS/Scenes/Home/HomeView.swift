@@ -56,23 +56,8 @@ struct HomeView: View {
                     )
                 }
             }
-            .onAppear {
-                ViewStore(store).send(.onAppear)
-            }
-//            .fullScreenStore(
-//                store: store.scope(
-//                    state: \.animeDetail,
-//                    action: HomeCore.Action.animeDetail
-//                )
-//            ) {
-//
-//            } destination: {
-//                AnimeDetailView(
-//                    store: $0,
-//                    namespace: animeDetailNamespace
-//                )
-//            }
-
+        }
+        .overlay(
             IfLetStore(
                 store.scope(
                     state: \.animeDetail,
@@ -83,8 +68,10 @@ struct HomeView: View {
                     store: $0,
                     namespace: animeDetailNamespace
                 )
-                .background(Color.black)
             }
+        )
+        .onAppear {
+            ViewStore(store).send(.onAppear)
         }
     }
 }
@@ -128,13 +115,7 @@ extension HomeView {
                                         namespace: animeDetailNamespace
                                     )
                                     .onTapGesture {
-                                        viewStore.send(
-                                            .animeTapped(anime),
-                                            animation: Animation.spring(
-                                                response: 0.3,
-                                                dampingFraction: 0.8
-                                            )
-                                        )
+                                        viewStore.send(.animeTapped(anime))
                                     }
                                 }
                             }
@@ -212,7 +193,9 @@ struct HomeView_Previews: PreviewProvider {
                 initialState: .init(),
                 reducer: HomeCore.reducer,
                 environment: .init(
-                    animeClient: .mock
+                    animeClient: .mock,
+                    mainQueue: .main.eraseToAnyScheduler(),
+                    mainRunLoop: .main.eraseToAnyScheduler()
                 )
             )
         )

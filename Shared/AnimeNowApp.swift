@@ -16,11 +16,7 @@ struct AnimeNowApp: App {
                 store: .init(
                     initialState: .init(),
                     reducer: ContentCore.reducer,
-                    environment: .init(
-                        animeClient: .live(),
-                        mainRunLoop: .main,
-                        userDefaultsClient: .live
-                    )
+                    environment: .live
                 )
             )
             .preferredColorScheme(.dark)

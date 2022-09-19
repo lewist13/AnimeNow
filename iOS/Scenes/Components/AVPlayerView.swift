@@ -19,9 +19,10 @@ struct AVPlayerCore {
         case play
         case pause
         case stop
+        case start(media: AVPlayerItem)
         case seek(to: CMTime)
         case appendMedia(AVPlayerItem)
-        case start(media: AVPlayerItem)
+        case videoGravity(AVLayerVideoGravity)
     }
 
     struct State: Equatable {
@@ -31,6 +32,8 @@ struct AVPlayerCore {
         var timeStatus = AVPlayer.TimeControlStatus.paused
         var rate = Float.zero
         var currentTime = CMTime.zero
+        var videoGravity = AVLayerVideoGravity.resizeAspect
+        var duration: CMTime?
     }
 
     enum Action: Equatable {
@@ -40,6 +43,8 @@ struct AVPlayerCore {
         case timeStatus(AVPlayer.TimeControlStatus, AVPlayer.WaitingReason?)
         case rate(Float)
         case currentTime(CMTime)
+        case videoGravity(AVLayerVideoGravity)
+        case duration(CMTime?)
     }
 }
 
@@ -54,24 +59,63 @@ extension AVPlayerCore {
             state.rate = rate
         case .currentTime(let currentTime):
             state.currentTime = currentTime
+        case .videoGravity(let gravity):
+            state.videoGravity = gravity
+        case .duration(let duration):
+            state.duration = duration
         case .avAction(let action):
             state.avAction = action
         }
         return .none
     }
-        .debug()
 }
 
 struct AVPlayerView: UIViewRepresentable {
     let store: Store<AVPlayerCore.State, AVPlayerCore.Action>
 
     func makeUIView(context: Context) -> AVPlayerUIView {
-        AVPlayerUIView(
+        let view = AVPlayerUIView(
             store: store
         )
+
+        view.avDelegate = context.coordinator
+        return view
     }
 
     func updateUIView(_ uiView: AVPlayerUIView, context: Context) {}
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(
+            self
+        )
+    }
+
+    class Coordinator: NSObject, AVPictureInPictureControllerDelegate {
+        private let parent: AVPlayerView
+
+        init(
+            _ parent: AVPlayerView
+        ) {
+            self.parent = parent
+        }
+
+        func pictureInPictureControllerWillStartPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
+            print("PIP Starting")
+        }
+
+        func pictureInPictureControllerWillStopPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
+            print("PIP Ending")
+        }
+
+        func pictureInPictureController(_ pictureInPictureController: AVPictureInPictureController, restoreUserInterfaceForPictureInPictureStopWithCompletionHandler completionHandler: @escaping (Bool) -> Void) {
+            print("PIP restore user interface")
+            completionHandler(true)
+        }
+
+        func pictureInPictureController(_ pictureInPictureController: AVPictureInPictureController, failedToStartPictureInPictureWithError error: Error) {
+            print("PIP Error starting PIP")
+        }
+    }
 }
 
 class AVPlayerUIView: UIView {
@@ -84,15 +128,27 @@ class AVPlayerUIView: UIView {
     override static var layerClass: AnyClass { AVPlayerLayer.self }
 
     private var timerObserver: Any? = nil
+    private var playerItemCancellables = Set<AnyCancellable>()
+
+    private var controller: AVPictureInPictureController?
+
+    weak var avDelegate: AVPictureInPictureControllerDelegate? {
+        set {
+            controller?.delegate = newValue
+        }
+        get {
+            controller?.delegate
+        }
+    }
 
     init(store: Store<AVPlayerCore.State, AVPlayerCore.Action>) {
         self.store = store
         self.viewStore = ViewStore(store)
         super.init(frame: .zero)
+        self.controller = .init(playerLayer: playerLayer)
 
         bindStore()
         self.playerLayer.player = player
-        self.isUserInteractionEnabled = false
     }
 
     required init?(coder: NSCoder) {
@@ -101,13 +157,12 @@ class AVPlayerUIView: UIView {
 
     private func bindStore() {
         viewStore.publisher.avAction
+            .compactMap { $0 }
             .sink { [weak self] action in
-                guard let action = action else {
-                    return
-                }
                 switch action {
                 case .initialize:
                     self?.observePlayer()
+                    self?.observePiP()
                 case .play:
                     self?.player.playImmediately(atRate: 1.0)
                 case .pause:
@@ -115,29 +170,47 @@ class AVPlayerUIView: UIView {
                 case .stop:
                     self?.player.pause()
                     self?.player.removeAllItems()
+                    self?.cancellables.removeAll()
+                    self?.playerItemCancellables.removeAll()
                 case .seek(to: let time):
-                    self?.player.seek(to: time)
+                    self?.player.seek(to: time, toleranceBefore: .zero, toleranceAfter: .zero)
                 case .appendMedia(let primaryItem):
                     self?.player.insert(primaryItem, after: nil)
                 case .start(media: let media):
                     self?.player.replaceCurrentItem(with: media)
+                case .videoGravity(let gravity):
+                    self?.playerLayer.videoGravity = gravity
                 }
             }
             .store(in: &cancellables)
     }
 
     private func observePlayer() {
-        DispatchQueue.global().async {
-            try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback, policy: .longFormVideo)
+        try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback, policy: .longFormVideo)
+
+        playerLayer.publisher(
+            for: \.videoGravity
+        )
+        .sink { [weak self] gravity in
+            self?.viewStore.send(.videoGravity(gravity))
         }
+        .store(in: &cancellables)
+        
+        player.publisher(
+            for: \.currentItem
+        )
+        .sink { [weak self] item in
+            self?.startListeningToNewPlayerItem(playerItem: item)
+        }
+        .store(in: &cancellables)
 
         player.publisher(
             for: \.status
         )
-            .sink(receiveValue: { [weak self] status in
-                self?.viewStore.send(.status(status))
-            })
-            .store(in: &cancellables)
+        .sink { [weak self] status in
+            self?.viewStore.send(.status(status))
+        }
+        .store(in: &cancellables)
 
         player.publisher(
             for: \.rate
@@ -167,16 +240,36 @@ class AVPlayerUIView: UIView {
 
         timerObserver = player.addPeriodicTimeObserver(
             forInterval: .init(
-                value: 1,
-                timescale: 1
+                seconds: 0.5,
+                preferredTimescale: CMTimeScale(NSEC_PER_SEC)
             ),
             queue: .main
         ) { [weak self] time in
             self?.viewStore.send(.currentTime(time))
         }
     }
-}
 
+    private func observePiP() {
+//        controller.publisher(for: \.)
+    }
+
+    private func startListeningToNewPlayerItem(playerItem: AVPlayerItem?) {
+        guard let playerItem = playerItem else {
+            playerItemCancellables.removeAll()
+            self.viewStore.send(.duration(nil))
+            return
+        }
+
+        playerItem.publisher(
+            for: \.duration
+        )
+        .filter(\.isNumeric)
+        .sink { [weak self] duration in
+            self?.viewStore.send(.duration(duration))
+        }
+        .store(in: &playerItemCancellables)
+    }
+}
 
 extension AVPlayer.Status: CustomStringConvertible, CustomDebugStringConvertible {
     public var debugDescription: String {
@@ -211,7 +304,7 @@ extension AVPlayer.TimeControlStatus: CustomStringConvertible, CustomDebugString
         case .playing:
             return "playing"
         @unknown default:
-            return "default"
+            return "default-unknown"
         }
     }
 }
