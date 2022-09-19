@@ -38,9 +38,7 @@ struct VideoPlayerView: View {
             .onTapGesture {
                 ViewStore(store.stateless).send(.tappedPlayer)
             }
-
             loadingView
-
             playerOverlay
         }
         .ignoresSafeArea()
@@ -59,29 +57,27 @@ extension VideoPlayerView {
         WithViewStore(
             store.scope(state: \.showingOverlay)
         ) { showingOverlayViewStore in
-            Group {
-                if showingOverlayViewStore.state {
-                    GeometryReader { geometry in
-                        VStack(alignment: .leading) {
-                            topPlayerItems
-                            Spacer()
-                            playerControls
-                        }
-                        .padding()
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .background(
-                            LinearGradient(
-                                colors: [
-                                    Color.black,
-                                    Color.clear,
-                                    Color.black
-                                ],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                            .opacity(0.5)
-                        )
+            if showingOverlayViewStore.state {
+                GeometryReader { geometry in
+                    VStack(alignment: .leading) {
+                        topPlayerItems
+                        Spacer()
+                        playerControls
                     }
+                    .padding()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(
+                        LinearGradient(
+                            colors: [
+                                Color.black,
+                                Color.clear,
+                                Color.black
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                        .opacity(0.5)
+                    )
                 }
             }
         }
@@ -178,7 +174,7 @@ extension VideoPlayerView {
                     state: ViewState.init(state:)
                 )
             ) { viewState in
-                Text(viewState.state.currentTime.timeFormatted)
+                Text(viewState.state.duration > 0 ? viewState.state.currentTime.timeFormatted : "--:--")
 
                 Slider(
                     value: .init(
@@ -193,7 +189,9 @@ extension VideoPlayerView {
                 .disabled(viewState.state.duration == 0)
                 .padding(.horizontal)
 
-                Text(viewState.state.duration.timeFormatted)
+                Text(
+                    viewState.state.duration > 0 ? viewState.state.duration.timeFormatted : "--:--"
+                )
             }
         }
         .foregroundColor(.white)

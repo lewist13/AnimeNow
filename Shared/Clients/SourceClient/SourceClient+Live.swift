@@ -98,10 +98,6 @@ extension SourceClient {
                     return API.request(consumetApi, endpoint, ConsumetAPI.StreamingLinksPayload.self)
                         .map { $0?.sources ?? [] }
                         .map(convertConumentEnimeSourceToSource(sources:))
-//                        .map({ sources in
-//                            sources.map(<#T##(Output) -> NewOutput#>)
-//                        })
-//                        .map(convertEnimeSourceToSource(sources:))
                         .eraseToEffect()
 
 //                    let endpoint = EnimeAPI.Endpoint.episode(episodeId)

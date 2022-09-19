@@ -29,9 +29,9 @@ struct AnimeDetailView: View {
                 }
             }
         }
-        .statusBar(hidden: true)
         .frame(maxWidth: .infinity)
         .edgesIgnoringSafeArea(.top)
+        .statusBar(hidden: true)
         .background(Color.black.ignoresSafeArea())
         .overlay(closeButton)
         .transition(.move(edge: .bottom).combined(with: .opacity))

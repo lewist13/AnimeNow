@@ -82,7 +82,7 @@ extension VideoPlayerCore {
                 state.showingOverlay = showing
             case .hideOverlayAnimationDelay:
                 return .init(value: .showOverlay(false))
-                    .delay(for: 2.5, scheduler: environment.mainQueue.animation(overlayVisibilityAnimation))
+                    .delay(for: 5, scheduler: environment.mainQueue.animation(overlayVisibilityAnimation))
                     .eraseToEffect()
                     .cancellable(id: HideOverlayAnimationTimeout())
             case .cancelHideOverlayAnimationDelay:
@@ -128,7 +128,7 @@ extension VideoPlayerCore {
                 )
             case .slidingSeeker(let val):
                 let duration = state.avPlayerState.duration ?? .zero
-                let seconds = Int64(max(0, min(val, duration.seconds)))
+                let seconds = CMTimeValue(max(0, min(val, duration.seconds)))
                 let newTime = CMTime(
                     value: seconds,
                     timescale: 1

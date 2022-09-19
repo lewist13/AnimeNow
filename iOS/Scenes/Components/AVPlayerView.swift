@@ -70,11 +70,11 @@ extension AVPlayerCore {
     }
 }
 
-struct AVPlayerView: UIViewRepresentable {
+struct AVPlayerView: UIViewControllerRepresentable {
     let store: Store<AVPlayerCore.State, AVPlayerCore.Action>
 
-    func makeUIView(context: Context) -> AVPlayerUIView {
-        let view = AVPlayerUIView(
+    func makeUIViewController(context: Context) -> PlayerViewController {
+        let view = PlayerViewController(
             store: store
         )
 
@@ -82,7 +82,7 @@ struct AVPlayerView: UIViewRepresentable {
         return view
     }
 
-    func updateUIView(_ uiView: AVPlayerUIView, context: Context) {}
+    func updateUIViewController(_ uiView: PlayerViewController, context: Context) {}
 
     func makeCoordinator() -> Coordinator {
         Coordinator(
@@ -118,19 +118,18 @@ struct AVPlayerView: UIViewRepresentable {
     }
 }
 
-class AVPlayerUIView: UIView {
+class PlayerViewController: UIViewController {
     private let store: Store<AVPlayerCore.State, AVPlayerCore.Action>
     private let viewStore: ViewStore<AVPlayerCore.State, AVPlayerCore.Action>
     private var cancellables: Set<AnyCancellable> = []
 
     private let player = AVQueuePlayer()
-    private var playerLayer: AVPlayerLayer { layer as! AVPlayerLayer }
-    override static var layerClass: AnyClass { AVPlayerLayer.self }
+    private lazy var playerLayer = AVPlayerLayer(player: player)
 
     private var timerObserver: Any? = nil
     private var playerItemCancellables = Set<AnyCancellable>()
 
-    private var controller: AVPictureInPictureController?
+    private lazy var controller: AVPictureInPictureController? = .init(playerLayer: playerLayer)
 
     weak var avDelegate: AVPictureInPictureControllerDelegate? {
         set {
@@ -141,14 +140,25 @@ class AVPlayerUIView: UIView {
         }
     }
 
+    override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
+        .landscape
+    }
+
+    override var shouldAutorotate: Bool {
+        true
+    }
+
+    override var prefersHomeIndicatorAutoHidden: Bool {
+        true
+    }
+
     init(store: Store<AVPlayerCore.State, AVPlayerCore.Action>) {
         self.store = store
-        self.viewStore = ViewStore(store)
-        super.init(frame: .zero)
-        self.controller = .init(playerLayer: playerLayer)
+        self.viewStore = .init(store)
+        super.init(nibName: nil, bundle: nil)
 
+        view.layer.insertSublayer(playerLayer, at: 0)
         bindStore()
-        self.playerLayer.player = player
     }
 
     required init?(coder: NSCoder) {
@@ -268,6 +278,11 @@ class AVPlayerUIView: UIView {
             self?.viewStore.send(.duration(duration))
         }
         .store(in: &playerItemCancellables)
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        playerLayer.frame = view.frame
     }
 }
 
