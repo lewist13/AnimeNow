@@ -119,9 +119,9 @@ extension SourceClient {
 
 // MARK: - Consumet Converters
 
-fileprivate func convertConumentEnimeSourceToSource(sources: [ConsumetAPI.StreamingLink]) -> [EpisodeSource] {
+fileprivate func convertConumentEnimeSourceToSource(sources: [ConsumetAPI.StreamingLink]) -> [Source] {
     sources.map { streaminglink in
-        EpisodeSource(
+        Source(
             id: "",
             url: URL(string: streaminglink.url)!,
             provider: "Unknown",
@@ -132,7 +132,7 @@ fileprivate func convertConumentEnimeSourceToSource(sources: [ConsumetAPI.Stream
 
 fileprivate func convertConsumetEpisodeToEpisode(episodes: [ConsumetAPI.Episode]) -> [Episode] {
     episodes.compactMap { episode in
-        var thumbainImages = [Anime.Image]()
+        var thumbainImages = [ImageSize]()
 
         if let thumbnailString = episode.image, let thumbnailURL = URL(string: thumbnailString) {
             thumbainImages.append(.original(thumbnailURL))
@@ -153,7 +153,7 @@ fileprivate func convertConsumetEpisodeToEpisode(episodes: [ConsumetAPI.Episode]
 
 fileprivate func convertEnimeEpisodeToEpisode(episodes: [EnimeAPI.Episode]) -> [Episode] {
     episodes.compactMap { episode in
-        var thumbainImages = [Anime.Image]()
+        var thumbainImages = [ImageSize]()
 
         if let thumbnailString = episode.image, let thumbnailURL = URL(string: thumbnailString) {
             thumbainImages.append(.original(thumbnailURL))
@@ -170,13 +170,13 @@ fileprivate func convertEnimeEpisodeToEpisode(episodes: [EnimeAPI.Episode]) -> [
     }
 }
 
-fileprivate func convertEnimeSourceToSource(sources: [EnimeAPI.Source]) -> [EpisodeSource] {
+fileprivate func convertEnimeSourceToSource(sources: [EnimeAPI.Source]) -> [Source] {
     sources.compactMap { source in
         guard let url = URL(string: source.url) else {
             return nil
         }
 
-        return EpisodeSource(
+        return Source(
             id: source.id,
             url: url,
             provider: source.website ?? "Unknown",

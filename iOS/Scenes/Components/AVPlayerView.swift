@@ -197,6 +197,7 @@ class PlayerViewController: UIViewController {
 
     private func observePlayer() {
         try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback, policy: .longFormVideo)
+        player.allowsExternalPlayback = true
 
         playerLayer.publisher(
             for: \.videoGravity

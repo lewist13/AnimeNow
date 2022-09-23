@@ -12,64 +12,49 @@ import SwiftUINavigation
 
 struct HomeView: View {
     let store: Store<HomeCore.State, HomeCore.Action>
-    @Namespace private var animeDetailNamespace
 
     var body: some View {
-        ZStack {
-            ScrollView(.vertical, showsIndicators: false) {
-                topHeaderView
-
-                VStack(spacing: 24) {
-                    animeItems(
-                        title: "Trending This Week",
-                        store: store.scope(
-                            state: \.topTrendingAnime
-                        )
+        ScrollView(.vertical, showsIndicators: false) {
+            topHeaderView
+            
+            LazyVStack(spacing: 24) {
+                animeItems(
+                    title: "Trending This Week",
+                    store: store.scope(
+                        state: \.topTrendingAnime
                     )
-
-                    animeItems(
-                        title: "Top Airing Anime",
-                        store: store.scope(
-                            state: \.topAiringAnime
-                        )
+                )
+                
+                animeItems(
+                    title: "Top Airing Anime",
+                    store: store.scope(
+                        state: \.topAiringAnime
                     )
-
-                    animeItems(
-                        title: "Top Upcoming Anime",
-                        store: store.scope(
-                            state: \.topUpcomingAnime
-                        )
+                )
+                
+                animeItems(
+                    title: "Top Upcoming Anime",
+                    store: store.scope(
+                        state: \.topUpcomingAnime
                     )
-
-                    animeItems(
-                        title: "Highest Rated Anime",
-                        store: store.scope(
-                            state: \.highestRatedAnime
-                        )
+                )
+                
+                animeItems(
+                    title: "Highest Rated Anime",
+                    store: store.scope(
+                        state: \.highestRatedAnime
                     )
-
-                    animeItems(
-                        title: "Most Popular Anime",
-                        store: store.scope(
-                            state: \.mostPopularAnime
-                        )
+                )
+                
+                animeItems(
+                    title: "Most Popular Anime",
+                    store: store.scope(
+                        state: \.mostPopularAnime
                     )
-                }
+                )
             }
         }
-        .overlay(
-            IfLetStore(
-                store.scope(
-                    state: \.animeDetail,
-                    action: HomeCore.Action.animeDetail
-                )
-            ) {
-                AnimeDetailView(
-                    store: $0,
-                    namespace: animeDetailNamespace
-                )
-            }
-        )
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onAppear {
             ViewStore(store).send(.onAppear)
         }
@@ -111,11 +96,14 @@ extension HomeView {
                             } else if case let .success(animes) = viewStore.state {
                                 ForEach(animes, id: \.self) { anime in
                                     AnimeItemView(
-                                        anime: anime,
-                                        namespace: animeDetailNamespace
+                                        anime: anime
                                     )
                                     .onTapGesture {
-                                        viewStore.send(.animeTapped(anime))
+                                        viewStore.send(
+                                            .animeTapped(
+                                                anime
+                                            )
+                                        )
                                     }
                                 }
                             }

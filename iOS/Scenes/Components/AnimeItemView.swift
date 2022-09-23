@@ -11,16 +11,11 @@ import Kingfisher
 struct AnimeItemView: View {
     let anime: Anime
 
-    var namespace: Namespace.ID
-
     var body: some View {
         ZStack(alignment: .bottomLeading) {
             KFImage(anime.posterImage.largest?.link)
-                .cacheMemoryOnly()
-                .setProcessors([RoundCornerImageProcessor(cornerRadius: 12)])
                 .fade(duration: 0.5)
                 .resizable()
-                .shadow(color: .black.opacity(0.2), radius: 14, x: 0, y: 0)
                 .overlay(
                     LinearGradient(
                         colors: [
@@ -32,7 +27,6 @@ struct AnimeItemView: View {
                         endPoint: .bottom
                     )
                 )
-//                .matchedGeometryEffect(id: "\(anime.id)-image", in: namespace, isSource: true)
 
             Text(anime.title)
                 .font(.system(size: 13))
@@ -40,10 +34,10 @@ struct AnimeItemView: View {
                 .multilineTextAlignment(.leading)
                 .foregroundColor(.white)
                 .padding(12)
-//                .matchedGeometryEffect(id: "\(anime.id)-name", in: namespace, isSource: true)
         }
-        .cornerRadius(12)
+        .transition(.scale(scale: 1))
         .aspectRatio(2/3, contentMode: .fit)
+        .cornerRadius(12)
     }
 }
 
@@ -52,8 +46,7 @@ struct TrendingAnimeItemView_Previews: PreviewProvider {
 
     static var previews: some View {
         AnimeItemView(
-            anime: .narutoShippuden,
-            namespace: namespace
+            anime: .narutoShippuden
         )
         .frame(height: 200)
     }

@@ -14,15 +14,9 @@ enum AnimeDetailCore {
 
     struct State: Equatable {
         let anime: Anime
+
         var episodes = LoadableEpisodes.preparing
-//        var videoType: SourceType
-
         var moreInfo = Set<Episode.ID>()
-
-        enum VideoType {
-            case episodes(LoadableEpisodes)
-            case movie
-        }
     }
 
     enum Action: Equatable {
@@ -31,7 +25,7 @@ enum AnimeDetailCore {
         case close
         case fetchedEpisodes(Result<[Episode], API.Error>)
         case selectedEpisode(episode: Episode)
-        case fetchedSources(Result<[EpisodeSource], API.Error>)
+        case play(anime: Anime, episodes: IdentifiedArrayOf<Episode>, selected: Episode.ID)
         case moreInfo(id: Episode.ID)
     }
 
@@ -77,13 +71,21 @@ extension AnimeDetailCore {
                    state.moreInfo.insert(id)
                }
             case .selectedEpisode(episode: let episode):
-                return environment.animeClient.getSources(episode.id)
-                    .subscribe(on: DispatchQueue.global(qos: .userInteractive))
-                    .receive(on: environment.mainQueue)
-                    .catchToEffect()
-                    .map(Action.fetchedSources)
-                    .cancellable(id: CancelFetchingSourcesId())
-            case .fetchedSources:
+                return .init(
+                    value: .play(
+                        anime: state.anime,
+                        episodes: state.episodes.value ?? [],
+                        selected: episode.id
+                    )
+                )
+                // TODO: Move the place where we get the source to the video player
+//                return environment.animeClient.getSources(episode.id)
+//                    .subscribe(on: DispatchQueue.global(qos: .userInteractive))
+//                    .receive(on: environment.mainQueue)
+//                    .catchToEffect()
+//                    .map(Action.fetchedSources)
+//                    .cancellable(id: CancelFetchingSourcesId())
+            case .play:
                 break
             case .closeButtonPressed:
                 return .concatenate(

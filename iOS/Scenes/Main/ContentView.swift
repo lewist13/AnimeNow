@@ -23,6 +23,15 @@ struct ContentView: View {
         .overlay(
             IfLetStore(
                 store.scope(
+                    state: \.animeDetail,
+                    action: ContentCore.Action.animeDetail
+                ),
+                then: { AnimeDetailView(store: $0) }
+            )
+        )
+        .overlay(
+            IfLetStore(
+                store.scope(
                     state: \.videoPlayer,
                     action: ContentCore.Action.videoPlayer
                 )

@@ -10,7 +10,7 @@ import ComposableArchitecture
 
 struct AnimeClient {
     let setListClient: (List) -> Effect<Never, Never>
-    let setSourceClient: (Source) -> Effect<Never, Never>
+    let setSourceClient: (DataSource) -> Effect<Never, Never>
     let getTopTrendingAnime: () -> Effect<[Anime], API.Error>
     let getTopUpcomingAnime: () -> Effect<[Anime], API.Error>
     let getTopAiringAnime: () -> Effect<[Anime], API.Error>
@@ -18,7 +18,7 @@ struct AnimeClient {
     let getMostPopularAnime: () -> Effect<[Anime], API.Error>
     let searchAnimes: (String) -> Effect<[Anime], API.Error>
     let getEpisodes: (Anime.ID) -> Effect<[Episode], API.Error>
-    let getSources: (Episode.ID) -> Effect<[EpisodeSource], API.Error>
+    let getSources: (Episode.ID) -> Effect<[Source], API.Error>
 }
 
 extension AnimeClient {
@@ -43,7 +43,7 @@ extension AnimeClient {
         }
     }
 
-    enum Source: String, CaseIterable {
+    enum DataSource: String, CaseIterable {
         case live
         case mock
 

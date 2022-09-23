@@ -13,15 +13,15 @@ extension AnimeClient {
     } setSourceClient: { _ in
         .none
     } getTopTrendingAnime: {
-        .none
+        .init(value: [.attackOnTitan, .narutoShippuden])
     } getTopUpcomingAnime: {
-        .none
+        .init(value: [])
     } getTopAiringAnime: {
-        .none
+        .init(value: [])
     } getHighestRatedAnime: {
-        .none
+        .init(value: [])
     } getMostPopularAnime: {
-        .none
+        .init(value: [])
     } searchAnimes: { _ in
         .none
     } getEpisodes: { _ in

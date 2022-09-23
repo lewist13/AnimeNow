@@ -22,6 +22,7 @@ struct BlurredButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .foregroundColor(.white)
+            .aspectRatio(1, contentMode: .fill)
             .padding(12)
             .background(BlurView(style: .systemThinMaterialDark))
     }

@@ -1,5 +1,5 @@
 //
-//  EpisodeSource.swift
+//  Source.swift
 //  Anime Now!
 //
 //  Created by Erik Bautista on 9/12/22.
@@ -7,16 +7,16 @@
 
 import Foundation
 
-struct EpisodeSource: Equatable {
+struct Source: Equatable, Identifiable {
     let id: String
     let url: URL
     let provider: String
     let subbed: Bool
 }
 
-extension EpisodeSource {
+extension Source {
     static let mock = [
-        EpisodeSource(
+        Source(
             id: "",
             url: URL(string: "/")!,
             provider: "",

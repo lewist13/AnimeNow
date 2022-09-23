@@ -141,8 +141,8 @@ private func convertKitsuAnimeToAnime(animes: [KitsuAPI.Anime]) -> [Anime] {
             return nil
         }
 
-        let posterImageOriginal: [Anime.Image]
-        let bannerImageOriginal: [Anime.Image]
+        let posterImageOriginal: [ImageSize]
+        let bannerImageOriginal: [ImageSize]
 
         if let posterImgOrigStr = anime.posterImage?.original.url,
            let url = URL(string: posterImgOrigStr) {
@@ -175,19 +175,19 @@ private func convertKitsuAnimeToAnime(animes: [KitsuAPI.Anime]) -> [Anime] {
     }
 }
 
-private func convertImageViewToImage(imageView: KitsuAPI.ImageView) -> Anime.Image? {
+private func convertImageViewToImage(imageView: KitsuAPI.ImageView) -> ImageSize? {
     guard let url = URL(string: imageView.url) else { return nil }
 
     let name = imageView.name
 
     if name == "tiny" {
-        return Anime.Image.tiny(url)
+        return ImageSize.tiny(url)
     } else if name == "small" {
-        return Anime.Image.small(url)
+        return ImageSize.small(url)
     } else if name == "medium" {
-        return Anime.Image.medium(url)
+        return ImageSize.medium(url)
     } else if name == "large" {
-        return Anime.Image.large(url)
+        return ImageSize.large(url)
     } else {
         // Huh????
         return nil

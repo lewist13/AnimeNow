@@ -6,33 +6,76 @@
 //  Copyright © 2022. All rights reserved.
 //
 
+import SwiftUI
 import ComposableArchitecture
 import Foundation
 import AVFoundation
-import SwiftUI
+
+enum SidebarRoute: Equatable {
+    case sources
+    case episodes
+
+    var stringVal: String {
+        switch self {
+        case .sources:
+            return "Sources"
+        case .episodes:
+            return "Episodes"
+        }
+    }
+}
 
 enum VideoPlayerCore {
     struct State: Equatable {
-        let sources: [EpisodeSource]
+        let anime: Anime
 
-        var showingOverlay = true
-        var showingSettings = false
+        var episodesState: SidebarEpisodesCore.State
+        var sourcesState: SidebarSourcesCore.State
+        var sidebarRoute: SidebarRoute?
+
+        // Overlays
+
+        var showPlayerOverlay = false
+
+        var showSidebarPanel: Bool {
+            sidebarRoute != nil
+        }
 
         // Player State
         var avPlayerState = AVPlayerCore.State()
+
+        init(anime: Anime, episodes: IdentifiedArrayOf<Episode>, selectedEpisode: Episode.ID) {
+            self.anime = anime
+            self.episodesState = .init(episodes: episodes, selectedId: selectedEpisode)
+            self.sourcesState = .init()
+        }
     }
 
     enum Action: Equatable {
         case onAppear
-        case startPlayer
         case tappedPlayer
-        case showOverlay(Bool)
+        case showPlayerControlsOverlay(Bool)
         case hideOverlayAnimationDelay
         case cancelHideOverlayAnimationDelay
+        case tappedEpisodesSidebar
+        case tappedSourcesSidebar
+        case closeSidebar
         case closeButtonPressed
         case close
 
+        case setSidebar(route: SidebarRoute?)
+
+        case playSource
+        case fetchSourcesForSelectedEpisode
+
+        // Sidebar Actions
+
+        case episodes(SidebarEpisodesCore.Action)
+        case sources(SidebarSourcesCore.Action)
+
         // Player Action Controls
+
+        case initializePlayer
         case togglePlayback
         case startSeeking
         case slidingSeeker(Double)
@@ -41,7 +84,8 @@ enum VideoPlayerCore {
     }
 
     struct Environment {
-        let mainQueue: AnySchedulerOf<RunLoop>
+        let mainQueue: AnySchedulerOf<DispatchQueue>
+        let animeClient: AnimeClient
         let mainRunLoop: AnySchedulerOf<RunLoop>
         let userDefaultsClient: UserDefaultsClient
     }
@@ -51,18 +95,57 @@ extension VideoPlayerCore {
     static let reducer = Reducer<Self.State, Self.Action, Self.Environment>.combine(
         .init { state, action, environment in
             struct HideOverlayAnimationTimeout: Hashable {}
+            struct CancelEpisodeSourceFetchingId: Hashable {}
+
             let overlayVisibilityAnimation = Animation.easeInOut(duration: 0.5)
 
             switch action {
             case .onAppear:
-                return .merge(
-                    .init(value: .startPlayer)
+                return .concatenate(
+                    .init(value: .initializePlayer),
+                    .init(value: .fetchSourcesForSelectedEpisode)
                 )
+            case .episodes(.selected):
+                return .init(value: .fetchSourcesForSelectedEpisode)
+            case .sources(.selected):
+                return .init(value: .playSource)
+            case .fetchSourcesForSelectedEpisode:
+                if let selectedEpisode = state.episodesState.episode {
+                    return .init(value: .sources(.fetchSources(episodeId: selectedEpisode.id)))
+                        .cancellable(id: CancelEpisodeSourceFetchingId())
+                }
+            case .sources(.fetchedSources(.success)):
+                return .init(value: .playSource)
+            case .playSource:
+                guard let source = state.sourcesState.source else {
+                    break
+                }
+
+                let asset = AVAsset(url: source.url)
+                let item = AVPlayerItem(asset: asset)
+                return .concatenate(
+                    .init(value: .player(.avAction(.start(media: item))))
+                        .delay(for: 0.5, scheduler: environment.mainQueue)
+                        .eraseToEffect(),
+                    .init(value: .player(.avAction(.play)))
+                )
+            case .tappedEpisodesSidebar:
+                return .init(value: .setSidebar(route: .episodes))
+                    .receive(on: environment.mainQueue.animation(.easeInOut(duration: 0.25)))
+                    .eraseToEffect()
+            case .tappedSourcesSidebar:
+                return .init(value: .setSidebar(route: .sources))
+                    .receive(on: environment.mainQueue.animation(.easeInOut(duration: 0.25)))
+                    .eraseToEffect()
             case .tappedPlayer:
-                let showingOverlay = !state.showingOverlay
+                guard state.sidebarRoute == nil else {
+                    return .init(value: .closeSidebar)
+                }
+
+                let showingOverlay = !state.showPlayerOverlay
 
                 var effects: [Effect<Self.Action, Never>] = [
-                    .init(value: .showOverlay(showingOverlay))
+                    .init(value: .showPlayerControlsOverlay(showingOverlay))
                         .receive(on: environment.mainQueue.animation(overlayVisibilityAnimation))
                         .eraseToEffect()
                 ]
@@ -78,10 +161,10 @@ extension VideoPlayerCore {
                     )
                 }
                 return .concatenate(effects)
-            case .showOverlay(let showing):
-                state.showingOverlay = showing
+            case .showPlayerControlsOverlay(let showing):
+                state.showPlayerOverlay = showing
             case .hideOverlayAnimationDelay:
-                return .init(value: .showOverlay(false))
+                return .init(value: .showPlayerControlsOverlay(false))
                     .delay(for: 5, scheduler: environment.mainQueue.animation(overlayVisibilityAnimation))
                     .eraseToEffect()
                     .cancellable(id: HideOverlayAnimationTimeout())
@@ -91,28 +174,32 @@ extension VideoPlayerCore {
                 return .concatenate(
                     [
                         .cancel(id: HideOverlayAnimationTimeout()),
+                        .cancel(id: CancelEpisodeSourceFetchingId()),
                         .init(value: .player(.avAction(.stop))),
                         .init(value: .close)
                             .delay(for: 0.25, scheduler: environment.mainQueue)
                             .eraseToEffect()
                     ]
                 )
+            case .closeSidebar:
+                return .init(value: .setSidebar(route: nil))
+                    .receive(on: environment.mainQueue.animation(.easeInOut(duration: 0.25)))
+                    .eraseToEffect()
             case .close:
+                break
+            case .setSidebar(route: let route):
+                state.sidebarRoute = route
+                if route != nil {
+                    return .init(value: .showPlayerControlsOverlay(false))
+                }
+            case .sources(_):
                 break
 
             // MARK: AVPlayer Actions
 
-            case .startPlayer:
-                let asset = AVAsset(url: state.sources.first!.url)
-                let media = AVPlayerItem(asset: asset)
+            case .initializePlayer:
                 return .concatenate(
-                    [
                         .init(value: .player(.avAction(.initialize)))
-                            .delay(for: 1, scheduler: environment.mainQueue)
-                            .eraseToEffect(),
-                        .init(value: .player(.avAction(.start(media: media)))),
-                        .init(value: .player(.avAction(.play)))
-                    ]
                 )
             case .togglePlayback:
                 if state.avPlayerState.timeStatus == .playing {
@@ -142,11 +229,11 @@ extension VideoPlayerCore {
                         .eraseToEffect()
                 )
             case .player(.timeStatus(.playing, nil)):
-                if state.showingOverlay {
+                if state.showPlayerOverlay {
                     return .init(value: .hideOverlayAnimationDelay)
                 }
             case .player(.timeStatus(.paused, nil)):
-                if state.showingOverlay {
+                if state.showPlayerOverlay {
                     return .init(value: .cancelHideOverlayAnimationDelay)
                 }
             case .player:
@@ -158,7 +245,22 @@ extension VideoPlayerCore {
             state: \.avPlayerState,
             action: /VideoPlayerCore.Action.player,
             environment: { _ in () }
+        ),
+//        .debugActions(),
+        SidebarEpisodesCore.reducer.pullback(
+            state: \.episodesState,
+            action: /Action.episodes,
+            environment: { _ in .init() }
+        ),
+        SidebarSourcesCore.reducer.pullback(
+            state: \.sourcesState,
+            action: /Action.sources,
+            environment: {
+                .init(
+                    mainQueue: $0.mainQueue,
+                    animeClient: $0.animeClient
+                )
+            }
         )
-        .debugActions()
     )
 }

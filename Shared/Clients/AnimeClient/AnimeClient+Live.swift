@@ -9,7 +9,7 @@ import Foundation
 
 
 extension AnimeClient {
-    static func live(list: List = .kitsu, source: Source = .live) -> AnimeClient {
+    static func live(list: List = .kitsu, source: DataSource = .live) -> AnimeClient {
         var selectedAnimeList = list
         var selectedSource = source
 

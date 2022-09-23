@@ -17,7 +17,7 @@ struct Episode: Equatable, Identifiable {
     let name: String
     let number: Int
     let description: String
-    let thumbnail: [Anime.Image]
+    let thumbnail: [ImageSize]
     let length: Int?    // in Seconds
 
     enum IDType: Hashable {
@@ -65,12 +65,12 @@ extension Episode {
 
     static let demoEpisodes: [Episode] = [
         .init(
-            id: .enime("1"),
-            name: "Test 1",
-            number: 0,
-            description: "Helloooooo guesss what??",
-            thumbnail: [],
-            length: 1250
+            id: .enime("cl6ooypne2201181rtgxmvdmmfx"),
+            name: "Homecoming",
+            number: 1,
+            description: "An older and stronger Naruto returns from his two and a half years of training with Jiraiya. When he gets back he finds that many things have changed since he left. From Konohamaru becoming a Gennin and being under the supervision of Ebisu to Tsunade's, the Fifth Hokage, being added to the great stone faces. Now the tasks of starting things where they were left has begun. And what new danger does Jiraiya know about?",
+            thumbnail: [.original(URL(string: "https://artworks.thetvdb.com/banners/episodes/79824/320623.jpg")!)],
+            length: nil
         )
     ]
 }

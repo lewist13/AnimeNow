@@ -29,4 +29,13 @@ enum LoadableState<T: Equatable>: Equatable {
     var hasInitialized: Bool {
         self != .preparing
     }
+
+    var value: T? {
+        switch self {
+        case .success(let value):
+            return value
+        default:
+            return nil
+        }
+    }
 }

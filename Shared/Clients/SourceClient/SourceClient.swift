@@ -10,5 +10,5 @@ import ComposableArchitecture
 
 struct SourceClient {
     let episodes: (Anime.ID) -> Effect<[Episode], API.Error>
-    let sources: (Episode.ID) -> Effect<[EpisodeSource], API.Error>
+    let sources: (Episode.ID) -> Effect<[Source], API.Error>
 }

@@ -7,131 +7,294 @@
 
 import SwiftUI
 import ComposableArchitecture
+import Kingfisher
+import SwiftUINavigation
 
 struct VideoPlayerView: View {
     let store: Store<VideoPlayerCore.State, VideoPlayerCore.Action>
 
     struct ViewState: Equatable {
-        let isLoaded: Bool
+        let showPlayerControlsOverlay: Bool
+        let hasLoaded: Bool
         let isPlaying: Bool
         let isBuffering: Bool
         let currentTime: Double
         let duration: Double
+        let sidebar: SidebarRoute?
+
+        let animeName: String
+        let animeFormat: Anime.Format
+        let episodeName: String
+        let episodeNumber: Int
 
         init(state: VideoPlayerCore.State) {
-            self.isLoaded = state.avPlayerState.status == .readyToPlay
+            self.hasLoaded = state.avPlayerState.status == .readyToPlay
+            self.showPlayerControlsOverlay = state.showPlayerOverlay
             self.isPlaying = state.avPlayerState.timeStatus == .playing
-            self.isBuffering = state.avPlayerState.timeStatus == .waitingToPlayAtSpecifiedRate
+            self.isBuffering = state.avPlayerState.timeStatus == .waitingToPlayAtSpecifiedRate || state.sourcesState.sources == .loading
             self.currentTime = state.avPlayerState.currentTime.seconds
             self.duration = state.avPlayerState.duration?.seconds ?? 0
+            self.sidebar = state.sidebarRoute
+            self.animeName = state.anime.title
+            self.animeFormat = state.anime.format
+            self.episodeName = state.episodesState.episode?.name ?? "Untitled"
+            self.episodeNumber = state.episodesState.episode?.number ?? 0
         }
     }
 
     var body: some View {
-        ZStack {
-            AVPlayerView(
-                store: store.scope(
-                    state: \.avPlayerState,
-                    action: VideoPlayerCore.Action.player
-                )
+        AVPlayerView(
+            store: store.scope(
+                state: \.avPlayerState,
+                action: VideoPlayerCore.Action.player
             )
-            .onTapGesture {
-                ViewStore(store.stateless).send(.tappedPlayer)
-            }
-            loadingView
-            playerOverlay
+        )
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+        .onTapGesture {
+            ViewStore(store.stateless).send(.tappedPlayer)
         }
-        .ignoresSafeArea()
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.black.ignoresSafeArea())
+        .overlay(playerOverlay)
+        .overlay(statusButton)
+        .overlay(sidepanelView)
         .statusBar(hidden: true)
+        .ignoresSafeArea(edges: .vertical)
+        .background(Color.black.edgesIgnoringSafeArea(.all))
         .onAppear {
             ViewStore(store.stateless).send(.onAppear)
         }
     }
 }
 
+// MARK: Player Overlay
+
 extension VideoPlayerView {
     @ViewBuilder
     var playerOverlay: some View {
         WithViewStore(
-            store.scope(state: \.showingOverlay)
+            store.scope(state: ViewState.init)
         ) { showingOverlayViewStore in
-            if showingOverlayViewStore.state {
-                GeometryReader { geometry in
-                    VStack(alignment: .leading) {
-                        topPlayerItems
-                        Spacer()
-                        playerControls
-                    }
-                    .padding()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(
-                        LinearGradient(
-                            colors: [
-                                Color.black,
-                                Color.clear,
-                                Color.black
-                            ],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                        .opacity(0.5)
-                    )
+            if showingOverlayViewStore.showPlayerControlsOverlay {
+                VStack(alignment: .leading, spacing: 12) {
+                    topPlayerItems
+                    Spacer()
+                    animeEpisodeInfo
+                    bottomPlayerItems
                 }
+                .frame(
+                    maxWidth: .infinity,
+                    maxHeight: .infinity,
+                    alignment: .center
+                )
+                .padding(.vertical, 24)
+                .background(
+                    LinearGradient(
+                        colors: [
+                            Color.black
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    .opacity(0.5)
+                    .ignoresSafeArea()
+                )
             }
         }
-    }
-
-    @ViewBuilder
-    var loadingView: some View {
-        WithViewStore(
-            store.scope(state: ViewState.init(state:))
-        ) { viewState in
-            if viewState.state.isBuffering || !viewState.state.isLoaded {
-                ProgressView()
-            }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
-
-// MARK: Episode Info
-
-//extension VideoPlayerView {
-//    @ViewBuilder
-//    var episodeInfo: some View {
-//    }
-//}
 
 // MARK: Top Player Items
 
 extension VideoPlayerView {
     @ViewBuilder
     var topPlayerItems: some View {
-        HStack(alignment: .center, spacing: 18) {
+        HStack {
             closeButton
         }
-        .padding(.horizontal)
+            .transition(.move(edge: .top))
     }
 
     @ViewBuilder
     var closeButton: some View {
-        WithViewStore(
-            store.stateless
-        ) { viewStore in
-            Button {
-                viewStore.send(.closeButtonPressed)
-            } label: {
+        Circle()
+            .foregroundColor(Color.white)
+            .padding(8)
+            .overlay(
                 Image(
                     systemName: "xmark"
                 )
-                .font(.body.weight(.black))
-                .foregroundColor(Color.white)
+                .foregroundColor(Color.black)
+                .font(.callout.weight(.black))
+            )
+            .frame(width: 46, height: 46)
+            .onTapGesture {
+                ViewStore(store.stateless).send(.closeButtonPressed)
             }
-            .buttonStyle(BlurredButtonStyle())
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: RoundedCornerStyle.continuous))
+    }
+}
+
+// MARK: Sidebar Views
+
+extension VideoPlayerView {
+    @ViewBuilder
+    var sidepanelView: some View {
+        IfLetStore(
+            store.scope(state: \.sidebarRoute)
+        ) { sidebarStore in
+            WithViewStore(sidebarStore) { sidebarViewStore in
+                VStack {
+                    HStack(alignment: .center) {
+                        Text(sidebarViewStore.state.stringVal)
+                            .foregroundColor(Color.white)
+                            .font(.title2)
+                            .bold()
+                        Spacer()
+                        sidebarCloseButton
+                    }
+
+                    switch sidebarViewStore.state {
+                    case .episodes:
+                        SidebarEpisodesView(
+                            store: store.scope(
+                                state: \.episodesState,
+                                action: VideoPlayerCore.Action.episodes
+                            )
+                        )
+                    case .sources:
+                        SidebarSourcesView(
+                            store: store.scope(
+                                state: \.sourcesState,
+                                action: VideoPlayerCore.Action.sources
+                            )
+                        )
+                    }
+                }
+                .padding([.horizontal, .top])
+            }
+            .aspectRatio(1.0, contentMode: .fit)
+            .frame(maxHeight: .infinity)
+            .background(
+                BlurView(style: .systemThickMaterialDark)
+            )
+            .cornerRadius(18)
+            .padding(.vertical, 24)
+            .transition(.move(edge: .trailing).combined(with: .opacity))
         }
+        .frame(
+            maxWidth: .infinity,
+            maxHeight: .infinity,
+            alignment: .trailing
+        )
+    }
+
+    @ViewBuilder
+    var sidebarCloseButton: some View {
+        Circle()
+            .foregroundColor(Color.white)
+            .overlay(
+                Image(systemName: "xmark")
+                    .font(.system(size: 12).weight(.black))
+                    .foregroundColor(Color.black.opacity(0.75))
+            )
+            .frame(width: 24, height: 24)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                ViewStore(store.stateless).send(.closeSidebar)
+            }
+    }
+}
+
+// MARK: Anime Episode Info
+
+extension VideoPlayerView {
+    @ViewBuilder
+    var animeEpisodeInfo: some View {
+        WithViewStore(
+            store.scope(
+                state: ViewState.init
+            )
+        ) { viewState in
+            HStack(alignment: .bottom) {
+                VStack(alignment: .leading) {
+                    HStack(spacing: 4) {
+                        Text(viewState.animeName)
+                            .bold()
+
+                        if viewState.animeFormat == .tv {
+                            Text("\u{2022}")
+                                .bold()
+
+                            Text("E\(viewState.episodeNumber)")
+                                .bold()
+                        }
+                    }
+                    .font(.callout)
+                    .foregroundColor(.white.opacity(0.8))
+
+                    HStack {
+                        Text(viewState.episodeName)
+                            .font(.title)
+                            .bold()
+
+                        if viewState.animeFormat == .tv {
+                            Image(systemName: "chevron.compact.right")
+                                .font(.body.weight(.black))
+                        }
+                    }
+                }
+                .foregroundColor(Color.white)
+                .onTapGesture {
+                    let viewStore = ViewStore(store)
+                    if viewStore.anime.format == .tv {
+                        viewStore.send(.tappedEpisodesSidebar)
+                    }
+                }
+
+                Spacer()
+                playerOptionsButton
+            }
+        }
+    }
+}
+
+// MARK: Player Options Buttons
+
+extension VideoPlayerView {
+    @ViewBuilder
+    var playerOptionsButton: some View {
+        HStack(spacing: 16) {
+            airplayButton
+            subtitlesButton
+            sourcesButton
+        }
+    }
+
+    @ViewBuilder
+    var sourcesButton: some View {
+        Button {
+            ViewStore(store.stateless).send(.tappedSourcesSidebar)
+        } label: {
+            Image("play.rectangle.on.rectangle.fill")
+                .foregroundColor(Color.white)
+                .font(.title3)
+        }
+    }
+
+    @ViewBuilder
+    var subtitlesButton: some View {
+        Button {
+        } label: {
+            Image(
+                systemName: "captions.bubble.fill"
+            )
+            .foregroundColor(Color.white)
+            .font(.title3)
+        }
+    }
+    
+    @ViewBuilder
+    var airplayButton: some View {
+        AirplayRouterPickerView()
+            .fixedSize()
     }
 }
 
@@ -139,80 +302,89 @@ extension VideoPlayerView {
 
 extension VideoPlayerView {
     @ViewBuilder
-    var playerControls: some View {
-        HStack(alignment: .center, spacing: 18) {
-            playButton
+    var bottomPlayerItems: some View {
+        LazyVStack(alignment: .leading) {
             seekbarView
-            settingsButton
+                .frame(height: 12)
+            progressInfo
         }
-        .padding(.horizontal)
+        .transition(.move(edge: .bottom))
     }
 
     @ViewBuilder
-    var playButton: some View {
+    var statusButton: some View {
         WithViewStore(
             store.scope(state: ViewState.init(state:))
         ) { viewState in
-            Button {
-                viewState.send(.togglePlayback)
-            } label: {
-                Image(
-                    systemName: viewState.state.isPlaying ? "pause.fill" : "play.fill"
-                )
-                .foregroundColor(Color.white)
+            if viewState.state.isBuffering || !viewState.state.hasLoaded {
+                ProgressView()
+                    .scaleEffect(1.5)
+            } else if viewState.state.showPlayerControlsOverlay {
+                Circle()
+                    .foregroundColor(Color.clear)
+                    .padding(8)
+                    .overlay(
+                        Image(
+                            systemName: viewState.state.isPlaying ? "pause.fill" : "play.fill"
+                        )
+                        .foregroundColor(Color.white)
+                        .font(.title)
+                    )
+                    .frame(width: 48, height: 48)
+                    .contentShape(Circle())
+                    .onTapGesture {
+                        viewState.send(.togglePlayback)
+                    }
             }
-            .buttonStyle(BlurredButtonStyle())
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: RoundedCornerStyle.continuous))
         }
+        .frame(maxWidth: .infinity)
     }
 
     @ViewBuilder
     var seekbarView: some View {
-        HStack {
-            WithViewStore(
-                store.scope(
-                    state: ViewState.init(state:)
-                )
-            ) { viewState in
-                Text(viewState.state.duration > 0 ? viewState.state.currentTime.timeFormatted : "--:--")
-
-                Slider(
-                    value: .init(
-                        get: { viewState.state.currentTime },
-                        set: { viewState.send(.slidingSeeker($0)) }
-                    ),
-                    in: 0...viewState.state.duration,
-                    onEditingChanged: { editing in
-                        viewState.send(editing ? .startSeeking : .doneSeeking)
+        WithViewStore(
+            store.scope(
+                state: ViewState.init(state:)
+            )
+        ) { viewState in
+            SeekbarView(
+                progress: .init(
+                    get: {
+                        viewState.duration > 0 ?
+                        viewState.currentTime / viewState.duration :
+                        0
+                    },
+                    set: {
+                        viewState.send(.slidingSeeker($0 * viewState.duration))
                     }
-                )
-                .disabled(viewState.state.duration == 0)
-                .padding(.horizontal)
-
-                Text(
-                    viewState.state.duration > 0 ? viewState.state.duration.timeFormatted : "--:--"
-                )
-            }
+                ),
+                preloaded: 0.0,
+                onEditingCallback: { editing in
+                    viewState.send(editing ? .startSeeking : .doneSeeking)
+                }
+            )
+            .disabled(viewState.state.duration == 0)
         }
-        .foregroundColor(.white)
-        .font(.footnote.monospacedDigit())
-        .padding(4)
-        .padding(.horizontal)
-        .background(BlurView(style: .systemThinMaterialDark))
-        .clipShape(RoundedRectangle(cornerRadius: 12, style: RoundedCornerStyle.continuous))
+        .frame(maxWidth: .infinity)
     }
 
     @ViewBuilder
-    var settingsButton: some View {
-        Button {
-        } label: {
-            Image(
-                systemName: "gearshape"
-            )
-            .foregroundColor(Color.white)
+    var progressInfo: some View {
+        WithViewStore(
+            store.scope(state: ViewState.init)
+        ) { viewState in
+            HStack(spacing: 4) {
+                Text(
+                    viewState.duration > 0 ? viewState.currentTime.timeFormatted : "--:--"
+                )
+                Text("/")
+                Text(
+                    viewState.duration > 0 ? viewState.duration.timeFormatted : "--:--"
+                )
+            }
+            .foregroundColor(.white)
+            .font(.footnote.monospacedDigit())
         }
-        .buttonStyle(BlurredButtonStyle())
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: RoundedCornerStyle.continuous))
     }
 }
 
@@ -222,11 +394,14 @@ struct VideoPlayerView_Previews: PreviewProvider {
             VideoPlayerView(
                 store: .init(
                     initialState: .init(
-                        sources: EpisodeSource.mock
+                        anime: .narutoShippuden,
+                        episodes: .init(uniqueElements: Episode.demoEpisodes),
+                        selectedEpisode: Episode.demoEpisodes.first!.id
                     ),
                     reducer: VideoPlayerCore.reducer,
                     environment: .init(
                         mainQueue: .main.eraseToAnyScheduler(),
+                        animeClient: .mock,
                         mainRunLoop: .main.eraseToAnyScheduler(),
                         userDefaultsClient: .mock
                     )

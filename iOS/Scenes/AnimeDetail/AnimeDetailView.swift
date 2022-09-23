@@ -12,29 +12,44 @@ import Kingfisher
 
 struct AnimeDetailView: View {
     let store: Store<AnimeDetailCore.State, AnimeDetailCore.Action>
-    var namespace: Namespace.ID
 
     @State var expandSummary = false
 
+    struct ViewState: Equatable {
+        let animeStatus: Anime.Status
+        let animeFormat: Anime.Format
+
+        init(_ state: AnimeDetailCore.State) {
+            self.animeStatus = state.anime.status
+            self.animeFormat = state.anime.format
+        }
+    }
+
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
-            topContainer
-            infoContainer
+            VStack(spacing: 0) {
+                topContainer
+                infoContainer
 
-            WithViewStore(
-                store.scope(state: \.anime.status)
-            ) { statusViewStore in
-                if statusViewStore.state != .upcoming {
-                    episodesContainer
+                WithViewStore(
+                    store.scope(state: ViewState.init)
+                ) { viewState in
+                    if viewState.state.animeStatus != .upcoming &&
+                        viewState.state.animeFormat == .tv {
+                        episodesContainer
+                    }
                 }
             }
         }
-        .frame(maxWidth: .infinity)
-        .edgesIgnoringSafeArea(.top)
-        .statusBar(hidden: true)
-        .background(Color.black.ignoresSafeArea())
-        .overlay(closeButton)
         .transition(.move(edge: .bottom).combined(with: .opacity))
+        .frame(maxWidth: .infinity)
+        .statusBar(hidden: true)
+        .ignoresSafeArea(edges: .top)
+        .overlay(closeButton)
+        .background(
+            Color.black
+                .ignoresSafeArea()
+        )
         .onAppear {
             ViewStore(store.stateless).send(.onAppear)
         }
@@ -70,68 +85,69 @@ extension AnimeDetailView {
     @ViewBuilder
     var topContainer: some View {
         WithViewStore(
-            store.scope(state: \.anime)
+            store.scope(
+                state: \.anime
+            )
         ) { viewStore in
-            KFImage(viewStore.posterImage.largest?.link)
-                .cacheMemoryOnly()
-                .fade(duration: 0.5)
-                .resizable()
-                .overlay(
-                    LinearGradient(
-                        colors: [
-                            .clear,
-                            .clear,
-                            .black
-                        ],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
-                .overlay(
-                    VStack(alignment: .leading, spacing: 0) {
-                        Text(viewStore.title)
-                            .font(.largeTitle)
-                            .bold()
-                            .foregroundColor(.white)
-//                            .matchedGeometryEffect(id: "\(viewStore.id)-name", in: namespace, isSource: false)
-
-                        HStack(alignment: .top, spacing: 4) {
-                            ForEach(
-                                viewStore.categories,
-                                id: \.self
-                            ) { category in
-                                Text(category)
-                                    .font(.footnote)
-                                    .bold()
-                                    .foregroundColor(.white.opacity(0.8))
-                                if viewStore.categories.last != category {
-                                    Text("\u{2022}")
-                                        .font(.footnote)
-                                        .fontWeight(.black)
-                                        .foregroundColor(.white.opacity(0.8))
-                                }
-                            }
-                        }
-
-                        Button {
-                            print("Play button clicked for \(viewStore.title)")
-                        } label: {
-                            HStack {
-                                Image(systemName: "play.fill")
-                                Text("Play Show")
-                            }
-                        }
-                        .buttonStyle(PlayButtonStyle())
-                        .padding(.vertical, 12)
-                    }
-                        .frame(
-                            maxWidth: .infinity,
-                            maxHeight: .infinity,
-                            alignment: .bottomLeading
+            ZStack(alignment: .bottom) {
+                KFImage(viewStore.posterImage.largest?.link)
+                    .resizable()
+                    .overlay(
+                        LinearGradient(
+                            colors: [
+                                .clear,
+                                .clear,
+                                .black
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
                         )
-                        .padding()
+                    )
+
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(viewStore.title)
+                        .font(.largeTitle)
+                        .bold()
+                        .multilineTextAlignment(.leading)
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                    HStack(alignment: .top, spacing: 4) {
+                        ForEach(
+                            viewStore.categories,
+                            id: \.self
+                        ) { category in
+                            Text(category)
+                                .font(.footnote)
+                                .bold()
+                                .foregroundColor(.white.opacity(0.8))
+                            if viewStore.categories.last != category {
+                                Text("\u{2022}")
+                                    .font(.footnote)
+                                    .fontWeight(.black)
+                                    .foregroundColor(.white.opacity(0.8))
+                            }
+                        }
+                    }
+
+                    Button {
+                        print("Play button clicked for \(viewStore.title)")
+                    } label: {
+                        HStack {
+                            Image(systemName: "play.fill")
+                            Text("Play Show")
+                        }
+                    }
+                    .buttonStyle(PlayButtonStyle())
+                    .padding(.vertical, 12)
+                }
+                .frame(
+                    maxWidth: .infinity,
+                    maxHeight: .infinity,
+                    alignment: .bottomLeading
                 )
-//                .matchedGeometryEffect(id: "\(viewStore.id)-image", in: namespace, isSource: false)
+                .padding()
+            }
         }
         .aspectRatio(2/3, contentMode: .fill)
     }
@@ -144,7 +160,21 @@ extension AnimeDetailView {
         WithViewStore(
             store.scope(state: \.anime)
         ) { anime in
-            Section {
+            VStack(alignment: .leading) {
+                HStack(alignment: .center, spacing: 12) {
+                    buildSubHeading(title: "Summary")
+                    Image(systemName: expandSummary ? "chevron.up" : "chevron.down")
+                        .font(Font.system(size: 18, weight: .black))
+                        .foregroundColor(Color.white.opacity(0.9))
+                    Spacer()
+                }
+                .padding(.vertical, 6)
+                .onTapGesture {
+                    withAnimation(.easeInOut(duration: 0.15)) {
+                        expandSummary.toggle()
+                    }
+                }
+
                 LazyVStack {
                     Text(anime.description)
                         .font(.body)
@@ -182,21 +212,6 @@ extension AnimeDetailView {
                     .font(.callout)
                     .padding(.vertical)
                 }
-            } header: {
-                HStack(alignment: .center, spacing: 12) {
-                    buildSubHeading(title: "Summary")
-                    Image(systemName: expandSummary ? "chevron.up" : "chevron.down")
-                        .font(Font.system(size: 18, weight: .black))
-                        .foregroundColor(Color.white.opacity(0.9))
-                    Spacer()
-                }
-                .padding(.vertical, 6)
-                .background(Color.black)
-                .onTapGesture {
-                    withAnimation(.easeInOut(duration: 0.15)) {
-                        expandSummary.toggle()
-                    }
-                }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -213,7 +228,12 @@ extension AnimeDetailView {
         WithViewStore(
             store.scope(state: \.episodes)
         ) { episodesViewStore in
-            Section {
+            VStack {
+                buildSubHeading(title: "Episodes")
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.vertical, 6)
+                    .background(Color.black)
+
                 if episodesViewStore.state.isLoading == true {
                     episodeShimmeringView
                 } else if case let .success(episodes) = episodesViewStore.state {
@@ -240,71 +260,36 @@ extension AnimeDetailView {
                             .foregroundColor(Color.red)
                     }
                 }
-            } header: {
-                buildSubHeading(title: "Episodes")
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.vertical, 6)
-                    .background(Color.black)
             }
-            .frame(maxWidth: .infinity)
-            .padding(.horizontal)
         }
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal)
     }
 
     @ViewBuilder
     private func generateEpisodeItem(
         _ episode: Episode
     ) -> some View {
-        ZStack(alignment: .bottomLeading) {
-            KFImage(episode.thumbnail.largest?.link)
-                .cacheMemoryOnly()
-                .placeholder {
-                    episodeShimmeringView
+        EpisodeItemBigView(episode: episode)
+            .overlay(
+                WithViewStore(
+                    store.scope(state: { $0.moreInfo.contains(episode.id) })
+                ) { visibleViewStore in
+                    Button {
+                        visibleViewStore.send(.moreInfo(id: episode.id), animation: Animation.easeInOut(duration: 0.15))
+                    } label: {
+                        Image(
+                            systemName: visibleViewStore.state ? "chevron.up" : "chevron.down"
+                        )
+                        .font(Font.system(size: 12, weight: .black))
+                        .foregroundColor(Color.white.opacity(0.9))
+                    }
+                    .buttonStyle(BlurredButtonStyle())
+                    .clipShape(Circle())
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+                    .padding()
                 }
-                .fade(duration: 0.5)
-                .resizable()
-                .episodeFrame()
-                .overlay(
-                    LinearGradient(
-                        colors: [
-                            .clear,
-                            .clear,
-                            .black
-                        ],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text(episode.name)
-                    .font(.title2.bold())
-                HStack {
-                    Text("E\(episode.number)" + (episode.length != nil ? " \u{2022} \(episode.lengthFormatted)" : ""))
-                        .font(.callout.bold())
-                }
-            }
-            .padding()
-        }
-        .overlay(
-            WithViewStore(
-                store.scope(state: { $0.moreInfo.contains(episode.id) })
-            ) { visibleViewStore in
-                Button {
-                    visibleViewStore.send(.moreInfo(id: episode.id), animation: Animation.easeInOut(duration: 0.15))
-                } label: {
-                    Image(
-                        systemName: visibleViewStore.state ? "chevron.up" : "chevron.down"
-                    )
-                    .font(Font.system(size: 12, weight: .black))
-                    .foregroundColor(Color.white.opacity(0.9))
-                }
-                .buttonStyle(BlurredButtonStyle())
-                .clipShape(Circle())
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
-                .padding()
-            }
-        )
+            )
 
         WithViewStore(
             store.scope(state: { $0.moreInfo.contains(episode.id) })
@@ -362,8 +347,6 @@ extension AnimeDetailView {
 }
 
 struct AnimeView_Previews: PreviewProvider {
-    @Namespace static var namespace
-
     static var previews: some View {
         AnimeDetailView(
             store: .init(
@@ -373,8 +356,7 @@ struct AnimeView_Previews: PreviewProvider {
                 ),
                 reducer: .empty,
                 environment: ()
-            ),
-            namespace: namespace
+            )
         )
         .preferredColorScheme(.dark)
     }
