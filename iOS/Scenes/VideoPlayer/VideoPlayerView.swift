@@ -28,12 +28,12 @@ struct VideoPlayerView: View {
         let episodeNumber: Int
 
         init(state: VideoPlayerCore.State) {
-            self.hasLoaded = state.avPlayerState.status == .readyToPlay
+            self.hasLoaded = state.playerState.status == .readyToPlay
             self.showPlayerControlsOverlay = state.showPlayerOverlay
-            self.isPlaying = state.avPlayerState.timeStatus == .playing
-            self.isBuffering = state.avPlayerState.timeStatus == .waitingToPlayAtSpecifiedRate || state.sourcesState.sources == .loading
-            self.currentTime = state.avPlayerState.currentTime.seconds
-            self.duration = state.avPlayerState.duration?.seconds ?? 0
+            self.isPlaying = state.playerState.timeStatus == .playing
+            self.isBuffering = state.playerState.timeStatus == .waitingToPlayAtSpecifiedRate || state.sourcesState.sources == .loading
+            self.currentTime = state.playerState.currentTime.seconds
+            self.duration = state.playerState.duration?.seconds ?? 0
             self.sidebar = state.sidebarRoute
             self.animeName = state.anime.title
             self.animeFormat = state.anime.format
@@ -45,7 +45,7 @@ struct VideoPlayerView: View {
     var body: some View {
         AVPlayerView(
             store: store.scope(
-                state: \.avPlayerState,
+                state: \.playerState,
                 action: VideoPlayerCore.Action.player
             )
         )

@@ -34,15 +34,10 @@ enum VideoPlayerCore {
         var sidebarRoute: SidebarRoute?
 
         // Overlays
-
         var showPlayerOverlay = false
 
-        var showSidebarPanel: Bool {
-            sidebarRoute != nil
-        }
-
         // Player State
-        var avPlayerState = AVPlayerCore.State()
+        var playerState = AVPlayerCore.State()
 
         init(anime: Anime, episodes: IdentifiedArrayOf<Episode>, selectedEpisode: Episode.ID) {
             self.anime = anime
@@ -88,6 +83,12 @@ enum VideoPlayerCore {
         let animeClient: AnimeClient
         let mainRunLoop: AnySchedulerOf<RunLoop>
         let userDefaultsClient: UserDefaultsClient
+    }
+}
+
+extension VideoPlayerCore.State {
+    var showSidebarPanel: Bool {
+        sidebarRoute != nil
     }
 }
 
@@ -150,7 +151,7 @@ extension VideoPlayerCore {
                         .eraseToEffect()
                 ]
 
-                if showingOverlay && state.avPlayerState.timeStatus == .playing {
+                if showingOverlay && state.playerState.timeStatus == .playing {
                     // Show overlay with timeout if the video is currently playing
                     effects.append(
                         .init(value: .hideOverlayAnimationDelay)
@@ -202,7 +203,7 @@ extension VideoPlayerCore {
                         .init(value: .player(.avAction(.initialize)))
                 )
             case .togglePlayback:
-                if state.avPlayerState.timeStatus == .playing {
+                if state.playerState.timeStatus == .playing {
                     return .init(value: .player(.avAction(.pause)))
                 } else {
                     return .init(value: .player(.avAction(.play)))
@@ -214,7 +215,7 @@ extension VideoPlayerCore {
                     .init(value: .cancelHideOverlayAnimationDelay)
                 )
             case .slidingSeeker(let val):
-                let duration = state.avPlayerState.duration ?? .zero
+                let duration = state.playerState.duration ?? .zero
                 let seconds = CMTimeValue(max(0, min(val, duration.seconds)))
                 let newTime = CMTime(
                     value: seconds,
@@ -224,7 +225,7 @@ extension VideoPlayerCore {
                 return .init(value: .player(.currentTime(newTime)))
             case .doneSeeking:
                 return .concatenate(
-                    .init(value: .player(.avAction(.seek(to: state.avPlayerState.currentTime)))),
+                    .init(value: .player(.avAction(.seek(to: state.playerState.currentTime)))),
                     .init(value: .player(.avAction(.play))).delay(for: 0.5, scheduler: environment.mainQueue)
                         .eraseToEffect()
                 )
@@ -242,7 +243,7 @@ extension VideoPlayerCore {
             return .none
         },
         AVPlayerCore.reducer.pullback(
-            state: \.avPlayerState,
+            state: \.playerState,
             action: /VideoPlayerCore.Action.player,
             environment: { _ in () }
         ),
