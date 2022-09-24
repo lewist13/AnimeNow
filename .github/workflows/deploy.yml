@@ -39,10 +39,6 @@ jobs:
     runs-on: macos-12
     if: github.event.pull_request.merged == true || ${{ github.event.workflow_dispatch != null  }}
     steps:
-      - name: Configure Git config
-        run: |
-            git config user.name 'github-actions[bot]'
-            git config user.email 'github-actions[bot]@users.noreply.github.com'
       - name: Check Inputs
         run: |
             [[ ! -z "${{ github.event.pull_request.body }}" ]] && PAYLOAD_BODY="${{ github.event.pull_request.body }}"
@@ -53,6 +49,10 @@ jobs:
             [[ ! -z "$PAYLOAD_TITLE" ]] || exit 1
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Configure Git config
+        run: |
+            git config user.name 'github-actions[bot]'
+            git config user.email 'github-actions[bot]@users.noreply.github.com'
       - name: Install dependencies
         run: brew install rswift
       - name: Show Xcode version
