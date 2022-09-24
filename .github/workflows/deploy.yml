@@ -3,6 +3,16 @@
 name: Deploy
 on:
   workflow_dispatch:
+    inputs:
+        title:
+            description: 'Release Title'
+            required: true
+            type: string
+        body:
+            description: 'Description
+            required: true
+            type: string
+
   pull_request:
     branches:
       - main
@@ -29,14 +39,22 @@ env:
 jobs:
   Deploy:
     runs-on: macos-12
-    if: github.event.pull_request.merged == true
+    if: github.event.pull_request.merged == true || github.event == workflow_dispatch
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
       - name: Configure Git config
         run: |
             git config user.name 'github-actions[bot]'
             git config user.email 'github-actions[bot]@users.noreply.github.com'
+      - name: Check Inputs
+        run: |
+            [[ ! -z "${{ github.event.pull_request.body }}" ]] && PAYLOAD_BODY="${{ github.event.pull_request.body }}"
+            [[ ! -z "${{ inputs.body }}" ]] && PAYLOAD_BODY="${{ inputs.body }}"
+            [[ ! -z "$PAYLOAD_BODY" ]] || exit 1
+            [[ ! -z "${{ github.event.pull_request.title }}" ]] && PAYLOAD_TITLE="${{ github.event.pull_request.title }}"
+            [[ ! -z "${{ inputs.title }}" ]] && PAYLOAD_TITLE="${{ inputs.title }}"
+            [[ ! -z "$PAYLOAD_TITLE" ]] || exit 1
+      - name: Checkout
+        uses: actions/checkout@v2
       - name: Install dependencies
         run: brew install rswift
       - name: Show Xcode version
@@ -62,11 +80,9 @@ jobs:
           sudo chmod 777 $FILTER_PATH
           echo "::set-output name=size::$(stat -f%z "$IPA_OUTPUT_PATH")"
           echo "::set-output name=version_date::$(date -u +"%Y-%m-%dT%T")"
-          echo "::set-output name=notes::$($FILTER_PATH "${{ github.event.pull_request.body }}")"
+          echo "::set-output name=notes::$($FILTER_PATH "$PAYLOAD_BODY")"
       - name: Validate data
         run: |
-          [[ ! -z "${{ github.event.pull_request.body }}" ]] || exit 1
-          [[ ! -z "${{ github.event.pull_request.title }}" ]] || exit 1
           [[ ! -z "${{ steps.retrieve-data.outputs.size }}" ]] || exit 1
           [[ ! -z "${{ steps.retrieve-data.outputs.notes }}" ]] || exit 1
           [[ ! -z "${{ steps.bump-version.outputs.version }}" ]] || exit 1
@@ -78,8 +94,8 @@ jobs:
          fail_on_unmatched_files: true
          files: ${{ env.IPA_OUTPUT_PATH }}
          token: ${{ secrets.GITHUB_TOKEN }}
-         body: ${{ github.event.pull_request.body }}
-         name: ${{ github.event.pull_request.title }}
+         body: "$PAYLOAD_BODY"
+         name: "$PAYLOAD_TITLE"
          tag_name: 'v${{ steps.bump-version.outputs.version }}_b${{ steps.bump-version.outputs.build-number }}'
       - name: Commit bump version
         run: |
