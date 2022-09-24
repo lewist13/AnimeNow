@@ -39,14 +39,16 @@ jobs:
     runs-on: macos-12
     if: github.event.pull_request.merged == true || ${{ github.event.workflow_dispatch != null  }}
     steps:
-      - name: Check Inputs
+      - name: Set Env Variables
         run: |
-            [[ ! -z "${{ github.event.pull_request.body }}" ]] && echo "PAYLOAD_BODY=${{ github.event.pull_request.body }}" >> $GITHUB_ENV
-            [[ ! -z "${{ inputs.body }}" ]] && echo "PAYLOAD_BODY=${{ inputs.body }}" >> $GITHUB_ENV
-            [[ ! -z "$PAYLOAD_BODY" ]] || exit 1
-            [[ ! -z "${{ github.event.pull_request.title }}" ]] && echo "PAYLOAD_TITLE=${{ github.event.pull_request.title }}" >> $GITHUB_ENV
-            [[ ! -z "${{ github.event.inputs.title }}" ]] && echo "PAYLOAD_TITLE=${{ github.event.inputs.title }}" >> $GITHUB_ENV
-            [[ ! -z "$PAYLOAD_TITLE" ]] || exit 1
+            [[ ! -z "${{ github.event.pull_request.body }}" ]] && echo "message_body=${{ github.event.pull_request.body }}" >> $GITHUB_ENV
+            [[ ! -z "${{ inputs.body }}" ]] && echo "message_body=${{ inputs.body }}" >> $GITHUB_ENV
+            [[ ! -z "${{ github.event.pull_request.title }}" ]] && echo "message_title=${{ github.event.pull_request.title }}" >> $GITHUB_ENV
+            [[ ! -z "${{ github.event.inputs.title }}" ]] && echo "message_title=${{ github.event.inputs.title }}" >> $GITHUB_ENV
+      - name: Check Env Variables
+        run: |
+            [[ ! -z "${{ env.message_body }}" ]] || exit 1
+            [[ ! -z "$message_title" ]] || exit 1
       - name: Checkout
         uses: actions/checkout@v2
       - name: Configure Git config
@@ -78,7 +80,7 @@ jobs:
           sudo chmod 777 $FILTER_PATH
           echo "::set-output name=size::$(stat -f%z "$IPA_OUTPUT_PATH")"
           echo "::set-output name=version_date::$(date -u +"%Y-%m-%dT%T")"
-          echo "::set-output name=notes::$($FILTER_PATH "${{ env.PAYLOAD_BODY }}")"
+          echo "::set-output name=notes::$($FILTER_PATH "${{ env.message_body }}")"
       - name: Validate data
         run: |
           [[ ! -z "${{ steps.retrieve-data.outputs.size }}" ]] || exit 1
@@ -92,8 +94,8 @@ jobs:
          fail_on_unmatched_files: true
          files: ${{ env.IPA_OUTPUT_PATH }}
          token: ${{ secrets.GITHUB_TOKEN }}
-         body: ${{ env.PAYLOAD_BODY }}
-         name: ${{ env.PAYLOAD_TITLE }}
+         body: ${{ env.message_body }}
+         name: ${{ env.message_title }}
          tag_name: 'v${{ steps.bump-version.outputs.version }}_b${{ steps.bump-version.outputs.build-number }}'
       - name: Commit bump version
         run: |
