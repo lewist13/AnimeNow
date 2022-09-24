@@ -41,12 +41,12 @@ jobs:
     steps:
       - name: Check Inputs
         run: |
-            [[ ! -z "${{ github.event.pull_request.body }}" ]] && PAYLOAD_BODY="${{ github.event.pull_request.body }}"
-            [[ ! -z "${{ inputs.body }}" ]] && PAYLOAD_BODY="${{ inputs.body }}"
-            [[ ! -z "$PAYLOAD_BODY" ]] || exit 1
-            [[ ! -z "${{ github.event.pull_request.title }}" ]] && PAYLOAD_TITLE="${{ github.event.pull_request.title }}"
-            [[ ! -z "${{ github.event.inputs.title }}" ]] && PAYLOAD_TITLE="${{ github.event.inputs.title }}"
-            [[ ! -z "$PAYLOAD_TITLE" ]] || exit 1
+            [[ ! -z "${{ github.event.pull_request.body }}" ]] && echo "PAYLOAD_BODY=${{ github.event.pull_request.body }}" >> $GITHUB_ENV
+            [[ ! -z "${{ inputs.body }}" ]] && echo "PAYLOAD_BODY=${{ inputs.body }}" >> $GITHUB_ENV
+            [[ ! -z "${{ env.PAYLOAD_BODY }}" ]] || exit 1
+            [[ ! -z "${{ github.event.pull_request.title }}" ]] && echo "PAYLOAD_TITLE=${{ github.event.pull_request.title }}" >> $GITHUB_ENV
+            [[ ! -z "${{ github.event.inputs.title }}" ]] && echo "PAYLOAD_TITLE=${{ github.event.inputs.title }}" >> $GITHUB_ENV
+            [[ ! -z "${{ env.PAYLOAD_TITLE }}" ]] || exit 1
       - name: Checkout
         uses: actions/checkout@v2
       - name: Configure Git config
@@ -78,7 +78,7 @@ jobs:
           sudo chmod 777 $FILTER_PATH
           echo "::set-output name=size::$(stat -f%z "$IPA_OUTPUT_PATH")"
           echo "::set-output name=version_date::$(date -u +"%Y-%m-%dT%T")"
-          echo "::set-output name=notes::$($FILTER_PATH "$PAYLOAD_BODY")"
+          echo "::set-output name=notes::$($FILTER_PATH "${{ env.PAYLOAD_BODY }}")"
       - name: Validate data
         run: |
           [[ ! -z "${{ steps.retrieve-data.outputs.size }}" ]] || exit 1
@@ -92,8 +92,8 @@ jobs:
          fail_on_unmatched_files: true
          files: ${{ env.IPA_OUTPUT_PATH }}
          token: ${{ secrets.GITHUB_TOKEN }}
-         body: "$PAYLOAD_BODY"
-         name: "$PAYLOAD_TITLE"
+         body: ${{ env.PAYLOAD_BODY }}
+         name: ${{ env.PAYLOAD_TITLE }}
          tag_name: 'v${{ steps.bump-version.outputs.version }}_b${{ steps.bump-version.outputs.build-number }}'
       - name: Commit bump version
         run: |
