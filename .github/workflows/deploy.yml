@@ -48,7 +48,7 @@ jobs:
       - name: Check Env Variables
         run: |
             [[ ! -z "${{ env.message_body }}" ]] || exit 1
-            [[ ! -z "$message_title" ]] || exit 1
+            [[ ! -z "${{ env.message_title }}" ]] || exit 1
       - name: Checkout
         uses: actions/checkout@v2
       - name: Configure Git config
@@ -68,19 +68,19 @@ jobs:
         run: xcodebuild archive -destination 'generic/platform=iOS' -scheme '${{ env.IOS_SCHEME_NAME }}' -archivePath '${{ env.IOS_ARCHIVE_PATH }}' CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO CODE_SIGN_IDENTITY= CODE_SIGN_ENTITLEMENTS= GCC_OPTIMIZATION_LEVEL=s SWIFT_OPTIMIZATION_LEVEL=-O
       - name: Export .ipa file
         run: |
-          mkdir -p ${{env.PAYLOAD_PATH}}
-          mv '${{env.IOS_ARCHIVE_PATH}}/Products/Applications/${{env.APP_NAME}}.app' '${{env.PAYLOAD_PATH}}/${{env.APP_NAME}}.app'
-          pushd ${{env.BUILDS_PATH}}
-          zip -r '${{env.IPA_OUTPUT_PATH}}' ./Payload
+          mkdir -p ${{ env.PAYLOAD_PATH }}
+          mv '${{env.IOS_ARCHIVE_PATH}}/Products/Applications/${{env.APP_NAME}}.app' '${{ env.PAYLOAD_PATH }}/${{ env.APP_NAME }}.app'
+          pushd ${{ env.BUILDS_PATH }}
+          zip -r '${{ env.IPA_OUTPUT_PATH }}' ./Payload
           popd
       - name: Retrieve data
         id: retrieve-data
         run: |
-          swiftc -o $FILTER_PATH $FILTER_SWIFT_PATH
-          sudo chmod 777 $FILTER_PATH
-          echo "::set-output name=size::$(stat -f%z "$IPA_OUTPUT_PATH")"
+          swiftc -o ${{ env.FILTER_PATH }} ${{ env.FILTER_SWIFT_PATH }}
+          sudo chmod 777 ${{ env.FILTER_PATH }}
+          echo "::set-output name=size::$(stat -f%z "${{ env.IPA_OUTPUT_PATH }}")"
           echo "::set-output name=version_date::$(date -u +"%Y-%m-%dT%T")"
-          echo "::set-output name=notes::$($FILTER_PATH "${{ env.message_body }}")"
+          echo "::set-output name=notes::$(${{ env.FILTER_PATH }} "${{ env.message_body }}")"
       - name: Validate data
         run: |
           [[ ! -z "${{ steps.retrieve-data.outputs.size }}" ]] || exit 1
