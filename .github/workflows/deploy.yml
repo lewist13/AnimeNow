@@ -7,11 +7,9 @@ on:
         title:
             description: 'Release Title'
             required: true
-            type: string
         body:
-            description: 'Description
+            description: 'Release Description'
             required: true
-            type: string
 
   pull_request:
     branches:
