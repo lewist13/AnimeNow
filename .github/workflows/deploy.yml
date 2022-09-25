@@ -1,102 +1,84 @@
-# Modified version of https://github.com/EhPanda-Team/EhPanda/blob/main/.github/workflows/deploy.yml
+name: Build and Deploy Apps
 
-name: Deploy
 on:
-  workflow_dispatch:
-    inputs:
-        title:
-            description: 'Release Title'
-            required: true
-        body:
-            description: 'Release Description'
-            required: true
-
+  push:
+    branches:
+      - main
   pull_request:
     branches:
       - main
     types: [closed]
 
 env:
-  DEVELOPER_DIR: /Applications/Xcode_13.4.app
-  APP_VERSION: '0.0.1'
-  APP_NAME: 'Anime Now!'
-  IOS_SCHEME_NAME: 'Anime Now! (iOS)'
-  MACOS_SCHEME_NAME: 'Anime Now! (macOS)'
-  BUILDS_PATH: '/tmp/action-builds'
-  PAYLOAD_PATH: '/tmp/action-builds/Payload'
-  ASC_KEY_PATH: '/Users/runner/private_keys'
-  FILTER_SWIFT_PATH: './actions-tool/ReleaseNotesFilter.swift'
-  FILTER_PATH: './actions-tool/ReleaseNotesFilter'
+  IOS_SCHEME: 'Anime Now! (iOS)'
   IOS_ARCHIVE_PATH: '/tmp/action-builds/Anime Now! (iOS).xcarchive'
-  IPA_OUTPUT_PATH: '/tmp/action-builds/Anime Now!.ipa'
-  APP_DEV_PROVISION_PATH: '/tmp/action-builds/app_dev.mobileprovision'
-  APP_DIS_PROVISION_PATH: '/tmp/action-builds/app_dis.mobileprovision'
-  SHARE_EXTENSION_DEV_PROVISION_PATH: '/tmp/action-builds/share_extension_dev.mobileprovision'
-  SHARE_EXTENSION_DIS_PROVISION_PATH: '/tmp/action-builds/share_extension_dis.mobileprovision'
+  IOS_OUTPUT_PATH: '/tmp/action-builds/Anime Now! (iOS).ipa'
+
+#  MACOS_SCHEME_NAME: 'Anime Now! (macOS)'
+#  MACOS_ARCHIVE_PATH: '/tmp/action-builds/Anime Now! (macOS).xcarchive'
+#  MACOS_OUTPUT_PATH: '/tmp/action-builds/Anime Now! (macOS).app'
 
 jobs:
-  Deploy:
+  build-and-deploy:
     runs-on: macos-12
-    if: github.event.pull_request.merged == true || ${{ github.event.workflow_dispatch != null  }}
     steps:
-      - name: Set Env Variables
-        run: |
-            [[ ! -z "${{ github.event.pull_request.body }}" ]] && echo "message_body=${{ github.event.pull_request.body }}" >> $GITHUB_ENV
-            [[ ! -z "${{ inputs.body }}" ]] && echo "message_body=${{ inputs.body }}" >> $GITHUB_ENV
-            [[ ! -z "${{ github.event.pull_request.title }}" ]] && echo "message_title=${{ github.event.pull_request.title }}" >> $GITHUB_ENV
-            [[ ! -z "${{ github.event.inputs.title }}" ]] && echo "message_title=${{ github.event.inputs.title }}" >> $GITHUB_ENV
-      - name: Check Env Variables
-        run: |
-            [[ ! -z "${{ env.message_body }}" ]] || exit 1
-            [[ ! -z "${{ env.message_title }}" ]] || exit 1
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Configure Git config
+      - name: Determine if beta or release
         run: |
-            git config user.name 'github-actions[bot]'
-            git config user.email 'github-actions[bot]@users.noreply.github.com'
-      - name: Install dependencies
-        run: brew install rswift
-      - name: Show Xcode version
-        run: xcodebuild -version
-      - name: Bump version
-        id: bump-version
-        uses: yanamura/ios-bump-version@v1
+          [[ ! -z ${{ github.event.pull_request }} ]] && [[ ! -z ${{ github.event.pull_request.user.login == github.repository.owner.login  }} ]] && echo "is_release=1" >> $GITHUB_ENV || echo "is_release=0" >> $GITHUB_ENV
+
+      - name: Get latest commit id
+        run: |
+          echo "latest_commit_build=$(git log --format="%h" -n 1)" >> $GITHUB_ENV
+
+      - name: Get ios marketing version
+        run: |
+          echo "ios_marketing_version=$(xcodebuild -showBuildSettings -scheme '${{ env.IOS_SCHEME }}'  | grep 'MARKETING_VERSION' | cut -f 7 -d ' ')" >> $GITHUB_ENV
+
+      - name: Bump iOS beta marketing version
+        id: bump_version
+        if: ${{ env.is_release == 0 }}
+        uses: christian-draeger/increment-semantic-version@1.0.2
         with:
-          version: ${{ env.APP_VERSION }}
-      - name: Xcode archive
-        run: xcodebuild archive -destination 'generic/platform=iOS' -scheme '${{ env.IOS_SCHEME_NAME }}' -archivePath '${{ env.IOS_ARCHIVE_PATH }}' CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO CODE_SIGN_IDENTITY= CODE_SIGN_ENTITLEMENTS= GCC_OPTIMIZATION_LEVEL=s SWIFT_OPTIMIZATION_LEVEL=-O
-      - name: Export .ipa file
+          current-version: ${{ env.ios_marketing_version }}
+          version-fragment: 'feature'
+
+      - name: Set Release Info
+        if: ${{ env.is_release == 1 }}
         run: |
-          mkdir -p ${{ env.PAYLOAD_PATH }}
-          mv '${{env.IOS_ARCHIVE_PATH}}/Products/Applications/${{env.APP_NAME}}.app' '${{ env.PAYLOAD_PATH }}/${{ env.APP_NAME }}.app'
-          pushd ${{ env.BUILDS_PATH }}
-          zip -r '${{ env.IPA_OUTPUT_PATH }}' ./Payload
-          popd
-      - name: Retrieve data
-        id: retrieve-data
+          echo "message_title=${{ github.event.pull_request.title }}" >> $GITHUB_ENV
+          echo "message_body=${{ github.event.pull_request.body }}" >> $GITHUB_ENV
+          echo "version=${{ env.ios_marketing_version }}" >> $GITHUB_ENV
+          echo "tag_version=v${{ env.ios_marketing_version }}" >> $GITHUB_ENV
+
+      - name: Set Beta Info
+        if: ${{ env.is_release == 0 }}
         run: |
-          swiftc -o ${{ env.FILTER_PATH }} ${{ env.FILTER_SWIFT_PATH }}
-          sudo chmod 777 ${{ env.FILTER_PATH }}
-          echo "::set-output name=size::$(stat -f%z "${{ env.IPA_OUTPUT_PATH }}")"
-          echo "::set-output name=version_date::$(date -u +"%Y-%m-%dT%T")"
-          echo "::set-output name=notes::$(${{ env.FILTER_PATH }} "${{ env.message_body }}")"
-      - name: Validate data
+          echo "message_title=${{ steps.bump_version.outputs.next-version }}-beta" >> $GITHUB_ENV
+          echo "message_body='It is not ready for daily use and we do not guarantee its usability.'" >> $GITHUB_ENV
+          echo "version=${{ steps.bump_version.outputs.next-version }}" >> $GITHUB_EN
+          echo "tag_version=v${{ steps.bump_version.outputs.next-version }}_b${{ env.latest_commit_build }}" >> $GITHUB_ENV
+
+      - name: Build IOS Archive
+        run: xcodebuild archive -destination 'generic/platform=iOS' -scheme '${{ env.IOS_SCHEME }}' -archivePath '${{ env.IOS_ARCHIVE_PATH }}' MARKETING_VERSION='${{ env.tag_version }}' CURRENT_PROJECT_VERSION='${{ env.latest_commit_build }}'  CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO CODE_SIGN_IDENTITY= CODE_SIGN_ENTITLEMENTS= GCC_OPTIMIZATION_LEVEL=s SWIFT_OPTIMIZATION_LEVEL=-O
+
+      - name: Build IPA
         run: |
-          [[ ! -z "${{ steps.retrieve-data.outputs.size }}" ]] || exit 1
-          [[ ! -z "${{ steps.retrieve-data.outputs.notes }}" ]] || exit 1
-          [[ ! -z "${{ steps.bump-version.outputs.version }}" ]] || exit 1
-          [[ ! -z "${{ steps.bump-version.outputs.build-number }}" ]] || exit 1
-          [[ ! -z "${{ steps.retrieve-data.outputs.version_date }}" ]] || exit 1
+          zip -r '${{ env.IOS_OUTPUT_PATH }}' '${{ env.IOS_ARCHIVE_PATH }}/Products/Applications'
+
       - name: Release to GitHub
         uses: softprops/action-gh-release@v1
         with:
          fail_on_unmatched_files: true
          files: ${{ env.IPA_OUTPUT_PATH }}
          token: ${{ secrets.GITHUB_TOKEN }}
+         generate_release_notes: ${{ env.is_release == 0 }}
+         prerelease: ${{ env.is_release == 0 }}
          body: ${{ env.message_body }}
          name: ${{ env.message_title }}
-         tag_name: 'v${{ steps.bump-version.outputs.version }}_b${{ steps.bump-version.outputs.build-number }}'
+         tag_name: '${{ env.tag_version }}'
+
       - name: Commit bump version
         run: |
           git add .
