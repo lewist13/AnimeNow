@@ -75,7 +75,9 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
          fail_on_unmatched_files: true
-         files: ${{ env.IPA_OUTPUT_PATH }}
+         files: |
+            ${{ env.IOS_OUTPUT_PATH }}
+
          token: ${{ secrets.GITHUB_TOKEN }}
          generate_release_notes: true
          prerelease: ${{ env.is_release == 0 }}
