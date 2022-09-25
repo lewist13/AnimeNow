@@ -47,10 +47,11 @@ jobs:
           sudo chmod 777 ${{ env.INCREMENT_SCRIPT_PATH }}
           echo "marketing_version=$(${{ env.INCREMENT_SCRIPT_PATH }} ${{ env.marketing_version }} major)" >> $GITHUB_ENV
 
-      - name: Bump Build Version and set build
+      - name: Bump Build Version and set build and commit
         run: |
           echo "project_version=$((${{ env.project_version }} + 1))" >> $GITHUB_ENV
-          
+          sed -i '' 's/\(^CURRENT_PROJECT_VERSION = \).*/\1${{ env.project_version }}/' MainConfig.xcconfig
+          sed -i '' 's/\(^COMMIT = \).*/\1${{ env.latest_commit_build }}/' MainConfig.xcconfig
 
       - name: Set Release Info
         if: ${{ env.is_release == 1 }}
