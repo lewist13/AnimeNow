@@ -37,8 +37,8 @@ jobs:
 
       - name: Get versions
         run: |
-          echo "marketing_version=$(cat ${{ env.BUILD_CONFIG }}) | grep 'MARKETING_VERSION' | cut -f 3 -d ' ')" >> $GITHUB_ENV
-          echo "project_version=$(cat ${{ env.BUILD_CONFIG }}) | grep 'CURRENT_PROJECT_VERSION' | cut -f 3 -d ' ')" >> $GITHUB_ENV
+          echo "marketing_version=$(cat ${{ env.BUILD_CONFIG }} | grep 'MARKETING_VERSION' | cut -f 3 -d ' ')" >> $GITHUB_ENV
+          echo "project_version=$(cat ${{ env.BUILD_CONFIG }} | grep 'CURRENT_PROJECT_VERSION' | cut -f 3 -d ' ')" >> $GITHUB_ENV
 
       - name: Bump upcoming beta marketing version
         id: bump_version
