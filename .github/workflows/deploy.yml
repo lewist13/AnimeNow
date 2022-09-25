@@ -34,10 +34,11 @@ jobs:
         run: |
           echo "latest_commit_build=$(git log --format="%h" -n 1)" >> $GITHUB_ENV
 
-      - name: Get ios marketing version
+      - name: Get versions and increment project_version
         run: |
           echo "marketing_version=$(xcodebuild -showBuildSettings -scheme '${{ env.IOS_SCHEME }}'  | grep 'MARKETING_VERSION' | cut -f 7 -d ' ')" >> $GITHUB_ENV
           echo "project_version=$(xcodebuild -showBuildSettings -scheme '${{ env.IOS_SCHEME }}'  | grep 'CURRENT_PROJECT_VERSION' | cut -f 7 -d ' ')" >> $GITHUB_ENV
+          echo "project_version=$(($project_version + 1))" >> $GITHUB_ENV
 
       - name: Bump iOS beta marketing version
         id: bump_version
@@ -63,7 +64,7 @@ jobs:
           echo "tag_version=${{ env.marketing_version }}.beta+${{ env.latest_commit_build }}" >> $GITHUB_ENV
 
       - name: Build IOS Archive
-        run: xcodebuild archive -destination 'generic/platform=iOS' -scheme '${{ env.IOS_SCHEME }}' -archivePath '${{ env.IOS_ARCHIVE_PATH }}' MARKETING_VERSION='${{ env.tag_version }}' CURRENT_PROJECT_VERSION='${{ env.project_version + 1 }}'  CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO CODE_SIGN_IDENTITY= CODE_SIGN_ENTITLEMENTS= GCC_OPTIMIZATION_LEVEL=s SWIFT_OPTIMIZATION_LEVEL=-O
+        run: xcodebuild archive -destination 'generic/platform=iOS' -scheme '${{ env.IOS_SCHEME }}' -archivePath '${{ env.IOS_ARCHIVE_PATH }}' MARKETING_VERSION='${{ env.tag_version }}' CURRENT_PROJECT_VERSION='${{ env.project_version }}'  CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO CODE_SIGN_IDENTITY= CODE_SIGN_ENTITLEMENTS= GCC_OPTIMIZATION_LEVEL=s SWIFT_OPTIMIZATION_LEVEL=-O
 
       - name: Build IPA
         run: |
