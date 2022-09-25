@@ -10,6 +10,8 @@ on:
     types: [closed]
 
 env:
+  INCREMENT_SCRIPT_PATH: './actions-tool/increment_version.sh'
+
   IOS_SCHEME: 'Anime Now! (iOS)'
   IOS_ARCHIVE_PATH: '/tmp/action-builds/Anime Now! (iOS).xcarchive'
   IOS_OUTPUT_PATH: '/tmp/action-builds/Anime Now! (iOS).ipa'
@@ -39,10 +41,9 @@ jobs:
       - name: Bump iOS beta marketing version
         id: bump_version
         if: ${{ env.is_release == 0 }}
-        uses: christian-draeger/increment-semantic-version@1.0.2
-        with:
-          current-version: ${{ env.ios_marketing_version }}
-          version-fragment: 'feature'
+        run: |
+          sudo chmod 777 $INCREMENT_SCRIPT_PATH
+          echo "ios_marketing_version=$($INCREMENT_SCRIPT_PATH ${{ env.ios_marketing_version }} feature)" >> $GITHUB_ENV
 
       - name: Set Release Info
         if: ${{ env.is_release == 1 }}
@@ -55,10 +56,10 @@ jobs:
       - name: Set Beta Info
         if: ${{ env.is_release == 0 }}
         run: |
-          echo "message_title=${{ steps.bump_version.outputs.next-version }}-beta" >> $GITHUB_ENV
+          echo "message_title=v${{ env.ios_marketing_version }}-beta" >> $GITHUB_ENV
           echo "message_body='It is not ready for daily use and we do not guarantee its usability.'" >> $GITHUB_ENV
-          echo "version=${{ steps.bump_version.outputs.next-version }}" >> $GITHUB_EN
-          echo "tag_version=v${{ steps.bump_version.outputs.next-version }}_b${{ env.latest_commit_build }}" >> $GITHUB_ENV
+          echo "version=${{ env.ios_marketing_version }}" >> $GITHUB_EN
+          echo "tag_version=v${{ env.ios_marketing_version }}_b${{ env.latest_commit_build }}" >> $GITHUB_ENV
 
       - name: Build IOS Archive
         run: xcodebuild archive -destination 'generic/platform=iOS' -scheme '${{ env.IOS_SCHEME }}' -archivePath '${{ env.IOS_ARCHIVE_PATH }}' MARKETING_VERSION='${{ env.tag_version }}' CURRENT_PROJECT_VERSION='${{ env.latest_commit_build }}'  CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO CODE_SIGN_IDENTITY= CODE_SIGN_ENTITLEMENTS= GCC_OPTIMIZATION_LEVEL=s SWIFT_OPTIMIZATION_LEVEL=-O
