@@ -34,23 +34,20 @@ jobs:
       - name: Get build info
         run: |
           echo "latest_commit_build=$(git log --format="%h" -n 1)" >> $GITHUB_ENV
-
-      - name: Get versions
-        run: |
           echo "marketing_version=$(cat ${{ env.BUILD_CONFIG }} | grep 'MARKETING_VERSION' | cut -f 3 -d ' ')" >> $GITHUB_ENV
-          echo "project_version=$(cat ${{ env.BUILD_CONFIG }} | grep 'CURRENT_PROJECT_VERSION' | cut -f 3 -d ' ')" >> $GITHUB_ENV
 
       - name: Bump upcoming beta marketing version
         id: bump_version
         if: ${{ env.is_release == 0 }}
         run: |
-          sudo chmod 777 ${{ env.INCREMENT_SCRIPT_PATH }}
-          echo "marketing_version=$(${{ env.INCREMENT_SCRIPT_PATH }} ${{ env.marketing_version }} major)" >> $GITHUB_ENV
+           echo "marketing_version=1.0.0-beta" >> $GITHUB_ENV
+#          remember to uncomment this for when after you release 1.0.0 for beta releases
+#          sudo chmod 777 ${{ env.INCREMENT_SCRIPT_PATH }}
+#          echo "marketing_version=$(${{ env.INCREMENT_SCRIPT_PATH }} ${{ env.marketing_version }} feature)-beta" >> $GITHUB_ENV
 
       - name: Bump Build Version and set build and commit
         run: |
-          echo "project_version=$((${{ env.project_version }} + 1))" >> $GITHUB_ENV
-          sed -i '' 's/\(^CURRENT_PROJECT_VERSION = \).*/\1${{ env.project_version }}/' MainConfig.xcconfig
+          sed -i '' 's/\(^MARKETING_VERSION = \).*/\1${{ env.marketing_version }}/' MainConfig.xcconfig
           sed -i '' 's/\(^COMMIT = \).*/\1${{ env.latest_commit_build }}/' MainConfig.xcconfig
 
       - name: Set Release Info
@@ -58,19 +55,17 @@ jobs:
         run: |
           echo "message_title=${{ github.event.pull_request.title }}" >> $GITHUB_ENV
           echo "message_body=${{ github.event.pull_request.body }}" >> $GITHUB_ENV
-          echo "version=${{ env.marketing_version }}" >> $GITHUB_ENV
           echo "tag_version=${{ env.marketing_version }}" >> $GITHUB_ENV
 
       - name: Set Beta Info
         if: ${{ env.is_release == 0 }}
         run: |
-          echo "message_title=v${{ env.marketing_version }}-beta+${{ env.latest_commit_build }} " >> $GITHUB_ENV
+          echo "message_title=v${{ env.marketing_version }}+${{ env.latest_commit_build }} " >> $GITHUB_ENV
           echo "message_body=This is a build of the current state of main repo. There might be some issues and error so I do not guarantee its usability." >> $GITHUB_ENV
-          echo "version=${{ env.marketing_version }}" >> $GITHUB_ENV
-          echo "tag_version=${{ env.marketing_version }}.beta+${{ env.latest_commit_build }}" >> $GITHUB_ENV
+          echo "tag_version=${{ env.marketing_version }}+${{ env.latest_commit_build }}" >> $GITHUB_ENV
 
       - name: Build IOS Archive
-        run: xcodebuild archive -destination 'generic/platform=iOS' -scheme '${{ env.IOS_SCHEME }}' -archivePath '${{ env.IOS_ARCHIVE_PATH }}' MARKETING_VERSION='${{ env.tag_version }}' CURRENT_PROJECT_VERSION='${{ env.project_version }}'  CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO CODE_SIGN_IDENTITY= CODE_SIGN_ENTITLEMENTS= GCC_OPTIMIZATION_LEVEL=s SWIFT_OPTIMIZATION_LEVEL=-O
+        run: xcodebuild archive -destination 'generic/platform=iOS' -scheme '${{ env.IOS_SCHEME }}' -archivePath '${{ env.IOS_ARCHIVE_PATH }}' -xcconfig '${{ env.BUILD_CONFIG }}' CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO CODE_SIGN_IDENTITY= CODE_SIGN_ENTITLEMENTS= GCC_OPTIMIZATION_LEVEL=s SWIFT_OPTIMIZATION_LEVEL=-O
 
       - name: Build IPA
         run: |
@@ -82,14 +77,8 @@ jobs:
          fail_on_unmatched_files: true
          files: ${{ env.IPA_OUTPUT_PATH }}
          token: ${{ secrets.GITHUB_TOKEN }}
-         generate_release_notes: ${{ env.is_release == 0 }}
+         generate_release_notes: true
          prerelease: ${{ env.is_release == 0 }}
          body: ${{ env.message_body }}
          name: ${{ env.message_title }}
-         tag_name: 'v${{ env.tag_version }}'
-
-      - name: Commit bump version
-        run: |
-          git add .
-          git commit -m "Bump version"
-          git push origin HEAD
+         tag_name: '${{ env.tag_version }}'
