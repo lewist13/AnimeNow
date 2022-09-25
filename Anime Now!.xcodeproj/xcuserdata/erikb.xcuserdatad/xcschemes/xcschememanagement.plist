@@ -11,6 +11,8 @@
 		</dict>
 		<key>Anime Now! (macOS).xcscheme_^#shared#^_</key>
 		<dict>
+			<key>isShown</key>
+			<true/>
 			<key>orderHint</key>
 			<integer>1</integer>
 		</dict>
@@ -123,6 +125,11 @@
 	<key>SuppressBuildableAutocreation</key>
 	<dict>
 		<key>13C3536128C308A000A54E7E</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>13C3536728C308A000A54E7E</key>
 		<dict>
 			<key>primary</key>
 			<true/>

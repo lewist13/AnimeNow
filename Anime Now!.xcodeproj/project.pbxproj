@@ -102,7 +102,6 @@
 		13E4BCF028C829A80039D880 /* AnimeDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13E4BCEE28C829A80039D880 /* AnimeDetailView.swift */; };
 		13E4BCF128C829A80039D880 /* AnimeDetailCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13E4BCEF28C829A80039D880 /* AnimeDetailCore.swift */; };
 		13E512C728C79E5E00B298BA /* GraphQLModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13E512C628C79E5E00B298BA /* GraphQLModels.swift */; };
-		13F3D97D28DE555500D00F06 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 13F3D97C28DE555500D00F06 /* README.md */; };
 		13FC21C828C39762000F0F79 /* RepositoryClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13FC21C728C39762000F0F79 /* RepositoryClient.swift */; };
 		13FC21CA28C3976D000F0F79 /* RepositoryClient+Live.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13FC21C928C3976D000F0F79 /* RepositoryClient+Live.swift */; };
 		13FC21CC28C39779000F0F79 /* RepositoryClient+Mock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13FC21CB28C39779000F0F79 /* RepositoryClient+Mock.swift */; };
@@ -190,7 +189,6 @@
 		13E4BCEE28C829A80039D880 /* AnimeDetailView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AnimeDetailView.swift; sourceTree = "<group>"; };
 		13E4BCEF28C829A80039D880 /* AnimeDetailCore.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AnimeDetailCore.swift; sourceTree = "<group>"; };
 		13E512C628C79E5E00B298BA /* GraphQLModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GraphQLModels.swift; sourceTree = "<group>"; };
-		13F3D97C28DE555500D00F06 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		13FC21C728C39762000F0F79 /* RepositoryClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepositoryClient.swift; sourceTree = "<group>"; };
 		13FC21C928C3976D000F0F79 /* RepositoryClient+Live.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "RepositoryClient+Live.swift"; sourceTree = "<group>"; };
 		13FC21CB28C39779000F0F79 /* RepositoryClient+Mock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "RepositoryClient+Mock.swift"; sourceTree = "<group>"; };
@@ -412,7 +410,6 @@
 		13C3535228C3089E00A54E7E = {
 			isa = PBXGroup;
 			children = (
-				13F3D97C28DE555500D00F06 /* README.md */,
 				13C3535728C3089E00A54E7E /* Shared */,
 				13FC21C128C3960E000F0F79 /* iOS */,
 				13C3536928C308A000A54E7E /* macOS */,
@@ -689,7 +686,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				13F3D97D28DE555500D00F06 /* README.md in Resources */,
 				13C3537328C308A000A54E7E /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -880,6 +876,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Debug;
 		};
@@ -932,6 +929,7 @@
 				MTL_FAST_MATH = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Release;
 		};
@@ -945,8 +943,6 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = A6HC4Y86NJ;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "anime-now-iOS-Info.plist";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -958,7 +954,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.0.1;
+				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.errorerrorerror.anime-now";
 				PRODUCT_MODULE_NAME = AnimeNow;
 				PRODUCT_NAME = "Anime Now!";
@@ -980,8 +976,6 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = A6HC4Y86NJ;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "anime-now-iOS-Info.plist";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -993,7 +987,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.0.1;
+				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.errorerrorerror.anime-now";
 				PRODUCT_MODULE_NAME = AnimeNow;
 				PRODUCT_NAME = "Anime Now!";
