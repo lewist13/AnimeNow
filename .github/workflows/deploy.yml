@@ -11,7 +11,7 @@ on:
 
 env:
   INCREMENT_SCRIPT_PATH: './actions-tool/increment_version.sh'
-  BUILD_CONFIG: './BaseConfig.xcconfig
+  BUILD_CONFIG: './BaseConfig.xcconfig'
 
   IOS_SCHEME: 'Anime Now! (iOS)'
   IOS_ARCHIVE_PATH: '/tmp/action-builds/Anime Now! (iOS).xcarchive'
