@@ -58,7 +58,7 @@ jobs:
         run: |
           echo "message_title=v${{ env.ios_marketing_version }}-beta" >> $GITHUB_ENV
           echo "message_body='It is not ready for daily use and we do not guarantee its usability.'" >> $GITHUB_ENV
-          echo "version=${{ env.ios_marketing_version }}" >> $GITHUB_EN
+          echo "version=${{ env.ios_marketing_version }}" >> $GITHUB_ENV
           echo "tag_version=v${{ env.ios_marketing_version }}_b${{ env.latest_commit_build }}" >> $GITHUB_ENV
 
       - name: Build IOS Archive
