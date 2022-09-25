@@ -51,11 +51,8 @@
 		134FAA1F28D6FBC200B081FE /* CMTime+String.swift in Sources */ = {isa = PBXBuildFile; fileRef = 134FAA1E28D6FBC200B081FE /* CMTime+String.swift */; };
 		134FAA2028D6FBC200B081FE /* CMTime+String.swift in Sources */ = {isa = PBXBuildFile; fileRef = 134FAA1E28D6FBC200B081FE /* CMTime+String.swift */; };
 		134FAA2428D762A200B081FE /* OrientationClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 134FAA2328D762A200B081FE /* OrientationClient.swift */; };
-		134FAA2528D762A200B081FE /* OrientationClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 134FAA2328D762A200B081FE /* OrientationClient.swift */; };
 		134FAA2728D7637900B081FE /* OrientationClient+Live.swift in Sources */ = {isa = PBXBuildFile; fileRef = 134FAA2628D7637900B081FE /* OrientationClient+Live.swift */; };
-		134FAA2828D7637900B081FE /* OrientationClient+Live.swift in Sources */ = {isa = PBXBuildFile; fileRef = 134FAA2628D7637900B081FE /* OrientationClient+Live.swift */; };
 		134FAA2A28D7638400B081FE /* OrientationClient+Mock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 134FAA2928D7638400B081FE /* OrientationClient+Mock.swift */; };
-		134FAA2B28D7638400B081FE /* OrientationClient+Mock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 134FAA2928D7638400B081FE /* OrientationClient+Mock.swift */; };
 		1352A05528DBC89600A5B20D /* ImageSize.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1352A05428DBC89600A5B20D /* ImageSize.swift */; };
 		1361FD2E28CE97BF00D7C569 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1361FD2D28CE97BF00D7C569 /* Theme.swift */; };
 		1361FD2F28CE97BF00D7C569 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1361FD2D28CE97BF00D7C569 /* Theme.swift */; };
@@ -81,6 +78,7 @@
 		1384FF7728CB8D07003B011E /* SwiftUINavigation in Frameworks */ = {isa = PBXBuildFile; productRef = 1384FF7628CB8D07003B011E /* SwiftUINavigation */; };
 		1384FF7928CB93FA003B011E /* Navigation+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1384FF7828CB93FA003B011E /* Navigation+Extension.swift */; };
 		1384FF7A28CB93FA003B011E /* Navigation+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1384FF7828CB93FA003B011E /* Navigation+Extension.swift */; };
+		13938BAA28E0AF20001C8784 /* ImageSize.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1352A05428DBC89600A5B20D /* ImageSize.swift */; };
 		1395FF7528C6920E00F21FB1 /* SociableWeaver in Frameworks */ = {isa = PBXBuildFile; productRef = 1395FF7428C6920E00F21FB1 /* SociableWeaver */; };
 		13B14A0628D1710400BD923B /* SourceClient+Mock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13B14A0528D1710400BD923B /* SourceClient+Mock.swift */; };
 		13B14A0728D1710400BD923B /* SourceClient+Mock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13B14A0528D1710400BD923B /* SourceClient+Mock.swift */; };
@@ -174,6 +172,7 @@
 		138066F028C572B50012DAFB /* SearchView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SearchView.swift; sourceTree = "<group>"; };
 		138066F128C572B50012DAFB /* SearchCore.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SearchCore.swift; sourceTree = "<group>"; };
 		1384FF7828CB93FA003B011E /* Navigation+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Navigation+Extension.swift"; sourceTree = "<group>"; };
+		13938BAB28E0CADD001C8784 /* MainConfig.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = MainConfig.xcconfig; sourceTree = "<group>"; };
 		13B14A0528D1710400BD923B /* SourceClient+Mock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SourceClient+Mock.swift"; sourceTree = "<group>"; };
 		13C3535928C3089E00A54E7E /* Shared.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Shared.xcdatamodel; sourceTree = "<group>"; };
 		13C3535A28C3089E00A54E7E /* AnimeNowApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimeNowApp.swift; sourceTree = "<group>"; };
@@ -410,6 +409,7 @@
 		13C3535228C3089E00A54E7E = {
 			isa = PBXGroup;
 			children = (
+				13938BAB28E0CADD001C8784 /* MainConfig.xcconfig */,
 				13C3535728C3089E00A54E7E /* Shared */,
 				13FC21C128C3960E000F0F79 /* iOS */,
 				13C3536928C308A000A54E7E /* macOS */,
@@ -785,10 +785,9 @@
 				1384FF7A28CB93FA003B011E /* Navigation+Extension.swift in Sources */,
 				1327550F28D2AACB00A6C525 /* AnimeClient+Mock.swift in Sources */,
 				1327550A28D2A7C400A6C525 /* UserDefaultsClient+Mock.swift in Sources */,
-				134FAA2528D762A200B081FE /* OrientationClient.swift in Sources */,
+				13938BAA28E0AF20001C8784 /* ImageSize.swift in Sources */,
 				134E0E9328D125C000A5F5E5 /* UserDefaultsClient.swift in Sources */,
 				1327551128D2AACB00A6C525 /* AnimeClient.swift in Sources */,
-				134FAA2828D7637900B081FE /* OrientationClient+Live.swift in Sources */,
 				1327551228D2AAD300A6C525 /* GraphQLModels.swift in Sources */,
 				13C3536C28C308A000A54E7E /* AnimeNow.xcdatamodeld in Sources */,
 				13FC747428CFA10A00A77818 /* Source.swift in Sources */,
@@ -812,7 +811,6 @@
 				13FC21D428C39928000F0F79 /* RepositoryClient+Live.swift in Sources */,
 				134FAA1D28D6FAFC00B081FE /* String+Time.swift in Sources */,
 				132754F728D269B200A6C525 /* ListClient+AniList.swift in Sources */,
-				134FAA2B28D7638400B081FE /* OrientationClient+Mock.swift in Sources */,
 				13FC21D128C3991C000F0F79 /* ManagedModel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -822,6 +820,7 @@
 /* Begin XCBuildConfiguration section */
 		13C3537528C308A000A54E7E /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 13938BAB28E0CADD001C8784 /* MainConfig.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -882,6 +881,7 @@
 		};
 		13C3537628C308A000A54E7E /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 13938BAB28E0CADD001C8784 /* MainConfig.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -940,7 +940,6 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = A6HC4Y86NJ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -955,7 +954,6 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.errorerrorerror.anime-now";
 				PRODUCT_MODULE_NAME = AnimeNow;
 				PRODUCT_NAME = "Anime Now!";
@@ -974,7 +972,6 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = A6HC4Y86NJ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -989,7 +986,6 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.errorerrorerror.anime-now";
 				PRODUCT_MODULE_NAME = AnimeNow;
 				PRODUCT_NAME = "Anime Now!";
@@ -1011,7 +1007,6 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = A6HC4Y86NJ;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
@@ -1022,7 +1017,6 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 11.0;
-				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.errorerrorerror.anime-now";
 				PRODUCT_NAME = "Anime Now!";
 				SDKROOT = macosx;
@@ -1040,7 +1034,6 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = A6HC4Y86NJ;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
@@ -1051,7 +1044,6 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 11.0;
-				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.errorerrorerror.anime-now";
 				PRODUCT_NAME = "Anime Now!";
 				SDKROOT = macosx;

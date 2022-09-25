@@ -11,6 +11,7 @@ on:
 
 env:
   INCREMENT_SCRIPT_PATH: './actions-tool/increment_version.sh'
+  BUILD_CONFIG: './BaseConfig.xcconfig
 
   IOS_SCHEME: 'Anime Now! (iOS)'
   IOS_ARCHIVE_PATH: '/tmp/action-builds/Anime Now! (iOS).xcarchive'
@@ -34,18 +35,22 @@ jobs:
         run: |
           echo "latest_commit_build=$(git log --format="%h" -n 1)" >> $GITHUB_ENV
 
-      - name: Get versions and increment project_version
+      - name: Get versions
         run: |
-          echo "marketing_version=$(xcodebuild -showBuildSettings -scheme '${{ env.IOS_SCHEME }}'  | grep 'MARKETING_VERSION' | cut -f 7 -d ' ')" >> $GITHUB_ENV
-          echo "project_version=$(xcodebuild -showBuildSettings -scheme '${{ env.IOS_SCHEME }}'  | grep 'CURRENT_PROJECT_VERSION' | cut -f 7 -d ' ')" >> $GITHUB_ENV
-          echo "project_version=$(($project_version + 1))" >> $GITHUB_ENV
+          echo "marketing_version=$(cat ${{ env.BUILD_CONFIG }}) | grep 'MARKETING_VERSION' | cut -f 3 -d ' ')" >> $GITHUB_ENV
+          echo "project_version=$(cat ${{ env.BUILD_CONFIG }}) | grep 'CURRENT_PROJECT_VERSION' | cut -f 3 -d ' ')" >> $GITHUB_ENV
 
-      - name: Bump iOS beta marketing version
+      - name: Bump upcoming beta marketing version
         id: bump_version
         if: ${{ env.is_release == 0 }}
         run: |
-          sudo chmod 777 $INCREMENT_SCRIPT_PATH
-          echo "marketing_version=$($INCREMENT_SCRIPT_PATH ${{ env.marketing_version }} feature)" >> $GITHUB_ENV
+          sudo chmod 777 ${{ env.INCREMENT_SCRIPT_PATH }}
+          echo "marketing_version=$(${{ env.INCREMENT_SCRIPT_PATH }} ${{ env.marketing_version }} major)" >> $GITHUB_ENV
+
+      - name: Bump Build Version and set build
+        run: |
+          echo "project_version=$((${{ env.project_version }} + 1))" >> $GITHUB_ENV
+          
 
       - name: Set Release Info
         if: ${{ env.is_release == 1 }}
@@ -58,8 +63,8 @@ jobs:
       - name: Set Beta Info
         if: ${{ env.is_release == 0 }}
         run: |
-          echo "message_title=v${{ env.marketing_version }}-beta" >> $GITHUB_ENV
-          echo "message_body='It is not ready for daily use and we do not guarantee its usability.'" >> $GITHUB_ENV
+          echo "message_title=v${{ env.marketing_version }}-beta+${{ env.latest_commit_build }} " >> $GITHUB_ENV
+          echo "message_body=This is a build of the current state of main repo. There might be some issues and error so I do not guarantee its usability." >> $GITHUB_ENV
           echo "version=${{ env.marketing_version }}" >> $GITHUB_ENV
           echo "tag_version=${{ env.marketing_version }}.beta+${{ env.latest_commit_build }}" >> $GITHUB_ENV
 

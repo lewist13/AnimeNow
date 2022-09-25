@@ -1,0 +1,13 @@
+//
+//  MainConfig.xcconfig
+//  Anime Now!
+//
+//  Created by Erik Bautista on 9/25/22.
+//
+
+// Configuration settings file format documentation can be found at:
+// https://help.apple.com/xcode/#/dev745c5c974
+
+CURRENT_PROJECT_VERSION = 1
+MARKETING_VERSION = 1.0.0.0.0
+COMMIT = ''
