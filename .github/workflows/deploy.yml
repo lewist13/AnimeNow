@@ -74,8 +74,8 @@ jobs:
         run: |
           mkdir -p '${{ env.IOS_PAYLOAD_PATH }}'
           mv '${{ env.IOS_ARCHIVE_PATH }}/Products/Applications/${{ env.APP_NAME }}.app' '${{ env.IOS_PAYLOAD_PATH }}/${{ env.APP_NAME }}.app'
-          pushd ${{ env.BUILD_PATH }}
-          zip -r ${{ env.IOS_OUTPUT_PATH }} ./Payload
+          pushd '${{ env.BUILD_PATH }}'
+          zip -r '${{ env.IOS_OUTPUT_PATH }}' './Payload'
           popd
 
       - name: Release to GitHub
