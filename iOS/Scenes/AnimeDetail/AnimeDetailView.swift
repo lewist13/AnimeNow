@@ -86,9 +86,9 @@ extension AnimeDetailView {
             store.scope(
                 state: \.anime
             )
-        ) { viewStore in
+        ) { animeViewStore in
             ZStack(alignment: .bottom) {
-                KFImage(viewStore.posterImage.largest?.link)
+                KFImage(animeViewStore.posterImage.largest?.link)
                     .resizable()
                     .overlay(
                         LinearGradient(
@@ -103,7 +103,7 @@ extension AnimeDetailView {
                     )
 
                 VStack(alignment: .leading, spacing: 0) {
-                    Text(viewStore.title)
+                    Text(animeViewStore.title)
                         .font(.largeTitle)
                         .bold()
                         .multilineTextAlignment(.leading)
@@ -112,14 +112,14 @@ extension AnimeDetailView {
 
                     HStack(alignment: .top, spacing: 4) {
                         ForEach(
-                            viewStore.categories,
+                            animeViewStore.categories,
                             id: \.self
                         ) { category in
                             Text(category)
                                 .font(.footnote)
                                 .bold()
                                 .foregroundColor(.white.opacity(0.8))
-                            if viewStore.categories.last != category {
+                            if animeViewStore.categories.last != category {
                                 Text("\u{2022}")
                                     .font(.footnote)
                                     .fontWeight(.black)
@@ -128,16 +128,28 @@ extension AnimeDetailView {
                         }
                     }
 
-                    Button {
-                        viewStore.send(.playRecentEpisodeClicked)
-                    } label: {
-                        HStack {
-                            Image(systemName: "play.fill")
-                            Text("Play Show")
+                    WithViewStore(
+                        store.scope(
+                            state: \.playButtonState
+                        )
+                    ) { playButtonState in
+                        Button {
+                            animeViewStore.send(.playResumeButtonClicked)
+                        } label: {
+                            switch playButtonState.state {
+                            case .unavailable, .comingSoon:
+                                Text(playButtonState.stringValue)
+                            case .playFromBeginning, .playNextEpisode, .resumeEpisode:
+                                HStack {
+                                    Image(systemName: "play.fill")
+                                    Text(playButtonState.stringValue)
+                                }
+                            }
                         }
+                        .buttonStyle(PlayButtonStyle(isEnabled: playButtonState.isAvailable))
+                        .padding(.vertical, 12)
+                        .disabled(!playButtonState.isAvailable)
                     }
-                    .buttonStyle(PlayButtonStyle())
-                    .padding(.vertical, 12)
                 }
                 .frame(
                     maxWidth: .infinity,
@@ -306,17 +318,33 @@ extension View {
 
 extension AnimeDetailView {
     struct PlayButtonStyle: ButtonStyle {
+        let isEnabled: Bool
+
         func makeBody(configuration: Configuration) -> some View {
             configuration.label
                 .font(.system(size: 12).weight(.heavy))
                 .padding()
-                .background(Color.white)
+                .background(isEnabled ? Color.white : Color.init(.sRGB, white: 0.25, opacity: 1.0))
+                .foregroundColor(isEnabled ? .black : .white)
+                .clipShape(Capsule())
+                .scaleEffect(configuration.isPressed ? 0.9 : 1)
+                .animation(.easeOut(duration: 0.2), value: configuration.isPressed)
+        }
+    }
+
+    struct PlayButtonDisableStyle: ButtonStyle {
+        func makeBody(configuration: Configuration) -> some View {
+            configuration.label
+                .font(.system(size: 12).weight(.heavy))
+                .padding()
+                .background(Color.white.opacity(0.25))
                 .foregroundColor(.black)
                 .clipShape(Capsule())
                 .scaleEffect(configuration.isPressed ? 0.9 : 1)
                 .animation(.easeOut(duration: 0.2), value: configuration.isPressed)
         }
     }
+
 }
 
 struct AnimeView_Previews: PreviewProvider {

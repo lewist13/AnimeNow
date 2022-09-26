@@ -12,6 +12,57 @@ import ComposableArchitecture
 enum AnimeDetailCore {
     typealias LoadableEpisodes = LoadableState<IdentifiedArrayOf<Episode>>
 
+    enum PlayButtonState: Equatable {
+        case unavailable
+        case comingSoon
+        case playFromBeginning(EpisodeInfo)
+        case playNextEpisode(EpisodeInfo)
+        case resumeEpisode(EpisodeInfo)
+
+        var isAvailable: Bool {
+            switch self {
+            case .unavailable, .comingSoon:
+                return false
+            default:
+                return true
+            }
+        }
+
+        var episodeId: Episode.ID? {
+            switch self {
+            case .playFromBeginning(let info), .playNextEpisode(let info), .resumeEpisode(let info):
+                return info.id
+            default:
+                return nil
+            }
+        }
+
+        var stringValue: String {
+            switch self {
+            case .unavailable:
+                return "Unavailable"
+            case .comingSoon:
+                return "Coming Soon"
+            case .playFromBeginning(let info):
+                return "Play \(info.format == .movie ? "Movie" : "Show")"
+            case .playNextEpisode(let info):
+                return "Play Next Epsidode: \(info.episodeNumber ?? 0)"
+            case .resumeEpisode(let info):
+                if info.format == .movie {
+                    return "Resume Movie"
+                } else {
+                    return "Resume Episode \(info.episodeNumber ?? 0)"
+                }
+            }
+        }
+
+        struct EpisodeInfo: Equatable {
+            let id: Episode.ID
+            let format: Anime.Format
+            var episodeNumber: Int?
+        }
+    }
+
     struct State: Equatable {
         let anime: Anime
 
@@ -24,7 +75,7 @@ enum AnimeDetailCore {
         case onAppear
         case closeButtonPressed
         case close
-        case playRecentEpisodeClicked
+        case playResumeButtonClicked
         case fetchedEpisodes(Result<[Episode], API.Error>)
         case selectedEpisode(episode: Episode)
         case play(anime: Anime, episodes: IdentifiedArrayOf<Episode>, selected: Episode.ID)
@@ -41,6 +92,16 @@ enum AnimeDetailCore {
 extension AnimeDetailCore.State {
     var format: Anime.Format {
         anime.format
+    }
+
+    var playButtonState: AnimeDetailCore.PlayButtonState {
+        if anime.status == .upcoming {
+            return .comingSoon
+        } else if case let .success(episodes) = episodes, let episode = episodes.first {
+            return .playFromBeginning(.init(id: episode.id, format: anime.format, episodeNumber: anime.format == .movie ? nil : episode.number))
+        } else {
+            return .unavailable
+        }
     }
 }
 
@@ -62,8 +123,10 @@ extension AnimeDetailCore {
                     .catchToEffect()
                     .map(Action.fetchedEpisodes)
                     .cancellable(id: CancelFetchingEpisodesId())
-            case .playRecentEpisodeClicked:
-                break
+            case .playResumeButtonClicked:
+                if let episodeId = state.playButtonState.episodeId, let episode = state.episodes.value?[id: episodeId] {
+                    return .init(value: .selectedEpisode(episode: episode))
+                }
             case .fetchedEpisodes(.success(let episodes)):
                 state.episodes = .success(.init(uniqueElements: episodes))
             case .fetchedEpisodes(.failure):
