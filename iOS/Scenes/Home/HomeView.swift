@@ -112,7 +112,7 @@ extension HomeView {
                     }
                 }
             }
-            .frame(height: 200)
+            .frame(height: 225)
         }
     }
 

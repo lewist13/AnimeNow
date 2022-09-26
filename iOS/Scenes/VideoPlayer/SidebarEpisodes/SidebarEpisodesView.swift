@@ -13,28 +13,38 @@ struct SidebarEpisodesView: View {
     let store: Store<SidebarEpisodesCore.State, SidebarEpisodesCore.Action>
 
     var body: some View {
-        WithViewStore(store) { viewStore in
-            ScrollViewReader.init { proxy in
+            ScrollViewReader { proxy in
                 ScrollView(
                     .vertical,
                     showsIndicators: false
                 ) {
-                    LazyVStack {
-                        ForEach(viewStore.episodes) { episode in
-                            EpisodeItemCompactView(episode: episode)
+                    WithViewStore(store) { viewStore in
+                        LazyVStack {
+                            ForEach(viewStore.episodes) { episode in
+                                EpisodeItemCompactView(
+                                    episode: episode,
+                                    selected: episode.id == viewStore.selectedId
+                                )
                                 .onTapGesture {
-                                    viewStore.send(.selected(id: episode.id))
+                                    if viewStore.selectedId != episode.id {
+                                        viewStore.send(.selected(id: episode.id))
+                                    }
                                 }
                                 .id(episode.id)
+                            }
+                        }
+                        .padding([.bottom])
+                        .onAppear {
+                            proxy.scrollTo(viewStore.selectedId, anchor: .top)
+                        }
+                        .onChange(of: viewStore.selectedId) { newValue in
+                            withAnimation {
+                                proxy.scrollTo(newValue, anchor: .top)
+                            }
                         }
                     }
-                    .padding([.bottom])
-                }
-                .onAppear {
-                    proxy.scrollTo(viewStore.selectedId)
                 }
             }
-        }
     }
 }
 
@@ -50,6 +60,7 @@ struct SidebarEpisodesView_Previews: PreviewProvider {
                 environment: .init()
             )
         )
+        .preferredColorScheme(.dark)
         .background(BlurView(style: .systemUltraThinMaterialDark))
     }
 }

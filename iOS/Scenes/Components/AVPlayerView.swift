@@ -19,6 +19,7 @@ struct AVPlayerCore {
         case play
         case pause
         case stop
+        case terminate
         case start(media: AVPlayerItem)
         case seek(to: CMTime)
         case appendMedia(AVPlayerItem)
@@ -178,6 +179,10 @@ class PlayerViewController: UIViewController {
                 case .pause:
                     self?.player.pause()
                 case .stop:
+                    self?.player.pause()
+                    self?.player.removeAllItems()
+                    self?.playerItemCancellables.removeAll()
+                case .terminate:
                     self?.player.pause()
                     self?.player.removeAllItems()
                     self?.cancellables.removeAll()

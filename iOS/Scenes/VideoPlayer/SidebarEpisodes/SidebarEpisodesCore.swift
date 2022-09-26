@@ -18,9 +18,7 @@ enum SidebarEpisodesCore {
         case selected(id: Episode.ID)
     }
 
-    struct Environment {
-
-    }
+    struct Environment {}
 
     static let reducer = Reducer<State, Action, Environment>.init { state, action, env in
         switch action {

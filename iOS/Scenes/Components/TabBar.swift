@@ -111,7 +111,7 @@ public struct TabBar<Content: View>: View {
                     }
                 }
                 .edgesIgnoringSafeArea(.bottom)
-//                .visibility(self.visibility)
+                .visibility(self.visibility)
             }
         }
         .onPreferenceChange(TabBarPreferenceKey.self) { value in
@@ -169,6 +169,16 @@ struct TabBarViewModifier: ViewModifier {
 extension View {
     public func tabItem(for item: TabBarRoute) -> some View {
         return self.modifier(TabBarViewModifier(item: item))
+    }
+
+    @ViewBuilder
+    public func visibility(_ visibility: TabBarVisibility) -> some View {
+        switch visibility {
+        case .visible:
+            self.transition(.move(edge: .bottom))
+        case .invisible:
+            hidden().transition(.move(edge: .bottom))
+        }
     }
 }
 

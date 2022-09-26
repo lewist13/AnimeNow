@@ -59,15 +59,15 @@ extension SearchView {
     var waitingForTyping: some View {
         VStack(spacing: 16) {
             Image(systemName: "magnifyingglass")
-                .font(.system(size: 100).bold())
+                .font(.system(size: 100))
 
             Text("Start typing to search for animes.")
-                .font(.title3)
-                .bold()
+                .font(.headline)
                 .multilineTextAlignment(.center)
         }
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .ignoresSafeArea(.keyboard, edges: .bottom)
     }
 
     @ViewBuilder
@@ -75,6 +75,7 @@ extension SearchView {
         ProgressView()
             .scaleEffect(1.5)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+            .ignoresSafeArea(.keyboard, edges: .bottom)
     }
 
     @ViewBuilder
@@ -103,15 +104,17 @@ extension SearchView {
 
     @ViewBuilder
     var failedToRetrieve: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 8) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 22))
+
             Text("There is an error fetching items.")
-                .font(.title3)
-                .bold()
+                .font(.headline)
                 .multilineTextAlignment(.center)
-                .foregroundColor(.red)
         }
-        .padding()
+        .foregroundColor(.red)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+        .ignoresSafeArea(.keyboard, edges: .bottom)
     }
 
     @ViewBuilder
@@ -134,11 +137,6 @@ struct SearchView_Previews: PreviewProvider {
             store: .init(
                 initialState: .init(
                     loadable: .failed
-//                    loadable: .success(
-//                        .init(
-//                            arrayLiteral: Anime.attackOnTitan, Anime.narutoShippuden
-//                        )
-//                    )
                 ),
                 reducer: SearchCore.reducer,
                 environment: .init(

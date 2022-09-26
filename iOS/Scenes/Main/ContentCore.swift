@@ -12,7 +12,7 @@ import ComposableArchitecture
 
 enum ContentCore {
     struct State: Equatable {
-        var route = TabBarRoute.home
+        @BindableState var route = TabBarRoute.home
 
         var home = HomeCore.State()
         var search = SearchCore.State()
@@ -23,9 +23,8 @@ enum ContentCore {
         var animeDetail: AnimeDetailCore.State?
     }
 
-    enum Action: Equatable {
+    enum Action: BindableAction {
         case onAppear
-        case setRoute(TabBarRoute)
         case setAnimeDetail(AnimeDetailCore.State?)
         case home(HomeCore.Action)
         case search(SearchCore.Action)
@@ -33,6 +32,7 @@ enum ContentCore {
         case settings(SettingsCore.Action)
         case videoPlayer(VideoPlayerCore.Action)
         case animeDetail(AnimeDetailCore.Action)
+        case binding(BindingAction<State>)
     }
 
     struct Environment {
@@ -122,8 +122,6 @@ extension ContentCore {
         ),
         .init { state, action, environment in
             switch action {
-            case .setRoute(let route):
-                state.route = route
             case let .animeDetail(.play(anime, episodes, selected)):
                 state.videoPlayer = .init(anime: anime, episodes: episodes, selectedEpisode: selected)
                 return environment.orientationClient.setOrientation(.landscapeRight)
@@ -153,5 +151,6 @@ extension ContentCore {
             }
             return .none
         }
+            .binding()
     )
 }

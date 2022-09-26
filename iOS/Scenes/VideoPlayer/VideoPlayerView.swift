@@ -31,7 +31,7 @@ struct VideoPlayerView: View {
             self.hasLoaded = state.playerState.status == .readyToPlay
             self.showPlayerControlsOverlay = state.showPlayerOverlay
             self.isPlaying = state.playerState.timeStatus == .playing
-            self.isBuffering = state.playerState.timeStatus == .waitingToPlayAtSpecifiedRate || state.sourcesState.sources == .loading
+            self.isBuffering = state.sourcesState.sources == .loading || state.playerState.timeStatus == .waitingToPlayAtSpecifiedRate
             self.currentTime = state.playerState.currentTime.seconds
             self.duration = state.playerState.duration?.seconds ?? 0
             self.sidebar = state.sidebarRoute
@@ -242,6 +242,7 @@ extension VideoPlayerView {
                     }
                 }
                 .foregroundColor(Color.white)
+                .contentShape(Rectangle())
                 .onTapGesture {
                     let viewStore = ViewStore(store)
                     if viewStore.anime.format == .tv {

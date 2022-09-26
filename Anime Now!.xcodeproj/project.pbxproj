@@ -59,7 +59,6 @@
 		1363011C28C5C49F0076BF0A /* TinyGraphQL in Frameworks */ = {isa = PBXBuildFile; productRef = 1363011B28C5C49F0076BF0A /* TinyGraphQL */; };
 		1363011E28C5C4B00076BF0A /* TinyGraphQL in Frameworks */ = {isa = PBXBuildFile; productRef = 1363011D28C5C4B00076BF0A /* TinyGraphQL */; };
 		1364BA7A28E12BBC005BAEBA /* TabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1364BA7928E12BBC005BAEBA /* TabBar.swift */; };
-		1364BA9428E12C14005BAEBA /* AnimeNowTabBarStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1364BA9328E12C14005BAEBA /* AnimeNowTabBarStyle.swift */; };
 		1364BA9C28E13F6E005BAEBA /* DownloadsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1364BA9A28E13F6E005BAEBA /* DownloadsView.swift */; };
 		1364BA9D28E13F6E005BAEBA /* DownloadsCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1364BA9B28E13F6E005BAEBA /* DownloadsCore.swift */; };
 		13650F3328CFE0BF002E20DD /* AnimeClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13650F3228CFE0BF002E20DD /* AnimeClient.swift */; };
@@ -94,6 +93,8 @@
 		13C3537328C308A000A54E7E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13C3535D28C308A000A54E7E /* Assets.xcassets */; };
 		13C3537428C308A000A54E7E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13C3535D28C308A000A54E7E /* Assets.xcassets */; };
 		13C3537F28C311B300A54E7E /* ComposableArchitecture in Frameworks */ = {isa = PBXBuildFile; productRef = 13C3537E28C311B300A54E7E /* ComposableArchitecture */; };
+		13D235C628E16F32004E51BB /* ComposableArchitecture+Binding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13D235C528E16F32004E51BB /* ComposableArchitecture+Binding.swift */; };
+		13D235C728E16F32004E51BB /* ComposableArchitecture+Binding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13D235C528E16F32004E51BB /* ComposableArchitecture+Binding.swift */; };
 		13D2846528CF08F500332556 /* XCTestDynamicOverlay in Frameworks */ = {isa = PBXBuildFile; productRef = 13D2846428CF08F500332556 /* XCTestDynamicOverlay */; };
 		13D2846728CF090700332556 /* XCTestDynamicOverlay in Frameworks */ = {isa = PBXBuildFile; productRef = 13D2846628CF090700332556 /* XCTestDynamicOverlay */; };
 		13D2846928CF090B00332556 /* SwiftUINavigation in Frameworks */ = {isa = PBXBuildFile; productRef = 13D2846828CF090B00332556 /* SwiftUINavigation */; };
@@ -163,7 +164,6 @@
 		1352A05428DBC89600A5B20D /* ImageSize.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageSize.swift; sourceTree = "<group>"; };
 		1361FD2D28CE97BF00D7C569 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		1364BA7928E12BBC005BAEBA /* TabBar.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TabBar.swift; sourceTree = "<group>"; };
-		1364BA9328E12C14005BAEBA /* AnimeNowTabBarStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimeNowTabBarStyle.swift; sourceTree = "<group>"; };
 		1364BA9A28E13F6E005BAEBA /* DownloadsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadsView.swift; sourceTree = "<group>"; };
 		1364BA9B28E13F6E005BAEBA /* DownloadsCore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadsCore.swift; sourceTree = "<group>"; };
 		13650F3228CFE0BF002E20DD /* AnimeClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimeClient.swift; sourceTree = "<group>"; };
@@ -190,6 +190,7 @@
 		13C3536828C308A000A54E7E /* Anime Now!.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Anime Now!.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		13C3536A28C308A000A54E7E /* macOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = macOS.entitlements; sourceTree = "<group>"; };
 		13D235C328E16801004E51BB /* anime-now-ios-info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "anime-now-ios-info.plist"; sourceTree = "<group>"; };
+		13D235C528E16F32004E51BB /* ComposableArchitecture+Binding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ComposableArchitecture+Binding.swift"; sourceTree = "<group>"; };
 		13D68EAE28D38D1B00B0D5DB /* VideoPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPlayerView.swift; sourceTree = "<group>"; };
 		13E1AA6A28DCEBD800D20745 /* SidebarQualityCore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarQualityCore.swift; sourceTree = "<group>"; };
 		13E1AA6C28DCEBE500D20745 /* SidebarSourcesCore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarSourcesCore.swift; sourceTree = "<group>"; };
@@ -323,7 +324,6 @@
 			children = (
 				13C3535B28C3089E00A54E7E /* ContentView.swift */,
 				137A819528C53A6400B69503 /* ContentCore.swift */,
-				1364BA9328E12C14005BAEBA /* AnimeNowTabBarStyle.swift */,
 			);
 			path = Main;
 			sourceTree = "<group>";
@@ -580,6 +580,7 @@
 				132754FE28D28F5A00A6C525 /* Array+Duplicates.swift */,
 				134FAA1B28D6FAFC00B081FE /* String+Time.swift */,
 				134FAA1E28D6FBC200B081FE /* CMTime+String.swift */,
+				13D235C528E16F32004E51BB /* ComposableArchitecture+Binding.swift */,
 			);
 			path = "Supporting Files";
 			sourceTree = "<group>";
@@ -733,6 +734,7 @@
 				13386AE728CBFD7A005E8352 /* LoadableState.swift in Sources */,
 				1312FD5C28DD4BEA004A415F /* EpisodeItemBigView.swift in Sources */,
 				13650F3328CFE0BF002E20DD /* AnimeClient.swift in Sources */,
+				13D235C628E16F32004E51BB /* ComposableArchitecture+Binding.swift in Sources */,
 				13FC21E628C3C2C6000F0F79 /* ListClient.swift in Sources */,
 				13650F3628D014B1002E20DD /* AnimeClient+Live.swift in Sources */,
 				1312FD6228DD7CB0004A415F /* AirplayRouterPickerView.swift in Sources */,
@@ -783,7 +785,6 @@
 				13FC21EE28C401E1000F0F79 /* ListClient+Kitsu.swift in Sources */,
 				137A819C28C5456400B69503 /* Episode.swift in Sources */,
 				1361FD2E28CE97BF00D7C569 /* Theme.swift in Sources */,
-				1364BA9428E12C14005BAEBA /* AnimeNowTabBarStyle.swift in Sources */,
 				1312FD6028DD6934004A415F /* SeekbarView.swift in Sources */,
 				13446E8228CA4AB100F815C6 /* SettingsCore.swift in Sources */,
 				13E4BCF028C829A80039D880 /* AnimeDetailView.swift in Sources */,
@@ -807,6 +808,7 @@
 				13FC21ED28C40193000F0F79 /* ListClient+Kitsu.swift in Sources */,
 				13386AEF28CC2892005E8352 /* ShimmerView.swift in Sources */,
 				1327552228D2ABAE00A6C525 /* HomeView.swift in Sources */,
+				13D235C728E16F32004E51BB /* ComposableArchitecture+Binding.swift in Sources */,
 				1327550728D2A11A00A6C525 /* UserDefaultsClient+Live.swift in Sources */,
 				1384FF7A28CB93FA003B011E /* Navigation+Extension.swift in Sources */,
 				1327550F28D2AACB00A6C525 /* AnimeClient+Mock.swift in Sources */,

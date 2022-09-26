@@ -20,10 +20,7 @@ struct ContentView: View {
             store.scope(state: \.route)
         ) { viewStore in
             TabBar(
-                selection: .init(
-                    get: { viewStore.state },
-                    set: { viewStore.send(.setRoute($0)) }
-                ),
+                selection: viewStore.binding(\.$route, as: \.self),
                 visibility: $visibility
             ) {
                 HomeView(
@@ -75,6 +72,27 @@ struct ContentView: View {
                 )
             }
         )
+    }
+}
+
+struct AnimeTabBarStyle: TabBarStyle {
+    public func tabBar(with geometry: GeometryProxy, itemsContainer: @escaping () -> AnyView) -> some View {
+        itemsContainer()
+            .padding(.horizontal)
+            .background(Color(hue: 0, saturation: 0, brightness: 0.03))
+            .cornerRadius(geometry.size.height / 4)
+            .fixedSize()
+            .padding(.vertical, 28)
+            .frame(maxWidth: .infinity)
+    }
+}
+
+struct AnimeTabItemStyle: TabItemStyle {
+    public func tabItem(item: TabBarRoute, isSelected: Bool) -> some View {
+        Image(systemName: "\(isSelected ? item.selectedIcon : item.icon)")
+            .font(.system(size: 20).weight(.semibold))
+            .frame(width: 58, height: 58)
+            .foregroundColor(isSelected ? Color.red : Color.white)
     }
 }
 

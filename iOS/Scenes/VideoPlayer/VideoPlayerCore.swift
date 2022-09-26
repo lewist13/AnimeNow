@@ -34,7 +34,7 @@ enum VideoPlayerCore {
         var sidebarRoute: SidebarRoute?
 
         // Overlays
-        var showPlayerOverlay = false
+        var showPlayerOverlay = true
 
         // Player State
         var playerState = AVPlayerCore.State()
@@ -55,6 +55,7 @@ enum VideoPlayerCore {
         case tappedEpisodesSidebar
         case tappedSourcesSidebar
         case closeSidebar
+        case closeSidebarAndShowOverlay
         case closeButtonPressed
         case close
 
@@ -107,7 +108,11 @@ extension VideoPlayerCore {
                     .init(value: .fetchSourcesForSelectedEpisode)
                 )
             case .episodes(.selected):
-                return .init(value: .fetchSourcesForSelectedEpisode)
+                return .merge(
+                    .init(value: .closeSidebarAndShowOverlay),
+                    .init(value: .player(.avAction(.stop))),
+                    .init(value: .fetchSourcesForSelectedEpisode)
+               )
             case .sources(.selected):
                 return .init(value: .playSource)
             case .fetchSourcesForSelectedEpisode:
@@ -171,12 +176,15 @@ extension VideoPlayerCore {
                     .cancellable(id: HideOverlayAnimationTimeout())
             case .cancelHideOverlayAnimationDelay:
                 return .cancel(id: HideOverlayAnimationTimeout())
+            case .closeSidebarAndShowOverlay:
+                state.sidebarRoute = nil
+                return .init(value: .tappedPlayer)
             case .closeButtonPressed:
                 return .concatenate(
                     [
                         .cancel(id: HideOverlayAnimationTimeout()),
                         .cancel(id: CancelEpisodeSourceFetchingId()),
-                        .init(value: .player(.avAction(.stop))),
+                        .init(value: .player(.avAction(.terminate))),
                         .init(value: .close)
                             .delay(for: 0.25, scheduler: environment.mainQueue)
                             .eraseToEffect()
@@ -208,9 +216,9 @@ extension VideoPlayerCore {
                 } else {
                     return .init(value: .player(.avAction(.play)))
                 }
-    
+
             case .startSeeking:
-                return .concatenate(
+                return .merge(
                     .init(value: .player(.avAction(.pause))),
                     .init(value: .cancelHideOverlayAnimationDelay)
                 )

@@ -52,7 +52,7 @@ struct SeekbarView: View {
                     .frame(width: preloaded * reader.size.width)
 
                 // Progress
-                Color.red
+                Color.white
                     .frame(
                         width: progress * reader.size.width,
                         alignment: .leading
@@ -82,7 +82,7 @@ struct SeekbarView: View {
                 }
                 .gesture(
                     DragGesture(
-                        minimumDistance: 0
+                        minimumDistance: 5
                     )
                         .onChanged({ value in
                             dragState = .dragging(value: value.location)
