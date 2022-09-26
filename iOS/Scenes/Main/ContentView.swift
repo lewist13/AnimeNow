@@ -11,15 +11,49 @@ import ComposableArchitecture
 struct ContentView: View {
     let store: Store<ContentCore.State, ContentCore.Action>
 
+    @State var visibility = TabBarVisibility.visible
+
     var body: some View {
         // MARK: Home View
 
-        HomeView(
-            store: store.scope(
-                state: \.home,
-                action: ContentCore.Action.home
-            )
-        )
+        WithViewStore(
+            store.scope(state: \.route)
+        ) { viewStore in
+            TabBar(
+                selection: .init(
+                    get: { viewStore.state },
+                    set: { viewStore.send(.setRoute($0)) }
+                ),
+                visibility: $visibility
+            ) {
+                HomeView(
+                    store: store.scope(
+                        state: \.home,
+                        action: ContentCore.Action.home
+                    )
+                )
+                .tabItem(for: TabBarRoute.home)
+
+                SearchView(
+                    store: store.scope(
+                        state: \.search,
+                        action: ContentCore.Action.search
+                    )
+                )
+                .tabItem(for: TabBarRoute.search)
+
+                DownloadsView(
+                    store: store.scope(
+                        state: \.downloads,
+                        action: ContentCore.Action.downloads
+                    )
+                )
+                .tabItem(for: TabBarRoute.downloads)
+            }
+            .tabBar(style: AnimeTabBarStyle())
+            .tabItem(style: AnimeTabItemStyle())
+            .animation(Animation.linear(duration: 0.15), value: viewStore.state)
+        }
         .overlay(
             IfLetStore(
                 store.scope(

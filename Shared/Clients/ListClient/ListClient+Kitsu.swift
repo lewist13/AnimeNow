@@ -106,7 +106,22 @@ extension ListClient {
                     .map(convertKitsuAnimeToAnime(animes:))
                     .eraseToEffect()
             },
-            search: { _ in .none }
+            search: { query in
+                let query = KitsuAPI.SearchAnimeByTitle.createQuery(
+                    .init(
+                        title: query,
+                        first: 25
+                    )
+                )
+                    .format()
+                let endpoint = KitsuAPI.Endpoint.graphql(.init(query: query))
+                let response = API.request(api, endpoint, GraphQL.Response<KitsuAPI.SearchAnimeByTitle>.self)
+
+                return response
+                    .map { $0?.data.searchAnimeByTitle.nodes ?? [] }
+                    .map(convertKitsuAnimeToAnime(animes:))
+                    .eraseToEffect()
+            }
         )
     }()
 }

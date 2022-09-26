@@ -16,7 +16,7 @@ struct HomeView: View {
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
             topHeaderView
-            
+
             LazyVStack(spacing: 24) {
                 animeItems(
                     title: "Trending This Week",
@@ -24,21 +24,21 @@ struct HomeView: View {
                         state: \.topTrendingAnime
                     )
                 )
-                
+
                 animeItems(
                     title: "Top Airing Anime",
                     store: store.scope(
                         state: \.topAiringAnime
                     )
                 )
-                
+
                 animeItems(
                     title: "Top Upcoming Anime",
                     store: store.scope(
                         state: \.topUpcomingAnime
                     )
                 )
-                
+
                 animeItems(
                     title: "Highest Rated Anime",
                     store: store.scope(
@@ -167,7 +167,7 @@ extension HomeView {
     @ViewBuilder
     func headerText(_ title: String) -> some View {
         Text(title)
-            .font(.subheadline)
+            .font(.headline)
             .bold()
             .padding(.horizontal)
             .foregroundColor(.white.opacity(0.9))

@@ -10,12 +10,14 @@ import SwiftUI
 import Foundation
 import ComposableArchitecture
 
-
 enum ContentCore {
     struct State: Equatable {
+        var route = TabBarRoute.home
+
         var home = HomeCore.State()
         var search = SearchCore.State()
         var settings = SettingsCore.State()
+        var downloads = DownloadsCore.State()
 
         var videoPlayer: VideoPlayerCore.State?
         var animeDetail: AnimeDetailCore.State?
@@ -23,9 +25,11 @@ enum ContentCore {
 
     enum Action: Equatable {
         case onAppear
+        case setRoute(TabBarRoute)
         case setAnimeDetail(AnimeDetailCore.State?)
         case home(HomeCore.Action)
         case search(SearchCore.Action)
+        case downloads(DownloadsCore.Action)
         case settings(SettingsCore.Action)
         case videoPlayer(VideoPlayerCore.Action)
         case animeDetail(AnimeDetailCore.Action)
@@ -74,7 +78,18 @@ extension ContentCore {
         SearchCore.reducer.pullback(
             state: \.search,
             action: /ContentCore.Action.search,
-            environment: { .init(animeClient: $0.animeClient)
+            environment: {
+                .init(
+                    mainQueue: $0.mainQueue,
+                    animeClient: $0.animeClient
+                )
+            }
+        ),
+        DownloadsCore.reducer.pullback(
+            state: \.downloads,
+            action: /ContentCore.Action.downloads,
+            environment: { _ in
+                .init()
             }
         ),
         SettingsCore.reducer.pullback(
@@ -107,6 +122,8 @@ extension ContentCore {
         ),
         .init { state, action, environment in
             switch action {
+            case .setRoute(let route):
+                state.route = route
             case let .animeDetail(.play(anime, episodes, selected)):
                 state.videoPlayer = .init(anime: anime, episodes: episodes, selectedEpisode: selected)
                 return environment.orientationClient.setOrientation(.landscapeRight)
@@ -117,7 +134,8 @@ extension ContentCore {
                     .fireAndForget()
             case .setAnimeDetail(let animeMaybe):
                 state.animeDetail = animeMaybe
-            case .home(.animeTapped(let anime)):
+            case let .home(.animeTapped(anime)),
+                 let .search(SearchCore.Action.onAnimeTapped(anime)):
                 let animation = Animation.interactiveSpring(response: 0.35, dampingFraction: 1.0)
                 return .init(value: .setAnimeDetail(.init(anime: anime)))
                     .receive(

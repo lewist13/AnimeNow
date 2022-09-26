@@ -48,5 +48,6 @@ struct EpisodeItemCompactView_Previews: PreviewProvider {
         EpisodeItemCompactView(
             episode: .demoEpisodes.first!
         )
+        .preferredColorScheme(.dark)
     }
 }

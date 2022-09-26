@@ -29,13 +29,11 @@ struct AnimeItemView: View {
                 )
 
             Text(anime.title)
-                .font(.system(size: 13))
-                .bold()
+                .font(.system(size: 16).weight(.bold))
                 .multilineTextAlignment(.leading)
                 .foregroundColor(.white)
                 .padding(12)
         }
-        .transition(.scale(scale: 1))
         .aspectRatio(2/3, contentMode: .fit)
         .cornerRadius(12)
     }

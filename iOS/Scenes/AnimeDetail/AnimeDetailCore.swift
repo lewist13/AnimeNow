@@ -17,12 +17,14 @@ enum AnimeDetailCore {
 
         var episodes = LoadableEpisodes.preparing
         var moreInfo = Set<Episode.ID>()
+
     }
 
     enum Action: Equatable {
         case onAppear
         case closeButtonPressed
         case close
+        case playRecentEpisodeClicked
         case fetchedEpisodes(Result<[Episode], API.Error>)
         case selectedEpisode(episode: Episode)
         case play(anime: Anime, episodes: IdentifiedArrayOf<Episode>, selected: Episode.ID)
@@ -60,6 +62,8 @@ extension AnimeDetailCore {
                     .catchToEffect()
                     .map(Action.fetchedEpisodes)
                     .cancellable(id: CancelFetchingEpisodesId())
+            case .playRecentEpisodeClicked:
+                break
             case .fetchedEpisodes(.success(let episodes)):
                 state.episodes = .success(.init(uniqueElements: episodes))
             case .fetchedEpisodes(.failure):
@@ -78,13 +82,6 @@ extension AnimeDetailCore {
                         selected: episode.id
                     )
                 )
-                // TODO: Move the place where we get the source to the video player
-//                return environment.animeClient.getSources(episode.id)
-//                    .subscribe(on: DispatchQueue.global(qos: .userInteractive))
-//                    .receive(on: environment.mainQueue)
-//                    .catchToEffect()
-//                    .map(Action.fetchedSources)
-//                    .cancellable(id: CancelFetchingSourcesId())
             case .play:
                 break
             case .closeButtonPressed:

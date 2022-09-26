@@ -13,8 +13,6 @@ import Kingfisher
 struct AnimeDetailView: View {
     let store: Store<AnimeDetailCore.State, AnimeDetailCore.Action>
 
-    @State var expandSummary = false
-
     struct ViewState: Equatable {
         let animeStatus: Anime.Status
         let animeFormat: Anime.Format
@@ -27,7 +25,7 @@ struct AnimeDetailView: View {
 
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
-            VStack(spacing: 0) {
+            VStack(spacing: 18) {
                 topContainer
                 infoContainer
 
@@ -131,7 +129,7 @@ extension AnimeDetailView {
                     }
 
                     Button {
-                        print("Play button clicked for \(viewStore.title)")
+                        viewStore.send(.playRecentEpisodeClicked)
                     } label: {
                         HStack {
                             Image(systemName: "play.fill")
@@ -146,12 +144,14 @@ extension AnimeDetailView {
                     maxHeight: .infinity,
                     alignment: .bottomLeading
                 )
-                .padding()
+                .padding(.horizontal)
             }
         }
         .aspectRatio(2/3, contentMode: .fill)
     }
 }
+
+// MARK: - Info Container
 
 extension AnimeDetailView {
 
@@ -160,58 +160,34 @@ extension AnimeDetailView {
         WithViewStore(
             store.scope(state: \.anime)
         ) { anime in
-            VStack(alignment: .leading) {
-                HStack(alignment: .center, spacing: 12) {
-                    buildSubHeading(title: "Summary")
-                    Image(systemName: expandSummary ? "chevron.up" : "chevron.down")
-                        .font(Font.system(size: 18, weight: .black))
-                        .foregroundColor(Color.white.opacity(0.9))
-                    Spacer()
-                }
-                .padding(.vertical, 6)
-                .onTapGesture {
-                    withAnimation(.easeInOut(duration: 0.15)) {
-                        expandSummary.toggle()
-                    }
-                }
+            VStack(alignment: .leading, spacing: 8) {
 
-                LazyVStack {
-                    Text(anime.description)
-                        .font(.body)
-                        .foregroundColor(.white)
-                        .lineLimit(expandSummary ? nil : 5)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .overlay(
-                            Group {
-                                if expandSummary {
-                                    EmptyView()
-                                } else {
-                                    LinearGradient(
-                                        colors: [
-                                            .clear,
-                                            .black
-                                        ],
-                                        startPoint: .top,
-                                        endPoint: .bottom
-                                    )
-                                }
-                            }
-                        )
-                }
+                // MARK: Summary Header
 
-                if anime.state.studios.count > 0 {
-                    VStack(alignment: .leading) {
-                        Text("Studios")
-                            .bold()
-                            .foregroundColor(Color.gray)
-                        CompressableText(
-                            array: anime.state.studios,
-                            max: 3
-                        )
-                    }
-                    .font(.callout)
-                    .padding(.vertical)
-                }
+                buildSubHeading(title: "Summary")
+
+                // MARK: Description Info
+
+                Text(anime.description)
+                    .font(.body)
+                    .foregroundColor(.white.opacity(0.85))
+                    .lineLimit(5)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+//                if anime.state.studios.count > 0 {
+//                    VStack(alignment: .leading) {
+//                        Text("Studios")
+//                            .bold()
+//                            .foregroundColor(Color.white)
+//
+//                        CompressableText(
+//                            array: anime.state.studios,
+//                            max: 3
+//                        )
+//                    }
+//                    .font(.callout)
+//                    .padding(.vertical)
+//                }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -228,11 +204,8 @@ extension AnimeDetailView {
         WithViewStore(
             store.scope(state: \.episodes)
         ) { episodesViewStore in
-            VStack {
+            VStack(alignment: .leading, spacing: 10) {
                 buildSubHeading(title: "Episodes")
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.vertical, 6)
-                    .background(Color.black)
 
                 if episodesViewStore.state.isLoading == true {
                     episodeShimmeringView
@@ -271,37 +244,37 @@ extension AnimeDetailView {
         _ episode: Episode
     ) -> some View {
         EpisodeItemBigView(episode: episode)
-            .overlay(
-                WithViewStore(
-                    store.scope(state: { $0.moreInfo.contains(episode.id) })
-                ) { visibleViewStore in
-                    Button {
-                        visibleViewStore.send(.moreInfo(id: episode.id), animation: Animation.easeInOut(duration: 0.15))
-                    } label: {
-                        Image(
-                            systemName: visibleViewStore.state ? "chevron.up" : "chevron.down"
-                        )
-                        .font(Font.system(size: 12, weight: .black))
-                        .foregroundColor(Color.white.opacity(0.9))
-                    }
-                    .buttonStyle(BlurredButtonStyle())
-                    .clipShape(Circle())
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
-                    .padding()
-                }
-            )
+//            .overlay(
+//                WithViewStore(
+//                    store.scope(state: { $0.moreInfo.contains(episode.id) })
+//                ) { visibleViewStore in
+//                    Button {
+//                        visibleViewStore.send(.moreInfo(id: episode.id), animation: Animation.easeInOut(duration: 0.15))
+//                    } label: {
+//                        Image(
+//                            systemName: visibleViewStore.state ? "chevron.up" : "chevron.down"
+//                        )
+//                        .font(Font.system(size: 12, weight: .black))
+//                        .foregroundColor(Color.white.opacity(0.9))
+//                    }
+//                    .buttonStyle(BlurredButtonStyle())
+//                    .clipShape(Circle())
+//                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+//                    .padding()
+//                }
+//            )
 
-        WithViewStore(
-            store.scope(state: { $0.moreInfo.contains(episode.id) })
-        ) { visibleDescriptionViewStore in
-            if visibleDescriptionViewStore.state {
-                Text(episode.description)
-                    .font(.footnote)
-                    .padding(.horizontal)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.bottom)
-            }
-        }
+//        WithViewStore(
+//            store.scope(state: { $0.moreInfo.contains(episode.id) })
+//        ) { visibleDescriptionViewStore in
+//            if visibleDescriptionViewStore.state {
+//                Text(episode.description)
+//                    .font(.footnote)
+//                    .padding(.horizontal)
+//                    .frame(maxWidth: .infinity, alignment: .leading)
+//                    .padding(.bottom)
+//            }
+//        }
     }
 
     @ViewBuilder
@@ -317,7 +290,7 @@ extension AnimeDetailView {
     @ViewBuilder
     func buildSubHeading(title: String) -> some View {
         Text(title)
-            .font(.title.bold())
+            .font(.title2.bold())
             .foregroundColor(.white)
     }
 }

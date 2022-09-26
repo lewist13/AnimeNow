@@ -15,7 +15,7 @@ struct EpisodeItemBigView: View {
         ZStack(alignment: .bottomLeading) {
             KFImage(episode.thumbnail.largest?.link)
                 .placeholder {
-                    episodeShimmeringView
+                    imageShimmeringView
                 }
                 .fade(duration: 0.5)
                 .resizable()
@@ -32,7 +32,7 @@ struct EpisodeItemBigView: View {
                     )
                 )
 
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading) {
                 Text(episode.name)
                     .font(.title2.bold())
                 HStack {
@@ -40,6 +40,7 @@ struct EpisodeItemBigView: View {
                         .font(.callout.bold())
                 }
             }
+            .foregroundColor(Color.white)
             .padding()
         }
     }
@@ -47,7 +48,7 @@ struct EpisodeItemBigView: View {
 
 extension EpisodeItemBigView {
     @ViewBuilder
-    private var episodeShimmeringView: some View {
+    private var imageShimmeringView: some View {
         RoundedRectangle(cornerRadius: 16)
             .episodeFrame()
             .foregroundColor(Color.gray.opacity(0.2))
@@ -69,5 +70,8 @@ struct EpisodeItemBigView_Previews: PreviewProvider {
         EpisodeItemBigView(
             episode: .demoEpisodes.first!
         )
+        .preferredColorScheme(.dark)
+        .frame(maxWidth: .infinity)
+        .frame(height: 0)
     }
 }
