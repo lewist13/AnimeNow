@@ -17,7 +17,7 @@ env:
 
   IOS_SCHEME: 'Anime Now! (iOS)'
   IOS_ARCHIVE_PATH: '/tmp/action-builds/Anime Now! (iOS).xcarchive'
-  IOS_PAYLOAD_PATH: '/tmp/action-builds/Payload
+  IOS_PAYLOAD_PATH: '/tmp/action-builds/Payload'
   IOS_OUTPUT_PATH: '/tmp/action-builds/Anime Now! (iOS).ipa'
 
 #  MACOS_SCHEME_NAME: 'Anime Now! (macOS)'

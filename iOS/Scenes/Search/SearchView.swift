@@ -39,7 +39,7 @@ struct SearchView: View {
                 )
             ) { viewStore in
                 switch viewStore.state {
-                case .preparing:
+                case .idle:
                     waitingForTyping
                 case .loading:
                     loadingSearches

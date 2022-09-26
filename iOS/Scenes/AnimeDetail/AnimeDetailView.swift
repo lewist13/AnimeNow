@@ -24,32 +24,35 @@ struct AnimeDetailView: View {
     }
 
     var body: some View {
-        ScrollView(.vertical, showsIndicators: false) {
-            VStack(spacing: 18) {
-                topContainer
-                infoContainer
+        WithViewStore(store.scope(state: \.loading)) { loadingViewState in
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(spacing: 18) {
+                    topContainer
+                    infoContainer
 
-                WithViewStore(
-                    store.scope(state: ViewState.init)
-                ) { viewState in
-                    if viewState.state.animeStatus != .upcoming &&
-                        viewState.state.animeFormat == .tv {
-                        episodesContainer
+                    WithViewStore(
+                        store.scope(state: ViewState.init)
+                    ) { viewState in
+                        if viewState.state.animeStatus != .upcoming &&
+                            viewState.state.animeFormat == .tv {
+                            episodesContainer
+                        }
                     }
                 }
             }
-        }
-        .transition(.move(edge: .bottom).combined(with: .opacity))
-        .frame(maxWidth: .infinity)
-        .statusBar(hidden: true)
-        .ignoresSafeArea(edges: .top)
-        .overlay(closeButton)
-        .background(
-            Color.black
-                .ignoresSafeArea()
-        )
-        .onAppear {
-            ViewStore(store.stateless).send(.onAppear)
+            .placeholder(active: loadingViewState.state)
+            .transition(.move(edge: .bottom).combined(with: .opacity))
+            .frame(maxWidth: .infinity)
+            .statusBar(hidden: true)
+            .ignoresSafeArea(edges: .top)
+            .overlay(closeButton)
+            .background(
+                Color.black
+                    .ignoresSafeArea()
+            )
+            .onAppear {
+                ViewStore(store.stateless).send(.onAppear)
+            }
         }
     }
 }
@@ -219,9 +222,7 @@ extension AnimeDetailView {
             VStack(alignment: .leading, spacing: 10) {
                 buildSubHeading(title: "Episodes")
 
-                if episodesViewStore.state.isLoading == true {
-                    episodeShimmeringView
-                } else if case let .success(episodes) = episodesViewStore.state {
+                if case let .success(episodes) = episodesViewStore.state {
                     LazyVStack {
                         ForEach(episodes, id: \.id) { episode in
                             generateEpisodeItem(episode)
@@ -234,7 +235,7 @@ extension AnimeDetailView {
                                 }
                         }
                     }
-                } else {
+                } else if case .failed = episodesViewStore.state {
                     ZStack {
                         RoundedRectangle(cornerRadius: 16)
                             .episodeFrame()
@@ -244,6 +245,8 @@ extension AnimeDetailView {
                             .font(.title3.bold())
                             .foregroundColor(Color.red)
                     }
+                } else {
+                    generateEpisodeItem(.empty)
                 }
             }
         }
@@ -287,14 +290,6 @@ extension AnimeDetailView {
 //                    .padding(.bottom)
 //            }
 //        }
-    }
-
-    @ViewBuilder
-    private var episodeShimmeringView: some View {
-        RoundedRectangle(cornerRadius: 16)
-            .episodeFrame()
-            .foregroundColor(Color.gray.opacity(0.2))
-            .shimmering()
     }
 }
 
@@ -344,7 +339,6 @@ extension AnimeDetailView {
                 .animation(.easeOut(duration: 0.2), value: configuration.isPressed)
         }
     }
-
 }
 
 struct AnimeView_Previews: PreviewProvider {
@@ -353,7 +347,7 @@ struct AnimeView_Previews: PreviewProvider {
             store: .init(
                 initialState: .init(
                     anime: .narutoShippuden,
-                    episodes: .success(.init(uniqueElements: Episode.demoEpisodes))
+                    episodes: .loading
                 ),
                 reducer: .empty,
                 environment: ()

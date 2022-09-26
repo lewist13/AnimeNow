@@ -14,7 +14,7 @@ enum SidebarSourcesCore {
     typealias LoadableSources = LoadableState<IdentifiedArrayOf<Source>>
 
     struct State: Equatable {
-        var sources: LoadableSources = .preparing
+        var sources: LoadableSources = .idle
         var selectedSourceId: Source.ID?
     }
 

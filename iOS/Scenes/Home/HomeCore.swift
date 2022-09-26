@@ -13,11 +13,11 @@ import SwiftUI
 enum HomeCore {
     typealias LoadableAnime = LoadableState<IdentifiedArrayOf<Anime>>
     struct State: Equatable {
-        var topTrendingAnime: LoadableAnime = .preparing
-        var topAiringAnime: LoadableAnime = .preparing
-        var topUpcomingAnime: LoadableAnime = .preparing
-        var highestRatedAnime: LoadableAnime = .preparing
-        var mostPopularAnime: LoadableAnime = .preparing
+        var topTrendingAnime: LoadableAnime = .idle
+        var topAiringAnime: LoadableAnime = .idle
+        var topUpcomingAnime: LoadableAnime = .idle
+        var highestRatedAnime: LoadableAnime = .idle
+        var mostPopularAnime: LoadableAnime = .idle
 
         var currentlyWatchingEpisodes: [Episode] = []
     }

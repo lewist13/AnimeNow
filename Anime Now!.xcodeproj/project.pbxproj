@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1309D6C328E22BB500CC9036 /* View+Redacted.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1309D6C228E22BB500CC9036 /* View+Redacted.swift */; };
 		1312FD5628DD4330004A415F /* SidebarEpisodesCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1312FD5428DD4251004A415F /* SidebarEpisodesCore.swift */; };
 		1312FD5828DD45A4004A415F /* SidebarEpisodesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1312FD5728DD45A4004A415F /* SidebarEpisodesView.swift */; };
 		1312FD5A28DD4B52004A415F /* EpisodeItemCompactView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1312FD5928DD4B52004A415F /* EpisodeItemCompactView.swift */; };
@@ -133,6 +134,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		1309D6C228E22BB500CC9036 /* View+Redacted.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+Redacted.swift"; sourceTree = "<group>"; };
 		1312FD5428DD4251004A415F /* SidebarEpisodesCore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarEpisodesCore.swift; sourceTree = "<group>"; };
 		1312FD5728DD45A4004A415F /* SidebarEpisodesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarEpisodesView.swift; sourceTree = "<group>"; };
 		1312FD5928DD4B52004A415F /* EpisodeItemCompactView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EpisodeItemCompactView.swift; sourceTree = "<group>"; };
@@ -298,6 +300,7 @@
 			isa = PBXGroup;
 			children = (
 				1364BA7928E12BBC005BAEBA /* TabBar.swift */,
+				1309D6C228E22BB500CC9036 /* View+Redacted.swift */,
 				138066EB28C5699F0012DAFB /* AnimeItemView.swift */,
 				1312FD6128DD7CB0004A415F /* AirplayRouterPickerView.swift */,
 				1327553228D2C16C00A6C525 /* AVPlayerView.swift */,
@@ -732,6 +735,7 @@
 				137A819A28C5455100B69503 /* Anime.swift in Sources */,
 				138066E928C55BE30012DAFB /* HomeCore.swift in Sources */,
 				13386AE728CBFD7A005E8352 /* LoadableState.swift in Sources */,
+				1309D6C328E22BB500CC9036 /* View+Redacted.swift in Sources */,
 				1312FD5C28DD4BEA004A415F /* EpisodeItemBigView.swift in Sources */,
 				13650F3328CFE0BF002E20DD /* AnimeClient.swift in Sources */,
 				13D235C628E16F32004E51BB /* ComposableArchitecture+Binding.swift in Sources */,

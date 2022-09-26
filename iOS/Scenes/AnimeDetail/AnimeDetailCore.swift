@@ -66,9 +66,8 @@ enum AnimeDetailCore {
     struct State: Equatable {
         let anime: Anime
 
-        var episodes = LoadableEpisodes.preparing
+        var episodes = LoadableEpisodes.idle
         var moreInfo = Set<Episode.ID>()
-
     }
 
     enum Action: Equatable {
@@ -103,6 +102,10 @@ extension AnimeDetailCore.State {
             return .unavailable
         }
     }
+
+    var loading: Bool {
+        episodes == .loading || anime.status != .upcoming && !episodes.hasInitialized
+    }
 }
 
 extension AnimeDetailCore {
@@ -113,7 +116,7 @@ extension AnimeDetailCore {
 
             switch action {
             case .onAppear:
-                if state.anime.status == .upcoming {
+                guard state.anime.status != .upcoming else {
                     break
                 }
                 state.episodes = .loading

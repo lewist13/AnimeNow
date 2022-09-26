@@ -13,7 +13,7 @@ enum SearchCore {
     typealias LoadableAnimes = LoadableState<IdentifiedArrayOf<Anime>>
 
     struct State: Equatable {
-        var loadable = LoadableAnimes.preparing
+        var loadable = LoadableAnimes.idle
         var query = ""
     }
 
@@ -43,7 +43,7 @@ extension SearchCore {
                 state.query = query
 
                 guard !query.isEmpty else {
-                    state.loadable = .preparing
+                    state.loadable = .idle
                     return .cancel(id: SearchAnimesID.self)
                 }
                 state.loadable = .loading

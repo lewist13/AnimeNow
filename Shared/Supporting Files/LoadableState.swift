@@ -8,16 +8,16 @@
 import Foundation
 
 enum LoadableState<T: Equatable>: Equatable {
-    case preparing
+    case idle
     case loading
     case success(T)
     case failed
 
     var isLoading: Bool {
-        self == .preparing || self == .loading
+        self == .loading
     }
 
-    var loaded: Bool {
+    var finished: Bool {
         switch self {
         case .success, .failed:
             return true
@@ -27,7 +27,7 @@ enum LoadableState<T: Equatable>: Equatable {
     }
 
     var hasInitialized: Bool {
-        self != .preparing
+        self != .idle
     }
 
     var value: T? {
