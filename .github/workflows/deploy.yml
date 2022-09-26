@@ -10,11 +10,14 @@ on:
     types: [closed]
 
 env:
-  INCREMENT_SCRIPT_PATH: './actions-tool/increment_version.sh'
+  APP_NAME: 'Anime Now!'
   BUILD_CONFIG: './MainConfig.xcconfig'
+  BUILD_PATH: '/tmp/action-builds'
+  INCREMENT_SCRIPT_PATH: './actions-tool/increment_version.sh'
 
   IOS_SCHEME: 'Anime Now! (iOS)'
   IOS_ARCHIVE_PATH: '/tmp/action-builds/Anime Now! (iOS).xcarchive'
+  IOS_PAYLOAD_PATH: '/tmp/action-builds/Payload
   IOS_OUTPUT_PATH: '/tmp/action-builds/Anime Now! (iOS).ipa'
 
 #  MACOS_SCHEME_NAME: 'Anime Now! (macOS)'
@@ -69,7 +72,11 @@ jobs:
 
       - name: Build IPA
         run: |
-          zip -r '${{ env.IOS_OUTPUT_PATH }}' '${{ env.IOS_ARCHIVE_PATH }}/Products/Applications'
+          mkdir -p '${{ env.IOS_PAYLOAD_PATH }}'
+          mv '${{ env.IOS_ARCHIVE_PATH }}/Products/Applications/${{ env.APP_NAME }}.app' '${{ env.IOS_PAYLOAD_PATH }}/${{ env.APP_NAME }}.app'
+          pushd ${{ env.BUILD_PATH }}
+          zip -r ${{ env.IOS_OUTPUT_PATH }} ./Payload
+          popd
 
       - name: Release to GitHub
         uses: softprops/action-gh-release@v1
