@@ -216,27 +216,22 @@ extension VideoPlayerView {
         ) { viewState in
             HStack(alignment: .bottom) {
                 VStack(alignment: .leading) {
-                    HStack(spacing: 4) {
-                        Text(viewState.animeName)
-                            .bold()
-
-                        if viewState.animeFormat == .tv {
+                    if viewState.animeFormat == .tv {
+                        HStack(spacing: 4) {
+                            Text(viewState.animeName)
                             Text("\u{2022}")
-                                .bold()
-
                             Text("E\(viewState.episodeNumber)")
-                                .bold()
                         }
+                        .font(.callout.bold())
+                        .foregroundColor(.white.opacity(0.8))
                     }
-                    .font(.callout)
-                    .foregroundColor(.white.opacity(0.8))
 
                     HStack {
-                        Text(viewState.episodeName)
+                        Text(viewState.animeFormat == .tv ? viewState.episodeName : viewState.animeName)
                             .font(.title)
                             .bold()
 
-                        if viewState.animeFormat == .tv {
+                        if (viewState.animeFormat == .tv) {
                             Image(systemName: "chevron.compact.right")
                                 .font(.body.weight(.black))
                         }

@@ -39,8 +39,8 @@ struct AnimeDetailView: View {
                         }
                     }
                 }
+                .placeholder(active: loadingViewState.state)
             }
-            .placeholder(active: loadingViewState.state)
             .transition(.move(edge: .bottom).combined(with: .opacity))
             .frame(maxWidth: .infinity)
             .statusBar(hidden: true)
@@ -51,7 +51,7 @@ struct AnimeDetailView: View {
                     .ignoresSafeArea()
             )
             .onAppear {
-                ViewStore(store.stateless).send(.onAppear)
+                loadingViewState.send(.onAppear)
             }
         }
     }
