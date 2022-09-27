@@ -74,7 +74,7 @@ extension VideoPlayerView {
             store.scope(state: ViewState.init)
         ) { showingOverlayViewStore in
             if showingOverlayViewStore.showPlayerControlsOverlay {
-                VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading, spacing: 8) {
                     topPlayerItems
                     Spacer()
                     animeEpisodeInfo
@@ -126,6 +126,7 @@ extension VideoPlayerView {
                 .font(.callout.weight(.black))
             )
             .frame(width: 46, height: 46)
+            .contentShape(Rectangle())
             .onTapGesture {
                 ViewStore(store.stateless).send(.closeButtonPressed)
             }

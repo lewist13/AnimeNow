@@ -91,9 +91,7 @@ extension HomeView {
                 } else {
                     ScrollView(.horizontal, showsIndicators: false) {
                         LazyHStack(alignment: .center, spacing: 12) {
-                            if viewStore.state.isLoading || !viewStore.state.hasInitialized {
-                                loadingAnimePlaceholders
-                            } else if case let .success(animes) = viewStore.state {
+                            if case let .success(animes) = viewStore.state {
                                 ForEach(animes, id: \.self) { anime in
                                     AnimeItemView(
                                         anime: anime
@@ -106,6 +104,8 @@ extension HomeView {
                                         )
                                     }
                                 }
+                            } else {
+                                loadingAnimePlaceholders
                             }
                         }
                         .padding(.horizontal)
