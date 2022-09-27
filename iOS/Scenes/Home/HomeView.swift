@@ -14,50 +14,61 @@ struct HomeView: View {
     let store: Store<HomeCore.State, HomeCore.Action>
 
     var body: some View {
-        ScrollView(.vertical, showsIndicators: false) {
-            topHeaderView
+        WithViewStore(store.scope(state: \.isLoading)) { viewStore in
+            ScrollView(.vertical, showsIndicators: false) {
+                topHeaderView
 
-            LazyVStack(spacing: 24) {
-                animeItems(
-                    title: "Trending This Week",
-                    store: store.scope(
-                        state: \.topTrendingAnime
+                LazyVStack(spacing: 24) {
+                    animeItems(
+                        title: "Trending This Week",
+                        isLoading: viewStore.state,
+                        store: store.scope(
+                            state: \.topTrendingAnime
+                        )
                     )
-                )
 
-                animeItems(
-                    title: "Top Airing Anime",
-                    store: store.scope(
-                        state: \.topAiringAnime
+                    animeItems(
+                        title: "Top Airing Anime",
+                        isLoading: viewStore.state,
+                        store: store.scope(
+                            state: \.topAiringAnime
+                        )
                     )
-                )
 
-                animeItems(
-                    title: "Top Upcoming Anime",
-                    store: store.scope(
-                        state: \.topUpcomingAnime
+                    animeItems(
+                        title: "Top Upcoming Anime",
+                        isLoading: viewStore.state,
+                        store: store.scope(
+                            state: \.topUpcomingAnime
+                        )
                     )
-                )
 
-                animeItems(
-                    title: "Highest Rated Anime",
-                    store: store.scope(
-                        state: \.highestRatedAnime
+                    animeItems(
+                        title: "Highest Rated Anime",
+                        isLoading: viewStore.state,
+                        store: store.scope(
+                            state: \.highestRatedAnime
+                        )
                     )
-                )
-                
-                animeItems(
-                    title: "Most Popular Anime",
-                    store: store.scope(
-                        state: \.mostPopularAnime
+
+                    animeItems(
+                        title: "Most Popular Anime",
+                        isLoading: viewStore.state,
+                        store: store.scope(
+                            state: \.mostPopularAnime
+                        )
                     )
-                )
+                }
+                .placeholder(active: viewStore.state, duration:  2.0)
+                .transition(.opacity)
+                .animation(.easeInOut(duration: 0.5), value: viewStore.state)
+            }
+            .disabled(viewStore.state)
+            .onAppear {
+                viewStore.send(.onAppear)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .onAppear {
-            ViewStore(store).send(.onAppear)
-        }
     }
 }
 
@@ -66,10 +77,8 @@ extension HomeView {
     var topHeaderView: some View {
         Text("Discover")
             .font(.largeTitle.bold())
-            .foregroundColor(.white)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal)
-            .padding(.vertical, 8)
+            .padding([.horizontal, .top])
     }
 }
 
@@ -79,6 +88,7 @@ extension HomeView {
     @ViewBuilder
     func animeItems(
         title: String,
+        isLoading: Bool,
         store: Store<HomeCore.LoadableAnime, HomeCore.Action>
     ) -> some View {
         VStack(alignment: .leading) {
@@ -91,21 +101,19 @@ extension HomeView {
                 } else {
                     ScrollView(.horizontal, showsIndicators: false) {
                         LazyHStack(alignment: .center, spacing: 12) {
-                            if case let .success(animes) = viewStore.state {
+                            if case let .success(animes) = viewStore.state, !isLoading {
                                 ForEach(animes, id: \.self) { anime in
                                     AnimeItemView(
                                         anime: anime
                                     )
                                     .onTapGesture {
-                                        viewStore.send(
-                                            .animeTapped(
-                                                anime
-                                            )
-                                        )
+                                        viewStore.send(.animeTapped(anime))
                                     }
                                 }
                             } else {
-                                loadingAnimePlaceholders
+                                ForEach(0...2, id: \.self) { _ in
+                                    AnimeItemView(anime: .placeholder)
+                                }
                             }
                         }
                         .padding(.horizontal)
@@ -113,17 +121,6 @@ extension HomeView {
                 }
             }
             .frame(height: 225)
-        }
-    }
-
-    @ViewBuilder
-    var loadingAnimePlaceholders: some View {
-        ForEach(0...2, id: \.self) { _ in
-            Rectangle()
-                .foregroundColor(Color.gray.opacity(0.2))
-                .shimmering()
-                .cornerRadius(12)
-                .aspectRatio(2/3, contentMode: .fit)
         }
     }
 
@@ -167,10 +164,9 @@ extension HomeView {
     @ViewBuilder
     func headerText(_ title: String) -> some View {
         Text(title)
-            .font(.headline)
-            .bold()
+            .font(.headline.bold())
             .padding(.horizontal)
-            .foregroundColor(.white.opacity(0.9))
+            .opacity(0.9)
     }
 }
 

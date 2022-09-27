@@ -22,8 +22,10 @@ struct SidebarEpisodesView: View {
                         LazyVStack {
                             ForEach(viewStore.episodes) { episode in
                                 EpisodeItemCompactView(
-                                    episode: episode,
-                                    selected: episode.id == viewStore.selectedId
+                                    episode: episode
+                                )
+                                .overlay(
+                                    selectedOverlay(episode.id == viewStore.selectedId)
                                 )
                                 .onTapGesture {
                                     if viewStore.selectedId != episode.id {
@@ -45,6 +47,33 @@ struct SidebarEpisodesView: View {
                     }
                 }
             }
+    }
+}
+
+extension SidebarEpisodesView {
+    @ViewBuilder
+    func selectedOverlay(_ selected: Bool) -> some View {
+        if selected {
+            Text("Now Playing")
+                .font(.caption2.weight(.heavy))
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(Color.white)
+                .foregroundColor(Color.black)
+                .clipShape(Capsule())
+                .shadow(
+                    color: Color.black.opacity(0.5),
+                    radius: 16,
+                    x: 0,
+                    y: 0
+                )
+                .frame(
+                    maxWidth: .infinity,
+                    maxHeight: .infinity,
+                    alignment: .bottomLeading
+                )
+                .padding(6)
+        }
     }
 }
 

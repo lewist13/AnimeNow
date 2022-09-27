@@ -26,20 +26,14 @@ struct AnimeDetailView: View {
     var body: some View {
         WithViewStore(store.scope(state: \.loading)) { loadingViewState in
             ScrollView(.vertical, showsIndicators: false) {
-                VStack(spacing: 18) {
+                VStack(spacing: 16) {
                     topContainer
                     infoContainer
-
-                    WithViewStore(
-                        store.scope(state: ViewState.init)
-                    ) { viewState in
-                        if viewState.state.animeStatus != .upcoming &&
-                            viewState.state.animeFormat == .tv {
-                            episodesContainer
-                        }
-                    }
+                    episodesContainer
                 }
                 .placeholder(active: loadingViewState.state)
+                .transition(.opacity)
+                .animation(.easeInOut(duration: 0.3), value: loadingViewState.state)
             }
             .transition(.move(edge: .bottom).combined(with: .opacity))
             .frame(maxWidth: .infinity)
@@ -216,37 +210,48 @@ extension AnimeDetailView {
 
     @ViewBuilder
     var episodesContainer: some View {
-        WithViewStore(
-            store.scope(state: \.episodes)
-        ) { episodesViewStore in
-            VStack(alignment: .leading, spacing: 10) {
-                buildSubHeading(title: "Episodes")
-
-                if case let .success(episodes) = episodesViewStore.state {
-                    LazyVStack {
-                        ForEach(episodes, id: \.id) { episode in
-                            generateEpisodeItem(episode)
-                                .onTapGesture {
-                                    episodesViewStore.send(
-                                        .selectedEpisode(
-                                            episode: episode
-                                        )
-                                    )
-                                }
+        IfLetStore(
+            store.scope(
+                state: { state -> AnimeDetailCore.LoadableEpisodes? in
+                    state.anime.status != .upcoming && state.anime.format == .tv ? state.episodes : nil
+                }
+            )
+        ) { episodesStore in
+            WithViewStore(episodesStore) { episodesViewStore in
+                VStack(alignment: .leading, spacing: 10) {
+                    if case let .success(episodes) = episodesViewStore.state {
+                        if episodes.count > 0 {
+                            buildSubHeading(title: "Episodes")
                         }
-                    }
-                } else if case .failed = episodesViewStore.state {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 16)
-                            .episodeFrame()
-                            .foregroundColor(Color.gray.opacity(0.2))
 
-                        Label("Failed to load.", systemImage: "exclamationmark.triangle.fill")
-                            .font(.title3.bold())
-                            .foregroundColor(Color.red)
+                        LazyVStack {
+                            ForEach(episodes, id: \.id) { episode in
+                                generateEpisodeItem(episode)
+                                    .onTapGesture {
+                                        episodesViewStore.send(
+                                            .selectedEpisode(
+                                                episode: episode
+                                            )
+                                        )
+                                    }
+                            }
+                        }
+                    } else if case .failed = episodesViewStore.state {
+                        buildSubHeading(title: "Episodes")
+
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 16)
+                                .episodeFrame()
+                                .foregroundColor(Color.gray.opacity(0.2))
+
+                            Label("Failed to load.", systemImage: "exclamationmark.triangle.fill")
+                                .font(.title3.bold())
+                                .foregroundColor(Color.red)
+                        }
+                    } else {
+                        buildSubHeading(title: "Episodes")
+                        generateEpisodeItem(.placeholder)
                     }
-                } else {
-                    generateEpisodeItem(.empty)
                 }
             }
         }
@@ -319,7 +324,7 @@ extension AnimeDetailView {
             configuration.label
                 .font(.system(size: 12).weight(.heavy))
                 .padding()
-                .background(isEnabled ? Color.white : Color.init(.sRGB, white: 0.25, opacity: 1.0))
+                .background(isEnabled ? Color.white : Color.init(.sRGB, white: 0.15, opacity: 1.0))
                 .foregroundColor(isEnabled ? .black : .white)
                 .clipShape(Capsule())
                 .scaleEffect(configuration.isPressed ? 0.9 : 1)
@@ -347,7 +352,7 @@ struct AnimeView_Previews: PreviewProvider {
             store: .init(
                 initialState: .init(
                     anime: .narutoShippuden,
-                    episodes: .loading
+                    episodes: .success([])
                 ),
                 reducer: .empty,
                 environment: ()

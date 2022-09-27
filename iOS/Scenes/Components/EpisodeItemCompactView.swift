@@ -10,7 +10,6 @@ import Kingfisher
 
 struct EpisodeItemCompactView: View {
     let episode: Episode
-    var selected = false
 
     var body: some View {
         let height = 84.0
@@ -41,42 +40,13 @@ struct EpisodeItemCompactView: View {
 
             Spacer()
         }
-        .overlay(selectedOverlay)
-    }
-}
-
-extension EpisodeItemCompactView {
-    @ViewBuilder
-    var selectedOverlay: some View {
-        if selected {
-            Text("Now Playing")
-                .font(.caption2.bold())
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(Color.white)
-                .foregroundColor(Color.black)
-                .clipShape(Capsule())
-                .shadow(
-                    color: Color.black.opacity(0.5),
-                    radius: 16,
-                    x: 0,
-                    y: 0
-                )
-                .frame(
-                    maxWidth: .infinity,
-                    maxHeight: .infinity,
-                    alignment: .bottomLeading
-                )
-                .padding(6)
-        }
     }
 }
 
 struct EpisodeItemCompactView_Previews: PreviewProvider {
     static var previews: some View {
         EpisodeItemCompactView(
-            episode: .demoEpisodes.first!,
-            selected: true
+            episode: .demoEpisodes.first!
         )
         .preferredColorScheme(.dark)
     }

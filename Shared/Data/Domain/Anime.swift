@@ -94,4 +94,16 @@ extension Anime {
         format: .tv,
         studios: []
     )
+
+    static let placeholder = Anime(
+        id: .kitsu(""),
+        title: "Placeholder",
+        description: "Placeholder",
+        posterImage: [],
+        coverImage: [],
+        categories: [],
+        status: .tba,
+        format: .tv,
+        studios: []
+    )
 }

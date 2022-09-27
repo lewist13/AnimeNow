@@ -63,6 +63,15 @@ extension Episode {
         length: 0
     )
 
+    static let placeholder = Episode(
+        id: .enime(""),
+        name: "Placeholder",
+        number: 0,
+        description: "Placeholder",
+        thumbnail: [],
+        length: 0
+    )
+
     static let demoEpisodes: [Episode] = [
         .init(
             id: .enime("cl6ooypne2201181rtgxmvdmmfx"),

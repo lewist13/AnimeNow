@@ -36,13 +36,31 @@ enum HomeCore {
     }
 }
 
+extension HomeCore.State {
+    var isLoading: Bool {
+        !topTrendingAnime.hasInitialized || topTrendingAnime.isLoading ||
+        !topAiringAnime.hasInitialized || topAiringAnime.isLoading ||
+        !topUpcomingAnime.hasInitialized || topUpcomingAnime.isLoading ||
+        !highestRatedAnime.hasInitialized || highestRatedAnime.isLoading ||
+        !mostPopularAnime.hasInitialized || mostPopularAnime.isLoading
+    }
+
+    var hasInitialized: Bool {
+        topTrendingAnime.hasInitialized &&
+        topAiringAnime.hasInitialized &&
+        topUpcomingAnime.hasInitialized &&
+        highestRatedAnime.hasInitialized &&
+        mostPopularAnime.hasInitialized
+    }
+}
+
 extension HomeCore {
     static let reducer = Reducer<HomeCore.State, HomeCore.Action, HomeCore.Environment>.combine(
         .init { state, action, environment in
             switch (action) {
             case .onAppear:
-                if state.topAiringAnime.hasInitialized {
-                   break
+                guard !state.hasInitialized else {
+                    break
                 }
                 state.topTrendingAnime = .loading
                 state.topAiringAnime = .loading

@@ -10,7 +10,7 @@ import SwiftUI
 
 extension View {
     @ViewBuilder
-    func placeholder(active: Bool) -> some View {
+    func placeholder(active: Bool, duration: Double = 1.5) -> some View {
         Group {
             if active {
                 self.redacted(reason: .placeholder)
@@ -18,6 +18,6 @@ extension View {
                 self.unredacted()
             }
         }
-        .shimmering(active: active)
+        .shimmering(active: active, duration: duration)
     }
 }

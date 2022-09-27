@@ -179,21 +179,21 @@ extension VideoPlayerCore {
             case .closeSidebarAndShowOverlay:
                 state.sidebarRoute = nil
                 return .init(value: .tappedPlayer)
+            case .closeSidebar:
+                return .init(value: .setSidebar(route: nil))
+                    .receive(on: environment.mainQueue.animation(.easeInOut(duration: 0.25)))
+                    .eraseToEffect()
             case .closeButtonPressed:
                 return .concatenate(
                     [
-                        .cancel(id: HideOverlayAnimationTimeout()),
                         .cancel(id: CancelEpisodeSourceFetchingId()),
+                        .cancel(id: HideOverlayAnimationTimeout()),
                         .init(value: .player(.avAction(.terminate))),
                         .init(value: .close)
                             .delay(for: 0.25, scheduler: environment.mainQueue)
                             .eraseToEffect()
                     ]
                 )
-            case .closeSidebar:
-                return .init(value: .setSidebar(route: nil))
-                    .receive(on: environment.mainQueue.animation(.easeInOut(duration: 0.25)))
-                    .eraseToEffect()
             case .close:
                 break
             case .setSidebar(route: let route):

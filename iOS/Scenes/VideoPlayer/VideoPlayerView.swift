@@ -302,7 +302,7 @@ extension VideoPlayerView {
     var bottomPlayerItems: some View {
         LazyVStack(alignment: .leading) {
             seekbarView
-                .frame(height: 12)
+                .frame(height: 14)
             progressInfo
         }
         .transition(.move(edge: .bottom))
