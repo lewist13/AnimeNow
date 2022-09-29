@@ -186,8 +186,8 @@ extension AnimeDetailView {
                 // Bubbles info
 
                 HStack {
-                    if let date = anime.releaseDate {
-                        ChipView(text: date.getYear())
+                    if let year = anime.releaseYear {
+                        ChipView(text: "\(year)")
                     }
 
                     ChipView(text: anime.format == .tv ? "TV" : "Movie")

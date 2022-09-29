@@ -18,9 +18,9 @@ protocol GraphQLArgumentOptions {
     associatedtype Argument: GraphQLArgument
 }
 
-//protocol GraphQLQueryObject {
-//    static func createQueryObject(_ name: CodingKey) -> Object
-//}
+protocol GraphQLQueryObject {
+    static func createQueryObject(_ name: CodingKey) -> Object
+}
 
 protocol GraphQLQuery: Decodable, GraphQLArgumentOptions {
     static func createQuery(_ arguments: ArgumentOptions) -> Weave
@@ -37,9 +37,9 @@ enum GraphQL {
         let data: T
     }
 
-    struct NodeList<T: Decodable>: Decodable {
+    struct NodeList<T: Decodable, P: Decodable>: Decodable {
         let nodes: [T]
-        let pageInfo: PageInfo
+        let pageInfo: P
 
         enum CodingKeys: String, CodingKey {
             case nodes
@@ -50,25 +50,7 @@ enum GraphQL {
             let values = try decoder.container(keyedBy: CodingKeys.self)
             let throwables = try values.decode([Throwable<T>].self, forKey: .nodes)
             nodes = throwables.compactMap { try? $0.result.get() }
-            pageInfo = try values.decode(PageInfo.self, forKey: .pageInfo)
-        }
-    }
-
-    struct PageInfo: Decodable {
-        let endCursor: String?
-        let hasNextPage: Bool
-        let hasPreviousPage: Bool
-        let startCursor: String?
-
-        static func createQueryObject(
-            _ name: CodingKey
-        ) -> Object {
-            Object(name) {
-                Field(PageInfo.CodingKeys.endCursor)
-                Field(PageInfo.CodingKeys.hasNextPage)
-                Field(PageInfo.CodingKeys.hasPreviousPage)
-                Field(PageInfo.CodingKeys.startCursor)
-            }
+            pageInfo = try values.decode(P.self, forKey: .pageInfo)
         }
     }
 }
@@ -76,11 +58,13 @@ enum GraphQL {
 
 extension Weave {
     public func format(removeOperation: Bool = true) -> String {
+        let weave = String("\(self.description)")
+
         if (removeOperation) {
-            let output = String("\(self)".split(separator: "{", maxSplits: 1, omittingEmptySubsequences: true).last ?? "")
+            let output = String(weave.split(separator: "{", maxSplits: 1, omittingEmptySubsequences: true).last ?? "")
             return  "{\(output)"
         } else {
-            return "{ \(description) }"
+            return "{ \(weave) }"
         }
     }
 }

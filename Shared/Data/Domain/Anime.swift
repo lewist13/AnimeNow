@@ -17,7 +17,7 @@ struct Anime: Hashable, Identifiable {
     let status: Status
     let format: Format
     let studios: [String]
-    let releaseDate: Date?
+    let releaseYear: Int?
     var mappings: [AnimeListID] = []
 
     enum AnimeListID: Hashable {
@@ -67,7 +67,7 @@ extension Anime {
         format: .tv,
         studios: "TV Tokyo, Aniplex, KSS, Rakuonsha, TV Tokyo Music, Shueisha, TV Tokyo, Aniplex, KSS, Rakuonsha, TV Tokyo Music, Shueisha"
             .split(separator: ",").map({ String($0).trimmingCharacters(in: .whitespacesAndNewlines) }),
-        releaseDate: ISO8601DateFormatter().date(from: "2009-09-29T00:00:00-05:00")
+        releaseYear: 2009
     )
 
     static let attackOnTitan = Anime(
@@ -84,7 +84,7 @@ extension Anime {
         status: .current,
         format: .tv,
         studios: ["Wit Studio", "MAPPA"],
-        releaseDate: ISO8601DateFormatter().date(from: "2013-04-07T00:00:00-05:00")
+        releaseYear: 2013
     )
 
     static let empty = Anime(
@@ -97,7 +97,7 @@ extension Anime {
         status: .tba,
         format: .tv,
         studios: [],
-        releaseDate: Date()
+        releaseYear: nil
     )
 
     static let placeholder = Anime(
@@ -110,6 +110,6 @@ extension Anime {
         status: .tba,
         format: .tv,
         studios: [],
-        releaseDate: Date()
+        releaseYear: nil
     )
 }

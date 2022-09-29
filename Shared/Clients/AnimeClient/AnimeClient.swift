@@ -9,8 +9,6 @@ import Foundation
 import ComposableArchitecture
 
 struct AnimeClient {
-//    let setListClient: (List) -> Effect<Never, Never>
-//    let setSourceClient: (DataSource) -> Effect<Never, Never>
     let getTopTrendingAnime: () -> Effect<[Anime], API.Error>
     let getTopUpcomingAnime: () -> Effect<[Anime], API.Error>
     let getTopAiringAnime: () -> Effect<[Anime], API.Error>

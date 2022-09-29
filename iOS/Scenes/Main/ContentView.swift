@@ -14,6 +14,7 @@ struct ContentView: View {
     @State var visibility = TabBarVisibility.visible
 
     var body: some View {
+
         // MARK: Home View
 
         WithViewStore(
