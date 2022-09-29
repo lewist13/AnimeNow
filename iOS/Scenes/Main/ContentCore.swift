@@ -39,6 +39,7 @@ enum ContentCore {
         let animeClient: AnimeClient
         let mainQueue: AnySchedulerOf<DispatchQueue>
         let mainRunLoop: AnySchedulerOf<RunLoop>
+        let repositoryClient: RepositoryClient
         let orientationClient: OrientationClient
         let userDefaultsClient: UserDefaultsClient
     }
@@ -46,9 +47,10 @@ enum ContentCore {
 
 extension ContentCore.Environment {
     static let live = Self(
-        animeClient: .live(),
+        animeClient: .live,
         mainQueue: .main.eraseToAnyScheduler(),
         mainRunLoop: .main.eraseToAnyScheduler(),
+        repositoryClient: RepositoryClientLive(),
         orientationClient: .live,
         userDefaultsClient: .live
     )
@@ -57,6 +59,7 @@ extension ContentCore.Environment {
         animeClient: .mock,
         mainQueue: .main.eraseToAnyScheduler(),
         mainRunLoop: .main.eraseToAnyScheduler(),
+        repositoryClient: RepositoryClientMock(),
         orientationClient: .mock,
         userDefaultsClient: .mock
     )

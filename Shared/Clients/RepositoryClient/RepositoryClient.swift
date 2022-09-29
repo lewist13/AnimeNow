@@ -1,6 +1,6 @@
 //
 //  RepositoryClient.swift
-//  Anime Now! (iOS)
+//  Anime Now!
 //
 //  Created by Erik Bautista on 9/3/22.
 //
@@ -8,11 +8,11 @@
 import Foundation
 import ComposableArchitecture
 
-struct RepositoryClient<T: DomainModel> {
-    let insert: (T) -> Effect<T, Error>
-    let update: (T) -> Effect<T, Error>
-    let delete: (T) -> Effect<Void, Error>
-    let fetch: (NSPredicate?, [NSSortDescriptor]) -> Effect<[T], Error>
-    let count: (NSPredicate?) -> Effect<Int, Error>
-    let observe: ([NSSortDescriptor]) -> Effect<[T], Never>
+protocol RepositoryClient {
+    func insert<T: DomainModel>(_ item: T) -> Effect<T, Error>
+    func update<T: DomainModel>(_ item: T) -> Effect<T, Error>
+    func delete<T: DomainModel>(_ item: T) -> Effect<Void, Error>
+    func fetch<T: DomainModel>(_ predicate: NSPredicate?,_ sort: [NSSortDescriptor]) -> Effect<[T], Error>
+//    func count<T: DomainModel>(_ predicate: NSPredicate?, _ stub: T) -> Effect<Int, Error>
+    func observe<T: DomainModel>(_ sort: [NSSortDescriptor]) -> Effect<[T], Never>
 }

@@ -169,40 +169,37 @@ extension AnimeDetailView {
         WithViewStore(
             store.scope(state: \.anime)
         ) { anime in
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 12) {
 
                 // MARK: Summary Header
 
-                buildSubHeading(title: "Summary")
+//                buildSubHeading(title: "Summary")
 
                 // MARK: Description Info
 
                 Text(anime.description)
                     .font(.body)
                     .foregroundColor(.white.opacity(0.85))
-                    .lineLimit(5)
+                    .lineLimit(3)
                     .frame(maxWidth: .infinity, alignment: .leading)
 
-//                if anime.state.studios.count > 0 {
-//                    VStack(alignment: .leading) {
-//                        Text("Studios")
-//                            .bold()
-//                            .foregroundColor(Color.white)
-//
-//                        CompressableText(
-//                            array: anime.state.studios,
-//                            max: 3
-//                        )
-//                    }
-//                    .font(.callout)
-//                    .padding(.vertical)
-//                }
+                // Bubbles info
+
+                HStack {
+                    if let date = anime.releaseDate {
+                        ChipView(text: date.getYear())
+                    }
+
+                    ChipView(text: anime.format == .tv ? "TV" : "Movie")
+                }
+                .font(.system(size: 14).bold())
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal)
     }
 }
+
 
 // MARK: Episodes Container
 
@@ -322,23 +319,10 @@ extension AnimeDetailView {
 
         func makeBody(configuration: Configuration) -> some View {
             configuration.label
-                .font(.system(size: 12).weight(.heavy))
+                .font(.system(size: 13).weight(.heavy))
                 .padding()
                 .background(isEnabled ? Color.white : Color.init(.sRGB, white: 0.15, opacity: 1.0))
                 .foregroundColor(isEnabled ? .black : .white)
-                .clipShape(Capsule())
-                .scaleEffect(configuration.isPressed ? 0.9 : 1)
-                .animation(.easeOut(duration: 0.2), value: configuration.isPressed)
-        }
-    }
-
-    struct PlayButtonDisableStyle: ButtonStyle {
-        func makeBody(configuration: Configuration) -> some View {
-            configuration.label
-                .font(.system(size: 12).weight(.heavy))
-                .padding()
-                .background(Color.white.opacity(0.25))
-                .foregroundColor(.black)
                 .clipShape(Capsule())
                 .scaleEffect(configuration.isPressed ? 0.9 : 1)
                 .animation(.easeOut(duration: 0.2), value: configuration.isPressed)

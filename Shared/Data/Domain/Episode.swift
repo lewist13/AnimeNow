@@ -23,9 +23,19 @@ struct Episode: Equatable, Identifiable {
     enum IDType: Hashable {
         case enime(String)
         case consumet(String)
-        case zoro(String)
-        case gogoanime(String)
     }
+
+//    enum Provider: Hashable {
+//        case gogoanime(id: String)
+//        case zoro(id: String)
+//
+//        var id: String {
+//            switch self {
+//            case .gogoanime(let id), .zoro(id: let id):
+//                return id
+//            }
+//        }
+//    }
 }
 
 extension Episode {

@@ -17,11 +17,13 @@ struct Anime: Hashable, Identifiable {
     let status: Status
     let format: Format
     let studios: [String]
+    let releaseDate: Date?
+    var mappings: [AnimeListID] = []
 
     enum AnimeListID: Hashable {
         case kitsu(String)
         case anilist(String)
-        case myanimelist(String)
+        case mal(String)
 
         var value: String {
             switch self {
@@ -29,7 +31,7 @@ struct Anime: Hashable, Identifiable {
                 return id
             case .anilist(let id):
                 return id
-            case .myanimelist(let id):
+            case .mal(let id):
                 return id
             }
         }
@@ -64,7 +66,8 @@ extension Anime {
         status: .finished,
         format: .tv,
         studios: "TV Tokyo, Aniplex, KSS, Rakuonsha, TV Tokyo Music, Shueisha, TV Tokyo, Aniplex, KSS, Rakuonsha, TV Tokyo Music, Shueisha"
-            .split(separator: ",").map({ String($0).trimmingCharacters(in: .whitespacesAndNewlines) })
+            .split(separator: ",").map({ String($0).trimmingCharacters(in: .whitespacesAndNewlines) }),
+        releaseDate: ISO8601DateFormatter().date(from: "2009-09-29T00:00:00-05:00")
     )
 
     static let attackOnTitan = Anime(
@@ -80,7 +83,8 @@ extension Anime {
         ],
         status: .current,
         format: .tv,
-        studios: ["Wit Studio", "MAPPA"]
+        studios: ["Wit Studio", "MAPPA"],
+        releaseDate: ISO8601DateFormatter().date(from: "2013-04-07T00:00:00-05:00")
     )
 
     static let empty = Anime(
@@ -92,7 +96,8 @@ extension Anime {
         categories: [],
         status: .tba,
         format: .tv,
-        studios: []
+        studios: [],
+        releaseDate: Date()
     )
 
     static let placeholder = Anime(
@@ -104,6 +109,7 @@ extension Anime {
         categories: [],
         status: .tba,
         format: .tv,
-        studios: []
+        studios: [],
+        releaseDate: Date()
     )
 }

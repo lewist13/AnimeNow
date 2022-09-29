@@ -17,6 +17,8 @@ struct SeekbarView: View {
 
     @State var sentEditingCallback = false
 
+    let scaled = 1.25
+
     var body: some View {
         GeometryReader { reader in
             ZStack(alignment: .leading) {
@@ -36,11 +38,13 @@ struct SeekbarView: View {
             }
                 .frame(
                     width: reader.size.width,
-                    height: reader.size.height * (sentEditingCallback ? 1.25 : 1),
-                    alignment: .leading
+                    height: reader.size.height * (sentEditingCallback ? scaled : 1)
                 )
                 .clipShape(Capsule())
-                .contentShape(Capsule())
+                .offset(
+                    y: sentEditingCallback ? -(reader.size.height/10 * scaled) : 0
+                )
+                .contentShape(Rectangle())
                 .gesture(
                     DragGesture(
                         minimumDistance: 0

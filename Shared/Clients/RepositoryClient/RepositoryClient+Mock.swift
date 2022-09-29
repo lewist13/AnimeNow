@@ -6,22 +6,26 @@
 //
 
 import Foundation
+import ComposableArchitecture
 
-
-extension RepositoryClient {
-    static var mock: RepositoryClient {
-        return RepositoryClient { _ in
-            .none
-        } update: { _ in
-            .none
-        } delete: { _ in
-            .none
-        } fetch: { _, _ in
-            .none
-        } count: { _ in
-            .none
-        } observe: { _ in
-            .none
-        }
+class RepositoryClientMock: RepositoryClient {
+    func insert<T>(_ item: T) -> Effect<T, Error> where T : DomainModel {
+        .none
+    }
+    
+    func update<T>(_ item: T) -> Effect<T, Error> where T : DomainModel {
+        .none
+    }
+    
+    func delete<T>(_ item: T) -> Effect<Void, Error> where T : DomainModel {
+        .none
+    }
+    
+    func fetch<T>(_ predicate: NSPredicate?, _ sort: [NSSortDescriptor]) -> Effect<[T], Error> where T : DomainModel {
+        .none
+    }
+    
+    func observe<T>(_ sort: [NSSortDescriptor]) -> Effect<[T], Never> where T : DomainModel {
+        .none
     }
 }

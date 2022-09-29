@@ -8,11 +8,7 @@
 import Foundation
 
 extension AnimeClient {
-    static let mock = Self { _ in
-        .none
-    } setSourceClient: { _ in
-        .none
-    } getTopTrendingAnime: {
+    static let mock = Self {
         .init(value: [.attackOnTitan, .narutoShippuden])
     } getTopUpcomingAnime: {
         .init(value: [])
