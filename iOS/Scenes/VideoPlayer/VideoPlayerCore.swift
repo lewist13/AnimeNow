@@ -64,6 +64,7 @@ enum VideoPlayerCore {
         case playSource
         case fetchSourcesForSelectedEpisode
 
+        case saveEpisodeProgress
         // Sidebar Actions
 
         case episodes(SidebarEpisodesCore.Action)
@@ -83,6 +84,7 @@ enum VideoPlayerCore {
         let mainQueue: AnySchedulerOf<DispatchQueue>
         let animeClient: AnimeClient
         let mainRunLoop: AnySchedulerOf<RunLoop>
+        let repositoryClient: RepositoryClient
         let userDefaultsClient: UserDefaultsClient
     }
 }
@@ -188,6 +190,7 @@ extension VideoPlayerCore {
                     [
                         .cancel(id: CancelEpisodeSourceFetchingId()),
                         .cancel(id: HideOverlayAnimationTimeout()),
+                        .init(value: .saveEpisodeProgress),
                         .init(value: .player(.avAction(.terminate))),
                         .init(value: .close)
                             .delay(for: 0.25, scheduler: environment.mainQueue)
@@ -201,6 +204,25 @@ extension VideoPlayerCore {
                 if route != nil {
                     return .init(value: .showPlayerControlsOverlay(false))
                 }
+
+            case .saveEpisodeProgress:
+                if let episode = state.episodesState.episode, let duration = state.playerState.duration {
+                    let progressInfoId = ProgressInfoId(animeId: state.anime.id, episodeId: episode.id)
+                    let episodeProgress = EpisodeProgress(
+                        id: progressInfoId,
+                        animeTitle: state.anime.title,
+                        episodeTitle: episode.name,
+                        episodeThumbnailUrl: episode.thumbnail.largest?.link,
+                        episodeNumber: Int64(episode.number),
+                        lastUpdated: .init(),
+                        progress: state.playerState.currentTime.seconds / duration.seconds
+                    )
+
+                    return environment.repositoryClient.insert(episodeProgress)
+                        .receive(on: environment.mainQueue)
+                        .fireAndForget()
+                }
+
             case .sources(_):
                 break
 
@@ -255,7 +277,6 @@ extension VideoPlayerCore {
             action: /VideoPlayerCore.Action.player,
             environment: { _ in () }
         ),
-//        .debugActions(),
         SidebarEpisodesCore.reducer.pullback(
             state: \.episodesState,
             action: /Action.episodes,

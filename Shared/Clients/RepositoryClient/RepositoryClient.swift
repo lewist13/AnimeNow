@@ -14,5 +14,5 @@ protocol RepositoryClient {
     func delete<T: DomainModel>(_ item: T) -> Effect<Void, Error>
     func fetch<T: DomainModel>(_ predicate: NSPredicate?,_ sort: [NSSortDescriptor]) -> Effect<[T], Error>
 //    func count<T: DomainModel>(_ predicate: NSPredicate?, _ stub: T) -> Effect<Int, Error>
-    func observe<T: DomainModel>(_ sort: [NSSortDescriptor]) -> Effect<[T], Never>
+    func observe<T: DomainModel>(_ predicate: NSPredicate?, _ sort: [NSSortDescriptor]) -> Effect<[T], Never>
 }

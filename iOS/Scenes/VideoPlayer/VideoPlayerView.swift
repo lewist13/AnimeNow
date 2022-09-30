@@ -400,6 +400,7 @@ struct VideoPlayerView_Previews: PreviewProvider {
                         mainQueue: .main.eraseToAnyScheduler(),
                         animeClient: .mock,
                         mainRunLoop: .main.eraseToAnyScheduler(),
+                        repositoryClient: RepositoryClientMock.shared,
                         userDefaultsClient: .mock
                     )
                 )

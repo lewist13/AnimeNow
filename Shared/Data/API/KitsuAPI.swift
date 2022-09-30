@@ -573,7 +573,7 @@ extension KitsuAPI {
                 case .MYANIMELIST_ANIME:
                     return AnimeNow.Anime.AnimeListID.mal(mapping.externalId)
                 case .ANILIST_ANIME:
-                    return AnimeNow.Anime.AnimeListID.anilist(mapping.externalId)
+                    return AnimeNow.Anime.AnimeListID.anilist(Int(mapping.externalId) ?? 0)
                 default:
                     return nil
                 }
@@ -582,7 +582,7 @@ extension KitsuAPI {
             mappings.append(AnimeNow.Anime.AnimeListID.kitsu(anime.id))
 
             return AnimeNow.Anime(
-                id: .kitsu(anime.id),
+                id: 0,
                 title: anime.titles.translated ?? anime.titles.romanized ?? anime.titles.canonical ?? anime.titles.original ?? "Untitled",
                 description: anime.description.en ?? "Anime description is not available.",
                 posterImage: .init(posterImageSizes),

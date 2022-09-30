@@ -50,7 +50,7 @@ extension ContentCore.Environment {
         animeClient: .live,
         mainQueue: .main.eraseToAnyScheduler(),
         mainRunLoop: .main.eraseToAnyScheduler(),
-        repositoryClient: RepositoryClientLive(),
+        repositoryClient: RepositoryClientLive.shared,
         orientationClient: .live,
         userDefaultsClient: .live
     )
@@ -59,7 +59,7 @@ extension ContentCore.Environment {
         animeClient: .mock,
         mainQueue: .main.eraseToAnyScheduler(),
         mainRunLoop: .main.eraseToAnyScheduler(),
-        repositoryClient: RepositoryClientMock(),
+        repositoryClient: RepositoryClientMock.shared,
         orientationClient: .mock,
         userDefaultsClient: .mock
     )
@@ -74,7 +74,8 @@ extension ContentCore {
                 .init(
                     animeClient: $0.animeClient,
                     mainQueue: $0.mainQueue,
-                    mainRunLoop: $0.mainRunLoop
+                    mainRunLoop: $0.mainRunLoop,
+                    repositoryClient: $0.repositoryClient
                 )
             }
         ),
@@ -108,6 +109,7 @@ extension ContentCore {
                     mainQueue: $0.mainQueue,
                     animeClient: $0.animeClient,
                     mainRunLoop: $0.mainRunLoop,
+                    repositoryClient: $0.repositoryClient,
                     userDefaultsClient: $0.userDefaultsClient
                 )
             }
@@ -119,7 +121,8 @@ extension ContentCore {
                 .init(
                     animeClient: $0.animeClient,
                     mainQueue: $0.mainQueue,
-                    mainRunLoop: $0.mainRunLoop
+                    mainRunLoop: $0.mainRunLoop,
+                    repositoryClient: $0.repositoryClient
                 )
             }
         ),

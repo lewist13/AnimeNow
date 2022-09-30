@@ -11,7 +11,11 @@ import CoreData
 import Combine
 
 class RepositoryClientLive: RepositoryClient {
+    static let shared = RepositoryClientLive()
+
     let persistenceContainer = Persistence.shared.persistentContainer
+
+    private init() {}
 
     func insert<T>(_ item: T) -> Effect<T, Error> where T : DomainModel {
         .future { [unowned self] callback in
@@ -108,7 +112,7 @@ class RepositoryClientLive: RepositoryClient {
             }
         }
     }
-    
+
 //    func count<T>(_ predicate: NSPredicate?, _ stub: T) -> Effect<Int, Error> {
 //        .future { callback in
 //                let fetchRequest: NSFetchRequest<T.ManagedObject> = T.ManagedObject.fetchRequest()
@@ -127,10 +131,11 @@ class RepositoryClientLive: RepositoryClient {
 //                }
 //            }
 //    }
-    
-    func observe<T>(_ sort: [NSSortDescriptor]) -> Effect<[T], Never> where T : DomainModel {
+
+    func observe<T>(_ predicate: NSPredicate?, _ sort: [NSSortDescriptor]) -> Effect<[T], Never> where T : DomainModel {
         .run { [unowned self] subscriber in
             let fetchRequest: NSFetchRequest<T.ManagedObject> = T.ManagedObject.fetchRequest()
+            fetchRequest.predicate = predicate
             fetchRequest.sortDescriptors = sort
 
             let context = persistenceContainer.newBackgroundContext()

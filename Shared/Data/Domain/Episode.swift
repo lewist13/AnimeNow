@@ -16,20 +16,8 @@ struct Episode: Equatable, Identifiable {
     let length: Int?    // in Seconds
 
     enum IDType: Hashable {
-        case consumet(String)
+        case gogoanime(String)
     }
-
-//    enum Provider: Hashable {
-//        case gogoanime(id: String)
-//        case zoro(id: String)
-//
-//        var id: String {
-//            switch self {
-//            case .gogoanime(let id), .zoro(id: let id):
-//                return id
-//            }
-//        }
-//    }
 }
 
 extension Episode {
@@ -54,6 +42,10 @@ extension Episode {
         }
 
         return retVal.joined(separator: " ")
+    }
+
+    var episodeNumberLengthFormat: String {
+        "E\(number)" + (length != nil ? " \u{2022} \(lengthFormatted)" : "")
     }
 }
 
@@ -80,6 +72,14 @@ extension Episode {
         .init(
             id: "cl6ooypne2201181rtgxmvdmmfx",
             name: "Homecoming",
+            number: 1,
+            description: "An older and stronger Naruto returns from his two and a half years of training with Jiraiya. When he gets back he finds that many things have changed since he left. From Konohamaru becoming a Gennin and being under the supervision of Ebisu to Tsunade's, the Fifth Hokage, being added to the great stone faces. Now the tasks of starting things where they were left has begun. And what new danger does Jiraiya know about?",
+            thumbnail: [.original(URL(string: "https://artworks.thetvdb.com/banners/episodes/79824/320623.jpg")!)],
+            length: nil
+        ),
+        .init(
+            id: "jrinfeifniujrovuo",
+            name: "Homecoming 2",
             number: 1,
             description: "An older and stronger Naruto returns from his two and a half years of training with Jiraiya. When he gets back he finds that many things have changed since he left. From Konohamaru becoming a Gennin and being under the supervision of Ebisu to Tsunade's, the Fifth Hokage, being added to the great stone faces. Now the tasks of starting things where they were left has begun. And what new danger does Jiraiya know about?",
             thumbnail: [.original(URL(string: "https://artworks.thetvdb.com/banners/episodes/79824/320623.jpg")!)],

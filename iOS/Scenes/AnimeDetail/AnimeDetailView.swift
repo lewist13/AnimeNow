@@ -215,40 +215,38 @@ extension AnimeDetailView {
             )
         ) { episodesStore in
             WithViewStore(episodesStore) { episodesViewStore in
-                VStack(alignment: .leading, spacing: 10) {
-                    if case let .success(episodes) = episodesViewStore.state {
-                        if episodes.count > 0 {
-                            buildSubHeading(title: "Episodes")
-                        }
-
-                        LazyVStack {
-                            ForEach(episodes, id: \.id) { episode in
-                                generateEpisodeItem(episode)
-                                    .onTapGesture {
-                                        episodesViewStore.send(
-                                            .selectedEpisode(
-                                                episode: episode
-                                            )
-                                        )
-                                    }
-                            }
-                        }
-                    } else if case .failed = episodesViewStore.state {
+                if case let .success(episodes) = episodesViewStore.state {
+                    if episodes.count > 0 {
                         buildSubHeading(title: "Episodes")
-
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 16)
-                                .episodeFrame()
-                                .foregroundColor(Color.gray.opacity(0.2))
-
-                            Label("Failed to load.", systemImage: "exclamationmark.triangle.fill")
-                                .font(.title3.bold())
-                                .foregroundColor(Color.red)
-                        }
-                    } else {
-                        buildSubHeading(title: "Episodes")
-                        generateEpisodeItem(.placeholder)
                     }
+
+                    LazyVStack(spacing: 12) {
+                        ForEach(episodes, id: \.id) { episode in
+                            generateEpisodeItem(episode)
+                                .onTapGesture {
+                                    episodesViewStore.send(
+                                        .selectedEpisode(
+                                            episode: episode
+                                        )
+                                    )
+                                }
+                        }
+                    }
+                } else if case .failed = episodesViewStore.state {
+                    buildSubHeading(title: "Episodes")
+
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 16)
+                            .episodeFrame()
+                            .foregroundColor(Color.gray.opacity(0.2))
+                        
+                        Label("Failed to load.", systemImage: "exclamationmark.triangle.fill")
+                            .font(.title3.bold())
+                            .foregroundColor(Color.red)
+                    }
+                } else {
+                    buildSubHeading(title: "Episodes")
+                    generateEpisodeItem(.placeholder)
                 }
             }
         }
@@ -260,7 +258,18 @@ extension AnimeDetailView {
     private func generateEpisodeItem(
         _ episode: Episode
     ) -> some View {
-        EpisodeItemBigView(episode: episode)
+        WithViewStore(
+            store.scope(
+                state: { state -> EpisodeProgress? in
+                    return state.episodesProgress.value?.first(where: { $0.id.episodeId == episode.id })
+                }
+            )
+        ) { progressState in
+            EpisodeItemBigView(
+                episode: episode,
+                progress: progressState.state?.progress
+            )
+        }
 //            .overlay(
 //                WithViewStore(
 //                    store.scope(state: { $0.moreInfo.contains(episode.id) })
@@ -301,6 +310,7 @@ extension AnimeDetailView {
         Text(title)
             .font(.title2.bold())
             .foregroundColor(.white)
+            .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
@@ -336,7 +346,8 @@ struct AnimeView_Previews: PreviewProvider {
             store: .init(
                 initialState: .init(
                     anime: .narutoShippuden,
-                    episodes: .success([])
+                    episodes: .success(.init(uniqueElements: Episode.demoEpisodes)),
+                    episodesProgress: .success([])
                 ),
                 reducer: .empty,
                 environment: ()

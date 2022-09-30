@@ -27,6 +27,10 @@ struct HomeView: View {
                         )
                     )
 
+                    resumeWatchingEpisodes(
+                        store: store.scope(state: \.resumeWatching)
+                    )
+
                     animeItems(
                         title: "Top Airing Anime",
                         isLoading: viewStore.state,
@@ -140,19 +144,27 @@ extension HomeView {
 
 extension HomeView {
     @ViewBuilder
-    func currentlyWatchingEpisodes(
-        store: Store<[Episode], HomeCore.Action>
+    func resumeWatchingEpisodes(
+        store: Store<HomeCore.LoadableEpisodes, HomeCore.Action>
     ) -> some View {
-        VStack(alignment: .leading) {
-            headerText("Currently Watching")
+        WithViewStore(store) { viewStore in
+            if case .success(let episodes) = viewStore.state, episodes.count > 0 {
+                VStack(alignment: .leading) {
+                    headerText("Resume Watching")
 
-            WithViewStore(store) { viewStore in
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(alignment: .top) {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        LazyHStack(alignment: .center) {
+                            ForEach(episodes, id: \.self) { episodeProgressInfo in
+                                EpisodeItemBigView(
+                                    episode: episodeProgressInfo.asEpisode,
+                                    progress: episodeProgressInfo.progress
+                                )
+                                .frame(height: 150)
+                            }
+                        }
+                        .padding(.horizontal)
                     }
-                    .padding(.horizontal)
                 }
-                .frame(height: 150)
             }
         }
     }
@@ -164,7 +176,7 @@ extension HomeView {
     @ViewBuilder
     func headerText(_ title: String) -> some View {
         Text(title)
-            .font(.headline.bold())
+            .font(.title3.bold())
             .padding(.horizontal)
             .opacity(0.9)
     }
@@ -179,7 +191,8 @@ struct HomeView_Previews: PreviewProvider {
                 environment: .init(
                     animeClient: .mock,
                     mainQueue: .main.eraseToAnyScheduler(),
-                    mainRunLoop: .main.eraseToAnyScheduler()
+                    mainRunLoop: .main.eraseToAnyScheduler(),
+                    repositoryClient: RepositoryClientMock.shared
                 )
             )
         )

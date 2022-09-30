@@ -89,7 +89,7 @@ extension AniListAPI {
                 status = .tba
             }
             return Anime(
-                id: .anilist("\(media.id)"),
+                id: media.id,
                 title: media.title.english ?? media.title.romaji ?? media.title.native ?? "Untitled",
                 description: media.description?.trimHTMLTags() ?? "No description",
                 posterImage: coverImages,

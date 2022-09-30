@@ -11,7 +11,37 @@ import ComposableArchitecture
 
 enum AnimeDetailCore {
     typealias LoadableEpisodes = LoadableState<IdentifiedArrayOf<Episode>>
+    typealias LoadableEpisodeProgress = LoadableState<IdentifiedArrayOf<EpisodeProgress>>
 
+    struct State: Equatable {
+        let anime: Anime
+
+        var episodes = LoadableEpisodes.idle
+        var episodesProgress = LoadableEpisodeProgress.idle
+        var moreInfo = Set<Episode.ID>()
+    }
+
+    enum Action: Equatable {
+        case onAppear
+        case closeButtonPressed
+        case close
+        case playResumeButtonClicked
+        case fetchedEpisodes(Result<[Episode], API.Error>)
+        case selectedEpisode(episode: Episode)
+        case play(anime: Anime, episodes: IdentifiedArrayOf<Episode>, selected: Episode.ID)
+        case moreInfo(id: Episode.ID)
+        case fetchedEpisodesProgress([EpisodeProgress])
+    }
+
+    struct Environment {
+        let animeClient: AnimeClient
+        let mainQueue: AnySchedulerOf<DispatchQueue>
+        let mainRunLoop: AnySchedulerOf<RunLoop>
+        let repositoryClient: RepositoryClient
+    }
+}
+
+extension AnimeDetailCore {
     enum PlayButtonState: Equatable {
         case unavailable
         case comingSoon
@@ -44,14 +74,14 @@ enum AnimeDetailCore {
             case .comingSoon:
                 return "Coming Soon"
             case .playFromBeginning(let info):
-                return "Play \(info.format == .movie ? "Movie" : "Show")"
+                return "Play \(info.format == .movie ? "Movie" : "")"
             case .playNextEpisode(let info):
-                return "Play Next Epsidode: \(info.episodeNumber ?? 0)"
+                return "Play E\(info.episodeNumber ?? 0)"
             case .resumeEpisode(let info):
                 if info.format == .movie {
                     return "Resume Movie"
                 } else {
-                    return "Resume Episode \(info.episodeNumber ?? 0)"
+                    return "Resume E\(info.episodeNumber ?? 0)"
                 }
             }
         }
@@ -61,30 +91,6 @@ enum AnimeDetailCore {
             let format: Anime.Format
             var episodeNumber: Int?
         }
-    }
-
-    struct State: Equatable {
-        let anime: Anime
-
-        var episodes = LoadableEpisodes.idle
-        var moreInfo = Set<Episode.ID>()
-    }
-
-    enum Action: Equatable {
-        case onAppear
-        case closeButtonPressed
-        case close
-        case playResumeButtonClicked
-        case fetchedEpisodes(Result<[Episode], API.Error>)
-        case selectedEpisode(episode: Episode)
-        case play(anime: Anime, episodes: IdentifiedArrayOf<Episode>, selected: Episode.ID)
-        case moreInfo(id: Episode.ID)
-    }
-
-    struct Environment {
-        let animeClient: AnimeClient
-        let mainQueue: AnySchedulerOf<DispatchQueue>
-        let mainRunLoop: AnySchedulerOf<RunLoop>
     }
 }
 
@@ -96,15 +102,43 @@ extension AnimeDetailCore.State {
     var playButtonState: AnimeDetailCore.PlayButtonState {
         if anime.status == .upcoming {
             return .comingSoon
-        } else if case let .success(episodes) = episodes, let episode = episodes.first {
-            return .playFromBeginning(.init(id: episode.id, format: anime.format, episodeNumber: anime.format == .movie ? nil : episode.number))
-        } else {
-            return .unavailable
+        } else if case let .success(episodes) = episodes, case let .success(episodesProgress) = episodesProgress, episodes.count > 0 {
+            let lastUpdatedProgress = episodesProgress.sorted(by: { $0.lastUpdated > $1.lastUpdated }).first
+            if let lastUpdatedProgress = lastUpdatedProgress, 0.9 > lastUpdatedProgress.progress && lastUpdatedProgress.progress > 0 {
+                return .resumeEpisode(
+                    .init(
+                        id: lastUpdatedProgress.id.episodeId,
+                        format: anime.format,
+                        episodeNumber: anime.format == .movie ? nil : Int(lastUpdatedProgress.episodeNumber)
+                    )
+                )
+            } else if let lastUpdatedProgress = lastUpdatedProgress,
+                      let lastEpisode = episodes.last,
+                      lastEpisode.id != lastUpdatedProgress.id.episodeId,
+                      let lastUpdatedProgressInx = episodes.index(id: lastUpdatedProgress.id.episodeId) {
+                let nextEpisode = episodes[episodes.index(after: lastUpdatedProgressInx)]
+                return .playNextEpisode(
+                    .init(
+                        id: nextEpisode.id,
+                        format: anime.format,
+                        episodeNumber: anime.format == .movie ? nil : nextEpisode.number
+                    )
+                )
+            } else if let episode = episodes.first {
+                return .playFromBeginning(
+                    .init(
+                        id: episode.id,
+                        format: anime.format,
+                        episodeNumber: anime.format == .movie ? nil : episode.number
+                    )
+                )
+            }
         }
+        return .unavailable
     }
 
     var loading: Bool {
-        episodes == .loading || anime.status != .upcoming && !episodes.hasInitialized
+        episodes == .loading || anime.status != .upcoming && !episodes.hasInitialized || !episodesProgress.finished
     }
 }
 
@@ -116,16 +150,23 @@ extension AnimeDetailCore {
 
             switch action {
             case .onAppear:
-                guard state.anime.status != .upcoming else {
-                    break
-                }
+                guard state.anime.status != .upcoming && !state.episodes.hasInitialized else { break }
                 state.episodes = .loading
-                return environment.animeClient.getEpisodes(state.anime.id)
-                    .subscribe(on: DispatchQueue.global(qos: .userInteractive))
+                state.episodesProgress = .loading
+                return .merge(
+                    environment.animeClient.getEpisodes(state.anime.id)
+                        .receive(on: environment.mainQueue)
+                        .catchToEffect()
+                        .map(Action.fetchedEpisodes)
+                        .cancellable(id: CancelFetchingEpisodesId()),
+                    environment.repositoryClient.observe(
+                        .init(format: "id.animeId == %d", state.anime.id),
+                        []
+                    )
                     .receive(on: environment.mainQueue)
-                    .catchToEffect()
-                    .map(Action.fetchedEpisodes)
-                    .cancellable(id: CancelFetchingEpisodesId())
+                    .eraseToEffect()
+                    .map(Action.fetchedEpisodesProgress)
+                )
             case .playResumeButtonClicked:
                 if let episodeId = state.playButtonState.episodeId, let episode = state.episodes.value?[id: episodeId] {
                     return .init(value: .selectedEpisode(episode: episode))
@@ -148,6 +189,8 @@ extension AnimeDetailCore {
                         selected: episode.id
                     )
                 )
+            case .fetchedEpisodesProgress(let episodesProgress):
+                state.episodesProgress = .success(.init(uniqueElements: episodesProgress))
             case .play:
                 break
             case .closeButtonPressed:
