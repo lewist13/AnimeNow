@@ -33,11 +33,15 @@ enum VideoPlayerCore {
         var sourcesState: SidebarSourcesCore.State
         var sidebarRoute: SidebarRoute?
 
+        var animeDB = LoadableState<AnimeDBModel>.idle
+
         // Overlays
         var showPlayerOverlay = true
 
         // Player State
         var playerState = AVPlayerCore.State()
+
+        var initialized = false
 
         init(anime: Anime, episodes: IdentifiedArrayOf<Episode>, selectedEpisode: Episode.ID) {
             self.anime = anime
@@ -48,23 +52,22 @@ enum VideoPlayerCore {
 
     enum Action: Equatable {
         case onAppear
-        case tappedPlayer
-        case showPlayerControlsOverlay(Bool)
-        case hideOverlayAnimationDelay
-        case cancelHideOverlayAnimationDelay
         case tappedEpisodesSidebar
         case tappedSourcesSidebar
         case closeSidebar
         case closeSidebarAndShowOverlay
-        case closeButtonPressed
+        case notifyCloseButtonTapped
         case close
-
-        case setSidebar(route: SidebarRoute?)
 
         case playSource
         case fetchSourcesForSelectedEpisode
 
-        case saveEpisodeProgress
+        case saveCurrentEpisodeProgress
+
+        case setSidebar(route: SidebarRoute?)
+
+        case fetchedAnimeDB([AnimeDBModel])
+
         // Sidebar Actions
 
         case episodes(SidebarEpisodesCore.Action)
@@ -73,10 +76,14 @@ enum VideoPlayerCore {
         // Player Action Controls
 
         case initializePlayer
+        case showPlayerControlsOverlay(Bool)
+        case tappedPlayerBounds
         case togglePlayback
         case startSeeking
         case slidingSeeker(Double)
         case doneSeeking
+        case hideOverlayAnimationDelay
+        case cancelHideOverlayAnimationDelay
         case player(AVPlayerCore.Action)
     }
 
@@ -100,23 +107,37 @@ extension VideoPlayerCore {
         .init { state, action, environment in
             struct HideOverlayAnimationTimeout: Hashable {}
             struct CancelEpisodeSourceFetchingId: Hashable {}
+            struct ObservingAnimeInfoId: Hashable {}
 
             let overlayVisibilityAnimation = Animation.easeInOut(duration: 0.5)
 
             switch action {
             case .onAppear:
-                return .concatenate(
-                    .init(value: .initializePlayer),
-                    .init(value: .fetchSourcesForSelectedEpisode)
+                if state.initialized {
+                    break
+                }
+                return .merge(
+                    .init(value: .initializePlayer)
+                        .concatenate(with: .init(value: .fetchSourcesForSelectedEpisode)),
+                    environment.repositoryClient.observe(.init(format: "id == %d", state.anime.id), [])
+                        .receive(on: environment.mainQueue)
+                        .eraseToEffect()
+                        .map(Action.fetchedAnimeDB)
+                        .cancellable(id: ObservingAnimeInfoId())
                 )
+
+            case .episodes(.aboutToChangeEpisode):
+                return .init(value: .saveCurrentEpisodeProgress)
             case .episodes(.selected):
                 return .merge(
                     .init(value: .closeSidebarAndShowOverlay),
                     .init(value: .player(.avAction(.stop))),
                     .init(value: .fetchSourcesForSelectedEpisode)
                )
+
             case .sources(.selected):
                 return .init(value: .playSource)
+
             case .fetchSourcesForSelectedEpisode:
                 if let selectedEpisode = state.episodesState.episode {
                     return .init(value: .sources(.fetchSources(episodeId: selectedEpisode.id)))
@@ -131,6 +152,7 @@ extension VideoPlayerCore {
 
                 let asset = AVAsset(url: source.url)
                 let item = AVPlayerItem(asset: asset)
+
                 return .concatenate(
                     .init(value: .player(.avAction(.start(media: item))))
                         .delay(for: 0.5, scheduler: environment.mainQueue)
@@ -145,7 +167,7 @@ extension VideoPlayerCore {
                 return .init(value: .setSidebar(route: .sources))
                     .receive(on: environment.mainQueue.animation(.easeInOut(duration: 0.25)))
                     .eraseToEffect()
-            case .tappedPlayer:
+            case .tappedPlayerBounds:
                 guard state.sidebarRoute == nil else {
                     return .init(value: .closeSidebar)
                 }
@@ -180,17 +202,18 @@ extension VideoPlayerCore {
                 return .cancel(id: HideOverlayAnimationTimeout())
             case .closeSidebarAndShowOverlay:
                 state.sidebarRoute = nil
-                return .init(value: .tappedPlayer)
+                return .init(value: .tappedPlayerBounds)
             case .closeSidebar:
                 return .init(value: .setSidebar(route: nil))
                     .receive(on: environment.mainQueue.animation(.easeInOut(duration: 0.25)))
                     .eraseToEffect()
-            case .closeButtonPressed:
+            case .notifyCloseButtonTapped:
                 return .concatenate(
                     [
                         .cancel(id: CancelEpisodeSourceFetchingId()),
+                        .cancel(id: ObservingAnimeInfoId()),
                         .cancel(id: HideOverlayAnimationTimeout()),
-                        .init(value: .saveEpisodeProgress),
+                        .init(value: .saveCurrentEpisodeProgress),
                         .init(value: .player(.avAction(.terminate))),
                         .init(value: .close)
                             .delay(for: 0.25, scheduler: environment.mainQueue)
@@ -205,30 +228,52 @@ extension VideoPlayerCore {
                     return .init(value: .showPlayerControlsOverlay(false))
                 }
 
-            case .saveEpisodeProgress:
-                if let episode = state.episodesState.episode, let duration = state.playerState.duration {
-                    let progressInfoId = ProgressInfoId(animeId: state.anime.id, episodeId: episode.id)
-                    let episodeProgress = EpisodeProgress(
-                        id: progressInfoId,
-                        animeTitle: state.anime.title,
-                        episodeTitle: episode.name,
-                        episodeThumbnailUrl: episode.thumbnail.largest?.link,
-                        episodeNumber: Int64(episode.number),
-                        lastUpdated: .init(),
-                        progress: state.playerState.currentTime.seconds / duration.seconds
-                    )
+            case .saveCurrentEpisodeProgress:
+                if var animeDB = state.animeDB.value,
+                    let episode = state.episodesState.episode,
+                    let duration = state.playerState.duration {
 
-                    return environment.repositoryClient.insert(episodeProgress)
+                    let progress = state.playerState.currentTime.seconds / duration.seconds
+
+                    let progressInfo: ProgressInfo
+
+                    if var episodeProgress = animeDB.progressInfos.first(where: { $0.number == episode.number }) {
+                        episodeProgress.progress = progress
+                        episodeProgress.lastUpdated = .init()
+                        progressInfo = episodeProgress
+                    } else {
+                        progressInfo = .init(
+                            number: Int16(episode.number),
+                            progress: progress,
+                            lastUpdated: .init()
+                        )
+                    }
+
+                    animeDB.progressInfos.insertOrUpdate(progressInfo)
+
+                    return environment.repositoryClient.insertOrUpdate(animeDB)
                         .receive(on: environment.mainQueue)
                         .fireAndForget()
                 }
-
+            case .fetchedAnimeDB(let animesDB):
+                if let animeDB = animesDB.first {
+                    state.animeDB = .success(animeDB)
+                } else {
+                    state.animeDB = .success(
+                        .init(
+                            id: Int64(state.anime.id),
+                            isFavorite: false,
+                            progressInfos: .init()
+                        )
+                    )
+                }
             case .sources(_):
                 break
 
             // MARK: AVPlayer Actions
 
             case .initializePlayer:
+                state.initialized = true
                 return .concatenate(
                         .init(value: .player(.avAction(.initialize)))
                 )
@@ -245,8 +290,8 @@ extension VideoPlayerCore {
                     .init(value: .cancelHideOverlayAnimationDelay)
                 )
             case .slidingSeeker(let val):
-                let duration = state.playerState.duration ?? .zero
-                let seconds = CMTimeValue(max(0, min(val, duration.seconds)))
+                let duration = state.playerState.duration?.seconds ?? 0
+                let seconds = CMTimeValue(max(0, min(val * duration, duration)))
                 let newTime = CMTime(
                     value: seconds,
                     timescale: 1
@@ -266,6 +311,25 @@ extension VideoPlayerCore {
             case .player(.timeStatus(.paused, nil)):
                 if state.showPlayerOverlay {
                     return .init(value: .cancelHideOverlayAnimationDelay)
+                }
+            case .player(.duration(let duration)):
+                // When a duration changes, typically when sources or episodes are being changed,
+                // resume to the last progress
+                if let duration = duration, duration != .zero {
+                    let newDuration: Double
+
+                    if let episode = state.episodesState.episode,
+                       let progressInfo = state.animeDB.value?.progressInfos.first(where: { $0.id == episode.number }) {
+                        newDuration = progressInfo.isFinished ? 0 : progressInfo.progress * duration.seconds
+                    } else {
+                        newDuration = 0.0
+                    }
+
+                    let currentTime = CMTime.init(
+                        seconds: newDuration,
+                        preferredTimescale: 1
+                    )
+                    return .init(value: .player(.avAction(.seek(to: currentTime))))
                 }
             case .player:
                 break

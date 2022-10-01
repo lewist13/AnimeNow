@@ -11,8 +11,8 @@ import ComposableArchitecture
 protocol RepositoryClient {
     func insert<T: DomainModel>(_ item: T) -> Effect<T, Error>
     func update<T: DomainModel>(_ item: T) -> Effect<T, Error>
+    func insertOrUpdate<T: DomainModel>(_ item: T) -> Effect<T, Error>
     func delete<T: DomainModel>(_ item: T) -> Effect<Void, Error>
     func fetch<T: DomainModel>(_ predicate: NSPredicate?,_ sort: [NSSortDescriptor]) -> Effect<[T], Error>
-//    func count<T: DomainModel>(_ predicate: NSPredicate?, _ stub: T) -> Effect<Int, Error>
     func observe<T: DomainModel>(_ predicate: NSPredicate?, _ sort: [NSSortDescriptor]) -> Effect<[T], Never>
 }

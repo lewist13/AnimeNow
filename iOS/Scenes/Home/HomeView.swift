@@ -155,11 +155,11 @@ extension HomeView {
                     ScrollView(.horizontal, showsIndicators: false) {
                         LazyHStack(alignment: .center) {
                             ForEach(episodes, id: \.self) { episodeProgressInfo in
-                                EpisodeItemBigView(
-                                    episode: episodeProgressInfo.asEpisode,
-                                    progress: episodeProgressInfo.progress
-                                )
-                                .frame(height: 150)
+//                                ThumbnailItemBigView(
+//                                    episode: episodeProgressInfo.asEpisode,
+//                                    progress: episodeProgressInfo.progress
+//                                )
+//                                .frame(height: 150)
                             }
                         }
                         .padding(.horizontal)

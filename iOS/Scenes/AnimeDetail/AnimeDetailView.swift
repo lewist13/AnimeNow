@@ -89,10 +89,15 @@ extension AnimeDetailView {
                     .resizable()
                     .overlay(
                         LinearGradient(
-                            colors: [
-                                .clear,
-                                .clear,
-                                .black
+                            stops: [
+                                .init(
+                                    color: .clear,
+                                    location: 0.5
+                                ),
+                                .init(
+                                    color: .black,
+                                    location: 1.0
+                                )
                             ],
                             startPoint: .top,
                             endPoint: .bottom
@@ -125,27 +130,52 @@ extension AnimeDetailView {
                         }
                     }
 
-                    WithViewStore(
-                        store.scope(
-                            state: \.playButtonState
-                        )
-                    ) { playButtonState in
-                        Button {
-                            animeViewStore.send(.playResumeButtonClicked)
-                        } label: {
-                            switch playButtonState.state {
-                            case .unavailable, .comingSoon:
-                                Text(playButtonState.stringValue)
-                            case .playFromBeginning, .playNextEpisode, .resumeEpisode:
-                                HStack {
-                                    Image(systemName: "play.fill")
+                    HStack {
+                        // MARK: Play Button
+
+                        WithViewStore(
+                            store.scope(
+                                state: \.playButtonState
+                            )
+                        ) { playButtonState in
+                            Button {
+                                animeViewStore.send(.playResumeButtonClicked)
+                            } label: {
+                                switch playButtonState.state {
+                                case .unavailable, .comingSoon:
                                     Text(playButtonState.stringValue)
+                                case .playFromBeginning, .playNextEpisode, .resumeEpisode:
+                                    HStack {
+                                        Image(systemName: "play.fill")
+                                        Text(playButtonState.stringValue)
+                                    }
                                 }
                             }
+                            .buttonStyle(PlayButtonStyle(isEnabled: playButtonState.isAvailable))
+                            .padding(.vertical, 12)
+                            .disabled(!playButtonState.isAvailable)
                         }
-                        .buttonStyle(PlayButtonStyle(isEnabled: playButtonState.isAvailable))
-                        .padding(.vertical, 12)
-                        .disabled(!playButtonState.isAvailable)
+
+                        // MARK: Favorites Button
+
+                        WithViewStore(
+                            store.scope(
+                                state: \.animeInfo.value?.isFavorite
+                            )
+                        ) { isFavoriteViewStore in
+                            Button {
+                                isFavoriteViewStore.send(.tappedFavorite)
+                            } label: {
+                                Image(
+                                    systemName: isFavoriteViewStore.state == true ? "heart.fill" : "heart"
+                                )
+                                    .foregroundColor(
+                                        isFavoriteViewStore.state == true ? .red : .white
+                                    )
+                            }
+                            .buttonStyle(BlurredButtonStyle())
+                            .clipShape(Circle())
+                        }
                     }
                 }
                 .frame(
@@ -260,14 +290,20 @@ extension AnimeDetailView {
     ) -> some View {
         WithViewStore(
             store.scope(
-                state: { state -> EpisodeProgress? in
-                    return state.episodesProgress.value?.first(where: { $0.id.episodeId == episode.id })
+                state: { state -> ProgressInfo? in
+                    return state.animeInfo.value?.progressInfos.first(where: {
+                        $0.number == episode.number
+                    })
                 }
             )
         ) { progressState in
-            EpisodeItemBigView(
-                episode: episode,
-                progress: progressState.state?.progress
+            ThumbnailItemBigView(
+                type: .episode(
+                    image: episode.thumbnail.largest?.link,
+                    name: episode.name,
+                    numberLength: episode.episodeNumberLengthFormat,
+                    progress: progressState.state?.progress
+                )
             )
         }
 //            .overlay(
@@ -347,7 +383,13 @@ struct AnimeView_Previews: PreviewProvider {
                 initialState: .init(
                     anime: .narutoShippuden,
                     episodes: .success(.init(uniqueElements: Episode.demoEpisodes)),
-                    episodesProgress: .success([])
+                    animeInfo: .success(
+                        .init(
+                            id: 0,
+                            isFavorite: false,
+                            progressInfos: .init()
+                        )
+                    )
                 ),
                 reducer: .empty,
                 environment: ()

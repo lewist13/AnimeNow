@@ -1,17 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="20086" systemVersion="21A559" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
-    <entity name="CDEpisodeProgress" representedClassName=".CDEpisodeProgress" syncable="YES">
-        <attribute name="animeId" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
-        <attribute name="animeTitle" optional="YES" attributeType="String"/>
-        <attribute name="episodeId" optional="YES" attributeType="String"/>
-        <attribute name="episodeNumber" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
-        <attribute name="episodeThumbnailUrl" optional="YES" attributeType="URI"/>
-        <attribute name="episodeTitle" optional="YES" attributeType="String"/>
-        <attribute name="id" optional="YES" attributeType="Transformable" valueTransformerName="ProgressInfoIdTransformer" customClassName="ProgressInfoId"/>
-        <attribute name="lastUpdated" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
-        <attribute name="progress" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+    <entity name="CDAnime" representedClassName="CDAnime" syncable="YES" codeGenerationType="class">
+        <attribute name="id" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="isFavorite" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="progressInfos" optional="YES" attributeType="Binary"/>
     </entity>
     <elements>
-        <element name="CDEpisodeProgress" positionX="136.1427001953125" positionY="-14.76644897460938" width="128" height="164"/>
+        <element name="CDAnime" positionX="-194.68701171875" positionY="14.234375" width="128" height="88"/>
     </elements>
 </model>

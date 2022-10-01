@@ -10,7 +10,7 @@ import CoreData
 protocol ManagedModel: NSManagedObject {
     associatedtype DomainObject: DomainModel where DomainObject.ManagedObject == Self
 
-    static func fetchRequest() -> NSFetchRequest<DomainObject.ManagedObject>
+    static func getFetchRequest() -> NSFetchRequest<DomainObject.ManagedObject>
 
     var asDomain: DomainObject { get }
 

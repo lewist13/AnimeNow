@@ -21,6 +21,10 @@ class RepositoryClientMock: RepositoryClient {
         .none
     }
 
+    func insertOrUpdate<T>(_ item: T) -> Effect<T, Error> where T : DomainModel {
+        .none
+    }
+
     func delete<T>(_ item: T) -> Effect<Void, Error> where T : DomainModel {
         .none
     }

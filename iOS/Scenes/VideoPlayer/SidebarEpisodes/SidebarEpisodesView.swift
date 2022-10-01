@@ -21,7 +21,7 @@ struct SidebarEpisodesView: View {
                     WithViewStore(store) { viewStore in
                         LazyVStack {
                             ForEach(viewStore.episodes) { episode in
-                                EpisodeItemCompactView(
+                                ThumbnailItemCompactView(
                                     episode: episode
                                 )
                                 .overlay(
@@ -29,7 +29,7 @@ struct SidebarEpisodesView: View {
                                 )
                                 .onTapGesture {
                                     if viewStore.selectedId != episode.id {
-                                        viewStore.send(.selected(id: episode.id))
+                                        viewStore.send(.aboutToChangeEpisode(to: episode.id))
                                     }
                                 }
                                 .id(episode.id)

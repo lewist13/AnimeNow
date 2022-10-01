@@ -1,5 +1,5 @@
 //
-//  EpisodeItemCompactView.swift
+//  ThumbnailItemCompactView.swift
 //  Anime Now! (iOS)
 //
 //  Created by Erik Bautista on 9/22/22.
@@ -8,7 +8,7 @@
 import SwiftUI
 import Kingfisher
 
-struct EpisodeItemCompactView: View {
+struct ThumbnailItemCompactView: View {
     let episode: Episode
 
     var body: some View {
@@ -45,7 +45,7 @@ struct EpisodeItemCompactView: View {
 
 struct EpisodeItemCompactView_Previews: PreviewProvider {
     static var previews: some View {
-        EpisodeItemCompactView(
+        ThumbnailItemCompactView(
             episode: .demoEpisodes.first!
         )
         .preferredColorScheme(.dark)

@@ -31,7 +31,7 @@ public final class KitsuAPI: APIRoute {
 
     let baseURL = URL(string: "https://kitsu.io/api")!
 
-    func applyHeaders(request: inout URLRequest) {
+    func configureRequest(request: inout URLRequest) {
         let bodyCount = request.httpBody?.count ?? 0
         let requestHeaders = [
             "Content-Type": "application/json",
@@ -46,178 +46,178 @@ public final class KitsuAPI: APIRoute {
 
 // MARK: - Kitsu Queries
 
-extension KitsuAPI {
-    struct GlobalTrending: GraphQLQuery {
-        let globalTrending: GraphQL.NodeList<Anime, PageInfo>
-
-        enum Argument: GraphQLArgument {
-            case mediaType(MediaType)
-            case first(Int)
-
-            enum MediaType: String, EnumValueRepresentable {
-                case ANIME
-                case MANGA
-            }
-
-            var description: String {
-                switch self {
-                case .mediaType:
-                    return "mediaType"
-                case .first:
-                    return "first"
-                }
-            }
-
-            func getValue() -> ArgumentValueRepresentable {
-                switch self {
-                case .mediaType(let mediaType):
-                    return mediaType
-                case .first(let int):
-                    return int
-                }
-            }
-        }
-
-        struct ArgumentOptions {
-            var first: Int = 7
-        }
-
-        static func createQuery(
-            _ arguments: ArgumentOptions
-        ) -> Weave {
-            Weave(.query) {
-                Object(GlobalTrending.self) {
-                    Anime.createQueryObject(GraphQL.NodeList<Anime, PageInfo>.CodingKeys.nodes)
-                    PageInfo.createQueryObject(GraphQL.NodeList<Anime, PageInfo>.CodingKeys.pageInfo)
-                }
-                .argument(Argument.mediaType(.ANIME))
-                .argument(Argument.first(arguments.first))
-            }
-        }
-    }
-
-    struct SearchAnimeByTitle: GraphQLQuery {
-        let searchAnimeByTitle: GraphQL.NodeList<Anime, PageInfo>
-
-        enum Argument: GraphQLArgument {
-            case title(String)
-            case first(Int)
-
-            var description: String {
-                switch self {
-                case .title:
-                    return "title"
-                case .first:
-                    return "first"
-                }
-            }
-
-            func getValue() -> ArgumentValueRepresentable {
-                switch self {
-                case .title(let title):
-                    return title
-                case .first(let first):
-                    return first
-                }
-            }
-        }
-
-        struct ArgumentOptions {
-            let title: String
-            var first: Int = 10
-        }
-
-        static func createQuery(
-            _ arguments: ArgumentOptions
-        ) -> Weave {
-            Weave(.query) {
-                Object(SearchAnimeByTitle.self) {
-                    Anime.createQueryObject(GraphQL.NodeList<Anime, PageInfo>.CodingKeys.nodes)
-                    PageInfo.createQueryObject(GraphQL.NodeList<Anime, PageInfo>.CodingKeys.pageInfo)
-                }
-                .argument(Argument.title(arguments.title))
-                .argument(Argument.first(arguments.first))
-            }
-        }
-    }
-
-    struct AnimeByStatus: GraphQLQuery {
-        let animeByStatus: GraphQL.NodeList<Anime, PageInfo>
-
-        struct ArgumentOptions {
-            let first: Int
-            let status: Anime.Status
-        }
-
-        enum Argument: GraphQLArgument {
-            case first(Int)
-            case status(Anime.Status)
-
-            func getValue() -> ArgumentValueRepresentable {
-                switch self {
-                case .first(let int):
-                    return int
-                case .status(let status):
-                    return status
-                }
-            }
-
-            var description: String {
-                switch self {
-                case .first:
-                    return "first"
-                case .status:
-                    return "status"
-                }
-            }
-        }
-
-        static func createQuery(_ arguments: ArgumentOptions) -> Weave {
-            Weave(.query) {
-                Object(Self.self) {
-                    Anime.createQueryObject(GraphQL.NodeList<Anime, PageInfo>.CodingKeys.nodes)
-                    PageInfo.createQueryObject(GraphQL.NodeList<Anime, PageInfo>.CodingKeys.pageInfo)
-                }
-                .argument(Argument.first(arguments.first))
-                .argument(Argument.status(arguments.status))
-            }
-        }
-    }
-
-    struct FindAnimeById: GraphQLQuery {
-        let findAnimeById: Anime
-
-        struct ArgumentOptions {
-            let id: String
-            var episodesOnly = false
-        }
-
-        enum Argument: GraphQLArgument {
-            case id(String)
-
-            func getValue() -> ArgumentValueRepresentable {
-                switch self {
-                case .id(let str):
-                    return str
-                }
-            }
-
-            var description: String {
-                switch self {
-                case .id:
-                    return "id"
-                }
-            }
-        }
-
-        static func createQuery(_ arguments: ArgumentOptions) -> Weave {
-            Weave(.query) {
-                Anime.createQueryObject(CodingKeys.findAnimeById)
-                    .argument(Argument.id(arguments.id))
-            }
-        }
-    }
-}
+//extension KitsuAPI {
+//    struct GlobalTrending: GraphQLQuery {
+//        let globalTrending: GraphQL.NodeList<Anime, PageInfo>
+//
+//        enum Argument: GraphQLArgument {
+//            case mediaType(MediaType)
+//            case first(Int)
+//
+//            enum MediaType: String, EnumValueRepresentable {
+//                case ANIME
+//                case MANGA
+//            }
+//
+//            var description: String {
+//                switch self {
+//                case .mediaType:
+//                    return "mediaType"
+//                case .first:
+//                    return "first"
+//                }
+//            }
+//
+//            func getValue() -> ArgumentValueRepresentable {
+//                switch self {
+//                case .mediaType(let mediaType):
+//                    return mediaType
+//                case .first(let int):
+//                    return int
+//                }
+//            }
+//        }
+//
+//        struct ArgumentOptions {
+//            var first: Int = 7
+//        }
+//
+//        static func createQuery(
+//            _ arguments: ArgumentOptions
+//        ) -> Weave {
+//            Weave(.query) {
+//                Object(GlobalTrending.self) {
+//                    Anime.createQueryObject(GraphQL.NodeList<Anime, PageInfo>.CodingKeys.nodes)
+//                    PageInfo.createQueryObject(GraphQL.NodeList<Anime, PageInfo>.CodingKeys.pageInfo)
+//                }
+//                .argument(Argument.mediaType(.ANIME))
+//                .argument(Argument.first(arguments.first))
+//            }
+//        }
+//    }
+//
+//    struct SearchAnimeByTitle: GraphQLQuery {
+//        let searchAnimeByTitle: GraphQL.NodeList<Anime, PageInfo>
+//
+//        enum Argument: GraphQLArgument {
+//            case title(String)
+//            case first(Int)
+//
+//            var description: String {
+//                switch self {
+//                case .title:
+//                    return "title"
+//                case .first:
+//                    return "first"
+//                }
+//            }
+//
+//            func getValue() -> ArgumentValueRepresentable {
+//                switch self {
+//                case .title(let title):
+//                    return title
+//                case .first(let first):
+//                    return first
+//                }
+//            }
+//        }
+//
+//        struct ArgumentOptions {
+//            let title: String
+//            var first: Int = 10
+//        }
+//
+//        static func createQuery(
+//            _ arguments: ArgumentOptions
+//        ) -> Weave {
+//            Weave(.query) {
+//                Object(SearchAnimeByTitle.self) {
+//                    Anime.createQueryObject(GraphQL.NodeList<Anime, PageInfo>.CodingKeys.nodes)
+//                    PageInfo.createQueryObject(GraphQL.NodeList<Anime, PageInfo>.CodingKeys.pageInfo)
+//                }
+//                .argument(Argument.title(arguments.title))
+//                .argument(Argument.first(arguments.first))
+//            }
+//        }
+//    }
+//
+//    struct AnimeByStatus: GraphQLQuery {
+//        let animeByStatus: GraphQL.NodeList<Anime, PageInfo>
+//
+//        struct ArgumentOptions {
+//            let first: Int
+//            let status: Anime.Status
+//        }
+//
+//        enum Argument: GraphQLArgument {
+//            case first(Int)
+//            case status(Anime.Status)
+//
+//            func getValue() -> ArgumentValueRepresentable {
+//                switch self {
+//                case .first(let int):
+//                    return int
+//                case .status(let status):
+//                    return status
+//                }
+//            }
+//
+//            var description: String {
+//                switch self {
+//                case .first:
+//                    return "first"
+//                case .status:
+//                    return "status"
+//                }
+//            }
+//        }
+//
+//        static func createQuery(_ arguments: ArgumentOptions) -> Weave {
+//            Weave(.query) {
+//                Object(Self.self) {
+//                    Anime.createQueryObject(GraphQL.NodeList<Anime, PageInfo>.CodingKeys.nodes)
+//                    PageInfo.createQueryObject(GraphQL.NodeList<Anime, PageInfo>.CodingKeys.pageInfo)
+//                }
+//                .argument(Argument.first(arguments.first))
+//                .argument(Argument.status(arguments.status))
+//            }
+//        }
+//    }
+//
+//    struct FindAnimeById: GraphQLQuery {
+//        let findAnimeById: Anime
+//
+//        struct ArgumentOptions {
+//            let id: String
+//            var episodesOnly = false
+//        }
+//
+//        enum Argument: GraphQLArgument {
+//            case id(String)
+//
+//            func getValue() -> ArgumentValueRepresentable {
+//                switch self {
+//                case .id(let str):
+//                    return str
+//                }
+//            }
+//
+//            var description: String {
+//                switch self {
+//                case .id:
+//                    return "id"
+//                }
+//            }
+//        }
+//
+//        static func createQuery(_ arguments: ArgumentOptions) -> Weave {
+//            Weave(.query) {
+//                Anime.createQueryObject(CodingKeys.findAnimeById)
+//                    .argument(Argument.id(arguments.id))
+//            }
+//        }
+//    }
+//}
 
 // MARK: - Kitsu GraphQL Models
 

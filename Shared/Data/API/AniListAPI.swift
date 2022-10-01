@@ -28,7 +28,7 @@ final class AniListAPI: APIRoute {
         .eraseToAnyParserPrinter()
     }()
 
-    func applyHeaders(request: inout URLRequest) {
+    func configureRequest(request: inout URLRequest) {
         let bodyCount = request.httpBody?.count ?? 0
         let requestHeaders = [
             "Content-Type": "application/json",

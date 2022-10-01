@@ -87,7 +87,7 @@ final class ConsumetAPI: APIRoute {
         .eraseToAnyParserPrinter()
     }()
 
-    func applyHeaders(request: inout URLRequest) {}
+    func configureRequest(request: inout URLRequest) {}
 }
 
 extension ConsumetAPI {

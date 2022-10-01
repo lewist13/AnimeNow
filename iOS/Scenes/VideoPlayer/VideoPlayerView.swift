@@ -51,7 +51,7 @@ struct VideoPlayerView: View {
         )
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         .onTapGesture {
-            ViewStore(store.stateless).send(.tappedPlayer)
+            ViewStore(store.stateless).send(.tappedPlayerBounds)
         }
         .overlay(playerOverlay)
         .overlay(statusButton)
@@ -128,7 +128,7 @@ extension VideoPlayerView {
             .frame(width: 46, height: 46)
             .contentShape(Rectangle())
             .onTapGesture {
-                ViewStore(store.stateless).send(.closeButtonPressed)
+                ViewStore(store.stateless).send(.notifyCloseButtonTapped)
             }
     }
 }
@@ -352,7 +352,7 @@ extension VideoPlayerView {
                         0
                     },
                     set: {
-                        viewState.send(.slidingSeeker($0 * viewState.duration))
+                        viewState.send(.slidingSeeker($0))
                     }
                 ),
                 preloaded: 0.0,

@@ -280,6 +280,7 @@ class PlayerViewController: UIViewController {
             for: \.duration
         )
         .filter(\.isNumeric)
+        .removeDuplicates()
         .sink { [weak self] duration in
             self?.viewStore.send(.duration(duration))
         }

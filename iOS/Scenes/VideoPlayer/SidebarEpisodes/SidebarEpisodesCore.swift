@@ -15,6 +15,7 @@ enum SidebarEpisodesCore {
     }
 
     enum Action: Equatable {
+        case aboutToChangeEpisode(to: Episode.ID)
         case selected(id: Episode.ID)
     }
 
@@ -22,6 +23,8 @@ enum SidebarEpisodesCore {
 
     static let reducer = Reducer<State, Action, Environment>.init { state, action, env in
         switch action {
+        case .aboutToChangeEpisode(let episode):
+            return .init(value: .selected(id: episode))
         case let .selected(id):
             state.selectedId = id
         }

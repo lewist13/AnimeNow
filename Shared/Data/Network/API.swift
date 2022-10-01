@@ -15,7 +15,7 @@ protocol APIRoute {
     associatedtype Endpoint
     var baseURL: URL { get }
     var router: AnyParserPrinter<URLRequestData, Endpoint> { get }
-    func applyHeaders(request: inout URLRequest)
+    func configureRequest(request: inout URLRequest)
 }
 
 enum API {
@@ -36,7 +36,7 @@ enum API {
                 .eraseToAnyPublisher()
         }
 
-        api.applyHeaders(request: &request)
+        api.configureRequest(request: &request)
 
         return URLSession.shared.dataTaskPublisher(for: request)
             .tryMap { (data, response) in
@@ -50,8 +50,7 @@ enum API {
                 }
 
                 do {
-                    let output = try JSONDecoder().decode(outputType.self, from: data)
-                    return output
+                    return try JSONDecoder().decode(outputType.self, from: data)
                 } catch {
                     throw Self.Error.parsingFailed("Failed to parse to: \(outputType.self) - \(error)")
                 }

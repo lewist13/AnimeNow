@@ -58,7 +58,7 @@ class EnimeAPI: APIRoute {
     
     let baseURL = URL(string: "https://api.enime.moe")!
     
-    func applyHeaders(request: inout URLRequest) {}
+    func configureRequest(request: inout URLRequest) {}
 }
 
 fileprivate extension EnimeAPI {

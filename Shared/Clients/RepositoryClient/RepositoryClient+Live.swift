@@ -43,13 +43,13 @@ class RepositoryClientLive: RepositoryClient {
 
                 context.perform {
                     guard let managedObjectId = context.persistentStoreCoordinator?.managedObjectID(
-                        forURIRepresentation:objectIdURL
+                        forURIRepresentation: objectIdURL
                     ) else {
                         return
                     }
-                    let _managedObject = context.object(with: managedObjectId)
+                    let managedObject = context.object(with: managedObjectId)
 
-                    guard let managedObject = _managedObject as? T.ManagedObject else {
+                    guard let managedObject = managedObject as? T.ManagedObject else {
                         return
                     }
 
@@ -63,10 +63,20 @@ class RepositoryClientLive: RepositoryClient {
                         callback(.failure(error))
                     }
                 }
+            } else {
+                callback(.failure(NSError.init(domain: "Failed to update item. Item has no objectURL.", code: 0)))
             }
         }
     }
-    
+
+    func insertOrUpdate<T>(_ item: T) -> Effect<T, Error> where T : DomainModel {
+        if item.objectURL != nil {
+            return update(item)
+        } else {
+            return insert(item)
+        }
+    }
+
     func delete<T>(_ item: T) -> Effect<Void, Error> where T : DomainModel {
         .future { [unowned self] callback in
             if let objectIdURL = item.objectURL {
@@ -95,7 +105,7 @@ class RepositoryClientLive: RepositoryClient {
     
     func fetch<T>(_ predicate: NSPredicate?, _ sort: [NSSortDescriptor]) -> Effect<[T], Error> where T : DomainModel {
         .future { [unowned self] callback in
-            let fetchRequest: NSFetchRequest<T.ManagedObject> = T.ManagedObject.fetchRequest()
+            let fetchRequest: NSFetchRequest<T.ManagedObject> = T.ManagedObject.getFetchRequest()
             fetchRequest.sortDescriptors = sort
             fetchRequest.predicate = predicate
 
@@ -113,35 +123,16 @@ class RepositoryClientLive: RepositoryClient {
         }
     }
 
-//    func count<T>(_ predicate: NSPredicate?, _ stub: T) -> Effect<Int, Error> {
-//        .future { callback in
-//                let fetchRequest: NSFetchRequest<T.ManagedObject> = T.ManagedObject.fetchRequest()
-//                fetchRequest.predicate = predicate
-//
-//                let context = persistenceContainer.newBackgroundContext()
-//
-//                context.perform {
-//                    do {
-//                        let count = try context.count(for: fetchRequest)
-//                        callback(.success(count))
-//                    } catch {
-//                        print("Error: \(error)")
-//                        callback(.failure(error))
-//                    }
-//                }
-//            }
-//    }
-
     func observe<T>(_ predicate: NSPredicate?, _ sort: [NSSortDescriptor]) -> Effect<[T], Never> where T : DomainModel {
         .run { [unowned self] subscriber in
-            let fetchRequest: NSFetchRequest<T.ManagedObject> = T.ManagedObject.fetchRequest()
+            let fetchRequest: NSFetchRequest<T.ManagedObject> = T.ManagedObject.getFetchRequest()
             fetchRequest.predicate = predicate
             fetchRequest.sortDescriptors = sort
 
             let context = persistenceContainer.newBackgroundContext()
             context.automaticallyMergesChangesFromParent = true
 
-            let fetchedResultsController = NSFetchedResultsController(
+            let frc = NSFetchedResultsController(
                 fetchRequest: fetchRequest,
                 managedObjectContext: context,
                 sectionNameKeyPath: nil,
@@ -149,21 +140,13 @@ class RepositoryClientLive: RepositoryClient {
             )
 
             let delegate = FetchedResultsControllerDelegate<T>(subscriber)
-            fetchedResultsController.delegate = delegate
 
-            fetchedResultsController.managedObjectContext.perform {
-                do {
-                    try fetchedResultsController.performFetch()
-                    let newData = fetchedResultsController.fetchedObjects.map({ $0.map(\.asDomain) })
-                    subscriber.send(newData ?? [])
-                } catch {
-                    subscriber.send([])
-                }
-            }
+            frc.delegate = delegate
+            delegate.controllerDidChangeContent(frc as! NSFetchedResultsController<NSFetchRequestResult>)
 
             return AnyCancellable {
                 subscriber.send(completion: .finished)
-                fetchedResultsController.delegate = nil
+                frc.delegate = nil
                 _ = delegate
             }
         }
@@ -180,16 +163,17 @@ private class FetchedResultsControllerDelegate<T: DomainModel>: NSObject, NSFetc
 
     func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
         controller.managedObjectContext.perform { [unowned self] in
-            if controller.fetchedObjects?.isEmpty ?? true {
+            if controller.fetchedObjects == nil {
                 do {
                     try controller.performFetch()
                 } catch {
-                    print("There was an error fetching.")
+                    print("There was an error fetching \(String(describing: T.ManagedObject.self)).")
+                    subscriber.send([])
                 }
             }
-            
+
             let items = controller.fetchedObjects as? [T.ManagedObject] ?? []
-            
+
             self.subscriber.send(items.map(\.asDomain))
         }
     }

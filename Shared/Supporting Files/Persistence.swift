@@ -26,8 +26,6 @@ public class Persistence {
             fatalError("Failed to create model from file: \(databaseURL)")
         }
 
-        ProgressInfoIdTransformer.register()
-
         persistentContainer = .init(name: database, managedObjectModel: managedObjectModel)
         persistentContainer.loadPersistentStores { description, error in
             if let error = error {
