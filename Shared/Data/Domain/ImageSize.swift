@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum ImageSize: Hashable, Comparable {
+enum ImageSize: Codable, Hashable, Comparable {
     case tiny(URL)
     case small(URL)
     case medium(URL)

@@ -12,7 +12,7 @@ import SwiftUI
 
 enum HomeCore {
     typealias LoadableAnime = LoadableState<IdentifiedArrayOf<Anime>>
-    typealias LoadableEpisodes = LoadableState<IdentifiedArrayOf<ProgressInfo>>
+    typealias LoadableEpisodes = LoadableState<IdentifiedArrayOf<EpisodeStoredInfo>>
 
     struct State: Equatable {
         var topTrendingAnime: LoadableAnime = .idle
@@ -27,7 +27,7 @@ enum HomeCore {
         case onAppear
         case animeTapped(Anime)
         case fetchedAnime(keyPath: WritableKeyPath<State, LoadableAnime>, result: Result<[Anime], API.Error>)
-        case fetchedEpisodesProgress([ProgressInfo])
+        case fetchedAnimesInDB([AnimeStoredInfo])
         case binding(BindingAction<HomeCore.State>)
     }
 
@@ -71,7 +71,7 @@ extension HomeCore {
                 state.topUpcomingAnime = .loading
                 state.highestRatedAnime = .loading
                 state.mostPopularAnime = .loading
-                state.resumeWatching = .success([])
+                state.resumeWatching = .loading
                 return .merge(
                     environment.animeClient.getTopTrendingAnime()
                         .receive(on: environment.mainQueue)
@@ -92,42 +92,27 @@ extension HomeCore {
                     environment.animeClient.getMostPopularAnime()
                         .receive(on: environment.mainQueue)
                         .catchToEffect()
-                        .map { HomeCore.Action.fetchedAnime(keyPath: \.mostPopularAnime, result: $0) }
-//                    environment.repositoryClient.observe(nil, [])
-//                        .receive(on: environment.mainQueue)
-//                        .eraseToEffect()
-//                        .map(Action.fetchedEpisodesProgress)
+                        .map { HomeCore.Action.fetchedAnime(keyPath: \.mostPopularAnime, result: $0) },
+                    environment.repositoryClient.observe(nil, [])
+                        .receive(on: environment.mainQueue)
+                        .eraseToEffect()
+                        .map(Action.fetchedAnimesInDB)
                 )
             case .fetchedAnime(let keyPath, .success(let anime)):
                 state[keyPath: keyPath] = .success(.init(uniqueElements: anime))
             case .fetchedAnime(let keyPath, .failure(let error)):
                 print(error)
                 state[keyPath: keyPath] = .failed
-            case .fetchedEpisodesProgress(let episodesProgress):
-//                var filteredEpisodesProgress: [ProgressInfo] = []
-//
-//                for progressInfo in episodesProgress {
-//                    // We only want one episode for each anime that has been recent to be shown
-//                    let containsProgressInfoWithAnime = filteredEpisodesProgress.firstIndex(
-//                        where: {
-//                            $0.id.animeId == progressInfo.id.animeId
-//                        }
-//                    )
-//                    if let progressInfoAnimeIndex = containsProgressInfoWithAnime {
-//                        let element = filteredEpisodesProgress[progressInfoAnimeIndex]
-//                        if progressInfo.lastUpdated.compare(element.lastUpdated) == .orderedDescending {
-//                            filteredEpisodesProgress[progressInfoAnimeIndex] = progressInfo
-//                        }
-//                    } else {
-//                        filteredEpisodesProgress.append(progressInfo)
-//                    }
-//                }
-//
-//                filteredEpisodesProgress = filteredEpisodesProgress
-//                    .filter({ 0.9 > $0.progress && $0.progress > 0 })
-//                    .sorted(by: { $0.lastUpdated > $1.lastUpdated })
+            case .fetchedAnimesInDB(let animesInDB):
+                var resumeWatchingEpisodes = [EpisodeStoredInfo]()
+                for animeInfo in animesInDB {
+                    guard let recentEpisodeInfo = animeInfo.lastModifiedEpisode, !recentEpisodeInfo.finishedWatching else { continue }
+                    resumeWatchingEpisodes.append(recentEpisodeInfo)
+                }
 
-                state.resumeWatching = .success(.init(uniqueElements: []))
+                resumeWatchingEpisodes.sort(by: { $0.lastUpdatedProgress > $1.lastUpdatedProgress })
+
+                state.resumeWatching = .success(.init(uniqueElements: resumeWatchingEpisodes))
             case .binding:
                 break
             case .animeTapped:

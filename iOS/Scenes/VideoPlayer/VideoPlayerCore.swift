@@ -33,7 +33,7 @@ enum VideoPlayerCore {
         var sourcesState: SidebarSourcesCore.State
         var sidebarRoute: SidebarRoute?
 
-        var animeDB = LoadableState<AnimeDBModel>.idle
+        var animeDB = LoadableState<AnimeStoredInfo>.idle
 
         // Overlays
         var showPlayerOverlay = true
@@ -66,7 +66,7 @@ enum VideoPlayerCore {
 
         case setSidebar(route: SidebarRoute?)
 
-        case fetchedAnimeDB([AnimeDBModel])
+        case fetchedAnimeDB([AnimeStoredInfo])
 
         // Sidebar Actions
 
@@ -235,21 +235,24 @@ extension VideoPlayerCore {
 
                     let progress = state.playerState.currentTime.seconds / duration.seconds
 
-                    let progressInfo: ProgressInfo
+                    let episodeInfo: EpisodeStoredInfo
 
-                    if var episodeProgress = animeDB.progressInfos.first(where: { $0.number == episode.number }) {
-                        episodeProgress.progress = progress
-                        episodeProgress.lastUpdated = .init()
-                        progressInfo = episodeProgress
+                    if var episodeStoredInfo = animeDB.episodesInfo.first(where: { $0.number == episode.number }) {
+                        episodeStoredInfo.progress = progress
+                        episodeStoredInfo.lastUpdatedProgress = .init()
+                        episodeInfo = episodeStoredInfo
                     } else {
-                        progressInfo = .init(
+                        episodeInfo = .init(
                             number: Int16(episode.number),
+                            title: state.anime.format == .movie ? state.anime.title : episode.name,
+                            cover: episode.thumbnail.first,
+                            isMovie: state.anime.format == .movie,
                             progress: progress,
-                            lastUpdated: .init()
+                            lastUpdatedProgress: .init()
                         )
                     }
 
-                    animeDB.progressInfos.insertOrUpdate(progressInfo)
+                    animeDB.episodesInfo.insertOrUpdate(episodeInfo)
 
                     return environment.repositoryClient.insertOrUpdate(animeDB)
                         .receive(on: environment.mainQueue)
@@ -263,7 +266,7 @@ extension VideoPlayerCore {
                         .init(
                             id: Int64(state.anime.id),
                             isFavorite: false,
-                            progressInfos: .init()
+                            episodesInfo: .init()
                         )
                     )
                 }
@@ -313,14 +316,17 @@ extension VideoPlayerCore {
                     return .init(value: .cancelHideOverlayAnimationDelay)
                 }
             case .player(.duration(let duration)):
-                // When a duration changes, typically when sources or episodes are being changed,
-                // resume to the last progress
+                // Typically when a duration changes, sources or episodes are being changed.
+                // Resume to the last progress saved
                 if let duration = duration, duration != .zero {
                     let newDuration: Double
 
                     if let episode = state.episodesState.episode,
-                       let progressInfo = state.animeDB.value?.progressInfos.first(where: { $0.id == episode.number }) {
-                        newDuration = progressInfo.isFinished ? 0 : progressInfo.progress * duration.seconds
+                       let progressInfo = state.animeDB.value?.episodesInfo.first(
+                        where: { $0.id == episode.number }
+                       ),
+                       !progressInfo.finishedWatching {
+                        newDuration = progressInfo.progress * duration.seconds
                     } else {
                         newDuration = 0.0
                     }

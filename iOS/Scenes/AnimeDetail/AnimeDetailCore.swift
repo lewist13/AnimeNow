@@ -11,8 +11,7 @@ import ComposableArchitecture
 
 enum AnimeDetailCore {
     typealias LoadableEpisodes = LoadableState<IdentifiedArrayOf<Episode>>
-    typealias LoadableEpisodeProgress = LoadableState<IdentifiedArrayOf<ProgressInfo>>
-    typealias LoadableAnimeInfoDB = LoadableState<AnimeDBModel>
+    typealias LoadableAnimeInfoDB = LoadableState<AnimeStoredInfo>
 
     struct State: Equatable {
         let anime: Anime
@@ -30,7 +29,7 @@ enum AnimeDetailCore {
         case fetchedEpisodes(Result<[Episode], API.Error>)
         case selectedEpisode(episode: Episode)
         case play(anime: Anime, episodes: IdentifiedArrayOf<Episode>, selected: Episode.ID)
-        case fetchedAnimeFromDB([AnimeDBModel])
+        case fetchedAnimeFromDB([AnimeStoredInfo])
     }
 
     struct Environment {
@@ -110,12 +109,12 @@ extension AnimeDetailCore.State {
             return .unavailable
         }
 
-        let episodesProgress = animeInfo.value?.progressInfos
-        let lastUpdatedProgress = episodesProgress?.sorted(by: \.lastUpdated).last
+        let episodesProgress = animeInfo.value?.episodesInfo
+        let lastUpdatedProgress = episodesProgress?.sorted(by: \.lastUpdatedProgress).last
 
         if let lastUpdatedProgress = lastUpdatedProgress,
            let episode = episodes.first(where: { $0.number == lastUpdatedProgress.number }) {
-            if !lastUpdatedProgress.isFinished {
+            if !lastUpdatedProgress.finishedWatching {
                 return .resumeEpisode(
                     .init(
                         id: episode.id,
@@ -123,7 +122,7 @@ extension AnimeDetailCore.State {
                         episodeNumber: episode.number
                     )
                 )
-            } else if lastUpdatedProgress.isFinished,
+            } else if lastUpdatedProgress.finishedWatching,
                       episodes.last != episode,
                       let nextEpisode = episodes.first(where: { $0.number == (lastUpdatedProgress.number + 1) }) {
                 return .playNextEpisode(
@@ -206,7 +205,7 @@ extension AnimeDetailCore {
                         .init(
                             id: Int64(state.anime.id),
                             isFavorite: false,
-                            progressInfos: .init()
+                            episodesInfo: .init()
                         )
                     )
                 }

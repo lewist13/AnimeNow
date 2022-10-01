@@ -290,9 +290,9 @@ extension AnimeDetailView {
     ) -> some View {
         WithViewStore(
             store.scope(
-                state: { state -> ProgressInfo? in
-                    return state.animeInfo.value?.progressInfos.first(where: {
-                        $0.number == episode.number
+                state: { state -> EpisodeStoredInfo? in
+                    return state.animeInfo.value?.episodesInfo.first(where: {
+                        $0.id == episode.number
                     })
                 }
             )
@@ -301,7 +301,7 @@ extension AnimeDetailView {
                 type: .episode(
                     image: episode.thumbnail.largest?.link,
                     name: episode.name,
-                    numberLength: episode.episodeNumberLengthFormat,
+                    number: episode.number,
                     progress: progressState.state?.progress
                 )
             )
@@ -387,7 +387,7 @@ struct AnimeView_Previews: PreviewProvider {
                         .init(
                             id: 0,
                             isFavorite: false,
-                            progressInfos: .init()
+                            episodesInfo: .init()
                         )
                     )
                 ),

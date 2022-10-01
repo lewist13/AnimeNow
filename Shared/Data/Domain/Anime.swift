@@ -18,7 +18,6 @@ struct Anime: Hashable, Identifiable {
     let format: Format
     let studios: [String]
     let releaseYear: Int?
-    var mappings: [AnimeListID] = []
 
     enum AnimeListID: Hashable {
         case kitsu(String)

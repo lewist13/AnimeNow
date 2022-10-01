@@ -124,7 +124,7 @@ extension HomeView {
                     }
                 }
             }
-            .frame(height: 225)
+            .frame(height: 200)
         }
     }
 
@@ -148,23 +148,35 @@ extension HomeView {
         store: Store<HomeCore.LoadableEpisodes, HomeCore.Action>
     ) -> some View {
         WithViewStore(store) { viewStore in
-            if case .success(let episodes) = viewStore.state, episodes.count > 0 {
+            if case .success(let episodesInfo) = viewStore.state, episodesInfo.count > 0 {
                 VStack(alignment: .leading) {
                     headerText("Resume Watching")
 
                     ScrollView(.horizontal, showsIndicators: false) {
                         LazyHStack(alignment: .center) {
-                            ForEach(episodes, id: \.self) { episodeProgressInfo in
-//                                ThumbnailItemBigView(
-//                                    episode: episodeProgressInfo.asEpisode,
-//                                    progress: episodeProgressInfo.progress
-//                                )
-//                                .frame(height: 150)
+                            ForEach(episodesInfo, id: \.self) { episodeInfo in
+                                ThumbnailItemBigView(
+                                    type: episodeInfo.isMovie ?
+                                        .movie(
+                                            image: episodeInfo.cover?.link,
+                                            name: episodeInfo.title,
+                                            progress: episodeInfo.progress
+                                        ) :
+                                        .episode(
+                                            image: episodeInfo.cover?.link,
+                                            name: episodeInfo.title,
+                                            number: Int(episodeInfo.number),
+                                            progress: episodeInfo.progress
+                                        )
+                                )
+                                .frame(height: 150)
                             }
                         }
                         .padding(.horizontal)
                     }
                 }
+            } else {
+                Color.red
             }
         }
     }

@@ -10,7 +10,7 @@ import Kingfisher
 
 struct ThumbnailItemBigView: View {
     enum InputType {
-        case episode(image: URL?, name: String, numberLength: String, progress: Double?)
+        case episode(image: URL?, name: String, number: Int, progress: Double?)
         case movie(image: URL?, name: String, progress: Double?)
 
         var name: String {
@@ -74,8 +74,8 @@ struct ThumbnailItemBigView: View {
                         .lineLimit(2)
                         .font(.title2.bold())
 
-                    if case .episode(_,_,let numberFormat, let progress) = type {
-                        Text(numberFormat)
+                    if case .episode(_,_,let number, let progress) = type {
+                        Text("\(number)")
                             .font(.callout.bold())
                             .foregroundColor(.white.opacity(0.9))
                             .padding(.bottom, progress == nil ? 0 : 6)
@@ -112,7 +112,7 @@ struct EpisodeItemBigView_Previews: PreviewProvider {
             type: .episode(
                 image: episode.thumbnail.largest?.link,
                 name: episode.name,
-                numberLength: episode.episodeNumberLengthFormat,
+                number: episode.number,
                 progress: 0.5
             )
         )

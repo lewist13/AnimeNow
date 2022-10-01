@@ -568,19 +568,6 @@ extension KitsuAPI {
             let dateFormatter = DateFormatter()
             dateFormatter.dateFormat = "yyyy/MM/dd"
 
-            var mappings = anime.mappings.nodes.compactMap { mapping -> AnimeNow.Anime.AnimeListID? in
-                switch mapping.externalSite {
-                case .MYANIMELIST_ANIME:
-                    return AnimeNow.Anime.AnimeListID.mal(mapping.externalId)
-                case .ANILIST_ANIME:
-                    return AnimeNow.Anime.AnimeListID.anilist(Int(mapping.externalId) ?? 0)
-                default:
-                    return nil
-                }
-            }
-
-            mappings.append(AnimeNow.Anime.AnimeListID.kitsu(anime.id))
-
             return AnimeNow.Anime(
                 id: 0,
                 title: anime.titles.translated ?? anime.titles.romanized ?? anime.titles.canonical ?? anime.titles.original ?? "Untitled",
@@ -591,8 +578,7 @@ extension KitsuAPI {
                 status: .init(rawValue: anime.status.rawValue.lowercased())!,
                 format: anime.subtype == .MOVIE ? .movie : .tv,
                 studios: anime.productions.nodes.map({ $0.company.name }).removingDuplicates(),
-                releaseYear: Int(dateFormatter.date(from: anime.startDate ?? "")?.getYear() ?? ""),
-                mappings: mappings
+                releaseYear: Int(dateFormatter.date(from: anime.startDate ?? "")?.getYear() ?? "")
             )
         }
     }

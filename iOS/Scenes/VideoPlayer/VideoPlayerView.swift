@@ -50,6 +50,27 @@ struct VideoPlayerView: View {
             )
         )
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+//        .overlay(
+//            HStack(spacing: 0) {
+//                Color.clear
+//                    .contentShape(Rectangle())
+//                    .onTapGesture(count: 2) {
+//                        // TODO: Get Double Tap to work
+//                        print("left tapped")
+//                    }
+//                Color.clear
+//                    .contentShape(Rectangle())
+//                    .onTapGesture(count: 2) {
+//                        // TODO: Get Double Tap to work
+//                        print("right tapped")
+//                    }
+//            }
+//                .frame(
+//                    maxWidth: .infinity,
+//                    maxHeight: .infinity,
+//                    alignment: .center
+//                )
+//        )
         .onTapGesture {
             ViewStore(store.stateless).send(.tappedPlayerBounds)
         }
