@@ -139,7 +139,7 @@ extension ContentCore {
             case .setAnimeDetail(let animeMaybe):
                 state.animeDetail = animeMaybe
             case let .home(.animeTapped(anime)),
-                 let .search(SearchCore.Action.onAnimeTapped(anime)):
+                 let .search(.onAnimeTapped(anime)):
                 let animation = Animation.interactiveSpring(response: 0.35, dampingFraction: 1.0)
                 return .init(value: .setAnimeDetail(.init(anime: anime)))
                     .receive(

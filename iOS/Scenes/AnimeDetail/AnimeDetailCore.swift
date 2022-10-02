@@ -11,7 +11,7 @@ import ComposableArchitecture
 
 enum AnimeDetailCore {
     typealias LoadableEpisodes = LoadableState<IdentifiedArrayOf<Episode>>
-    typealias LoadableAnimeInfoDB = LoadableState<AnimeStoredInfo>
+    typealias LoadableAnimeInfoDB = LoadableState<AnimeInfoStore>
 
     struct State: Equatable {
         let anime: Anime
@@ -29,7 +29,7 @@ enum AnimeDetailCore {
         case fetchedEpisodes(Result<[Episode], API.Error>)
         case selectedEpisode(episode: Episode)
         case play(anime: Anime, episodes: IdentifiedArrayOf<Episode>, selected: Episode.ID)
-        case fetchedAnimeFromDB([AnimeStoredInfo])
+        case fetchedAnimeFromDB([AnimeInfoStore])
     }
 
     struct Environment {
@@ -203,7 +203,7 @@ extension AnimeDetailCore {
                 } else {
                     state.animeInfo = .success(
                         .init(
-                            id: Int64(state.anime.id),
+                            id: state.anime.id,
                             isFavorite: false,
                             episodesInfo: .init()
                         )

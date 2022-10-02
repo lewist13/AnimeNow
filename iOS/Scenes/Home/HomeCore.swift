@@ -12,7 +12,7 @@ import SwiftUI
 
 enum HomeCore {
     typealias LoadableAnime = LoadableState<IdentifiedArrayOf<Anime>>
-    typealias LoadableEpisodes = LoadableState<IdentifiedArrayOf<EpisodeStoredInfo>>
+    typealias LoadableEpisodes = LoadableState<IdentifiedArrayOf<EpisodeInfoWithAnime>>
 
     struct State: Equatable {
         var topTrendingAnime: LoadableAnime = .idle
@@ -26,8 +26,9 @@ enum HomeCore {
     enum Action: Equatable, BindableAction {
         case onAppear
         case animeTapped(Anime)
+        case resumeWatchingTapped(EpisodeInfoWithAnime)
         case fetchedAnime(keyPath: WritableKeyPath<State, LoadableAnime>, result: Result<[Anime], API.Error>)
-        case fetchedAnimesInDB([AnimeStoredInfo])
+        case fetchedAnimesInDB([AnimeInfoStore])
         case binding(BindingAction<HomeCore.State>)
     }
 
@@ -104,15 +105,15 @@ extension HomeCore {
                 print(error)
                 state[keyPath: keyPath] = .failed
             case .fetchedAnimesInDB(let animesInDB):
-                var resumeWatchingEpisodes = [EpisodeStoredInfo]()
+                var resumeWatchingEpisodes = [EpisodeInfoWithAnime]()
                 for animeInfo in animesInDB {
                     guard let recentEpisodeInfo = animeInfo.lastModifiedEpisode, !recentEpisodeInfo.finishedWatching else { continue }
-                    resumeWatchingEpisodes.append(recentEpisodeInfo)
+                    resumeWatchingEpisodes.append(.init(animeId: animeInfo.id, episodeInfo: recentEpisodeInfo))
                 }
-
-                resumeWatchingEpisodes.sort(by: { $0.lastUpdatedProgress > $1.lastUpdatedProgress })
-
+                resumeWatchingEpisodes.sort(by: { $0.episodeInfo.lastUpdatedProgress > $1.episodeInfo.lastUpdatedProgress })
                 state.resumeWatching = .success(.init(uniqueElements: resumeWatchingEpisodes))
+            case .resumeWatchingTapped:
+                break
             case .binding:
                 break
             case .animeTapped:
@@ -122,4 +123,12 @@ extension HomeCore {
         }
     )
         .binding()
+}
+
+extension HomeCore {
+    struct EpisodeInfoWithAnime: Identifiable, Hashable {
+        var id: EpisodeInfoStore.ID { episodeInfo.id }
+        let animeId: Anime.ID
+        let episodeInfo: EpisodeInfoStore
+    }
 }

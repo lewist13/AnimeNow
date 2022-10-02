@@ -20,7 +20,7 @@ struct HomeView: View {
 
                 LazyVStack(spacing: 24) {
                     animeItems(
-                        title: "Trending This Week",
+                        title: "Trending Now",
                         isLoading: viewStore.state,
                         store: store.scope(
                             state: \.topTrendingAnime
@@ -40,7 +40,7 @@ struct HomeView: View {
                     )
 
                     animeItems(
-                        title: "Top Upcoming Anime",
+                        title: "Upcoming Anime",
                         isLoading: viewStore.state,
                         store: store.scope(
                             state: \.topUpcomingAnime
@@ -148,35 +148,37 @@ extension HomeView {
         store: Store<HomeCore.LoadableEpisodes, HomeCore.Action>
     ) -> some View {
         WithViewStore(store) { viewStore in
-            if case .success(let episodesInfo) = viewStore.state, episodesInfo.count > 0 {
+            if case .success(let animeEpisodesInfo) = viewStore.state, animeEpisodesInfo.count > 0 {
                 VStack(alignment: .leading) {
                     headerText("Resume Watching")
 
                     ScrollView(.horizontal, showsIndicators: false) {
                         LazyHStack(alignment: .center) {
-                            ForEach(episodesInfo, id: \.self) { episodeInfo in
+                            ForEach(animeEpisodesInfo, id: \.id) { animeEpisodeInfo in
                                 ThumbnailItemBigView(
-                                    type: episodeInfo.isMovie ?
+                                    type:
+                                        animeEpisodeInfo.episodeInfo.isMovie ?
                                         .movie(
-                                            image: episodeInfo.cover?.link,
-                                            name: episodeInfo.title,
-                                            progress: episodeInfo.progress
+                                            image: animeEpisodeInfo.episodeInfo.cover?.link,
+                                            name: animeEpisodeInfo.episodeInfo.title,
+                                            progress: animeEpisodeInfo.episodeInfo.progress
                                         ) :
                                         .episode(
-                                            image: episodeInfo.cover?.link,
-                                            name: episodeInfo.title,
-                                            number: Int(episodeInfo.number),
-                                            progress: episodeInfo.progress
+                                            image: animeEpisodeInfo.episodeInfo.cover?.link,
+                                            name: animeEpisodeInfo.episodeInfo.title,
+                                            number: Int(animeEpisodeInfo.episodeInfo.number),
+                                            progress: animeEpisodeInfo.episodeInfo.progress
                                         )
                                 )
                                 .frame(height: 150)
+                                .onTapGesture {
+                                    viewStore.send(.resumeWatchingTapped(animeEpisodeInfo))
+                                }
                             }
                         }
                         .padding(.horizontal)
                     }
                 }
-            } else {
-                Color.red
             }
         }
     }

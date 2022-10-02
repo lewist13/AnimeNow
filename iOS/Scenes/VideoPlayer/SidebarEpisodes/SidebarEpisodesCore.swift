@@ -19,7 +19,10 @@ enum SidebarEpisodesCore {
         case selected(id: Episode.ID)
     }
 
-    struct Environment {}
+    struct Environment {
+        let mainQueue: AnySchedulerOf<DispatchQueue>
+        let animeClient: AnimeClient
+    }
 
     static let reducer = Reducer<State, Action, Environment>.init { state, action, env in
         switch action {

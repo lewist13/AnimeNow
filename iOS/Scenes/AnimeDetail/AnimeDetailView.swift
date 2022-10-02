@@ -290,9 +290,9 @@ extension AnimeDetailView {
     ) -> some View {
         WithViewStore(
             store.scope(
-                state: { state -> EpisodeStoredInfo? in
+                state: { state -> EpisodeInfoStore? in
                     return state.animeInfo.value?.episodesInfo.first(where: {
-                        $0.id == episode.number
+                        $0.number == episode.number
                     })
                 }
             )
@@ -303,7 +303,8 @@ extension AnimeDetailView {
                     name: episode.name,
                     number: episode.number,
                     progress: progressState.state?.progress
-                )
+                ),
+                watched: progressState.state?.finishedWatching ?? false
             )
         }
 //            .overlay(

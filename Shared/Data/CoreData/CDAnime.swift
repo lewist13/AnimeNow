@@ -13,30 +13,30 @@ extension CDAnime: ManagedModel {
         Self.fetchRequest()
     }
 
-    var asDomain: AnimeStoredInfo {
+    var asDomain: AnimeInfoStore {
         .init(
-            id: id,
+            id: Anime.ID(id),
             isFavorite: isFavorite,
             episodesInfo: progressInfos?.toObject() ?? .init(),
             objectURL: objectID.uriRepresentation()
         )
     }
 
-    func create(from domain: AnimeStoredInfo) {
+    func create(from domain: AnimeInfoStore) {
         update(from: domain)
     }
 
-    func update(from domain: AnimeStoredInfo) {
-        id = domain.id
+    func update(from domain: AnimeInfoStore) {
+        id = Int64(domain.id)
         isFavorite = domain.isFavorite
         progressInfos = domain.episodesInfo.toData()
     }
 }
 
-extension AnimeStoredInfo: DomainModel {
+extension AnimeInfoStore: DomainModel {
     func asManagedObject(in context: NSManagedObjectContext) -> CDAnime {
         let object = CDAnime(context: context)
-        object.id = id
+        object.id = Int64(id)
         object.isFavorite = isFavorite
         object.progressInfos = episodesInfo.toData()
         return object

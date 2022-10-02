@@ -149,7 +149,7 @@ extension VideoPlayerView {
             .frame(width: 46, height: 46)
             .contentShape(Rectangle())
             .onTapGesture {
-                ViewStore(store.stateless).send(.notifyCloseButtonTapped)
+                ViewStore(store.stateless).send(.closeButtonTapped)
             }
     }
 }

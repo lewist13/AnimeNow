@@ -39,7 +39,8 @@ struct ThumbnailItemBigView: View {
     }
 
     let type: InputType
-    
+    var watched: Bool = false
+
     var body: some View {
         GeometryReader { reader in
             ZStack(alignment: .bottomLeading) {
@@ -75,13 +76,13 @@ struct ThumbnailItemBigView: View {
                         .font(.title2.bold())
 
                     if case .episode(_,_,let number, let progress) = type {
-                        Text("\(number)")
+                        Text("E\(number)")
                             .font(.callout.bold())
                             .foregroundColor(.white.opacity(0.9))
-                            .padding(.bottom, progress == nil ? 0 : 6)
+                            .padding(.bottom, progress != nil && !watched ? 6 : 0)
                     }
 
-                    if let progress = type.progress {
+                    if let progress = type.progress, !watched {
                         SeekbarView(progress: .constant(progress))
                             .disabled(true)
                             .frame(height: 10)
@@ -89,10 +90,22 @@ struct ThumbnailItemBigView: View {
                 }
                 .foregroundColor(Color.white)
                 .padding()
+
+                if watched {
+                    Text("Watched")
+                        .font(.footnote.bold())
+                        .foregroundColor(Color.white)
+                        .padding(12)
+                        .background(BlurView(style: .systemUltraThinMaterialDark))
+                        .clipShape(Capsule())
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+                        .padding()
+                }
             }
         }
         .aspectRatio(16/9, contentMode: .fill)
         .cornerRadius(16)
+        .transition(.opacity)
     }
 }
 
@@ -116,7 +129,7 @@ struct EpisodeItemBigView_Previews: PreviewProvider {
                 progress: 0.5
             )
         )
-         .frame(width: 300)
+         .frame(width: 400)
         .frame(height: 0)
     }
 }

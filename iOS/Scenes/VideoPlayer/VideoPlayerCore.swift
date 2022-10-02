@@ -33,7 +33,7 @@ enum VideoPlayerCore {
         var sourcesState: SidebarSourcesCore.State
         var sidebarRoute: SidebarRoute?
 
-        var animeDB = LoadableState<AnimeStoredInfo>.idle
+        var animeDB = LoadableState<AnimeInfoStore>.idle
 
         // Overlays
         var showPlayerOverlay = true
@@ -51,39 +51,43 @@ enum VideoPlayerCore {
     }
 
     enum Action: Equatable {
+        // View actions
+
         case onAppear
-        case tappedEpisodesSidebar
-        case tappedSourcesSidebar
+        case closeButtonTapped
         case closeSidebar
-        case closeSidebarAndShowOverlay
-        case notifyCloseButtonTapped
-        case close
+        case slidingSeeker(Double)
+        case tappedEpisodesSidebar
+        case tappedPlayerBounds
+        case tappedSourcesSidebar
+        case togglePlayback
 
-        case playSource
+        // Internal Actions
+
+        case fetchedAnimeDB([AnimeInfoStore])
         case fetchSourcesForSelectedEpisode
-
+        case closeSidebarAndShowOverlay
+        case close
         case saveCurrentEpisodeProgress
-
         case setSidebar(route: SidebarRoute?)
+        case showPlayerControlsOverlay(Bool)
+        case hideOverlayAnimationDelay
+        case cancelHideOverlayAnimationDelay
 
-        case fetchedAnimeDB([AnimeStoredInfo])
+        // Internal Actions - Player
+
+        case initializePlayer
+        case playSource
+        case startSeeking
+        case doneSeeking
 
         // Sidebar Actions
 
         case episodes(SidebarEpisodesCore.Action)
         case sources(SidebarSourcesCore.Action)
 
-        // Player Action Controls
+        // Player Action
 
-        case initializePlayer
-        case showPlayerControlsOverlay(Bool)
-        case tappedPlayerBounds
-        case togglePlayback
-        case startSeeking
-        case slidingSeeker(Double)
-        case doneSeeking
-        case hideOverlayAnimationDelay
-        case cancelHideOverlayAnimationDelay
         case player(AVPlayerCore.Action)
     }
 
@@ -112,6 +116,9 @@ extension VideoPlayerCore {
             let overlayVisibilityAnimation = Animation.easeInOut(duration: 0.5)
 
             switch action {
+
+            // Video Player View Calls
+
             case .onAppear:
                 if state.initialized {
                     break
@@ -125,18 +132,6 @@ extension VideoPlayerCore {
                         .map(Action.fetchedAnimeDB)
                         .cancellable(id: ObservingAnimeInfoId())
                 )
-
-            case .episodes(.aboutToChangeEpisode):
-                return .init(value: .saveCurrentEpisodeProgress)
-            case .episodes(.selected):
-                return .merge(
-                    .init(value: .closeSidebarAndShowOverlay),
-                    .init(value: .player(.avAction(.stop))),
-                    .init(value: .fetchSourcesForSelectedEpisode)
-               )
-
-            case .sources(.selected):
-                return .init(value: .playSource)
 
             case .fetchSourcesForSelectedEpisode:
                 if let selectedEpisode = state.episodesState.episode {
@@ -207,7 +202,7 @@ extension VideoPlayerCore {
                 return .init(value: .setSidebar(route: nil))
                     .receive(on: environment.mainQueue.animation(.easeInOut(duration: 0.25)))
                     .eraseToEffect()
-            case .notifyCloseButtonTapped:
+            case .closeButtonTapped:
                 return .concatenate(
                     [
                         .cancel(id: CancelEpisodeSourceFetchingId()),
@@ -229,32 +224,15 @@ extension VideoPlayerCore {
                 }
 
             case .saveCurrentEpisodeProgress:
-                if var animeDB = state.animeDB.value,
+                if var animeInfo = state.animeDB.value,
                     let episode = state.episodesState.episode,
                     let duration = state.playerState.duration {
 
                     let progress = state.playerState.currentTime.seconds / duration.seconds
 
-                    let episodeInfo: EpisodeStoredInfo
+                    animeInfo.updateProgress(for: episode, anime: state.anime, progress: progress)
 
-                    if var episodeStoredInfo = animeDB.episodesInfo.first(where: { $0.number == episode.number }) {
-                        episodeStoredInfo.progress = progress
-                        episodeStoredInfo.lastUpdatedProgress = .init()
-                        episodeInfo = episodeStoredInfo
-                    } else {
-                        episodeInfo = .init(
-                            number: Int16(episode.number),
-                            title: state.anime.format == .movie ? state.anime.title : episode.name,
-                            cover: episode.thumbnail.first,
-                            isMovie: state.anime.format == .movie,
-                            progress: progress,
-                            lastUpdatedProgress: .init()
-                        )
-                    }
-
-                    animeDB.episodesInfo.insertOrUpdate(episodeInfo)
-
-                    return environment.repositoryClient.insertOrUpdate(animeDB)
+                    return environment.repositoryClient.insertOrUpdate(animeInfo)
                         .receive(on: environment.mainQueue)
                         .fireAndForget()
                 }
@@ -264,12 +242,33 @@ extension VideoPlayerCore {
                 } else {
                     state.animeDB = .success(
                         .init(
-                            id: Int64(state.anime.id),
+                            id: state.anime.id,
                             isFavorite: false,
                             episodesInfo: .init()
                         )
                     )
                 }
+
+            // MARK: Episodes Actions
+    
+            case .episodes(.aboutToChangeEpisode):
+                return .init(value: .saveCurrentEpisodeProgress)
+
+            case .episodes(.selected):
+                return .merge(
+                    .init(value: .closeSidebarAndShowOverlay),
+                    .init(value: .player(.avAction(.stop))),
+                    .init(value: .fetchSourcesForSelectedEpisode)
+               )
+
+            case .episodes:
+                break
+
+            // MARK: Sources Actions
+
+            case .sources(.selected):
+                return .init(value: .playSource)
+
             case .sources(_):
                 break
 
@@ -322,11 +321,9 @@ extension VideoPlayerCore {
                     let newDuration: Double
 
                     if let episode = state.episodesState.episode,
-                       let progressInfo = state.animeDB.value?.episodesInfo.first(
-                        where: { $0.id == episode.number }
-                       ),
-                       !progressInfo.finishedWatching {
-                        newDuration = progressInfo.progress * duration.seconds
+                       let episodeInfo = state.animeDB.value?.episodesInfo.first( where: { $0.number == episode.number } ),
+                       !episodeInfo.finishedWatching {
+                        newDuration = episodeInfo.progress * duration.seconds
                     } else {
                         newDuration = 0.0
                     }
@@ -350,7 +347,12 @@ extension VideoPlayerCore {
         SidebarEpisodesCore.reducer.pullback(
             state: \.episodesState,
             action: /Action.episodes,
-            environment: { _ in .init() }
+            environment: {
+                .init(
+                    mainQueue: $0.mainQueue,
+                    animeClient: $0.animeClient
+                )
+            }
         ),
         SidebarSourcesCore.reducer.pullback(
             state: \.sourcesState,

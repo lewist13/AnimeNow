@@ -86,7 +86,10 @@ struct SidebarEpisodesView_Previews: PreviewProvider {
                     selectedId: Episode.demoEpisodes.first!.id
                 ),
                 reducer: SidebarEpisodesCore.reducer,
-                environment: .init()
+                environment: .init(
+                    mainQueue: .main.eraseToAnyScheduler(),
+                    animeClient: .mock
+                )
             )
         )
         .preferredColorScheme(.dark)
