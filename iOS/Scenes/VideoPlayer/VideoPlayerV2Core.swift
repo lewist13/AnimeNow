@@ -10,23 +10,32 @@ import Foundation
 import ComposableArchitecture
 
 enum VideoPlayerV2Core {
-    struct State: Equatable {
-        var anime = LoadableState<Anime>.idle
-        var episodes = LoadableState<IdentifiedArrayOf<Episode>>.idle
-        var sources = LoadableState<[Source]>.idle
-        var savedAnimeInfo = LoadableState<AnimeInfoStore>.idle
+    enum SelectedEpisodeIdentifier: Equatable {
+        case id(Episode.ID)
+        case number(Int)
+    }
 
-        var selectedEpisode: SelectedEpisodeIdentifier?
+    struct State: Equatable {
+
+        let anime: Anime
+        var episodes = LoadableState<IdentifiedArrayOf<Episode>>.idle
+        var selectedEpisode: SelectedEpisodeIdentifier
+        var isOffline = false
+
+        var savedAnimeInfo = LoadableState<AnimeInfoStore>.idle
+        var sources = LoadableState<IdentifiedArrayOf<Source>>.idle
+
         var selectedSource: Source.ID?
 
-        init(animeId: Anime.ID, selectedEpisode: SelectedEpisodeIdentifier) {
-            self.selectedEpisode = selectedEpisode
-        }
-
-        enum SelectedEpisodeIdentifier: Equatable {
-            case id(Episode.ID)
-            case number(Int)
-        }
+//        init(
+//            anime: Anime,
+//            episodes: [Episode]?,
+//            selectedEpisode: SelectedEpisodeIdentifier
+//        ) {
+//            self.anime = anime
+//            self.episodes = episodes != nil ? .success(.init(uniqueElements: episodes!)) : .idle
+//            self.selectedEpisode = selectedEpisode
+//        }
     }
 
     enum Action: Equatable {
@@ -40,9 +49,14 @@ enum VideoPlayerV2Core {
 
         // Internal Actions
 
-        case fetchAnime
-        case fetchEpisodse
+        case initializeFirstTime
+
+        // Fetching
+
+        case fetchEpisodes
+        case fetchedEpisodes(Result<[Episode], API.Error>)
         case fetchSources
+        case fetchedSources(Result<[Source], API.Error>)
     }
 
     struct Environment {
@@ -58,16 +72,13 @@ enum VideoPlayerV2Core {
 
 extension VideoPlayerV2Core.State {
     enum LoadingState {
-        case fetchingAnime
         case fetchingEpisodes
         case fetchingSources
         case buffering
     }
 
     var loadingState: LoadingState? {
-        if !anime.finished {
-            return .fetchingAnime
-        } else if !episodes.finished {
+        if !episodes.finished {
             return .fetchingEpisodes
         } else if !sources.finished {
             return .fetchingSources
@@ -80,15 +91,12 @@ extension VideoPlayerV2Core.State {
 
 extension VideoPlayerV2Core.State {
     enum Error {
-        case failedToLoadAnime
         case failedToLoadEpisodes
         case failedToLoadSources
     }
 
     var error: Error? {
-        if case .failed = anime {
-            return .failedToLoadAnime
-        } else if case .failed = episodes {
+        if case .failed = episodes {
             return .failedToLoadEpisodes
         } else if case .failed = sources {
             return .failedToLoadSources
@@ -97,9 +105,97 @@ extension VideoPlayerV2Core.State {
     }
 }
 
+extension VideoPlayerV2Core.State {
+    fileprivate var episode: Episode? {
+        if let episodes = episodes.value {
+            switch selectedEpisode {
+            case .id(let  id):
+                return episodes[id: id]
+            case .number(let epNumber):
+                return episodes.first(where: { $0.number == epNumber })
+            }
+        }
+
+        return nil
+    }
+}
+
+extension VideoPlayerV2Core.State {
+    fileprivate var source: Source? {
+        if let sourceId = selectedSource, let sources = sources.value {
+            return sources[id: sourceId]
+        }
+        return nil
+    }
+}
+
 extension VideoPlayerV2Core {
     static var reducer: Reducer<VideoPlayerV2Core.State, VideoPlayerV2Core.Action, VideoPlayerV2Core.Environment> {
         .init { state, action, environment in
+            switch action {
+
+            // View Actions
+
+            case .onAppear:
+                return .init(value: .fetchEpisodes)
+            case .backwardsTapped:
+                break
+            case .forwardTapped:
+                break
+            case .playerTapped:
+                break
+
+            // Internal Actions
+
+            case .initializeFirstTime:
+                return .concatenate(
+                    .init(value: .fetchEpisodes)
+                )
+
+            // Fetch Episodes
+
+            case .fetchEpisodes:
+                guard !state.episodes.hasInitialized else {
+                    if state.episode != nil {
+                        return .init(value: .fetchSources)
+                    }
+                    break
+                }
+                state.episodes = .loading
+                return environment.animeClient.getEpisodes(state.anime.id)
+                    .receive(on: environment.mainQueue)
+                    .catchToEffect()
+                    .map(Action.fetchedEpisodes)
+
+            case .fetchedEpisodes(.success(let episodes)):
+                state.episodes = .success(.init(uniqueElements: episodes))
+                return .init(value: .fetchSources)
+
+            case .fetchedEpisodes(.failure):
+                state.episodes = .failed
+
+            // Fetch Sources
+
+            case .fetchSources:
+                guard let episode = state.episode else { break }
+                state.sources = .loading
+                return environment.animeClient.getSources(episode.id)
+                    .receive(on: environment.mainQueue)
+                    .catchToEffect()
+                    .map(Action.fetchedSources)
+
+            case .fetchedSources(.success(let sources)):
+                state.sources = .success(.init(uniqueElements: sources))
+                state.selectedSource = sources.first(where: { $0.quality == .teneightyp })?.id
+
+            case .fetchedSources(.failure):
+                state.sources = .failed
+                state.selectedSource = nil
+
+            default:
+                break
+            }
+
             return .none
         }
     }

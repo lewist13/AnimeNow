@@ -577,7 +577,6 @@ extension KitsuAPI {
                 categories: anime.categories.nodes.compactMap { $0.title.en },
                 status: .init(rawValue: anime.status.rawValue.lowercased())!,
                 format: anime.subtype == .MOVIE ? .movie : .tv,
-                studios: anime.productions.nodes.map({ $0.company.name }).removingDuplicates(),
                 releaseYear: Int(dateFormatter.date(from: anime.startDate ?? "")?.getYear() ?? "")
             )
         }

@@ -64,7 +64,6 @@ struct HomeView: View {
                     )
                 }
                 .placeholder(active: viewStore.state, duration:  2.0)
-                .transition(.opacity)
                 .animation(.easeInOut(duration: 0.5), value: viewStore.state)
             }
             .disabled(viewStore.state)

@@ -105,7 +105,6 @@ struct ThumbnailItemBigView: View {
         }
         .aspectRatio(16/9, contentMode: .fill)
         .cornerRadius(16)
-        .transition(.opacity)
     }
 }
 

@@ -16,7 +16,6 @@ struct Anime: Hashable, Identifiable {
     let categories: [String]
     let status: Status
     let format: Format
-    let studios: [String]
     let releaseYear: Int?
 
     enum AnimeListID: Hashable {
@@ -64,8 +63,6 @@ extension Anime {
         ],
         status: .finished,
         format: .tv,
-        studios: "TV Tokyo, Aniplex, KSS, Rakuonsha, TV Tokyo Music, Shueisha, TV Tokyo, Aniplex, KSS, Rakuonsha, TV Tokyo Music, Shueisha"
-            .split(separator: ",").map({ String($0).trimmingCharacters(in: .whitespacesAndNewlines) }),
         releaseYear: 2009
     )
 
@@ -82,7 +79,6 @@ extension Anime {
         ],
         status: .current,
         format: .tv,
-        studios: ["Wit Studio", "MAPPA"],
         releaseYear: 2013
     )
 
@@ -95,7 +91,6 @@ extension Anime {
         categories: [],
         status: .tba,
         format: .tv,
-        studios: [],
         releaseYear: nil
     )
 
@@ -108,7 +103,6 @@ extension Anime {
         categories: [],
         status: .tba,
         format: .tv,
-        studios: [],
         releaseYear: nil
     )
 }

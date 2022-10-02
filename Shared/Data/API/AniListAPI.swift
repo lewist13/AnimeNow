@@ -44,63 +44,66 @@ final class AniListAPI: APIRoute {
 extension AniListAPI {
     static func convert(from medias: [Media]) -> [Anime] {
         medias.compactMap { media in
-            var coverImages: [ImageSize] = []
-
-            if let imageStr = media.coverImage.extraLarge, let url = URL(string: imageStr) {
-                coverImages.append(.large(url))
-            }
-
-            if let imageStr = media.coverImage.large, let url = URL(string: imageStr) {
-                coverImages.append(.medium(url))
-            }
-
-            if let imageStr = media.coverImage.medium, let url = URL(string: imageStr) {
-                coverImages.append(.small(url))
-            }
-
-            var posterImage: [ImageSize] = []
-            if let imageStr = media.bannerImage, let url = URL(string: imageStr) {
-                posterImage.append(.original(url))
-            }
-
-            let format: Anime.Format
-
-            switch media.format {
-            case .some(.MOVIE):
-                format = .movie
-            case .some(.TV_SHORT), .some(Media.Format.TV), .some(.OVA), .some(.SPECIAL):
-                format = .tv
-            default:
-                return nil
-            }
-
-            let status: Anime.Status
-
-            switch media.status {
-            case .FINISHED:
-                status = .finished
-            case .RELEASING:
-                status = .current
-            case .NOT_YET_RELEASED:
-                status = .upcoming
-            case .CANCELLED:
-                status = .unreleased
-            case .HIATUS:
-                status = .tba
-            }
-            return Anime(
-                id: media.id,
-                title: media.title.english ?? media.title.romaji ?? media.title.native ?? "Untitled",
-                description: media.description?.trimHTMLTags() ?? "No description",
-                posterImage: coverImages,
-                coverImage: posterImage,
-                categories: [],
-                status: status,
-                format: format,
-                studios: [],
-                releaseYear: media.startDate.year
-            )
+            convert(from: media)
         }
+    }
+
+    static func convert(from media: Media) -> Anime {
+        var coverImages: [ImageSize] = []
+
+        if let imageStr = media.coverImage.extraLarge, let url = URL(string: imageStr) {
+            coverImages.append(.large(url))
+        }
+
+        if let imageStr = media.coverImage.large, let url = URL(string: imageStr) {
+            coverImages.append(.medium(url))
+        }
+
+        if let imageStr = media.coverImage.medium, let url = URL(string: imageStr) {
+            coverImages.append(.small(url))
+        }
+
+        var posterImage: [ImageSize] = []
+        if let imageStr = media.bannerImage, let url = URL(string: imageStr) {
+            posterImage.append(.original(url))
+        }
+
+        let format: Anime.Format
+
+        switch media.format {
+        case .some(.MOVIE):
+            format = .movie
+        case .some(.TV_SHORT), .some(Media.Format.TV), .some(.OVA), .some(.SPECIAL):
+            format = .tv
+        default:
+            format = .tv
+        }
+
+        let status: Anime.Status
+
+        switch media.status {
+        case .FINISHED:
+            status = .finished
+        case .RELEASING:
+            status = .current
+        case .NOT_YET_RELEASED:
+            status = .upcoming
+        case .CANCELLED:
+            status = .unreleased
+        case .HIATUS:
+            status = .tba
+        }
+        return Anime(
+            id: media.id,
+            title: media.title.english ?? media.title.romaji ?? media.title.native ?? "Untitled",
+            description: media.description?.trimHTMLTags() ?? "No description",
+            posterImage: coverImages,
+            coverImage: posterImage,
+            categories: [],
+            status: status,
+            format: format,
+            releaseYear: media.startDate.year
+        )
     }
 }
 
@@ -180,6 +183,9 @@ extension AniListAPI {
         }
     }
 
+    struct MediaResponses: Decodable {
+        let Media: Media
+    }
     struct Media: Decodable {
         let id: Int
         let title: Title
@@ -193,6 +199,8 @@ extension AniListAPI {
         let startDate: FuzzyDate
 
         enum ArgumentOptions {
+            case id(Int)
+            case idIn([Int])
             case isAdult(Bool = false)
             case type(MType = .ANIME)
             case sort([TrendSort])
@@ -226,6 +234,10 @@ extension AniListAPI {
 
             for argument in arguments {
                 switch argument {
+                case .id(let id):
+                    obj = obj.argument(key: "id", value: id)
+                case .idIn(let ids):
+                    obj = obj.argument(key: "id_in", value: ids)
                 case .isAdult(let bool):
                     obj = obj.argument(key: "isAdult", value: bool)
                 case .type(let mediaType):
@@ -245,6 +257,19 @@ extension AniListAPI {
                 }
             }
             return obj
+        }
+
+        static func createQuery(
+            _ arguments: [ArgumentOptions] = []
+        ) -> Weave {
+            enum CodingKeys: CodingKey {
+                case Media
+            }
+
+            return Weave(.query) {
+                Media.createQueryObject(CodingKeys.Media, arguments)
+                    .caseStyle(.pascalCase)
+            }
         }
 
         enum TrendSort: EnumValueRepresentable {

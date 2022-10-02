@@ -20,10 +20,11 @@ final class ConsumetAPI: APIRoute {
         }
 
         enum AnilistEndpoint: Equatable {
-            case animeInfo(animeId: Int, options: AnimeInfoOptions)
+            case animeInfo(animeId: Int, options: EpisodeInfo)
+            case episodes(animeId: Int, options: EpisodeInfo)
             case streamingLinks(episodeId: String, provider: Provider = .gogoanime)
 
-            struct AnimeInfoOptions: Equatable {
+            struct EpisodeInfo: Equatable {
                 var dub: Bool = false
                 var provider: Provider = .gogoanime
             }
@@ -68,7 +69,16 @@ final class ConsumetAPI: APIRoute {
                 OneOf {
                     Route(.case(Endpoint.AnilistEndpoint.animeInfo(animeId:options:))) {
                         Path { "info"; Int.parser() }
-                        Parse(.memberwise(Endpoint.AnilistEndpoint.AnimeInfoOptions.init(dub:provider:))) {
+                        Parse(.memberwise(Endpoint.AnilistEndpoint.EpisodeInfo.init(dub:provider:))) {
+                            Query {
+                                Field("dub") { Bool.parser() }
+                                Field("provider") { Endpoint.AnilistEndpoint.Provider.parser() }
+                            }
+                        }
+                    }
+                    Route(.case(Endpoint.AnilistEndpoint.episodes(animeId:options:))) {
+                        Path { "episodes"; Int.parser() }
+                        Parse(.memberwise(Endpoint.AnilistEndpoint.EpisodeInfo.init(dub:provider:))) {
                             Query {
                                 Field("dub") { Bool.parser() }
                                 Field("provider") { Endpoint.AnilistEndpoint.Provider.parser() }
@@ -121,20 +131,47 @@ extension ConsumetAPI {
     struct StreamingLink: Decodable {
         let url: String
         let isM3U8: Bool
+        let quality: String
+    }
+
+    enum Provider {
+        case gogoanime
+        case zoro
     }
 }
 
 // MARK: - Converters
 
 extension ConsumetAPI {
-    static func convert(from sources: [ConsumetAPI.StreamingLink]) -> [AnimeNow.Source] {
+    static func convert(from sources: [ConsumetAPI.StreamingLink], provider: Provider) -> [AnimeNow.Source] {
         zip(sources.indices, sources)
             .map { (index, streamingLink) in
-                Source(
+                let quality: Source.Quality
+
+                if streamingLink.quality == "default" {
+                    quality = .auto
+                } else if streamingLink.quality == "backup" {
+                    quality = .autoalt
+                } else if streamingLink.quality == "1080p" {
+                    quality = .teneightyp
+                } else if streamingLink.quality == "720p" {
+                    quality = .seventwentyp
+                } else if streamingLink.quality == "480p" {
+                    quality = .foureightyp
+                } else if streamingLink.quality == "270p" {
+                    quality = .twoseventyp
+                } else if streamingLink.quality == "144p" {
+                    quality = .onefourtyfourp
+                } else {
+                    quality = .autoalt
+                }
+
+                return Source(
                     id: "\(index)",
                     url: URL(string: streamingLink.url)!,
-                    provider: "Unknown",
-                    subbed: false
+                    provider: provider == .gogoanime ? .gogoanime : .zoro,
+                    subbed: false,
+                    quality: quality
                 )
             }
     }

@@ -10,7 +10,6 @@ import URLRouting
 import SociableWeaver
 import ComposableArchitecture
 
-
 extension AnimeClient {
     static let live: AnimeClient = {
         let episodesCache = Cache<Anime.ID, [Episode]>()
@@ -123,6 +122,53 @@ extension AnimeClient {
                 .map { $0?.data.Page.media ?? [] }
                 .map(AniListAPI.convert(from:))
                 .eraseToEffect()
+        } getAnimes: { animeIds in
+            let query = AniListAPI.MediaPage.createQuery(
+                AniListAPI.MediaPage.ArgumentOptions.defaults,
+                AniListAPI.Media.ArgumentOptions.defaults + [.idIn(animeIds)]
+            )
+                .format()
+            let endpoint = AniListAPI.Endpoint.graphql(
+                .init(
+                    query: query
+                )
+            )
+
+            let response = API.request(
+                aniListApi,
+                endpoint,
+                GraphQL.Response<AniListAPI.PageResponse<AniListAPI.MediaPage>>.self
+            )
+            return response
+                .map { $0?.data.Page.media ?? [] }
+                .map(AniListAPI.convert(from:))
+                .eraseToEffect()
+        } getAnime: { animeId in
+            let query = AniListAPI.Media.createQuery([.id(animeId)])
+                .format()
+            let endpoint = AniListAPI.Endpoint.graphql(
+                .init(
+                    query: query
+                )
+            )
+
+            let response = API.request(
+                aniListApi,
+                endpoint,
+                GraphQL.Response<AniListAPI.MediaResponses>.self
+            )
+
+            return response
+                .tryMap { object -> AniListAPI.Media in
+                    if let object = object {
+                        return object.data.Media
+                    } else {
+                        throw API.Error.parsingFailed("Failed to parse media object.")
+                    }
+                }
+                .map(AniListAPI.convert(from:))
+                .mapError { $0 as? API.Error ?? .badServerResponse("Unable to retrieve media object.") }
+                .eraseToEffect()
         } searchAnimes: { query in
             let query = AniListAPI.MediaPage.createQuery(
                 AniListAPI.MediaPage.ArgumentOptions.defaults,
@@ -150,17 +196,17 @@ extension AnimeClient {
             }
             return API.request(
                 consumetApi,
-                .anilist(.animeInfo(animeId: animeId, options: .init())),
-                ConsumetAPI.Anime.self
+                .anilist(.episodes(animeId: animeId, options: .init())),
+                [ConsumetAPI.Episode].self
             )
-            .tryCompactMap { anime -> [ConsumetAPI.Episode] in
-                    guard let anime = anime else {
-                        throw API.Error.badServerResponse("Failed to get anilist anime for episodes.")
+                .tryCompactMap { episodes -> [ConsumetAPI.Episode] in
+                    guard let episodes = episodes else {
+                        throw API.Error.badServerResponse("Failed to retrieve episodes.")
                     }
-                    return anime.episodes
+                    return episodes
                 }
                 .map(ConsumetAPI.convert(from:))
-                .mapError { $0 as? API.Error ?? .badServerResponse("Failed to get anilist anime for episodes.") }
+                .mapError { $0 as? API.Error ?? .badServerResponse("Failed to retrieve episodes.") }
                 .map { episodes -> [Episode] in
                     episodesCache.insert(episodes, forKey: animeId)
                     return episodes
@@ -169,16 +215,16 @@ extension AnimeClient {
         } getSources: { episodeId in
             // The episode id is always coming from gogoanime, so we will try to retrieve all different sources, and with dub and sub
 
-            let endpoint = ConsumetAPI.Endpoint.anilist(
+            let gogoanimeSources = ConsumetAPI.Endpoint.anilist(
                 .streamingLinks(
                     episodeId: episodeId,
                     provider: .gogoanime
                 )
             )
 
-            return API.request(consumetApi, endpoint, ConsumetAPI.StreamingLinksPayload.self)
+            return API.request(consumetApi, gogoanimeSources, ConsumetAPI.StreamingLinksPayload.self)
                 .map { $0?.sources ?? [] }
-                .map(ConsumetAPI.convert(from:))
+                .map { ConsumetAPI.convert(from: $0, provider: .gogoanime) }
                 .eraseToEffect()
         }
     }()

@@ -18,6 +18,10 @@ extension AnimeClient {
         .init(value: [])
     } getMostPopularAnime: {
         .init(value: [])
+    } getAnimes: { _ in
+        .none
+    } getAnime: { _ in
+        .none
     } searchAnimes: { _ in
         .none
     } getEpisodes: { _ in

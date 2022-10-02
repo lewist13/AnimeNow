@@ -10,10 +10,43 @@ import ComposableArchitecture
 import SwiftUI
 
 struct VideoPlayerV2View: View {
-    let store: Store<VideoPlayerV2Core.State, VideoPlayerCore.Action>
+    let store: Store<VideoPlayerV2Core.State, VideoPlayerV2Core.Action>
 
     var body: some View {
-        Text("Hello")
+        Text("")
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+            .overlay(
+                WithViewStore(store.scope(state: \.loadingState)) { loadingState in
+                    switch loadingState.state {
+                    case .some(.fetchingEpisodes):
+                        Text("Loading Episodes")
+                            .background(Color.red)
+                    case .some(.fetchingSources):
+                        Text("Loading Sources")
+                            .background(Color.green)
+                    case .some(.buffering):
+                        Text("Loading Video")
+                            .background(Color.blue)
+                    case .none:
+                        Text("No Loading State")
+                            .background(Color.yellow)
+                    }
+                }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+            )
+            .overlay(
+                WithViewStore(store.scope(state: \.error)) { errorState in
+                    switch errorState.state {
+                    case .some(.failedToLoadEpisodes):
+                        Text("Failed to load episodes")
+                    case .some(.failedToLoadSources):
+                        Text("Failed to load sources")
+                    case .none:
+                        Text("Horray no errors :)")
+                    }
+                }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            )
 //        AVPlayerView(
 //            store: store.scope(
 //                state: \.playerState,
@@ -377,29 +410,29 @@ extension VideoPlayerV2View {
 //    }
 }
 
-//struct VideoPlayerV2View_Previews: PreviewProvider {
-//    static var previews: some View {
-//        if #available(iOS 15.0, *) {
-//            VideoPlayerView(
-//                store: .init(
-//                    initialState: .init(
-//                        anime: .narutoShippuden,
-//                        episodes: .init(uniqueElements: Episode.demoEpisodes),
-//                        selectedEpisode: Episode.demoEpisodes.first!.id
-//                    ),
-//                    reducer: VideoPlayerCore.reducer,
-//                    environment: .init(
-//                        mainQueue: .main.eraseToAnyScheduler(),
-//                        animeClient: .mock,
-//                        mainRunLoop: .main.eraseToAnyScheduler(),
-//                        repositoryClient: RepositoryClientMock.shared,
-//                        userDefaultsClient: .mock
-//                    )
-//                )
-//            )
-//            .previewInterfaceOrientation(.landscapeRight)
-//        } else {
-//            // Fallback on earlier versions
-//        }
-//    }
-//}
+struct VideoPlayerV2View_Previews: PreviewProvider {
+    static var previews: some View {
+        if #available(iOS 15.0, *) {
+            VideoPlayerV2View(
+                store: .init(
+                    initialState: .init(
+                        anime: .narutoShippuden,
+                        episodes: .success(.init(uniqueElements: Episode.demoEpisodes)),
+                        selectedEpisode: .id(Episode.demoEpisodes.first!.id)
+                    ),
+                    reducer: VideoPlayerV2Core.reducer,
+                    environment: .init(
+                        animeClient: .mock,
+                        mainQueue: .main.eraseToAnyScheduler(),
+                        mainRunLoop: .main.eraseToAnyScheduler(),
+                        repositoryClient: RepositoryClientMock.shared,
+                        userDefaultsClient: .mock
+                    )
+                )
+            )
+            .previewInterfaceOrientation(.landscapeRight)
+        } else {
+            // Fallback on earlier versions
+        }
+    }
+}

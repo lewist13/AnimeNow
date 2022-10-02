@@ -29,6 +29,8 @@ enum HomeCore {
         case resumeWatchingTapped(EpisodeInfoWithAnime)
         case fetchedAnime(keyPath: WritableKeyPath<State, LoadableAnime>, result: Result<[Anime], API.Error>)
         case fetchedAnimesInDB([AnimeInfoStore])
+        case fetchResumeWatchingAnimes([EpisodeInfoWithAnimeId])
+        case fetchedAnimeForResumeWatching(Result<[EpisodeInfoWithAnime], API.Error>)
         case binding(BindingAction<HomeCore.State>)
     }
 
@@ -55,7 +57,8 @@ extension HomeCore.State {
         topAiringAnime.hasInitialized &&
         topUpcomingAnime.hasInitialized &&
         highestRatedAnime.hasInitialized &&
-        mostPopularAnime.hasInitialized
+        mostPopularAnime.hasInitialized &&
+        resumeWatching.hasInitialized
     }
 }
 
@@ -105,13 +108,41 @@ extension HomeCore {
                 print(error)
                 state[keyPath: keyPath] = .failed
             case .fetchedAnimesInDB(let animesInDB):
-                var resumeWatchingEpisodes = [EpisodeInfoWithAnime]()
+                var resumeWatchingAnimes = [EpisodeInfoWithAnimeId]()
                 for animeInfo in animesInDB {
                     guard let recentEpisodeInfo = animeInfo.lastModifiedEpisode, !recentEpisodeInfo.finishedWatching else { continue }
-                    resumeWatchingEpisodes.append(.init(animeId: animeInfo.id, episodeInfo: recentEpisodeInfo))
+                    resumeWatchingAnimes.append(.init(animeId: animeInfo.id, episodeInfo: recentEpisodeInfo))
                 }
-                resumeWatchingEpisodes.sort(by: { $0.episodeInfo.lastUpdatedProgress > $1.episodeInfo.lastUpdatedProgress })
-                state.resumeWatching = .success(.init(uniqueElements: resumeWatchingEpisodes))
+
+                return .init(value: .fetchResumeWatchingAnimes(resumeWatchingAnimes))
+
+            case .fetchResumeWatchingAnimes(let episodeInfoWithAnimeIds):
+                guard episodeInfoWithAnimeIds.count > 0 else {
+                    state.resumeWatching = .success([])
+                    break
+                }
+
+                return environment.animeClient.getAnimes(episodeInfoWithAnimeIds.map(\.animeId))
+                    .receive(on: environment.mainQueue)
+                    .catchToEffect()
+                    .map {
+                        $0.map { animes -> [EpisodeInfoWithAnime] in
+                            var episodeInfosWithAnimes = [EpisodeInfoWithAnime]()
+
+                            for anime in animes {
+                                if let episodeInfo = episodeInfoWithAnimeIds.first(where: { $0.animeId == anime.id })?.episodeInfo {
+                                    episodeInfosWithAnimes.append(.init(anime: anime, episodeInfo: episodeInfo))
+                                }
+                            }
+                            return episodeInfosWithAnimes.sorted(by: \.episodeInfo.lastUpdatedProgress).reversed()
+                        }
+                    }
+                    .map(Action.fetchedAnimeForResumeWatching)
+            case .fetchedAnimeForResumeWatching(.success(let resumeWatchings)):
+                state.resumeWatching = .success(.init(uniqueElements: resumeWatchings))
+            case .fetchedAnimeForResumeWatching(.failure):
+                state.resumeWatching = .failed
+
             case .resumeWatchingTapped:
                 break
             case .binding:
@@ -123,12 +154,18 @@ extension HomeCore {
         }
     )
         .binding()
+        .debugActions()
 }
 
 extension HomeCore {
-    struct EpisodeInfoWithAnime: Identifiable, Hashable {
-        var id: EpisodeInfoStore.ID { episodeInfo.id }
+    struct EpisodeInfoWithAnimeId: Equatable {
         let animeId: Anime.ID
+        let episodeInfo: EpisodeInfoStore
+    }
+
+    struct EpisodeInfoWithAnime: Identifiable, Hashable {
+        var id: Anime.ID { anime.id }
+        let anime: Anime
         let episodeInfo: EpisodeInfoStore
     }
 }
