@@ -13,9 +13,9 @@ import ComposableArchitecture
 
 extension AnimeClient {
     static let live: AnimeClient = {
+        let episodesCache = Cache<Anime.ID, [Episode]>()
+
         let aniListApi = AniListAPI()
-        let kitsuApi = KitsuAPI()
-        let enimeApi = EnimeAPI()
         let consumetApi = ConsumetAPI()
 
         return Self {
@@ -145,19 +145,26 @@ extension AnimeClient {
                 .map(AniListAPI.convert(from:))
                 .eraseToEffect()
         } getEpisodes: { animeId in
+            if let episodes = episodesCache.value(forKey: animeId) {
+                return .init(value: episodes)
+            }
             return API.request(
                 consumetApi,
                 .anilist(.animeInfo(animeId: animeId, options: .init())),
                 ConsumetAPI.Anime.self
             )
-                .tryCompactMap {
-                    guard let anime = $0 else {
+            .tryCompactMap { anime -> [ConsumetAPI.Episode] in
+                    guard let anime = anime else {
                         throw API.Error.badServerResponse("Failed to get anilist anime for episodes.")
                     }
                     return anime.episodes
                 }
                 .map(ConsumetAPI.convert(from:))
                 .mapError { $0 as? API.Error ?? .badServerResponse("Failed to get anilist anime for episodes.") }
+                .map { episodes -> [Episode] in
+                    episodesCache.insert(episodes, forKey: animeId)
+                    return episodes
+                }
                 .eraseToEffect()
         } getSources: { episodeId in
             // The episode id is always coming from gogoanime, so we will try to retrieve all different sources, and with dub and sub
