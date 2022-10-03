@@ -20,8 +20,8 @@ enum SidebarSourcesCore {
 
     enum Action: Equatable {
         case selected(id: Source.ID)
-        case fetchSources(episodeId: Episode.ID)
-        case fetchedSources(Result<[Source], API.Error>)
+        case fetchSources(provider: Episode.Provider)
+        case fetchedSources(Result<[Source], EquatableError>)
     }
 
     struct Environment {
@@ -33,9 +33,9 @@ enum SidebarSourcesCore {
         switch action {
         case let .selected(id):
             state.selectedSourceId = id
-        case let .fetchSources(episodeId):
+        case let .fetchSources(provider):
             state.sources = .loading
-            return env.animeClient.getSources(episodeId)
+            return env.animeClient.getSources(provider)
                 .receive(on: env.mainQueue)
                 .catchToEffect()
                 .map(Action.fetchedSources)

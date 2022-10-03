@@ -8,15 +8,32 @@
 import Foundation
 
 struct Episode: Equatable, Identifiable {
-    let id: String
+    var id: Int { number }
     let name: String
     let number: Int
     let description: String
     let thumbnail: [ImageSize]
     let length: Int?    // in Seconds
 
-    enum IDType: Hashable {
-        case gogoanime(String)
+    var providers = [Provider]()
+
+    enum Provider: Equatable, Identifiable {
+        case gogoanime(id: String, dub: Bool)
+        case zoro(id: String)
+
+        var id: String {
+            switch self {
+            case .gogoanime(let id, _), .zoro(let id):
+                return id
+            }
+        }
+
+        var dub: Bool? {
+            if case .gogoanime(_, let dub) = self {
+                return dub
+            }
+            return nil
+        }
     }
 }
 
@@ -51,7 +68,6 @@ extension Episode {
 
 extension Episode {
     static let empty = Episode(
-        id: "",
         name: "",
         number: 0,
         description: "",
@@ -60,7 +76,6 @@ extension Episode {
     )
 
     static let placeholder = Episode(
-        id: "",
         name: "Placeholder",
         number: 0,
         description: "Placeholder",
@@ -70,17 +85,16 @@ extension Episode {
 
     static let demoEpisodes: [Episode] = [
         .init(
-            id: "cl6ooypne2201181rtgxmvdmmfx",
             name: "Homecoming",
             number: 1,
             description: "An older and stronger Naruto returns from his two and a half years of training with Jiraiya. When he gets back he finds that many things have changed since he left. From Konohamaru becoming a Gennin and being under the supervision of Ebisu to Tsunade's, the Fifth Hokage, being added to the great stone faces. Now the tasks of starting things where they were left has begun. And what new danger does Jiraiya know about?",
             thumbnail: [.original(URL(string: "https://artworks.thetvdb.com/banners/episodes/79824/320623.jpg")!)],
-            length: nil
+            length: nil,
+            providers: [.gogoanime(id: "12345", dub: false)]
         ),
         .init(
-            id: "jrinfeifniujrovuo",
             name: "Homecoming 2",
-            number: 1,
+            number: 2,
             description: "An older and stronger Naruto returns from his two and a half years of training with Jiraiya. When he gets back he finds that many things have changed since he left. From Konohamaru becoming a Gennin and being under the supervision of Ebisu to Tsunade's, the Fifth Hokage, being added to the great stone faces. Now the tasks of starting things where they were left has begun. And what new danger does Jiraiya know about?",
             thumbnail: [.original(URL(string: "https://artworks.thetvdb.com/banners/episodes/79824/320623.jpg")!)],
             length: nil

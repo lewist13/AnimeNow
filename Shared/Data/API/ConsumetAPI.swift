@@ -22,7 +22,7 @@ final class ConsumetAPI: APIRoute {
         enum AnilistEndpoint: Equatable {
             case animeInfo(animeId: Int, options: EpisodeInfo)
             case episodes(animeId: Int, options: EpisodeInfo)
-            case streamingLinks(episodeId: String, provider: Provider = .gogoanime)
+            case watch(episodeId: String, options: EpisodeInfo)
 
             struct EpisodeInfo: Equatable {
                 var dub: Bool = false
@@ -85,10 +85,13 @@ final class ConsumetAPI: APIRoute {
                             }
                         }
                     }
-                    Route(.case(Endpoint.AnilistEndpoint.streamingLinks(episodeId:provider:))) {
+                    Route(.case(Endpoint.AnilistEndpoint.watch(episodeId:options:))) {
                         Path { "watch"; Parse(.string) }
-                        Query {
-                            Field("provider") { Endpoint.AnilistEndpoint.Provider.parser() }
+                        Parse(.memberwise(Endpoint.AnilistEndpoint.EpisodeInfo.init(dub:provider:))) {
+                            Query {
+                                Field("dub") { Bool.parser() }
+                                Field("provider") { Endpoint.AnilistEndpoint.Provider.parser() }
+                            }
                         }
                     }
                 }
@@ -120,12 +123,9 @@ extension ConsumetAPI {
     }
 
     struct StreamingLinksPayload: Decodable {
-        let headers: HeaderReferer
         let sources: [StreamingLink]
-    }
-
-    struct HeaderReferer: Decodable {
-        let Referer: String
+        let subtitles: [Subtitle]?
+        let intro: Intro?
     }
 
     struct StreamingLink: Decodable {
@@ -134,16 +134,21 @@ extension ConsumetAPI {
         let quality: String
     }
 
-    enum Provider {
-        case gogoanime
-        case zoro
+    struct Subtitle: Decodable {
+        let url: URL
+        let lang: String
+    }
+
+    struct Intro: Decodable {
+        let start: Int
+        let end: Int
     }
 }
 
 // MARK: - Converters
 
 extension ConsumetAPI {
-    static func convert(from sources: [ConsumetAPI.StreamingLink], provider: Provider) -> [AnimeNow.Source] {
+    static func convert(from sources: [ConsumetAPI.StreamingLink]) -> [AnimeNow.Source] {
         zip(sources.indices, sources)
             .map { (index, streamingLink) in
                 let quality: Source.Quality
@@ -169,29 +174,28 @@ extension ConsumetAPI {
                 return Source(
                     id: "\(index)",
                     url: URL(string: streamingLink.url)!,
-                    provider: provider == .gogoanime ? .gogoanime : .zoro,
-                    subbed: false,
                     quality: quality
                 )
             }
     }
 
     static func convert(from episodes: [ConsumetAPI.Episode]) -> [AnimeNow.Episode] {
-        episodes.compactMap { episode in
-            var thumbnailImages = [ImageSize]()
+        episodes.compactMap(convert(from:))
+    }
 
-            if let thumbnailString = episode.image, let thumbnailURL = URL(string: thumbnailString) {
-                thumbnailImages.append(.original(thumbnailURL))
-            }
+    static func convert(from episode: ConsumetAPI.Episode) -> AnimeNow.Episode {
+        var thumbnailImages = [ImageSize]()
 
-            return AnimeNow.Episode(
-                id: episode.id,
-                name: episode.title ?? "Untitled",
-                number: episode.number,
-                description: episode.description ?? "No description available for this episode.",
-                thumbnail: thumbnailImages,
-                length: nil
-            )
+        if let thumbnailString = episode.image, let thumbnailURL = URL(string: thumbnailString) {
+            thumbnailImages.append(.original(thumbnailURL))
         }
+
+        return AnimeNow.Episode(
+            name: episode.title ?? "Untitled",
+            number: episode.number,
+            description: episode.description ?? "No description available for this episode.",
+            thumbnail: thumbnailImages,
+            length: nil
+        )
     }
 }

@@ -10,32 +10,42 @@ import Foundation
 import ComposableArchitecture
 
 enum VideoPlayerV2Core {
-    enum SelectedEpisodeIdentifier: Equatable {
-        case id(Episode.ID)
-        case number(Int)
+    enum Sidebar {
+        case episodes
+        case providers
+        case subtitles
     }
 
     struct State: Equatable {
-
         let anime: Anime
+
         var episodes = LoadableState<IdentifiedArrayOf<Episode>>.idle
-        var selectedEpisode: SelectedEpisodeIdentifier
-        var isOffline = false
-
-        var savedAnimeInfo = LoadableState<AnimeInfoStore>.idle
         var sources = LoadableState<IdentifiedArrayOf<Source>>.idle
+        var savedAnimeInfo = LoadableState<AnimeInfoStore>.idle
 
+        var selectedEpisode: Episode.ID
+        var selectedProvider: Episode.Provider.ID?
         var selectedSource: Source.ID?
+        var selectedSidebar: Sidebar?
 
-//        init(
-//            anime: Anime,
-//            episodes: [Episode]?,
-//            selectedEpisode: SelectedEpisodeIdentifier
-//        ) {
-//            self.anime = anime
-//            self.episodes = episodes != nil ? .success(.init(uniqueElements: episodes!)) : .idle
-//            self.selectedEpisode = selectedEpisode
-//        }
+        // Internal
+
+        var isOffline = false
+        var hasInitialized = false
+
+        // Player State
+
+        var player = AVPlayerCore.State()
+
+        init(
+            anime: Anime,
+            episodes: IdentifiedArrayOf<Episode>?,
+            selectedEpisode: Episode.ID
+        ) {
+            self.anime = anime
+            self.episodes = episodes != nil ? .success(episodes!) : .idle
+            self.selectedEpisode = selectedEpisode
+        }
     }
 
     enum Action: Equatable {
@@ -46,6 +56,7 @@ enum VideoPlayerV2Core {
         case backwardsTapped
         case forwardTapped
         case playerTapped
+        case close
 
         // Internal Actions
 
@@ -54,9 +65,13 @@ enum VideoPlayerV2Core {
         // Fetching
 
         case fetchEpisodes
-        case fetchedEpisodes(Result<[Episode], API.Error>)
+        case fetchedEpisodes(Result<[Episode], EquatableError>)
         case fetchSources
-        case fetchedSources(Result<[Source], API.Error>)
+        case fetchedSources(Result<[Source], EquatableError>)
+
+        // Player Actions
+
+        case player(AVPlayerCore.Action)
     }
 
     struct Environment {
@@ -80,7 +95,7 @@ extension VideoPlayerV2Core.State {
     var loadingState: LoadingState? {
         if !episodes.finished {
             return .fetchingEpisodes
-        } else if !sources.finished {
+        } else if (episode?.providers.count ?? 0) > 0 && !sources.finished {
             return .fetchingSources
         }
         return nil
@@ -92,12 +107,17 @@ extension VideoPlayerV2Core.State {
 extension VideoPlayerV2Core.State {
     enum Error {
         case failedToLoadEpisodes
+        case failedToFindProviders
         case failedToLoadSources
     }
 
     var error: Error? {
         if case .failed = episodes {
             return .failedToLoadEpisodes
+        } else if case .success(let episodes) = episodes, episodes.count == 0 {
+            return .failedToLoadEpisodes
+        } else if episode?.providers.count == nil || episode!.providers.count == 0 {
+            return .failedToFindProviders
         } else if case .failed = sources {
             return .failedToLoadSources
         }
@@ -108,19 +128,20 @@ extension VideoPlayerV2Core.State {
 extension VideoPlayerV2Core.State {
     fileprivate var episode: Episode? {
         if let episodes = episodes.value {
-            switch selectedEpisode {
-            case .id(let  id):
-                return episodes[id: id]
-            case .number(let epNumber):
-                return episodes.first(where: { $0.number == epNumber })
-            }
+            return episodes[id: selectedEpisode]
         }
 
         return nil
     }
-}
 
-extension VideoPlayerV2Core.State {
+    fileprivate var provider: Episode.Provider? {
+        if let episode = episode, let selectedProvider = selectedProvider {
+            return episode.providers.first(where: { $0.id == selectedProvider })
+        }
+
+        return nil
+    }
+
     fileprivate var source: Source? {
         if let sourceId = selectedSource, let sources = sources.value {
             return sources[id: sourceId]
@@ -137,7 +158,8 @@ extension VideoPlayerV2Core {
             // View Actions
 
             case .onAppear:
-                return .init(value: .fetchEpisodes)
+                guard !state.hasInitialized else { break }
+                return .init(value: .initializeFirstTime)
             case .backwardsTapped:
                 break
             case .forwardTapped:
@@ -149,6 +171,7 @@ extension VideoPlayerV2Core {
 
             case .initializeFirstTime:
                 return .concatenate(
+                    .init(value: .player(.avAction(.initialize))),
                     .init(value: .fetchEpisodes)
                 )
 
@@ -177,26 +200,30 @@ extension VideoPlayerV2Core {
             // Fetch Sources
 
             case .fetchSources:
-                guard let episode = state.episode else { break }
+                guard let provider = state.provider ?? state.episode?.providers.first else { break }
+
                 state.sources = .loading
-                return environment.animeClient.getSources(episode.id)
+                return environment.animeClient.getSources(provider)
                     .receive(on: environment.mainQueue)
                     .catchToEffect()
                     .map(Action.fetchedSources)
 
             case .fetchedSources(.success(let sources)):
-                state.sources = .success(.init(uniqueElements: sources))
-                state.selectedSource = sources.first(where: { $0.quality == .teneightyp })?.id
+                state.sources = .success(.init(uniqueElements: sources.sorted(by: \.quality)))
+                state.selectedSource = sources.first?.id
 
             case .fetchedSources(.failure):
                 state.sources = .failed
                 state.selectedSource = nil
 
-            default:
+            case .player:
+                break
+            case .close:
                 break
             }
 
             return .none
         }
+        .debugActions()
     }
 }

@@ -67,6 +67,8 @@
 		1359669028E6100B00EB2AFC /* HapticEngineClient+Live.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1359668D28E6100B00EB2AFC /* HapticEngineClient+Live.swift */; };
 		1361FD2E28CE97BF00D7C569 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1361FD2D28CE97BF00D7C569 /* Theme.swift */; };
 		1361FD2F28CE97BF00D7C569 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1361FD2D28CE97BF00D7C569 /* Theme.swift */; };
+		136245BD28EA4DA000ECE46B /* EquatableError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 136245BC28EA4DA000ECE46B /* EquatableError.swift */; };
+		136245BE28EA4DA000ECE46B /* EquatableError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 136245BC28EA4DA000ECE46B /* EquatableError.swift */; };
 		1363011C28C5C49F0076BF0A /* TinyGraphQL in Frameworks */ = {isa = PBXBuildFile; productRef = 1363011B28C5C49F0076BF0A /* TinyGraphQL */; };
 		1363011E28C5C4B00076BF0A /* TinyGraphQL in Frameworks */ = {isa = PBXBuildFile; productRef = 1363011D28C5C4B00076BF0A /* TinyGraphQL */; };
 		1364BA7A28E12BBC005BAEBA /* TabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1364BA7928E12BBC005BAEBA /* TabBar.swift */; };
@@ -188,6 +190,7 @@
 		1359668C28E6100B00EB2AFC /* HapticEngineClient+Mock.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "HapticEngineClient+Mock.swift"; sourceTree = "<group>"; };
 		1359668D28E6100B00EB2AFC /* HapticEngineClient+Live.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "HapticEngineClient+Live.swift"; sourceTree = "<group>"; };
 		1361FD2D28CE97BF00D7C569 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		136245BC28EA4DA000ECE46B /* EquatableError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EquatableError.swift; sourceTree = "<group>"; };
 		1364BA7928E12BBC005BAEBA /* TabBar.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TabBar.swift; sourceTree = "<group>"; };
 		1364BA9A28E13F6E005BAEBA /* DownloadsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadsView.swift; sourceTree = "<group>"; };
 		1364BA9B28E13F6E005BAEBA /* DownloadsCore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadsCore.swift; sourceTree = "<group>"; };
@@ -641,6 +644,7 @@
 				1380560828E8AD1800B9B45B /* Data+Extensions.swift */,
 				1380560B28E8B69E00B9B45B /* Array+Identifiable.swift */,
 				1380562028E9341A00B9B45B /* Cache.swift */,
+				136245BC28EA4DA000ECE46B /* EquatableError.swift */,
 			);
 			path = "Supporting Files";
 			sourceTree = "<group>";
@@ -829,6 +833,7 @@
 				1359669028E6100B00EB2AFC /* HapticEngineClient+Live.swift in Sources */,
 				13E1AA6F28DCEBF300D20745 /* SidebarSubtitlesCore.swift in Sources */,
 				1364BA9D28E13F6E005BAEBA /* DownloadsCore.swift in Sources */,
+				136245BD28EA4DA000ECE46B /* EquatableError.swift in Sources */,
 				13E465F428E6231A001FF309 /* ConsumetAPI.swift in Sources */,
 				134FAA2428D762A200B081FE /* OrientationClient.swift in Sources */,
 				134FAA2728D7637900B081FE /* OrientationClient+Live.swift in Sources */,
@@ -880,6 +885,7 @@
 				13938BAA28E0AF20001C8784 /* ImageSize.swift in Sources */,
 				134E0E9328D125C000A5F5E5 /* UserDefaultsClient.swift in Sources */,
 				1327551128D2AACB00A6C525 /* AnimeClient.swift in Sources */,
+				136245BE28EA4DA000ECE46B /* EquatableError.swift in Sources */,
 				1380561D28E9223500B9B45B /* VideoPlayerV2Core.swift in Sources */,
 				1327551228D2AAD300A6C525 /* GraphQLModels.swift in Sources */,
 				13C3536C28C308A000A54E7E /* AnimeNow.xcdatamodeld in Sources */,

@@ -135,7 +135,7 @@ extension VideoPlayerCore {
 
             case .fetchSourcesForSelectedEpisode:
                 if let selectedEpisode = state.episodesState.episode {
-                    return .init(value: .sources(.fetchSources(episodeId: selectedEpisode.id)))
+                    return .init(value: .sources(.fetchSources(provider: selectedEpisode.providers.first!)))
                         .cancellable(id: CancelEpisodeSourceFetchingId())
                 }
             case .sources(.fetchedSources(.success)):

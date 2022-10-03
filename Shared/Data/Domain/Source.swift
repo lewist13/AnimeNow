@@ -10,20 +10,19 @@ import Foundation
 struct Source: Equatable, Identifiable {
     let id: String
     let url: URL
-    let provider: Provider
-    let subbed: Bool
     let quality: Quality
+    var sub: Bool? = nil          // not all providers have sub/dub, this is useful for zoro
 
-    enum Quality {
-        case auto           // auto
-        case autoalt        // auotoalt
-        case teneightyp     // 1080p
-        case seventwentyp   // 720p
-        case foureightyp    // 480p
-        case twoseventyp    // 270p
+    enum Quality: Equatable, Comparable, CustomStringConvertible {
         case onefourtyfourp // 144p
+        case twoseventyp    // 270p
+        case foureightyp    // 480p
+        case seventwentyp   // 720p
+        case teneightyp     // 1080p
+        case autoalt        // auotoalt
+        case auto           // auto
 
-        var stringify: String {
+        var description: String {
             switch self {
             case .auto:
                 return "Auto"
@@ -49,14 +48,7 @@ extension Source {
         Source(
             id: "",
             url: URL(string: "/")!,
-            provider: .gogoanime,
-            subbed: false,
             quality: .auto
         )
     ]
-
-    enum Provider {
-        case gogoanime
-        case zoro
-    }
 }

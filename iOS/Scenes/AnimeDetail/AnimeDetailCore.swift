@@ -26,7 +26,7 @@ enum AnimeDetailCore {
         case closeButtonPressed
         case close
         case playResumeButtonClicked
-        case fetchedEpisodes(Result<[Episode], API.Error>)
+        case fetchedEpisodes(Result<[Episode], EquatableError>)
         case selectedEpisode(episode: Episode)
         case play(anime: Anime, episodes: IdentifiedArrayOf<Episode>, selected: Episode.ID)
         case fetchedAnimeFromDB([AnimeInfoStore])

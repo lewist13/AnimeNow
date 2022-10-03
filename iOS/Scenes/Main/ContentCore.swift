@@ -19,7 +19,7 @@ enum ContentCore {
         var settings = SettingsCore.State()
         var downloads = DownloadsCore.State()
 
-        var videoPlayer: VideoPlayerCore.State?
+        var videoPlayer: VideoPlayerV2Core.State?
         var animeDetail: AnimeDetailCore.State?
     }
 
@@ -30,7 +30,7 @@ enum ContentCore {
         case search(SearchCore.Action)
         case downloads(DownloadsCore.Action)
         case settings(SettingsCore.Action)
-        case videoPlayer(VideoPlayerCore.Action)
+        case videoPlayer(VideoPlayerV2Core.Action)
         case animeDetail(AnimeDetailCore.Action)
         case binding(BindingAction<State>)
     }
@@ -101,13 +101,13 @@ extension ContentCore {
             action: /ContentCore.Action.settings,
             environment: { _ in .init() }
         ),
-        VideoPlayerCore.reducer.optional().pullback(
+        VideoPlayerV2Core.reducer.optional().pullback(
             state: \.videoPlayer,
             action: /ContentCore.Action.videoPlayer,
             environment: {
                 .init(
-                    mainQueue: $0.mainQueue,
                     animeClient: $0.animeClient,
+                    mainQueue: $0.mainQueue,
                     mainRunLoop: $0.mainRunLoop,
                     repositoryClient: $0.repositoryClient,
                     userDefaultsClient: $0.userDefaultsClient

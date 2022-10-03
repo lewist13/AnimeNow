@@ -13,47 +13,47 @@ struct VideoPlayerV2View: View {
     let store: Store<VideoPlayerV2Core.State, VideoPlayerV2Core.Action>
 
     var body: some View {
-        Text("")
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-            .overlay(
-                WithViewStore(store.scope(state: \.loadingState)) { loadingState in
-                    switch loadingState.state {
-                    case .some(.fetchingEpisodes):
-                        Text("Loading Episodes")
-                            .background(Color.red)
-                    case .some(.fetchingSources):
-                        Text("Loading Sources")
-                            .background(Color.green)
-                    case .some(.buffering):
-                        Text("Loading Video")
-                            .background(Color.blue)
-                    case .none:
-                        Text("No Loading State")
-                            .background(Color.yellow)
-                    }
-                }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+        AVPlayerView(
+            store: store.scope(
+                state: \.player,
+                action: VideoPlayerV2Core.Action.player
             )
-            .overlay(
-                WithViewStore(store.scope(state: \.error)) { errorState in
-                    switch errorState.state {
-                    case .some(.failedToLoadEpisodes):
-                        Text("Failed to load episodes")
-                    case .some(.failedToLoadSources):
-                        Text("Failed to load sources")
-                    case .none:
-                        Text("Horray no errors :)")
-                    }
+        )
+        .overlay(
+            WithViewStore(store.scope(state: \.loadingState)) { loadingState in
+                switch loadingState.state {
+                case .some(.fetchingEpisodes):
+                    buildLoadingIndicator("Loading Episodes")
+                case .some(.fetchingSources):
+                    buildLoadingIndicator("Loading Sources")
+                case .some(.buffering):
+                    buildLoadingIndicator()
+                case .none:
+                    EmptyView()
                 }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-            )
-//        AVPlayerView(
-//            store: store.scope(
-//                state: \.playerState,
-//                action: VideoPlayerCore.Action.player
-//            )
-//        )
-//        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+            }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+        )
+        .overlay(
+            WithViewStore(store.scope(state: \.error)) { errorState in
+                switch errorState.state {
+                case .some(.failedToLoadEpisodes):
+                    Text("Failed to load episodes")
+                case .some(.failedToFindProviders):
+                    Text("No providers available for this episode.")
+                case .some(.failedToLoadSources):
+                    Text("Failed to load sources")
+                case .none:
+                    EmptyView()
+                }
+            }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        )
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+        .statusBar(hidden: true)
+        .ignoresSafeArea(edges: .vertical)
+        .background(Color.black.edgesIgnoringSafeArea(.all))
+
 ////        .overlay(
 ////            HStack(spacing: 0) {
 ////                Color.clear
@@ -84,9 +84,9 @@ struct VideoPlayerV2View: View {
 //        .statusBar(hidden: true)
 //        .ignoresSafeArea(edges: .vertical)
 //        .background(Color.black.edgesIgnoringSafeArea(.all))
-//        .onAppear {
-//            ViewStore(store.stateless).send(.onAppear)
-//        }
+        .onAppear {
+            ViewStore(store.stateless).send(.onAppear)
+        }
     }
 }
 
@@ -125,6 +125,26 @@ extension VideoPlayerV2View {
 //            }
 //        }
 //    }
+}
+
+extension VideoPlayerV2View {
+    @ViewBuilder
+    func buildLoadingIndicator(_ text: String? = nil) -> some View {
+        VStack(spacing: 16) {
+            ProgressView()
+                .colorInvert()
+                .brightness(1)
+                .scaleEffect(1.5)
+                .frame(width: 24, height: 24, alignment: .center)
+            if let text = text {
+                Text(text)
+                    .font(.body.bold())
+                    .foregroundColor(Color(white: 0.85))
+            }
+        }
+        .foregroundColor(.white)
+        .offset(y: text == nil ? 0 : 24)
+    }
 }
 
 // MARK: Top Player Items
@@ -417,8 +437,8 @@ struct VideoPlayerV2View_Previews: PreviewProvider {
                 store: .init(
                     initialState: .init(
                         anime: .narutoShippuden,
-                        episodes: .success(.init(uniqueElements: Episode.demoEpisodes)),
-                        selectedEpisode: .id(Episode.demoEpisodes.first!.id)
+                        episodes: .init(uniqueElements: Episode.demoEpisodes),
+                        selectedEpisode: Episode.demoEpisodes.first!.id
                     ),
                     reducer: VideoPlayerV2Core.reducer,
                     environment: .init(

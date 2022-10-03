@@ -7,8 +7,6 @@
 
 import Foundation
 import URLRouting
-import ComposableArchitecture
-import SociableWeaver
 import Combine
 
 protocol APIRoute {
@@ -19,43 +17,22 @@ protocol APIRoute {
 }
 
 enum API {
-    enum Error: Swift.Error, Equatable {
-        case badURL
-        case badServerResponse(String)
-        case authenticationFailed
-        case parsingFailed(String)
-    }
-
     static func request<API: APIRoute, Output: Decodable>(
         _ api: API,
         _ endpoint: API.Endpoint,
-        _ outputType: Output.Type? = nil
-    ) -> AnyPublisher<Output?, Self.Error> {
+        _ type: Output.Type? = nil
+    ) -> AnyPublisher<Output, EquatableError> {
         guard var request = try? api.router.baseURL(api.baseURL.absoluteString).request(for: endpoint) else {
-            return Fail(error: Self.Error.badURL)
+            return Fail(error: URLError(.badURL).toEquatableError())
                 .eraseToAnyPublisher()
         }
 
         api.configureRequest(request: &request)
 
         return URLSession.shared.dataTaskPublisher(for: request)
-            .tryMap { (data, response) in
-                guard let httpResponse = response as? HTTPURLResponse,
-                      httpResponse.statusCode == 200 else {
-                    throw Self.Error.badServerResponse(String(decoding: data, as: UTF8.self))
-                }
-
-                guard let outputType = outputType else {
-                    return nil
-                }
-
-                do {
-                    return try JSONDecoder().decode(outputType.self, from: data)
-                } catch {
-                    throw Self.Error.parsingFailed("Failed to parse to: \(outputType.self) - \(error)")
-                }
-            }
-            .mapError { $0 as? Self.Error ?? .badServerResponse("Error received from server.") }
+            .map(\.data)
+            .decode(type: Output.self, decoder: JSONDecoder())
+            .mapError { $0.toEquatableError() }
             .eraseToAnyPublisher()
     }
 }

@@ -27,10 +27,10 @@ enum HomeCore {
         case onAppear
         case animeTapped(Anime)
         case resumeWatchingTapped(EpisodeInfoWithAnime)
-        case fetchedAnime(keyPath: WritableKeyPath<State, LoadableAnime>, result: Result<[Anime], API.Error>)
+        case fetchedAnime(keyPath: WritableKeyPath<State, LoadableAnime>, result: Result<[Anime], EquatableError>)
         case fetchedAnimesInDB([AnimeInfoStore])
         case fetchResumeWatchingAnimes([EpisodeInfoWithAnimeId])
-        case fetchedAnimeForResumeWatching(Result<[EpisodeInfoWithAnime], API.Error>)
+        case fetchedAnimeForResumeWatching(Result<[EpisodeInfoWithAnime], EquatableError>)
         case binding(BindingAction<HomeCore.State>)
     }
 
@@ -154,7 +154,6 @@ extension HomeCore {
         }
     )
         .binding()
-        .debugActions()
 }
 
 extension HomeCore {

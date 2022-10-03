@@ -20,7 +20,7 @@ enum SearchCore {
     enum Action: Equatable {
         case onAppear
         case searchQueryChanged(String)
-        case searchResult(Result<[Anime], API.Error>)
+        case searchResult(Result<[Anime], EquatableError>)
         case searchQueryChangeDebounce
         case onAnimeTapped(Anime)
     }
