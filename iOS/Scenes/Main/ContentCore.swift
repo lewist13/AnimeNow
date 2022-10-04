@@ -128,16 +128,6 @@ extension ContentCore {
         ),
         .init { state, action, environment in
             switch action {
-            case let .animeDetail(.play(anime, episodes, selected)):
-                state.videoPlayer = .init(anime: anime, episodes: episodes, selectedEpisode: selected)
-                return environment.orientationClient.setOrientation(.landscapeRight)
-                    .fireAndForget()
-            case .videoPlayer(.close):
-                state.videoPlayer = nil
-                return environment.orientationClient.setOrientation(.portrait)
-                    .fireAndForget()
-            case .setAnimeDetail(let animeMaybe):
-                state.animeDetail = animeMaybe
             case let .home(.animeTapped(anime)),
                  let .search(.onAnimeTapped(anime)):
                 let animation = Animation.interactiveSpring(response: 0.35, dampingFraction: 1.0)
@@ -146,12 +136,36 @@ extension ContentCore {
                         on: environment.mainQueue.animation(animation)
                     )
                     .eraseToEffect()
+
+            case let .home(.resumeWatchingTapped(episodeInfoWithAnime)):
+                state.videoPlayer = .init(
+                    anime: episodeInfoWithAnime.anime,
+                    episodes: nil,
+                    selectedEpisode: Episode.ID(episodeInfoWithAnime.episodeInfo.number)
+                )
+                return environment.orientationClient.setOrientation(.landscapeRight)
+                    .fireAndForget()
+
+            case .setAnimeDetail(let animeMaybe):
+                state.animeDetail = animeMaybe
+
+            case let .animeDetail(.play(anime, episodes, selected)):
+                state.videoPlayer = .init(anime: anime, episodes: episodes, selectedEpisode: selected)
+                return environment.orientationClient.setOrientation(.landscapeRight)
+                    .fireAndForget()
+
             case .animeDetail(.close):
                 return .init(value: .setAnimeDetail(nil))
                     .receive(
                         on: environment.mainQueue.animation(.easeInOut(duration: 0.25))
                     )
                     .eraseToEffect()
+
+            case .videoPlayer(.close):
+                state.videoPlayer = nil
+                return environment.orientationClient.setOrientation(.portrait)
+                    .fireAndForget()
+
             default:
                 break
             }

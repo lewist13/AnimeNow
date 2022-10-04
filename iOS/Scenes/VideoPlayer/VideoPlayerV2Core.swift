@@ -28,6 +28,8 @@ enum VideoPlayerV2Core {
         var selectedSource: Source.ID?
         var selectedSidebar: Sidebar?
 
+        var showPlayerOverlay = true
+
         // Internal
 
         var isOffline = false
@@ -53,23 +55,37 @@ enum VideoPlayerV2Core {
         // View Actions
 
         case onAppear
-        case backwardsTapped
-        case forwardTapped
         case playerTapped
-        case close
+        case showMoreEpisodesTapped
+        case closeButtonTapped
 
+        case selectEpisode(Episode.ID)
+        case selectProvider(Episode.Provider.ID)
+        case selectSource(Source.ID)
+        
         // Internal Actions
 
         case initializeFirstTime
+        case close
 
         // Fetching
 
         case fetchEpisodes
-        case fetchedEpisodes(Result<[Episode], EquatableError>)
+        case fetchedEpisodes(Result<[Episode], Never>)
         case fetchSources
         case fetchedSources(Result<[Source], EquatableError>)
 
         // Player Actions
+
+        case backwardsTapped
+        case forwardTapped
+        case replayTapped
+        case togglePlayback
+        case startSeeking
+        case stopSeeking
+        case seeking(to: Double)
+
+        // Internal Video Player Actions
 
         case player(AVPlayerCore.Action)
     }
@@ -86,17 +102,18 @@ enum VideoPlayerV2Core {
 // MARK: Loading State
 
 extension VideoPlayerV2Core.State {
-    enum LoadingState {
-        case fetchingEpisodes
-        case fetchingSources
-        case buffering
+    enum Status {
+        case loading
+        case playing
+        case paused
+        case replay
     }
 
-    var loadingState: LoadingState? {
+    var statusState: Status? {
         if !episodes.finished {
-            return .fetchingEpisodes
-        } else if (episode?.providers.count ?? 0) > 0 && !sources.finished {
-            return .fetchingSources
+            return .loading
+        } else if !sources.finished && (episode?.providers.count ?? 0) > 0 {
+            return .loading
         }
         return nil
     }
@@ -116,17 +133,22 @@ extension VideoPlayerV2Core.State {
             return .failedToLoadEpisodes
         } else if case .success(let episodes) = episodes, episodes.count == 0 {
             return .failedToLoadEpisodes
-        } else if episode?.providers.count == nil || episode!.providers.count == 0 {
+        } else if let episode = episode, episode.providers.count == 0 {
             return .failedToFindProviders
         } else if case .failed = sources {
+            return .failedToLoadSources
+        } else if case .success(let sources) = sources, sources.count == 0 {
             return .failedToLoadSources
         }
         return nil
     }
 }
 
+
+// MARK: Episode Properties
+
 extension VideoPlayerV2Core.State {
-    fileprivate var episode: Episode? {
+    var episode: Episode? {
         if let episodes = episodes.value {
             return episodes[id: selectedEpisode]
         }
@@ -160,20 +182,23 @@ extension VideoPlayerV2Core {
             case .onAppear:
                 guard !state.hasInitialized else { break }
                 return .init(value: .initializeFirstTime)
-            case .backwardsTapped:
-                break
-            case .forwardTapped:
-                break
+
             case .playerTapped:
-                break
+                state.showPlayerOverlay.toggle()
+            case .closeButtonTapped:
+                return .init(value: .close)
 
             // Internal Actions
 
             case .initializeFirstTime:
+                state.hasInitialized = true
                 return .concatenate(
                     .init(value: .player(.avAction(.initialize))),
                     .init(value: .fetchEpisodes)
                 )
+
+            case .close:
+                break
 
             // Fetch Episodes
 
@@ -200,7 +225,9 @@ extension VideoPlayerV2Core {
             // Fetch Sources
 
             case .fetchSources:
-                guard let provider = state.provider ?? state.episode?.providers.first else { break }
+                state.selectedProvider = state.selectedProvider ?? state.episode?.providers.first?.id
+
+                guard let provider = state.provider else { break }
 
                 state.sources = .loading
                 return environment.animeClient.getSources(provider)
@@ -209,16 +236,26 @@ extension VideoPlayerV2Core {
                     .map(Action.fetchedSources)
 
             case .fetchedSources(.success(let sources)):
-                state.sources = .success(.init(uniqueElements: sources.sorted(by: \.quality)))
+                state.sources = .success(.init(uniqueElements: sources.sorted(by: \.quality).reversed()))
                 state.selectedSource = sources.first?.id
 
             case .fetchedSources(.failure):
                 state.sources = .failed
                 state.selectedSource = nil
 
+            // Video Player Actions
+
+            case .backwardsTapped:
+                break
+            case .forwardTapped:
+                break
+
+            // Internal Video Player Logic
+
             case .player:
                 break
-            case .close:
+                
+            default:
                 break
             }
 

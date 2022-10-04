@@ -223,14 +223,15 @@ extension AnimeClient {
             )
 
             let mergedSources = Publishers.Zip3(
-                gogoanimeSubEpisodes,
-                gogoanimeDubEpisodes,
-                zoroEpisodes
+                gogoanimeSubEpisodes.replaceError(with: []),
+                gogoanimeDubEpisodes.replaceError(with: []),
+                zoroEpisodes.replaceError(with: [])
             )
                 .map(AnimeClient.mergeSources)
 
             return mergedSources
                 .map { episodesCache.insert($0, forKey: animeId); return $0 }
+                .eraseToAnyPublisher()
                 .eraseToEffect()
         } getSources: { provider in
 
@@ -263,6 +264,8 @@ extension AnimeClient {
 extension AnimeClient {
     fileprivate static func mergeSources(_ gogoSub: [ConsumetAPI.Episode], _ gogoDub: [ConsumetAPI.Episode], _ zoro: [ConsumetAPI.Episode]) -> [Episode] {
         var episodes = [Episode]()
+
+        // TODO: Merge Zoro info
 
         let primary = gogoDub.count > gogoSub.count ? gogoDub : gogoSub
         let secondary = primary == gogoSub ? gogoDub : gogoSub
