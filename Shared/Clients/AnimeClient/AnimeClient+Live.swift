@@ -265,41 +265,51 @@ extension AnimeClient {
     fileprivate static func mergeSources(_ gogoSub: [ConsumetAPI.Episode], _ gogoDub: [ConsumetAPI.Episode], _ zoro: [ConsumetAPI.Episode]) -> [Episode] {
         var episodes = [Episode]()
 
-        // TODO: Merge Zoro info
+        let primary = gogoSub
+        let secondary = gogoDub
+        let tertiary = zoro
 
-        let primary = gogoDub.count > gogoSub.count ? gogoDub : gogoSub
-        let secondary = primary == gogoSub ? gogoDub : gogoSub
-        let primaryDub = primary == gogoDub
-        
         var primaryIndex = 0
         var secondaryIndex = 0
-        
-        for mainInx in 0..<(primary.last?.number ?? primary.count) {
+        var tertiaryIndex = 0
+
+        let maxEpisodesCount = max(primary.count, max(secondary.count, tertiary.count))
+
+        for mainInx in 0..<maxEpisodesCount {
             let episodeNumber = mainInx + 1
             var providers = [Episode.Provider]()
-            
+
             var mainEpisodeInfo: ConsumetAPI.Episode?
-            
+
             if primaryIndex < primary.count {
                 let episode = primary[primaryIndex]
                 if episode.number == episodeNumber {
                     mainEpisodeInfo = episode
-                    providers.append(.gogoanime(id: episode.id, dub: primaryDub))
+                    providers.append(.gogoanime(id: episode.id, dub: false))
                     primaryIndex += 1
                 }
             }
-            
+
             if secondaryIndex < secondary.count {
                 let episode = secondary[secondaryIndex]
                 if episode.number == episodeNumber {
                     mainEpisodeInfo = mainEpisodeInfo ?? episode
-                    providers.append(.gogoanime(id: episode.id, dub: !primaryDub))
+                    providers.append(.gogoanime(id: episode.id, dub: true))
                     secondaryIndex += 1
                 }
             }
-            
+
+            if tertiaryIndex < tertiary.count {
+                let episode = tertiary[tertiaryIndex]
+                if episode.number == episodeNumber {
+                    mainEpisodeInfo = mainEpisodeInfo ?? episode
+                    providers.append(.zoro(id: episode.id))
+                    tertiaryIndex += 1
+                }
+            }
+
             guard let mainEpisodeInfo = mainEpisodeInfo else { continue }
-            
+
             var episode = ConsumetAPI.convert(from: mainEpisodeInfo)
             episode.providers = providers
             episodes.append(episode)
