@@ -6,12 +6,12 @@
 //  Copyright © 2022. All rights reserved.
 //
 
+import AVKit
 import UIKit
 import SwiftUI
 import Combine
 import AVFoundation
 import ComposableArchitecture
-import AVKit
 
 struct AVPlayerCore {
     enum AVAction: Equatable {
@@ -19,6 +19,7 @@ struct AVPlayerCore {
         case play
         case pause
         case stop
+        case replay
         case terminate
         case start(media: AVPlayerItem)
         case seek(to: CMTime)
@@ -30,8 +31,8 @@ struct AVPlayerCore {
         var avAction: AVAction?
 
         var status = AVPlayer.Status.unknown
+        var playerItemStatus = AVPlayerItem.Status.unknown
         var timeStatus = AVPlayer.TimeControlStatus.paused
-        var rate = Float.zero
         var currentTime = CMTime.zero
         var videoGravity = AVLayerVideoGravity.resizeAspect
         var duration: CMTime?
@@ -41,8 +42,8 @@ struct AVPlayerCore {
         case avAction(AVAction?)
 
         case status(AVPlayer.Status)
+        case playerItemStatus(AVPlayerItem.Status)
         case timeStatus(AVPlayer.TimeControlStatus, AVPlayer.WaitingReason?)
-        case rate(Float)
         case currentTime(CMTime)
         case videoGravity(AVLayerVideoGravity)
         case duration(CMTime?)
@@ -56,8 +57,6 @@ extension AVPlayerCore {
             state.status = status
         case .timeStatus(let timeStatus, let waitingReason):
             state.timeStatus = timeStatus
-        case .rate(let rate):
-            state.rate = rate
         case .currentTime(let currentTime):
             state.currentTime = currentTime
         case .videoGravity(let gravity):
@@ -66,6 +65,8 @@ extension AVPlayerCore {
             state.duration = duration
         case .avAction(let action):
             state.avAction = action
+        case .playerItemStatus(let status):
+            state.playerItemStatus = status
         }
         return .none
     }
@@ -75,48 +76,12 @@ struct AVPlayerView: UIViewControllerRepresentable {
     let store: Store<AVPlayerCore.State, AVPlayerCore.Action>
 
     func makeUIViewController(context: Context) -> PlayerViewController {
-        let view = PlayerViewController(
+        PlayerViewController(
             store: store
         )
-
-        view.avDelegate = context.coordinator
-        return view
     }
 
     func updateUIViewController(_ uiView: PlayerViewController, context: Context) {}
-
-    func makeCoordinator() -> Coordinator {
-        Coordinator(
-            self
-        )
-    }
-
-    class Coordinator: NSObject, AVPictureInPictureControllerDelegate {
-        private let parent: AVPlayerView
-
-        init(
-            _ parent: AVPlayerView
-        ) {
-            self.parent = parent
-        }
-
-        func pictureInPictureControllerWillStartPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
-            print("PIP Starting")
-        }
-
-        func pictureInPictureControllerWillStopPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
-            print("PIP Ending")
-        }
-
-        func pictureInPictureController(_ pictureInPictureController: AVPictureInPictureController, restoreUserInterfaceForPictureInPictureStopWithCompletionHandler completionHandler: @escaping (Bool) -> Void) {
-            print("PIP restore user interface")
-            completionHandler(true)
-        }
-
-        func pictureInPictureController(_ pictureInPictureController: AVPictureInPictureController, failedToStartPictureInPictureWithError error: Error) {
-            print("PIP Error starting PIP")
-        }
-    }
 }
 
 class PlayerViewController: UIViewController {
@@ -131,15 +96,6 @@ class PlayerViewController: UIViewController {
     private var playerItemCancellables = Set<AnyCancellable>()
 
     private lazy var controller: AVPictureInPictureController? = .init(playerLayer: playerLayer)
-
-    weak var avDelegate: AVPictureInPictureControllerDelegate? {
-        set {
-            controller?.delegate = newValue
-        }
-        get {
-            controller?.delegate
-        }
-    }
 
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
         .landscape
@@ -159,25 +115,32 @@ class PlayerViewController: UIViewController {
         super.init(nibName: nil, bundle: nil)
 
         view.layer.insertSublayer(playerLayer, at: 0)
-        bindStore()
     }
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        bindStore()
+    }
+
     private func bindStore() {
+        controller?.delegate = self
+
         viewStore.publisher.avAction
             .compactMap { $0 }
             .sink { [weak self] action in
                 switch action {
                 case .initialize:
-                    self?.observePlayer()
-                    self?.observePiP()
+                    break
                 case .play:
                     self?.player.playImmediately(atRate: 1.0)
                 case .pause:
                     self?.player.pause()
+                case .replay:
+                    self?.player.seek(to: .zero)
                 case .stop:
                     self?.player.pause()
                     self?.player.removeAllItems()
@@ -198,6 +161,9 @@ class PlayerViewController: UIViewController {
                 }
             }
             .store(in: &cancellables)
+
+        observePlayer()
+        observePiP()
     }
 
     private func observePlayer() {
@@ -211,12 +177,12 @@ class PlayerViewController: UIViewController {
             self?.viewStore.send(.videoGravity(gravity))
         }
         .store(in: &cancellables)
-        
+
         player.publisher(
             for: \.currentItem
         )
         .sink { [weak self] item in
-            self?.startListeningToNewPlayerItem(playerItem: item)
+            self?.observePlayerItem(item)
         }
         .store(in: &cancellables)
 
@@ -227,14 +193,6 @@ class PlayerViewController: UIViewController {
             self?.viewStore.send(.status(status))
         }
         .store(in: &cancellables)
-
-        player.publisher(
-            for: \.rate
-        )
-            .sink { [weak self] rate in
-                self?.viewStore.send(.rate(rate))
-            }
-            .store(in: &cancellables)
 
         player.publisher(
             for: \.timeControlStatus
@@ -269,10 +227,11 @@ class PlayerViewController: UIViewController {
 //        controller.publisher(for: \.)
     }
 
-    private func startListeningToNewPlayerItem(playerItem: AVPlayerItem?) {
+    private func observePlayerItem(_ playerItem: AVPlayerItem?) {
         guard let playerItem = playerItem else {
             playerItemCancellables.removeAll()
             self.viewStore.send(.duration(nil))
+            self.viewStore.send(.playerItemStatus(.unknown))
             return
         }
 
@@ -285,11 +244,57 @@ class PlayerViewController: UIViewController {
             self?.viewStore.send(.duration(duration))
         }
         .store(in: &playerItemCancellables)
+
+        playerItem.publisher(
+            for: \.status
+        )
+        .sink { [weak self] status in
+            self?.viewStore.send(.playerItemStatus(status))
+        }
+        .store(in: &playerItemCancellables)
     }
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         playerLayer.frame = view.frame
+    }
+}
+
+extension PlayerViewController: AVPictureInPictureControllerDelegate {
+    func pictureInPictureControllerWillStartPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
+        print("PIP Starting")
+    }
+
+    func pictureInPictureControllerWillStopPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
+        print("PIP Ending")
+    }
+
+    func pictureInPictureController(_ pictureInPictureController: AVPictureInPictureController, restoreUserInterfaceForPictureInPictureStopWithCompletionHandler completionHandler: @escaping (Bool) -> Void) {
+        print("PIP restore user interface")
+        completionHandler(true)
+    }
+
+    func pictureInPictureController(_ pictureInPictureController: AVPictureInPictureController, failedToStartPictureInPictureWithError error: Error) {
+        print("PIP Error starting PIP")
+    }
+}
+
+extension AVPlayerItem.Status: CustomStringConvertible, CustomDebugStringConvertible {
+    public var debugDescription: String {
+        description
+    }
+
+    public var description: String {
+        switch self {
+        case .unknown:
+            return "unknown"
+        case .readyToPlay:
+            return "readyToPlay"
+        case .failed:
+            return "failed"
+        @unknown default:
+            return "default-unknown"
+        }
     }
 }
 

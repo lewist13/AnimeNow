@@ -13,14 +13,18 @@ struct Source: Equatable, Identifiable {
     let quality: Quality
     var sub: Bool? = nil          // not all providers have sub/dub, this is useful for zoro
 
-    enum Quality: Equatable, Comparable, CustomStringConvertible {
-        case onefourtyfourp // 144p
-        case twoseventyp    // 270p
-        case foureightyp    // 480p
-        case seventwentyp   // 720p
-        case teneightyp     // 1080p
-        case autoalt        // auotoalt
-        case auto           // auto
+    enum Quality: Int, Equatable, Comparable, CustomStringConvertible {
+        static func < (lhs: Source.Quality, rhs: Source.Quality) -> Bool {
+            lhs.rawValue < rhs.rawValue
+        }
+        
+        case onefourtyfourp = 0 // 144p
+        case twoseventyp        // 270p
+        case foureightyp        // 480p
+        case seventwentyp       // 720p
+        case teneightyp         // 1080p
+        case autoalt            // auotoalt
+        case auto               // auto
 
         var description: String {
             switch self {

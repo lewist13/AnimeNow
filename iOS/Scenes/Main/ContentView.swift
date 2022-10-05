@@ -68,7 +68,7 @@ struct ContentView: View {
                     action: ContentCore.Action.videoPlayer
                 )
             ) {
-                VideoPlayerV2View(
+                VideoPlayerView(
                     store: $0
                 )
             }
