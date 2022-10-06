@@ -298,7 +298,7 @@ extension VideoPlayerView {
 extension VideoPlayerView {
     @ViewBuilder
     var playerOptionsButton: some View {
-        HStack(spacing: 16) {
+        HStack(spacing: 8) {
             airplayButton
             subtitlesButton
             settingsButton
@@ -307,23 +307,24 @@ extension VideoPlayerView {
 
     @ViewBuilder
     var settingsButton: some View {
-        Button {
-            ViewStore(store.stateless).send(.showSettingsSidebar)
-        } label: {
-            Image(systemName: "gearshape.fill")
-                .foregroundColor(Color.white)
-                .font(.title3)
-        }
+        Image(systemName: "gearshape.fill")
+            .foregroundColor(Color.white)
+            .font(.title2)
+            .padding(4)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                ViewStore(store.stateless).send(.showSettingsSidebar)
+            }
+
     }
 
     @ViewBuilder
     var subtitlesButton: some View {
-        Button {
-        } label: {
-            Image(systemName: "captions.bubble.fill")
-                .foregroundColor(Color.white)
-                .font(.title3)
-        }
+        Image(systemName: "captions.bubble.fill")
+            .foregroundColor(Color.white)
+            .font(.title2)
+            .padding(4)
+            .contentShape(Rectangle())
     }
 
     @ViewBuilder
@@ -403,49 +404,60 @@ extension VideoPlayerView {
         WithViewStore(
             store.scope(state: \.selectedSidebar)
         ) { selectedSidebar in
-            if let selectedSidebar = selectedSidebar.state {
-                GeometryReader { proxy in
-                    VStack {
-                        HStack(alignment: .center) {
-                            Text("\(selectedSidebar.description)")
-                                .foregroundColor(Color.white)
-                                .font(.title2)
-                                .bold()
-                            Spacer()
-                            sidebarCloseButton
-                        }
+            Group {
+                if let selectedSidebar = selectedSidebar.state {
+                    GeometryReader { proxy in
+                        VStack {
+                            HStack(alignment: .center) {
+                                Text("\(selectedSidebar.description)")
+                                    .foregroundColor(Color.white)
+                                    .font(.title2)
+                                    .bold()
+                                Spacer()
+                                sidebarCloseButton
+                            }
 
-                        switch selectedSidebar {
-                        case .episodes:
-                            episodesSidebar
-                        case .settings:
-                            settingsSidebar
-                        default:
-                            EmptyView()
+                            switch selectedSidebar {
+                            case .episodes:
+                                episodesSidebar
+                            case .settings:
+                                settingsSidebar
+                            default:
+                                EmptyView()
+                            }
+                        }
+                        .padding([.horizontal, .top])
+                        .frame(maxWidth: .infinity)
+                        .background(
+                            BlurView(style: .systemThickMaterialDark)
+                        )
+                        .cornerRadius(proxy.size.height / 16)
+                    }
+                    .frame(
+                        maxWidth: .infinity,
+                        maxHeight: .infinity,
+                        alignment: .trailing
+                    )
+                    .padding(24)
+                    .ignoresSafeArea()
+                    .aspectRatio(8/9, contentMode: .fit)
+                    .frame(
+                        maxWidth: .infinity,
+                        maxHeight: .infinity,
+                        alignment: .trailing
+                    )
+                    .transition(.move(edge: .trailing).combined(with: .opacity))
+                }
+            }
+            .gesture(
+                DragGesture()
+                    .onEnded { value in
+                        // Drag right
+                        if value.startLocation.x < value.location.x {
+                            ViewStore(store.stateless).send(.closeSidebar)
                         }
                     }
-                    .padding([.horizontal, .top])
-                    .frame(maxWidth: .infinity)
-                    .background(
-                        BlurView(style: .systemThickMaterialDark)
-                    )
-                    .cornerRadius(proxy.size.height / 16)
-                }
-                .frame(
-                    maxWidth: .infinity,
-                    maxHeight: .infinity,
-                    alignment: .trailing
-                )
-                .padding(24)
-                .ignoresSafeArea()
-                .aspectRatio(8/9, contentMode: .fit)
-                .frame(
-                    maxWidth: .infinity,
-                    maxHeight: .infinity,
-                    alignment: .trailing
-                )
-                .transition(.move(edge: .trailing).combined(with: .opacity))
-            }
+            )
         }
     }
 
@@ -501,7 +513,7 @@ extension VideoPlayerView {
                             )
                             .onTapGesture {
                                 if viewStore.selectedEpisode != episode.id {
-                                    viewStore.send(.selectEpisode(episode.id))
+                                    viewStore.send(.selectEpisode(episode.id, saveProgress: true))
                                 }
                             }
                             .id(episode.id)
@@ -616,7 +628,7 @@ extension VideoPlayerView {
             return nil
         }
 
-        struct IdentifiedLanguage: Equatable, Identifiable, CustomStringConvertible {
+        struct IdentifiedAudio: Equatable, Identifiable, CustomStringConvertible {
             let id: Episode.Provider.ID
             let language: String
 
@@ -630,16 +642,16 @@ extension VideoPlayerView {
             }
         }
 
-        var selectableLanguages: IdentifiedArrayOf<IdentifiedLanguage>? {
+        var selectableAudio: IdentifiedArrayOf<IdentifiedAudio>? {
             if let providers = providers, let provider = provider {
                 let filtered = providers.filter { $0.description == provider.description }
-                return .init(uniqueElements: filtered.map(IdentifiedLanguage.init))
+                return .init(uniqueElements: filtered.map(IdentifiedAudio.init))
             }
             return nil
         }
 
-        var language: IdentifiedLanguage? {
-            if let provider = provider, let languages = selectableLanguages {
+        var audio: IdentifiedAudio? {
+            if let provider = provider, let languages = selectableAudio {
                 return languages[id: provider.id]
             }
             return nil
@@ -666,82 +678,84 @@ extension VideoPlayerView {
                 state: SettingsSidebarViewState.init
             )
         ) { viewState in
-            if viewState.isLoading {
-                VStack {
-                    ProgressView()
-                        .colorInvert()
-                        .brightness(1)
-                        .scaleEffect(1.25)
-                        .frame(width: 32, height: 32, alignment: .center)
+            Group {
+                if viewState.isLoading {
+                    VStack {
+                        ProgressView()
+                            .colorInvert()
+                            .brightness(1)
+                            .scaleEffect(1.25)
+                            .frame(width: 32, height: 32, alignment: .center)
 
-                    Text("Loading")
-                        .font(.body.bold())
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else {
-                ScrollView(
-                    .vertical,
-                    showsIndicators: false
-                ) {
-                    if let item = viewState.selectedSetting {
-                        switch item {
-                        case .provider:
-                            listsSettings(
-                                viewState.state.selectedProvider,
-                                viewState.selectableProviders
-                            ) { id in
-                                viewState.send(.selectProvider(id))
+                        Text("Loading")
+                            .font(.body.bold())
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    ScrollView(
+                        .vertical,
+                        showsIndicators: false
+                    ) {
+                        if let item = viewState.selectedSetting {
+                            switch item {
+                            case .provider:
+                                listsSettings(
+                                    viewState.state.selectedProvider,
+                                    viewState.selectableProviders
+                                ) { id in
+                                    viewState.send(.selectProvider(id, saveProgress: true))
+                                }
+                            case .quality:
+                                listsSettings(
+                                    viewState.state.selectedSource,
+                                    viewState.state.selectableQualities
+                                ) { id in
+                                    viewState.send(.selectSource(id, saveProgress: true))
+                                }
+                            case .language:
+                                listsSettings(
+                                    viewState.state.selectedProvider,
+                                    viewState.state.selectableAudio
+                                ) { id in
+                                    viewState.send(.selectProvider(id, saveProgress: true))
+                                }
                             }
-                        case .quality:
-                            listsSettings(
-                                viewState.state.selectedSource,
-                                viewState.state.selectableQualities
-                            ) { id in
-                                viewState.send(.selectSource(id))
-                            }
-                        case .language:
-                            listsSettings(
-                                viewState.state.selectedProvider,
-                                viewState.state.selectableLanguages
-                            ) { id in
-                                viewState.send(.selectProvider(id))
-                            }
-                        }
-                    } else {
-                        VStack(alignment: .leading) {
-                            createSettingsRow(
-                                "Provider",
-                                viewState.provider?.description ?? "Loading",
-                                viewState.selectableProviders.count
-                            ) {
-                                viewState.send(.sidebarSettingsSection(.provider))
-                            }
-                            
-                            createSettingsRow(
-                                "Quality",
-                                viewState.quality?.description ?? "Loading",
-                                viewState.selectableQualities?.count ?? 0
-                            ) {
-                                viewState.send(.sidebarSettingsSection(.quality))
-                            }
-                            
-                            createSettingsRow(
-                                "Language",
-                                viewState.language?.description ?? "Loading",
-                                viewState.selectableLanguages?.count ?? 0
-                            ) {
-                                viewState.send(.sidebarSettingsSection(.language))
+                        } else {
+                            VStack(alignment: .leading) {
+                                createSettingsRow(
+                                    "Provider",
+                                    viewState.provider?.description ?? "Loading",
+                                    viewState.selectableProviders.count
+                                ) {
+                                    viewState.send(.selectSidebarSettings(.provider))
+                                }
+
+                                createSettingsRow(
+                                    "Quality",
+                                    viewState.quality?.description ?? "Loading",
+                                    viewState.selectableQualities?.count ?? 0
+                                ) {
+                                    viewState.send(.selectSidebarSettings(.quality))
+                                }
+
+                                createSettingsRow(
+                                    "Audio",
+                                    viewState.audio?.description ?? "Loading",
+                                    viewState.selectableAudio?.count ?? 0
+                                ) {
+                                    viewState.send(.selectSidebarSettings(.language))
+                                }
                             }
                         }
                     }
                 }
             }
         }
+        .foregroundColor(Color.white)
         .frame(
             maxWidth: .infinity,
             maxHeight: .infinity
         )
-        .foregroundColor(Color.white)
     }
 
     @ViewBuilder
@@ -764,6 +778,24 @@ extension VideoPlayerView {
                         .cornerRadius(12)
                 }
             }
+            .transition(
+                .move(edge: .trailing)
+                .combined(with: .opacity)
+            )
+            .frame(
+                maxWidth: .infinity,
+                maxHeight: .infinity
+            )
+            .highPriorityGesture(
+                DragGesture()
+                    .onEnded { value in
+                        // Drag right
+                        if value.startLocation.x < value.location.x {
+                            ViewStore(store.stateless)
+                                .send(.selectSidebarSettings(nil))
+                        }
+                    }
+            )
         }
     }
 

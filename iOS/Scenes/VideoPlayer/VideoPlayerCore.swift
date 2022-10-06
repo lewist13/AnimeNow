@@ -84,9 +84,10 @@ enum VideoPlayerCore {
         case closeButtonTapped
         case closeSidebar
 
-        case selectEpisode(Episode.ID)
-        case selectProvider(Episode.Provider.ID?)
-        case selectSource(Source.ID?)
+        case selectEpisode(Episode.ID, saveProgress: Bool = false)
+        case selectProvider(Episode.Provider.ID?, saveProgress: Bool = false)
+        case selectSource(Source.ID?, saveProgress: Bool = false)
+        case selectSidebarSettings(Sidebar.SettingsState.Section?)
 
         // Internal Actions
 
@@ -314,10 +315,14 @@ extension VideoPlayerCore {
                     .receive(on: environment.mainQueue.animation(.easeInOut(duration: 0.25)))
                     .eraseToEffect()
 
-            case .selectEpisode(let episodeId):
+            case .selectEpisode(let episodeId, let saveProgress):
                 var effects = [Effect<Action, Never>]()
 
-                effects.append(.init(value: .saveEpisodeProgress(state.episode?.id)))
+                // Before selecting episode, save progress
+
+                if saveProgress {
+                    effects.append(.init(value: .saveEpisodeProgress(state.episode?.id)))
+                }
 
                 state.selectedEpisode = episodeId
 
@@ -329,11 +334,31 @@ extension VideoPlayerCore {
 
                 return .concatenate(effects)
 
-            case .selectProvider(let providerId):
-                state.selectedProvider = providerId
-                return .init(value: .fetchSources)
+            case .selectProvider(let providerId, let saveProgress):
+                var effects = [Effect<Action, Never>]()
 
-            case .selectSource(let sourceId):
+                // Before selecting provider, save progress
+
+                if saveProgress {
+                    effects.append(.init(value: .saveEpisodeProgress(state.episode?.id)))
+                }
+
+                state.selectedProvider = providerId
+
+                effects.append(.init(value: .player(.pushAction(.stop))))
+                effects.append(.init(value: .fetchSources))
+
+                return .concatenate(effects)
+
+            case .selectSource(let sourceId, let saveProgress):
+                var effects = [Effect<Action, Never>]()
+
+                // Before selecting source, save progress
+
+                if saveProgress {
+                    effects.append(.init(value: .saveEpisodeProgress(state.episode?.id)))
+                }
+
                 state.selectedSource = sourceId
 
                 guard let source = state.source else { break }
@@ -341,8 +366,18 @@ extension VideoPlayerCore {
                 let asset = AVAsset(url: source.url)
                 let item = AVPlayerItem(asset: asset)
 
-                return .init(value: .player(.pushAction(.start(media: item))))
-                    .receive(on: environment.mainQueue)
+                effects.append(.init(value: .player(.pushAction(.stop))))
+                effects.append(
+                    .init(value: .player(.pushAction(.start(media: item))))
+                        .receive(on: environment.mainQueue)
+                        .eraseToEffect()
+                )
+
+                return .concatenate(effects)
+
+            case .selectSidebarSettings(let section):
+                return .init(value: .sidebarSettingsSection(section))
+                    .receive(on: environment.mainQueue.animation(.easeInOut(duration: 0.25)))
                     .eraseToEffect()
 
             // Internal Actions
