@@ -15,7 +15,7 @@ struct SeekbarView: View {
     var preloaded: Double = 0.0
     var onEditingCallback: EditingChanged?
 
-    @State var sentEditingCallback = false
+    @State var isDragging = false
 
     let scaled = 1.25
 
@@ -38,11 +38,11 @@ struct SeekbarView: View {
             }
                 .frame(
                     width: reader.size.width,
-                    height: reader.size.height * (sentEditingCallback ? scaled : 1)
+                    height: reader.size.height * (isDragging ? scaled : 1)
                 )
                 .clipShape(Capsule())
                 .offset(
-                    y: sentEditingCallback ? -(reader.size.height/10 * scaled) : 0
+                    y: isDragging ? -(reader.size.height/10 * scaled) : 0
                 )
                 .contentShape(Rectangle())
                 .gesture(
@@ -50,9 +50,9 @@ struct SeekbarView: View {
                         minimumDistance: 0
                     )
                         .onChanged({ value in
-                            if !sentEditingCallback {
+                            if !isDragging {
+                                isDragging = true
                                 onEditingCallback?(true)
-                                sentEditingCallback = true
                             }
 
                             let locationX = value.location.x
@@ -60,14 +60,11 @@ struct SeekbarView: View {
                             progress = max(0, min(1.0, percentage))
                         })
                         .onEnded({ value in
-                            let locationX = value.location.x
-                            let percentage = locationX / reader.size.width
-                            progress = max(0, min(1.0, percentage))
                             onEditingCallback?(false)
-                            sentEditingCallback = false
+                            isDragging = false
                         })
                 )
-                .animation(.spring(response: 0.3), value: sentEditingCallback)
+                .animation(.spring(response: 0.3), value: isDragging)
         }
     }
 }

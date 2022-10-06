@@ -17,7 +17,7 @@ struct Source: Equatable, Identifiable {
         static func < (lhs: Source.Quality, rhs: Source.Quality) -> Bool {
             lhs.rawValue < rhs.rawValue
         }
-        
+
         case onefourtyfourp = 0 // 144p
         case twoseventyp        // 270p
         case foureightyp        // 480p

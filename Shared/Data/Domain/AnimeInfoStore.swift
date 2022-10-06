@@ -36,6 +36,7 @@ extension AnimeInfoStore {
         )
 
         episodeStoredInfo.progress = progress
+        episodeStoredInfo.lastUpdatedProgress = .init()
 
         episodesInfo.insertOrUpdate(episodeStoredInfo)
     }

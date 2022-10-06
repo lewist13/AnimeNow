@@ -17,7 +17,7 @@ struct Episode: Equatable, Identifiable {
 
     var providers = [Provider]()
 
-    enum Provider: Equatable, Identifiable {
+    enum Provider: Equatable, Identifiable, CustomStringConvertible {
         case gogoanime(id: String, dub: Bool)
         case zoro(id: String)
 
@@ -33,6 +33,15 @@ struct Episode: Equatable, Identifiable {
                 return dub
             }
             return nil
+        }
+
+        var description: String {
+            switch self {
+            case .gogoanime:
+                return "gogoanime"
+            case .zoro:
+                return "zoro"
+            }
         }
     }
 }
@@ -90,7 +99,7 @@ extension Episode {
             description: "An older and stronger Naruto returns from his two and a half years of training with Jiraiya. When he gets back he finds that many things have changed since he left. From Konohamaru becoming a Gennin and being under the supervision of Ebisu to Tsunade's, the Fifth Hokage, being added to the great stone faces. Now the tasks of starting things where they were left has begun. And what new danger does Jiraiya know about?",
             thumbnail: [.original(URL(string: "https://artworks.thetvdb.com/banners/episodes/79824/320623.jpg")!)],
             length: nil,
-            providers: [.gogoanime(id: "12345", dub: false)]
+            providers: [.gogoanime(id: "12345", dub: false), .gogoanime(id: "123456", dub: true)]
         ),
         .init(
             name: "Homecoming 2",

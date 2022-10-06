@@ -14,6 +14,14 @@ import AVFoundation
 import ComposableArchitecture
 
 struct AVPlayerCore {
+    enum PIPStatus: Equatable {
+        case willStart
+        case didStart
+        case willStop
+        case didStop
+        case restoreUI
+    }
+
     enum AVAction: Equatable {
         case initialize
         case play
@@ -28,7 +36,7 @@ struct AVPlayerCore {
     }
 
     struct State: Equatable {
-        var avAction: AVAction?
+        var action = [AVAction]()
 
         var status = AVPlayer.Status.unknown
         var playerItemStatus = AVPlayerItem.Status.unknown
@@ -36,10 +44,12 @@ struct AVPlayerCore {
         var currentTime = CMTime.zero
         var videoGravity = AVLayerVideoGravity.resizeAspect
         var duration: CMTime?
+        var pipStatus: PIPStatus = .restoreUI
     }
 
     enum Action: Equatable {
-        case avAction(AVAction?)
+        case pushAction(AVAction)
+        case dequeueAction
 
         case status(AVPlayer.Status)
         case playerItemStatus(AVPlayerItem.Status)
@@ -47,6 +57,7 @@ struct AVPlayerCore {
         case currentTime(CMTime)
         case videoGravity(AVLayerVideoGravity)
         case duration(CMTime?)
+        case pipStatus(PIPStatus)
     }
 }
 
@@ -63,10 +74,17 @@ extension AVPlayerCore {
             state.videoGravity = gravity
         case .duration(let duration):
             state.duration = duration
-        case .avAction(let action):
-            state.avAction = action
+        case .pushAction(let action):
+            state.action.append(action)
+        case .dequeueAction:
+            if !state.action.isEmpty {
+               _ = state.action.removeFirst()
+            }
+
         case .playerItemStatus(let status):
             state.playerItemStatus = status
+        case .pipStatus(let status):
+            state.pipStatus = status
         }
         return .none
     }
@@ -115,6 +133,7 @@ class PlayerViewController: UIViewController {
         super.init(nibName: nil, bundle: nil)
 
         view.layer.insertSublayer(playerLayer, at: 0)
+        player.automaticallyWaitsToMinimizeStalling = true
     }
 
     required init?(coder: NSCoder) {
@@ -129,8 +148,9 @@ class PlayerViewController: UIViewController {
     private func bindStore() {
         controller?.delegate = self
 
-        viewStore.publisher.avAction
-            .compactMap { $0 }
+        viewStore.publisher.action
+            .compactMap { $0.first }
+            .print()
             .sink { [weak self] action in
                 switch action {
                 case .initialize:
@@ -159,11 +179,17 @@ class PlayerViewController: UIViewController {
                 case .videoGravity(let gravity):
                     self?.playerLayer.videoGravity = gravity
                 }
+
+                self?.viewStore.send(.dequeueAction)
             }
             .store(in: &cancellables)
 
         observePlayer()
         observePiP()
+    }
+
+    private func handleAVAction(_ action: AVPlayerCore.AVAction?) {
+        
     }
 
     private func observePlayer() {
@@ -248,6 +274,7 @@ class PlayerViewController: UIViewController {
         playerItem.publisher(
             for: \.status
         )
+        .removeDuplicates()
         .sink { [weak self] status in
             self?.viewStore.send(.playerItemStatus(status))
         }
@@ -261,21 +288,25 @@ class PlayerViewController: UIViewController {
 }
 
 extension PlayerViewController: AVPictureInPictureControllerDelegate {
-    func pictureInPictureControllerWillStartPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
-        print("PIP Starting")
+    public func pictureInPictureControllerWillStartPictureInPicture(_: AVPictureInPictureController) {
+        viewStore.send(.pipStatus(.willStart))
     }
 
-    func pictureInPictureControllerWillStopPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
-        print("PIP Ending")
+    public func pictureInPictureControllerDidStartPictureInPicture(_: AVPictureInPictureController) {
+        viewStore.send(.pipStatus(.didStart))
     }
 
-    func pictureInPictureController(_ pictureInPictureController: AVPictureInPictureController, restoreUserInterfaceForPictureInPictureStopWithCompletionHandler completionHandler: @escaping (Bool) -> Void) {
-        print("PIP restore user interface")
+    public func pictureInPictureControllerWillStopPictureInPicture(_: AVPictureInPictureController) {
+        viewStore.send(.pipStatus(.willStop))
+    }
+
+    public func pictureInPictureControllerDidStopPictureInPicture(_: AVPictureInPictureController) {
+        viewStore.send(.pipStatus(.didStop))
+    }
+
+    public func pictureInPictureController(_: AVPictureInPictureController, restoreUserInterfaceForPictureInPictureStopWithCompletionHandler completionHandler: @escaping (Bool) -> Void) {
+        viewStore.send(.pipStatus(.restoreUI))
         completionHandler(true)
-    }
-
-    func pictureInPictureController(_ pictureInPictureController: AVPictureInPictureController, failedToStartPictureInPictureWithError error: Error) {
-        print("PIP Error starting PIP")
     }
 }
 

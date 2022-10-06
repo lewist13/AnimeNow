@@ -12,23 +12,30 @@ import AVFoundation
 import SwiftUI
 
 enum VideoPlayerCore {
-    enum Sidebar: CustomStringConvertible {
+    enum Sidebar: Equatable, CustomStringConvertible {
         case episodes
-        case providers
-        case sources
+        case settings(SettingsState)
         case subtitles
 
         var description: String {
             switch self {
             case .episodes:
                 return "Episodes"
-            case .providers:
-                return "Providers"
-            case .sources:
-                return "Sources"
+            case .settings:
+                return "Settings"
             case .subtitles:
                 return "Subtitles"
             }
+        }
+
+        struct SettingsState: Equatable {
+            enum Section: Equatable {
+                case provider
+                case quality
+                case language
+            }
+
+            var selectedSection: Section?
         }
     }
 
@@ -73,6 +80,7 @@ enum VideoPlayerCore {
         case onAppear
         case playerTapped
         case showEpisodesSidebar
+        case showSettingsSidebar
         case closeButtonTapped
         case closeSidebar
 
@@ -96,10 +104,14 @@ enum VideoPlayerCore {
         case fetchSources
         case fetchedSources(Result<[Source], EquatableError>)
 
+        // Sidebar Actions
+
+        case sidebarSettingsSection(Sidebar.SettingsState.Section?)
+
         // Player Actions
 
-        case backwardsTapped
-        case forwardTapped
+        case backwardsDoubleTapped
+        case forwardDoubleTapped
         case replayTapped
         case togglePlayback
         case startSeeking
@@ -176,6 +188,7 @@ extension VideoPlayerCore.State {
 extension VideoPlayerCore.State {
     var progress: Double {
         guard let duration = duration, duration > 0 else { return 0 }
+        guard 0 <= player.currentTime.seconds && player.currentTime.seconds <= duration else { return 0 }
         return player.currentTime.seconds / duration
     }
 
@@ -280,12 +293,17 @@ extension VideoPlayerCore {
                     .receive(on: environment.mainQueue.animation(.easeInOut(duration: 0.25)))
                     .eraseToEffect()
 
+            case .showSettingsSidebar:
+                return .init(value: .setSidebar(.settings(.init())))
+                    .receive(on: environment.mainQueue.animation(.easeInOut(duration: 0.25)))
+                    .eraseToEffect()
+
             case .closeButtonTapped:
                 return .concatenate(
+                    .init(value: .saveEpisodeProgress(state.episode?.id)),
                     .cancel(id: FetchSourcesCancellable()),
                     .cancel(id: FetchEpisodesCancellable()),
-                    .init(value: .saveEpisodeProgress(state.episode?.id)),
-                    .init(value: .player(.avAction(.terminate))),
+                    .init(value: .player(.pushAction(.terminate))),
                     .init(value: .close)
                         .delay(for: 0.25, scheduler: environment.mainQueue)
                         .eraseToEffect()
@@ -302,13 +320,14 @@ extension VideoPlayerCore {
                 effects.append(.init(value: .saveEpisodeProgress(state.episode?.id)))
 
                 state.selectedEpisode = episodeId
+
                 // TODO: Add user defaults for preferred provider or fallback to first
                 let provider = state.episode?.providers.first?.id
 
-                effects.append(.init(value: .player(.avAction(.stop))))
+                effects.append(.init(value: .player(.pushAction(.stop))))
                 effects.append(.init(value: .selectProvider(provider)))
 
-                return .merge(effects)
+                return .concatenate(effects)
 
             case .selectProvider(let providerId):
                 state.selectedProvider = providerId
@@ -322,7 +341,7 @@ extension VideoPlayerCore {
                 let asset = AVAsset(url: source.url)
                 let item = AVPlayerItem(asset: asset)
 
-                return .init(value: .player(.avAction(.start(media: item))))
+                return .init(value: .player(.pushAction(.start(media: item))))
                     .receive(on: environment.mainQueue)
                     .eraseToEffect()
 
@@ -330,8 +349,8 @@ extension VideoPlayerCore {
 
             case .initializeFirstTime:
                 state.hasInitialized = true
-                return .concatenate(
-                    .init(value: .player(.avAction(.initialize))),
+                return .merge(
+                    .init(value: .player(.pushAction(.initialize))),
                     .init(value: .fetchEpisodes)
                 )
 
@@ -375,6 +394,13 @@ extension VideoPlayerCore {
                         .init(value: .cancelHideOverlayAnimationDelay),
                         .init(value: .showPlayerOverlay(false))
                     )
+                }
+
+            // Section actions
+
+            case .sidebarSettingsSection(let section):
+                if case .settings(var value) = state.selectedSidebar {
+                    state.selectedSidebar = .settings(.init(selectedSection: section))
                 }
 
             // Fetch Anime Info Store
@@ -439,40 +465,52 @@ extension VideoPlayerCore {
 
             // Video Player Actions
 
-            case .backwardsTapped:
-                break
+            case .backwardsDoubleTapped:
+                let requestedTime = max(state.player.currentTime.seconds - 15, 0)
 
-            case .forwardTapped:
-                break
+                let time = CMTime(seconds: requestedTime, preferredTimescale: 1)
+
+                return .concatenate(
+                    .init(value: .player(.currentTime(time))),
+                    .init(value: .player(.pushAction(.seek(to: time))))
+                )
+
+            case .forwardDoubleTapped:
+                let requestedTime = min(state.player.currentTime.seconds + 15, state.player.duration?.seconds ?? 0)
+
+                let time = CMTime(seconds: requestedTime, preferredTimescale: 1)
+
+                return .concatenate(
+                    .init(value: .player(.currentTime(time))),
+                    .init(value: .player(.pushAction(.seek(to: time))))
+                )
 
             // Internal Video Player Logic
 
             case .replayTapped:
-                return .init(value: .player(.avAction(.replay)))
+                return .init(value: .player(.pushAction(.replay)))
 
             case .togglePlayback:
                 if state.status == .playing {
-                    return .init(value: .player(.avAction(.pause)))
+                    return .init(value: .player(.pushAction(.pause)))
                 } else {
-                    return .init(value: .player(.avAction(.play)))
+                    return .init(value: .player(.pushAction(.play)))
                 }
 
             case .startSeeking:
                 return .merge(
-                    .init(value: .player(.avAction(.pause))),
+                    .init(value: .player(.pushAction(.pause))),
                     .init(value: .cancelHideOverlayAnimationDelay)
                 )
 
             case .stopSeeking:
                 return .concatenate(
                     .init(
-                        value: .player(.avAction(.seek(to: state.player.currentTime)))
+                        value: .player(.pushAction(.seek(to: state.player.currentTime)))
                     ),
                     .init(
-                        value: .player(.avAction(.play))
+                        value: .player(.pushAction(.play))
                     )
-                    .delay(for: 0.5, scheduler: environment.mainQueue)
-                    .eraseToEffect()
                 )
 
             case .seeking(to: let to):
@@ -485,7 +523,34 @@ extension VideoPlayerCore {
                 return .init(value: .player(.currentTime(item)))
 
             case .player(.playerItemStatus(.readyToPlay)):
-                return .init(value: .player(.avAction(.play)))
+                let progress: Double
+
+                if let duration = state.duration,
+                   let episode = state.episode,
+                   let animeInfo = state.savedAnimeInfo.value,
+                   let savedEpisodeProgress = animeInfo.episodesInfo.first(where: { $0.number ==  episode.number }),
+                   !savedEpisodeProgress.finishedWatching {
+                    progress = savedEpisodeProgress.progress * duration
+                } else {
+                    progress = 0.0
+                }
+
+                let item = CMTime(
+                    seconds: progress,
+                    preferredTimescale: 1
+                )
+
+                return .concatenate(
+                    .init(
+                        value: .player(.currentTime(item))
+                    ),
+                    .init(
+                        value: .player(.pushAction(.seek(to: item)))
+                    ),
+                    .init(
+                        value: .player(.pushAction(.play))
+                    )
+                )
 
             case .player(.timeStatus(.playing, nil)):
                 if state.showPlayerOverlay {
@@ -503,6 +568,6 @@ extension VideoPlayerCore {
 
             return .none
         }
-            .debugActions()
+            .debugActions("tca", actionFormat: .labelsOnly, environment: { _ in DebugEnvironment() })
     )
 }
