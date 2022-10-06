@@ -67,7 +67,6 @@ struct ThumbnailItemBigView: View {
                             endPoint: .bottom
                         )
                     )
-                    .clipped()
 
                 VStack(alignment: .leading, spacing: 0) {
                     Text(type.name)
@@ -83,7 +82,10 @@ struct ThumbnailItemBigView: View {
                     }
 
                     if let progress = type.progress, !watched {
-                        SeekbarView(progress: .constant(progress))
+                        SeekbarView(
+                            progress: .constant(progress),
+                            padding: 0
+                        )
                             .disabled(true)
                             .frame(height: 10)
                     }
@@ -98,13 +100,18 @@ struct ThumbnailItemBigView: View {
                         .padding(12)
                         .background(BlurView(style: .systemUltraThinMaterialDark))
                         .clipShape(Capsule())
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+                        .frame(
+                            maxWidth: .infinity,
+                            maxHeight: .infinity,
+                            alignment: .topTrailing
+                        )
                         .padding()
                 }
             }
         }
         .aspectRatio(16/9, contentMode: .fill)
         .cornerRadius(16)
+        .clipped()
     }
 }
 
@@ -128,7 +135,7 @@ struct EpisodeItemBigView_Previews: PreviewProvider {
                 progress: 0.5
             )
         )
-         .frame(width: 400)
+         .frame(width: 300)
         .frame(height: 0)
     }
 }

@@ -15,7 +15,7 @@
 		1312FD5A28DD4B52004A415F /* ThumbnailItemCompactView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1312FD5928DD4B52004A415F /* ThumbnailItemCompactView.swift */; };
 		1312FD5C28DD4BEA004A415F /* ThumbnailItemBigView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1312FD5B28DD4BEA004A415F /* ThumbnailItemBigView.swift */; };
 		1312FD6028DD6934004A415F /* SeekbarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1312FD5F28DD6934004A415F /* SeekbarView.swift */; };
-		1312FD6228DD7CB0004A415F /* AirplayRouterPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1312FD6128DD7CB0004A415F /* AirplayRouterPickerView.swift */; };
+		1312FD6228DD7CB0004A415F /* AirplayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1312FD6128DD7CB0004A415F /* AirplayView.swift */; };
 		1318EEE628D5374C00EB85FA /* AVKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1318EEE528D5374B00EB85FA /* AVKit.framework */; };
 		1318EEE828D5375100EB85FA /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1318EEE728D5375100EB85FA /* AVFoundation.framework */; };
 		1324366728E7B40300F282EE /* Sequence+Keypath.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1324366628E7B40300F282EE /* Sequence+Keypath.swift */; };
@@ -152,7 +152,7 @@
 		1312FD5928DD4B52004A415F /* ThumbnailItemCompactView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThumbnailItemCompactView.swift; sourceTree = "<group>"; };
 		1312FD5B28DD4BEA004A415F /* ThumbnailItemBigView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThumbnailItemBigView.swift; sourceTree = "<group>"; };
 		1312FD5F28DD6934004A415F /* SeekbarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeekbarView.swift; sourceTree = "<group>"; };
-		1312FD6128DD7CB0004A415F /* AirplayRouterPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AirplayRouterPickerView.swift; sourceTree = "<group>"; };
+		1312FD6128DD7CB0004A415F /* AirplayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AirplayView.swift; sourceTree = "<group>"; };
 		1318EEE528D5374B00EB85FA /* AVKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.5.sdk/System/Library/Frameworks/AVKit.framework; sourceTree = DEVELOPER_DIR; };
 		1318EEE728D5375100EB85FA /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.5.sdk/System/Library/Frameworks/AVFoundation.framework; sourceTree = DEVELOPER_DIR; };
 		1324366628E7B40300F282EE /* Sequence+Keypath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sequence+Keypath.swift"; sourceTree = "<group>"; };
@@ -282,7 +282,7 @@
 				1364BA7928E12BBC005BAEBA /* TabBar.swift */,
 				1309D6C228E22BB500CC9036 /* View+Redacted.swift */,
 				138066EB28C5699F0012DAFB /* AnimeItemView.swift */,
-				1312FD6128DD7CB0004A415F /* AirplayRouterPickerView.swift */,
+				1312FD6128DD7CB0004A415F /* AirplayView.swift */,
 				1327553228D2C16C00A6C525 /* AVPlayerView.swift */,
 				13386AF028CC3239005E8352 /* BlurView.swift */,
 				132754FB28D2883500A6C525 /* CompressableText.swift */,
@@ -751,7 +751,7 @@
 				13650F3328CFE0BF002E20DD /* AnimeClient.swift in Sources */,
 				13D235C628E16F32004E51BB /* ComposableArchitecture+Binding.swift in Sources */,
 				13650F3628D014B1002E20DD /* AnimeClient+Live.swift in Sources */,
-				1312FD6228DD7CB0004A415F /* AirplayRouterPickerView.swift in Sources */,
+				1312FD6228DD7CB0004A415F /* AirplayView.swift in Sources */,
 				13E465F628E62508001FF309 /* EnimeAPI.swift in Sources */,
 				138066F328C572B50012DAFB /* SearchCore.swift in Sources */,
 				13E4BCF128C829A80039D880 /* AnimeDetailCore.swift in Sources */,

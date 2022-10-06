@@ -162,26 +162,33 @@ extension VideoPlayerView {
                 state: \.showPlayerOverlay
             )
         ) { showPlayerOverlay in
-            if showPlayerOverlay.state {
-                GeometryReader { proxy in
-                    VStack(spacing: 0) {
+            GeometryReader { proxy in
+                VStack(spacing: 0) {
+                    if showPlayerOverlay.state {
                         topPlayerItems
-                        Spacer()
-                        videoInfoWithActions
-                        bottomPlayerItems
                     }
-                    .frame(
-                        maxWidth: .infinity,
-                        maxHeight: .infinity
-                    )
-                    .padding(safeAreaInsetPadding(proxy))
-                    .ignoresSafeArea()
-                    .background(
-                        Color.black.opacity(0.5)
-                            .ignoresSafeArea()
-                            .allowsHitTesting(false)
-                    )
+                    Spacer()
+                    showNextEpisodeButton
+                    if showPlayerOverlay.state {
+                        VStack(spacing: 0) {
+                            videoInfoWithActions
+                            bottomPlayerItems
+                        }
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                    }
                 }
+                .frame(
+                    maxWidth: .infinity,
+                    maxHeight: .infinity
+                )
+                .padding(safeAreaInsetPadding(proxy))
+                .ignoresSafeArea()
+                .background(
+                    Color.black.opacity(0.5)
+                        .ignoresSafeArea()
+                        .allowsHitTesting(false)
+                        .opacity(showPlayerOverlay.state ? 1 : 0)
+                )
             }
         }
     }
@@ -197,6 +204,55 @@ extension VideoPlayerView {
     }
 }
 
+extension VideoPlayerView {
+    struct NextEpisodeViewState: Equatable {
+        let canShowButton: Bool
+        let nextEpisode: Episode?
+
+        init(_ state: VideoPlayerCore.State) {
+            self.canShowButton = state.progress >= 0.9 && state.nextEpisode != nil && state.selectedSidebar == nil
+            self.nextEpisode = state.nextEpisode
+        }
+    }
+
+    @ViewBuilder
+    var showNextEpisodeButton: some View {
+        WithViewStore(
+            store.scope(
+                state: NextEpisodeViewState.init
+            )
+        ) { viewState in
+            Group {
+                if viewState.canShowButton,
+                   let nextEpisode = viewState.state.nextEpisode {
+                    HStack {
+                        Image(systemName: "play.fill")
+                        Text("Next Episode")
+                    }
+                    .font(.system(size: 13).weight(.heavy))
+                    .padding(10)
+                    .foregroundColor(Color.black)
+                    .background(Color.white)
+                    .cornerRadius(12)
+                    .shadow(color: Color.gray.opacity(0.25), radius: 10)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        viewState.send(.selectEpisode(nextEpisode.id))
+                    }
+                }
+            }
+            .frame(
+                maxWidth: .infinity,
+                alignment: .trailing
+            )
+            .transition(.move(edge: .trailing).combined(with: .opacity))
+            .animation(
+                .easeInOut(duration: 0.5),
+                value: viewState.canShowButton
+            )
+        }
+    }
+}
 // MARK: Top Player Items
 
 extension VideoPlayerView {
@@ -205,8 +261,8 @@ extension VideoPlayerView {
         HStack {
             closeButton
         }
-            .transition(.move(edge: .top))
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
+        .transition(.move(edge: .top).combined(with: .opacity))
     }
 
     @ViewBuilder
@@ -250,7 +306,7 @@ extension VideoPlayerView {
         let isMovie: Bool
 
         init(_ state: VideoPlayerCore.State) {
-            self.title = state.anime.format == .movie ? state.anime.title : (state.episode?.name ?? "Untitled")
+            self.title = state.anime.format == .movie ? state.anime.title : (state.episode?.name ?? "Loading...")
             self.header = state.anime.format == .tv ? "E\(state.selectedEpisode) \u{2022} \(state.anime.title)" : nil
             self.isMovie = state.anime.format == .movie
         }
@@ -300,7 +356,7 @@ extension VideoPlayerView {
     var playerOptionsButton: some View {
         HStack(spacing: 8) {
             airplayButton
-            subtitlesButton
+//            subtitlesButton
             settingsButton
         }
     }
@@ -315,7 +371,6 @@ extension VideoPlayerView {
             .onTapGesture {
                 ViewStore(store.stateless).send(.showSettingsSidebar)
             }
-
     }
 
     @ViewBuilder
@@ -329,7 +384,7 @@ extension VideoPlayerView {
 
     @ViewBuilder
     var airplayButton: some View {
-        AirplayRouterPickerView()
+        AirplayView()
             .fixedSize()
     }
 }
@@ -340,6 +395,7 @@ extension VideoPlayerView {
     private struct ProgressViewState: Equatable {
         let progress: Double
         let duration: Double?
+        let ready: Bool
 
         var progressWithDuration: Double? {
             if let duration = duration {
@@ -351,6 +407,7 @@ extension VideoPlayerView {
         init(_ state: VideoPlayerCore.State) {
             self.progress = state.progress
             self.duration = state.duration
+            self.ready = state.player.playerItemStatus == .readyToPlay
         }
     }
 
@@ -361,7 +418,7 @@ extension VideoPlayerView {
                 state: ProgressViewState.init
             )
         ) { progressViewState in
-            VStack {
+            VStack(spacing: 0) {
                 SeekbarView(
                     progress: .init(
                         get: {
@@ -371,12 +428,12 @@ extension VideoPlayerView {
                             progressViewState.send(.seeking(to: progress))
                         }
                     ),
-                    preloaded: 0.0
-                ) { isEditing in
-                    progressViewState.send(isEditing ? .startSeeking : .stopSeeking)
+                    padding: 6
+                ) {
+                    progressViewState.send($0 ? .startSeeking : .stopSeeking)
                 }
-                .frame(height: 12)
-                .padding(.top, 8)
+                .frame(height: 24)
+                .disabled(progressViewState.state.duration == nil)
 
                 HStack(spacing: 4) {
                     Text(
@@ -391,7 +448,7 @@ extension VideoPlayerView {
                 .foregroundColor(.white)
                 .font(.footnote.bold().monospacedDigit())
             }
-            .disabled(progressViewState.duration == nil)
+            .disabled(progressViewState.duration == nil || !progressViewState.ready)
         }
     }
 }
@@ -513,7 +570,7 @@ extension VideoPlayerView {
                             )
                             .onTapGesture {
                                 if viewStore.selectedEpisode != episode.id {
-                                    viewStore.send(.selectEpisode(episode.id, saveProgress: true))
+                                    viewStore.send(.selectEpisode(episode.id))
                                 }
                             }
                             .id(episode.id)
@@ -703,21 +760,21 @@ extension VideoPlayerView {
                                     viewState.state.selectedProvider,
                                     viewState.selectableProviders
                                 ) { id in
-                                    viewState.send(.selectProvider(id, saveProgress: true))
+                                    viewState.send(.selectProvider(id))
                                 }
                             case .quality:
                                 listsSettings(
                                     viewState.state.selectedSource,
                                     viewState.state.selectableQualities
                                 ) { id in
-                                    viewState.send(.selectSource(id, saveProgress: true))
+                                    viewState.send(.selectSource(id))
                                 }
                             case .language:
                                 listsSettings(
                                     viewState.state.selectedProvider,
                                     viewState.state.selectableAudio
                                 ) { id in
-                                    viewState.send(.selectProvider(id, saveProgress: true))
+                                    viewState.send(.selectProvider(id))
                                 }
                             }
                         } else {

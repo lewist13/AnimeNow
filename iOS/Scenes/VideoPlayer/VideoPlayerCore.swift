@@ -84,9 +84,9 @@ enum VideoPlayerCore {
         case closeButtonTapped
         case closeSidebar
 
-        case selectEpisode(Episode.ID, saveProgress: Bool = false)
-        case selectProvider(Episode.Provider.ID?, saveProgress: Bool = false)
-        case selectSource(Source.ID?, saveProgress: Bool = false)
+        case selectEpisode(Episode.ID, saveProgress: Bool = true)
+        case selectProvider(Episode.Provider.ID?, saveProgress: Bool = true)
+        case selectSource(Source.ID?, saveProgress: Bool = true)
         case selectSidebarSettings(Sidebar.SettingsState.Section?)
 
         // Internal Actions
@@ -223,6 +223,17 @@ extension VideoPlayerCore.State {
         }
         return nil
     }
+
+    var nextEpisode: Episode? {
+        if let episode = episode,
+           let episodes = episodes.value,
+           let index = episodes.index(id: episode.id),
+           (index + 1) < episodes.count {
+            return episodes[index + 1]
+
+        }
+        return nil
+    }
 }
 
 extension VideoPlayerCore {
@@ -239,7 +250,7 @@ extension VideoPlayerCore {
             struct AnimeInfoStoreObservableCancellable: Hashable {}
 
             let overlayVisibilityAnimation = Animation.easeInOut(
-                duration: 0.5
+                duration: 0.3
             )
 
             switch action {
@@ -272,7 +283,9 @@ extension VideoPlayerCore {
 
                 var effects: [Effect<Action, Never>] = [
                     .init(value: .showPlayerOverlay(showingOverlay))
-                        .receive(on: environment.mainQueue.animation(overlayVisibilityAnimation))
+                        .receive(
+                            on: environment.mainQueue.animation(overlayVisibilityAnimation)
+                        )
                         .eraseToEffect()
                 ]
 
@@ -291,12 +304,12 @@ extension VideoPlayerCore {
 
             case .showEpisodesSidebar:
                 return .init(value: .setSidebar(.episodes))
-                    .receive(on: environment.mainQueue.animation(.easeInOut(duration: 0.25)))
+                    .receive(on: environment.mainQueue.animation(.easeInOut(duration: 0.35)))
                     .eraseToEffect()
 
             case .showSettingsSidebar:
                 return .init(value: .setSidebar(.settings(.init())))
-                    .receive(on: environment.mainQueue.animation(.easeInOut(duration: 0.25)))
+                    .receive(on: environment.mainQueue.animation(.easeInOut(duration: 0.35)))
                     .eraseToEffect()
 
             case .closeButtonTapped:
@@ -330,7 +343,7 @@ extension VideoPlayerCore {
                 let provider = state.episode?.providers.first?.id
 
                 effects.append(.init(value: .player(.pushAction(.stop))))
-                effects.append(.init(value: .selectProvider(provider)))
+                effects.append(.init(value: .selectProvider(provider, saveProgress: false)))
 
                 return .concatenate(effects)
 
@@ -396,8 +409,7 @@ extension VideoPlayerCore {
                 return .init(value: .showPlayerOverlay(false))
                     .delay(
                         for: 5,
-                        scheduler:  environment.mainQueue
-                            .animation(overlayVisibilityAnimation)
+                        scheduler:  environment.mainQueue.animation(overlayVisibilityAnimation)
                     )
                     .eraseToEffect()
                     .cancellable(id: HidePlayerOverlayDelayCancellable())
@@ -458,7 +470,7 @@ extension VideoPlayerCore {
             case .fetchEpisodes:
                 guard !state.episodes.hasInitialized else {
                     if state.episode != nil {
-                        return .init(value: .selectEpisode(state.selectedEpisode))
+                        return .init(value: .selectEpisode(state.selectedEpisode, saveProgress: false))
                     }
                     break
                 }
@@ -471,7 +483,7 @@ extension VideoPlayerCore {
 
             case .fetchedEpisodes(.success(let episodes)):
                 state.episodes = .success(.init(uniqueElements: episodes))
-                return .init(value: .selectEpisode(state.selectedEpisode))
+                return .init(value: .selectEpisode(state.selectedEpisode, saveProgress: false))
 
             case .fetchedEpisodes(.failure):
                 state.episodes = .failed
@@ -492,7 +504,7 @@ extension VideoPlayerCore {
                 let sources = sources.sorted(by: \.quality).reversed()
                 state.sources = .success(.init(uniqueElements: sources))
                 // TODO: Set quality based on user defaults or the first one based on the one received
-                return .init(value: .selectSource(sources.first?.id))
+                return .init(value: .selectSource(sources.first?.id, saveProgress: false))
 
             case .fetchedSources(.failure):
                 state.sources = .failed

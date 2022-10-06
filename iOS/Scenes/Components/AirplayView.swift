@@ -1,5 +1,5 @@
 //
-//  AirplayRouterPickerView.swift
+//  AirplayView.swift
 //  Anime Now! (iOS)
 //
 //  Created by Erik Bautista on 9/23/22.
@@ -9,7 +9,7 @@ import SwiftUI
 import Foundation
 import AVKit
 
-struct AirplayRouterPickerView: UIViewRepresentable {
+struct AirplayView: UIViewRepresentable {
     func makeCoordinator() -> Coordinator {
         Coordinator()
     }

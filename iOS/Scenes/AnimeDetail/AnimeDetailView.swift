@@ -201,10 +201,6 @@ extension AnimeDetailView {
         ) { anime in
             VStack(alignment: .leading, spacing: 12) {
 
-                // MARK: Summary Header
-
-//                buildSubHeading(title: "Summary")
-
                 // MARK: Description Info
 
                 Text(anime.description)

@@ -12,59 +12,57 @@ struct SeekbarView: View {
     typealias EditingChanged = (Bool) -> Void
 
     @Binding var progress: Double
-    var preloaded: Double = 0.0
+    var padding: Double = 8
     var onEditingCallback: EditingChanged?
 
     @State var isDragging = false
 
-    let scaled = 1.25
-
     var body: some View {
         GeometryReader { reader in
-            ZStack(alignment: .leading) {
-                // Background
-                BlurView(style: .systemThinMaterialDark)
+            let scaled = padding / 2
 
-                // Preloaded
-                Color.gray
-                    .frame(width: preloaded * reader.size.width)
+            ZStack {
+                ZStack(alignment: .leading) {
+                    // Background
 
-                // Progress
-                Color.white
-                    .frame(
-                        width: progress * reader.size.width,
-                        alignment: .leading
-                    )
-            }
+                    BlurView(style: .systemThinMaterialDark)
+
+                    // Progress
+
+                    Color.white
+                        .frame(
+                            width: progress * reader.size.width,
+                            alignment: .leading
+                        )
+                }
                 .frame(
                     width: reader.size.width,
-                    height: reader.size.height * (isDragging ? scaled : 1)
+                    height: reader.size.height - padding * 2 + (isDragging ? scaled : 0)
                 )
                 .clipShape(Capsule())
-                .offset(
-                    y: isDragging ? -(reader.size.height/10 * scaled) : 0
+            }
+            .frame(width: reader.size.width, height: reader.size.height)
+            .contentShape(Rectangle())
+            .gesture(
+                DragGesture(
+                    minimumDistance: 0
                 )
-                .contentShape(Rectangle())
-                .gesture(
-                    DragGesture(
-                        minimumDistance: 0
-                    )
-                        .onChanged({ value in
-                            if !isDragging {
-                                isDragging = true
-                                onEditingCallback?(true)
-                            }
-
-                            let locationX = value.location.x
-                            let percentage = locationX / reader.size.width
-                            progress = max(0, min(1.0, percentage))
-                        })
-                        .onEnded({ value in
-                            onEditingCallback?(false)
-                            isDragging = false
-                        })
-                )
-                .animation(.spring(response: 0.3), value: isDragging)
+                .onChanged({ value in
+                    if !isDragging {
+                        isDragging = true
+                        onEditingCallback?(true)
+                    }
+                    
+                    let locationX = value.location.x
+                    let percentage = locationX / reader.size.width
+                    progress = max(0, min(1.0, percentage))
+                })
+                .onEnded({ value in
+                    onEditingCallback?(false)
+                    isDragging = false
+                })
+            )
+            .animation(.spring(response: 0.3), value: isDragging)
         }
     }
 }
@@ -74,12 +72,13 @@ struct SeekbarView_Previews: PreviewProvider {
         @State var progress = 0.25
 
         var body: some View {
-            SeekbarView(progress: $progress, preloaded: 0.0)
+            SeekbarView(progress: $progress)
         }
     }
 
     static var previews: some View {
         BindingProvider()
-            .frame(width: 300, height: 10)
+            .frame(width: 300, height: 28)
+            .preferredColorScheme(.dark)
     }
 }
