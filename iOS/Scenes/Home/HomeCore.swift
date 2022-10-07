@@ -28,7 +28,7 @@ enum HomeCore {
         case animeTapped(Anime)
         case resumeWatchingTapped(EpisodeInfoWithAnime)
         case fetchedAnime(keyPath: WritableKeyPath<State, LoadableAnime>, result: Result<[Anime], EquatableError>)
-        case fetchedAnimesInDB([AnimeInfoStore])
+        case fetchedAnimesInDB([AnimeStore])
         case fetchResumeWatchingAnimes([EpisodeInfoWithAnimeId])
         case fetchedAnimeForResumeWatching(Result<[EpisodeInfoWithAnime], EquatableError>)
         case binding(BindingAction<HomeCore.State>)
@@ -159,12 +159,12 @@ extension HomeCore {
 extension HomeCore {
     struct EpisodeInfoWithAnimeId: Equatable {
         let animeId: Anime.ID
-        let episodeInfo: EpisodeInfoStore
+        let episodeInfo: EpisodeStore
     }
 
     struct EpisodeInfoWithAnime: Identifiable, Hashable {
         var id: Anime.ID { anime.id }
         let anime: Anime
-        let episodeInfo: EpisodeInfoStore
+        let episodeInfo: EpisodeStore
     }
 }

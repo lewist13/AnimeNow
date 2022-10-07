@@ -160,7 +160,7 @@ extension AnimeDetailView {
 
                         WithViewStore(
                             store.scope(
-                                state: \.animeInfo.value?.isFavorite
+                                state: \.animeStore.value?.isFavorite
                             )
                         ) { isFavoriteViewStore in
                             Button {
@@ -286,8 +286,8 @@ extension AnimeDetailView {
     ) -> some View {
         WithViewStore(
             store.scope(
-                state: { state -> EpisodeInfoStore? in
-                    return state.animeInfo.value?.episodesInfo.first(where: {
+                state: { state -> EpisodeStore? in
+                    return state.animeStore.value?.episodeStores.first(where: {
                         $0.number == episode.number
                     })
                 }
@@ -380,11 +380,11 @@ struct AnimeView_Previews: PreviewProvider {
                 initialState: .init(
                     anime: .narutoShippuden,
                     episodes: .success(.init(uniqueElements: Episode.demoEpisodes)),
-                    animeInfo: .success(
+                    animeStore: .success(
                         .init(
                             id: 0,
                             isFavorite: false,
-                            episodesInfo: .init()
+                            episodeStores: .init()
                         )
                     )
                 ),

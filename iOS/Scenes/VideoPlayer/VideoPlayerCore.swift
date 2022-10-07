@@ -44,7 +44,7 @@ enum VideoPlayerCore {
 
         var episodes = LoadableState<IdentifiedArrayOf<Episode>>.idle
         var sources = LoadableState<IdentifiedArrayOf<Source>>.idle
-        var savedAnimeInfo = LoadableState<AnimeInfoStore>.idle
+        var animeStore = LoadableState<AnimeStore>.idle
 
         var selectedEpisode: Episode.ID
         var selectedProvider: Episode.Provider.ID?
@@ -99,7 +99,7 @@ enum VideoPlayerCore {
         case cancelHideOverlayAnimationDelay
         case close
 
-        case fetchedAnimeInfoStore([AnimeInfoStore])
+        case fetchedAnimeInfoStore([AnimeStore])
         case fetchEpisodes
         case fetchedEpisodes(Result<[Episode], Never>)
         case fetchSources
@@ -420,7 +420,7 @@ extension VideoPlayerCore {
             case .saveEpisodeProgress(let episodeId):
                 guard let episodeId = episodeId, let episode = state.episodes.value?[id: episodeId] else { break }
                 guard state.duration != nil else { break }
-                guard var animeInfoStore = state.savedAnimeInfo.value else { break }
+                guard var animeInfoStore = state.animeStore.value else { break }
 
                 let progress = state.progress
 
@@ -450,20 +450,10 @@ extension VideoPlayerCore {
                     state.selectedSidebar = .settings(.init(selectedSection: section))
                 }
 
-            // Fetch Anime Info Store
+            // Fetched Anime Store
 
-            case .fetchedAnimeInfoStore(let animeInfos):
-                if let animeInfo = animeInfos.first {
-                    state.savedAnimeInfo = .success(animeInfo)
-                } else {
-                    state.savedAnimeInfo = .success(
-                        .init(
-                            id: state.anime.id,
-                            isFavorite: false,
-                            episodesInfo: .init()
-                        )
-                    )
-                }
+            case .fetchedAnimeInfoStore(let animeStores):
+                state.animeStore = .success(.findOrCreate(state.anime.id, animeStores))
 
             // Fetch Episodes
 
@@ -574,8 +564,8 @@ extension VideoPlayerCore {
 
                 if let duration = state.duration,
                    let episode = state.episode,
-                   let animeInfo = state.savedAnimeInfo.value,
-                   let savedEpisodeProgress = animeInfo.episodesInfo.first(where: { $0.number ==  episode.number }),
+                   let animeInfo = state.animeStore.value,
+                   let savedEpisodeProgress = animeInfo.episodeStores.first(where: { $0.number ==  episode.number }),
                    !savedEpisodeProgress.finishedWatching {
                     progress = savedEpisodeProgress.progress * duration
                 } else {

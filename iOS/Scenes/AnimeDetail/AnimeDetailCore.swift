@@ -11,13 +11,13 @@ import ComposableArchitecture
 
 enum AnimeDetailCore {
     typealias LoadableEpisodes = LoadableState<IdentifiedArrayOf<Episode>>
-    typealias LoadableAnimeInfoDB = LoadableState<AnimeInfoStore>
+    typealias LoadableAnimeStore = LoadableState<AnimeStore>
 
     struct State: Equatable {
         let anime: Anime
 
         var episodes = LoadableEpisodes.idle
-        var animeInfo = LoadableAnimeInfoDB.idle
+        var animeStore = LoadableAnimeStore.idle
     }
 
     enum Action: Equatable {
@@ -29,7 +29,7 @@ enum AnimeDetailCore {
         case fetchedEpisodes(Result<[Episode], Never>)
         case selectedEpisode(episode: Episode)
         case play(anime: Anime, episodes: IdentifiedArrayOf<Episode>, selected: Episode.ID)
-        case fetchedAnimeFromDB([AnimeInfoStore])
+        case fetchedAnimeFromDB([AnimeStore])
     }
 
     struct Environment {
@@ -109,7 +109,7 @@ extension AnimeDetailCore.State {
             return .unavailable
         }
 
-        let episodesProgress = animeInfo.value?.episodesInfo
+        let episodesProgress = animeStore.value?.episodeStores
         let lastUpdatedProgress = episodesProgress?.sorted(by: \.lastUpdatedProgress).last
 
         if let lastUpdatedProgress = lastUpdatedProgress,
@@ -146,7 +146,7 @@ extension AnimeDetailCore.State {
 
     var loading: Bool {
         anime.status != .upcoming && !episodes.finished ||
-        anime.status != .upcoming && !animeInfo.finished
+        anime.status != .upcoming && !animeStore.finished
     }
 }
 
@@ -160,7 +160,7 @@ extension AnimeDetailCore {
             case .onAppear:
                 guard state.anime.status != .upcoming && !state.episodes.hasInitialized else { break }
                 state.episodes = .loading
-                state.animeInfo = .loading
+                state.animeStore = .loading
                 return .merge(
                     environment.animeClient.getEpisodes(state.anime.id)
                         .receive(on: environment.mainQueue)
@@ -173,10 +173,10 @@ extension AnimeDetailCore {
                         .map(Action.fetchedAnimeFromDB)
                 )
             case .tappedFavorite:
-                if var animeInfo = state.animeInfo.value ?? nil {
-                    animeInfo.isFavorite.toggle()
+                if var animeStore = state.animeStore.value ?? nil {
+                    animeStore.isFavorite.toggle()
 
-                    return environment.repositoryClient.insertOrUpdate(animeInfo)
+                    return environment.repositoryClient.insertOrUpdate(animeStore)
                         .receive(on: environment.mainQueue)
                         .fireAndForget()
                 }
@@ -198,17 +198,7 @@ extension AnimeDetailCore {
                     )
                 )
             case .fetchedAnimeFromDB(let animesMatched):
-                if let anime = animesMatched.first {
-                    state.animeInfo = .success(anime)
-                } else {
-                    state.animeInfo = .success(
-                        .init(
-                            id: state.anime.id,
-                            isFavorite: false,
-                            episodesInfo: .init()
-                        )
-                    )
-                }
+                state.animeStore = .success(.findOrCreate(state.anime.id, animesMatched))
             case .play:
                 break
             case .closeButtonPressed:

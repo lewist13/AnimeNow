@@ -1,5 +1,5 @@
 //
-//  EpisodeInfoStore.swift
+//  EpisodeStore.swift
 //  Anime Now!
 //
 //  Created by Erik Bautista on 10/1/22.
@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct EpisodeInfoStore: Hashable, Codable, Identifiable {
+struct EpisodeStore: Hashable, Codable, Identifiable {
     var id = UUID()
     let number: Int16
     let title: String
@@ -16,9 +16,11 @@ struct EpisodeInfoStore: Hashable, Codable, Identifiable {
     var progress: Double
     var lastUpdatedProgress: Date
     var downloadURL: URL?
+
+    var objectURL: URL?
 }
 
-extension EpisodeInfoStore {
+extension EpisodeStore {
     var finishedWatching: Bool {
         return progress >= 0.9
     }
