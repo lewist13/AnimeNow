@@ -74,6 +74,7 @@ struct ContentView: View {
             }
         )
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .preferredColorScheme(.dark)
     }
 }
 

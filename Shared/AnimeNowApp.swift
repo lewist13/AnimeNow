@@ -7,24 +7,13 @@
 
 import SwiftUI
 
+#if os(macOS)
 @main
 struct AnimeNowApp: App {
     var body: some Scene {
-        #if os(iOS)
-        WindowGroup {
-            ContentView(
-                store: .init(
-                    initialState: .init(),
-                    reducer: ContentCore.reducer,
-                    environment: .live
-                )
-            )
-            .preferredColorScheme(.dark)
-        }
-        #elseif os(macOS)
         WindowGroup {
             ContentView()
         }
-        #endif
     }
 }
+#endif

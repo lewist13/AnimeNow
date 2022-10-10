@@ -105,6 +105,9 @@
 		1384FF7A28CB93FA003B011E /* Navigation+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1384FF7828CB93FA003B011E /* Navigation+Extension.swift */; };
 		13938BAA28E0AF20001C8784 /* ImageSize.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1352A05428DBC89600A5B20D /* ImageSize.swift */; };
 		1395FF7528C6920E00F21FB1 /* SociableWeaver in Frameworks */ = {isa = PBXBuildFile; productRef = 1395FF7428C6920E00F21FB1 /* SociableWeaver */; };
+		13BAE88828F3A0AC00662C0C /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13BAE88728F3A0AC00662C0C /* SceneDelegate.swift */; };
+		13BAE88A28F3A22F00662C0C /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13BAE88928F3A22F00662C0C /* AppDelegate.swift */; };
+		13BAE88C28F3A66100662C0C /* AnimeNowHostingController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13BAE88B28F3A66100662C0C /* AnimeNowHostingController.swift */; };
 		13C3536B28C308A000A54E7E /* AnimeNow.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 13C3535828C3089E00A54E7E /* AnimeNow.xcdatamodeld */; };
 		13C3536C28C308A000A54E7E /* AnimeNow.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 13C3535828C3089E00A54E7E /* AnimeNow.xcdatamodeld */; };
 		13C3536D28C308A000A54E7E /* AnimeNowApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13C3535A28C3089E00A54E7E /* AnimeNowApp.swift */; };
@@ -209,6 +212,9 @@
 		138066F128C572B50012DAFB /* SearchCore.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SearchCore.swift; sourceTree = "<group>"; };
 		1384FF7828CB93FA003B011E /* Navigation+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Navigation+Extension.swift"; sourceTree = "<group>"; };
 		13938BAB28E0CADD001C8784 /* MainConfig.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = MainConfig.xcconfig; sourceTree = "<group>"; };
+		13BAE88728F3A0AC00662C0C /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
+		13BAE88928F3A22F00662C0C /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		13BAE88B28F3A66100662C0C /* AnimeNowHostingController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimeNowHostingController.swift; sourceTree = "<group>"; };
 		13C3535928C3089E00A54E7E /* Shared.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Shared.xcdatamodel; sourceTree = "<group>"; };
 		13C3535A28C3089E00A54E7E /* AnimeNowApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimeNowApp.swift; sourceTree = "<group>"; };
 		13C3535B28C3089E00A54E7E /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -435,6 +441,16 @@
 			path = Search;
 			sourceTree = "<group>";
 		};
+		13BAE88628F3A09A00662C0C /* Main */ = {
+			isa = PBXGroup;
+			children = (
+				13BAE88728F3A0AC00662C0C /* SceneDelegate.swift */,
+				13BAE88928F3A22F00662C0C /* AppDelegate.swift */,
+				13BAE88B28F3A66100662C0C /* AnimeNowHostingController.swift */,
+			);
+			path = Main;
+			sourceTree = "<group>";
+		};
 		13C3535228C3089E00A54E7E = {
 			isa = PBXGroup;
 			children = (
@@ -520,6 +536,7 @@
 		13FC21C128C3960E000F0F79 /* iOS */ = {
 			isa = PBXGroup;
 			children = (
+				13BAE88628F3A09A00662C0C /* Main */,
 				134FAA2128D7628400B081FE /* Clients */,
 				137A818428C5342F00B69503 /* Scenes */,
 			);
@@ -776,6 +793,7 @@
 				132754FC28D2883500A6C525 /* CompressableText.swift in Sources */,
 				1359668F28E6100B00EB2AFC /* HapticEngineClient+Mock.swift in Sources */,
 				134FAA1F28D6FBC200B081FE /* CMTime+String.swift in Sources */,
+				13BAE88A28F3A22F00662C0C /* AppDelegate.swift in Sources */,
 				138066EC28C5699F0012DAFB /* AnimeItemView.swift in Sources */,
 				13386AEE28CC2892005E8352 /* ShimmerView.swift in Sources */,
 				1312FD5A28DD4B52004A415F /* ThumbnailItemCompactView.swift in Sources */,
@@ -785,7 +803,9 @@
 				1380561E28E9223500B9B45B /* VideoPlayerView.swift in Sources */,
 				13650F3828D04424002E20DD /* AnimeClient+Mock.swift in Sources */,
 				1324366728E7B40300F282EE /* Sequence+Keypath.swift in Sources */,
+				13BAE88828F3A0AC00662C0C /* SceneDelegate.swift in Sources */,
 				1372DEC728E5337D00E35980 /* AniListAPI.swift in Sources */,
+				13BAE88C28F3A66100662C0C /* AnimeNowHostingController.swift in Sources */,
 				1380560C28E8B69E00B9B45B /* Array+Identifiable.swift in Sources */,
 				1306E77528E76D4D004FC3E9 /* CDAnimeStore.swift in Sources */,
 				1327553428D2C16C00A6C525 /* AVPlayerView.swift in Sources */,

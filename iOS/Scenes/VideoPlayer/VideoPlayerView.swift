@@ -58,6 +58,8 @@ struct VideoPlayerView: View {
                 viewStore.send(.onAppear)
             }
         }
+        .prefersHomeIndicatorAutoHidden(true)
+        .supportedOrientation(.landscape)
     }
 }
 

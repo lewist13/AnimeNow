@@ -51,7 +51,7 @@ extension ContentCore.Environment {
         mainQueue: .main.eraseToAnyScheduler(),
         mainRunLoop: .main.eraseToAnyScheduler(),
         repositoryClient: RepositoryClientLive.shared,
-        orientationClient: .live,
+        orientationClient: .mock,
         userDefaultsClient: .live
     )
 
