@@ -53,9 +53,6 @@
 		134FAA1D28D6FAFC00B081FE /* String+Time.swift in Sources */ = {isa = PBXBuildFile; fileRef = 134FAA1B28D6FAFC00B081FE /* String+Time.swift */; };
 		134FAA1F28D6FBC200B081FE /* CMTime+String.swift in Sources */ = {isa = PBXBuildFile; fileRef = 134FAA1E28D6FBC200B081FE /* CMTime+String.swift */; };
 		134FAA2028D6FBC200B081FE /* CMTime+String.swift in Sources */ = {isa = PBXBuildFile; fileRef = 134FAA1E28D6FBC200B081FE /* CMTime+String.swift */; };
-		134FAA2428D762A200B081FE /* OrientationClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 134FAA2328D762A200B081FE /* OrientationClient.swift */; };
-		134FAA2728D7637900B081FE /* OrientationClient+Live.swift in Sources */ = {isa = PBXBuildFile; fileRef = 134FAA2628D7637900B081FE /* OrientationClient+Live.swift */; };
-		134FAA2A28D7638400B081FE /* OrientationClient+Mock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 134FAA2928D7638400B081FE /* OrientationClient+Mock.swift */; };
 		1352A05528DBC89600A5B20D /* ImageSize.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1352A05428DBC89600A5B20D /* ImageSize.swift */; };
 		1359668828E56ACF00EB2AFC /* KitsuAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1359668728E56ACF00EB2AFC /* KitsuAPI.swift */; };
 		1359668E28E6100B00EB2AFC /* HapticEngineClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1359668B28E6100B00EB2AFC /* HapticEngineClient.swift */; };
@@ -176,9 +173,6 @@
 		134E0E9128D125C000A5F5E5 /* UserDefaultsClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDefaultsClient.swift; sourceTree = "<group>"; };
 		134FAA1B28D6FAFC00B081FE /* String+Time.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+Time.swift"; sourceTree = "<group>"; };
 		134FAA1E28D6FBC200B081FE /* CMTime+String.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CMTime+String.swift"; sourceTree = "<group>"; };
-		134FAA2328D762A200B081FE /* OrientationClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrientationClient.swift; sourceTree = "<group>"; };
-		134FAA2628D7637900B081FE /* OrientationClient+Live.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "OrientationClient+Live.swift"; sourceTree = "<group>"; };
-		134FAA2928D7638400B081FE /* OrientationClient+Mock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "OrientationClient+Mock.swift"; sourceTree = "<group>"; };
 		1352A05428DBC89600A5B20D /* ImageSize.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageSize.swift; sourceTree = "<group>"; };
 		1359668728E56ACF00EB2AFC /* KitsuAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KitsuAPI.swift; sourceTree = "<group>"; };
 		1359668B28E6100B00EB2AFC /* HapticEngineClient.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HapticEngineClient.swift; sourceTree = "<group>"; };
@@ -335,19 +329,8 @@
 			isa = PBXGroup;
 			children = (
 				1359668A28E6100200EB2AFC /* HapticEngineClient */,
-				134FAA2228D7628C00B081FE /* OrientationClient */,
 			);
 			path = Clients;
-			sourceTree = "<group>";
-		};
-		134FAA2228D7628C00B081FE /* OrientationClient */ = {
-			isa = PBXGroup;
-			children = (
-				134FAA2328D762A200B081FE /* OrientationClient.swift */,
-				134FAA2628D7637900B081FE /* OrientationClient+Live.swift */,
-				134FAA2928D7638400B081FE /* OrientationClient+Mock.swift */,
-			);
-			path = OrientationClient;
 			sourceTree = "<group>";
 		};
 		1359668A28E6100200EB2AFC /* HapticEngineClient */ = {
@@ -780,7 +763,6 @@
 				1327550928D2A7C400A6C525 /* UserDefaultsClient+Mock.swift in Sources */,
 				134E0E9228D125C000A5F5E5 /* UserDefaultsClient.swift in Sources */,
 				13DC96BE28EE254100FB1B2D /* PlayerClient.swift in Sources */,
-				134FAA2A28D7638400B081FE /* OrientationClient+Mock.swift in Sources */,
 				13FC21DF28C3A3FD000F0F79 /* Persistence.swift in Sources */,
 				13FC21C828C39762000F0F79 /* RepositoryClient.swift in Sources */,
 				1364BA7A28E12BBC005BAEBA /* TabBar.swift in Sources */,
@@ -815,8 +797,6 @@
 				1364BA9D28E13F6E005BAEBA /* DownloadsCore.swift in Sources */,
 				136245BD28EA4DA000ECE46B /* EquatableError.swift in Sources */,
 				13E465F428E6231A001FF309 /* ConsumetAPI.swift in Sources */,
-				134FAA2428D762A200B081FE /* OrientationClient.swift in Sources */,
-				134FAA2728D7637900B081FE /* OrientationClient+Live.swift in Sources */,
 				1359668828E56ACF00EB2AFC /* KitsuAPI.swift in Sources */,
 				13FC21CE28C397A2000F0F79 /* DomainModel.swift in Sources */,
 				13378BA828C9B4E5000FF0D8 /* Throwable.swift in Sources */,

@@ -40,7 +40,6 @@ enum ContentCore {
         let mainQueue: AnySchedulerOf<DispatchQueue>
         let mainRunLoop: AnySchedulerOf<RunLoop>
         let repositoryClient: RepositoryClient
-        let orientationClient: OrientationClient
         let userDefaultsClient: UserDefaultsClient
     }
 }
@@ -51,7 +50,6 @@ extension ContentCore.Environment {
         mainQueue: .main.eraseToAnyScheduler(),
         mainRunLoop: .main.eraseToAnyScheduler(),
         repositoryClient: RepositoryClientLive.shared,
-        orientationClient: .mock,
         userDefaultsClient: .live
     )
 
@@ -60,7 +58,6 @@ extension ContentCore.Environment {
         mainQueue: .main.eraseToAnyScheduler(),
         mainRunLoop: .main.eraseToAnyScheduler(),
         repositoryClient: RepositoryClientMock.shared,
-        orientationClient: .mock,
         userDefaultsClient: .mock
     )
 }
@@ -143,16 +140,12 @@ extension ContentCore {
                     episodes: nil,
                     selectedEpisode: Episode.ID(episodeInfoWithAnime.episodeInfo.number)
                 )
-                return environment.orientationClient.setOrientation(.landscapeRight)
-                    .fireAndForget()
 
             case .setAnimeDetail(let animeMaybe):
                 state.animeDetail = animeMaybe
 
             case let .animeDetail(.play(anime, episodes, selected)):
                 state.videoPlayer = .init(anime: anime, episodes: episodes, selectedEpisode: selected)
-                return environment.orientationClient.setOrientation(.landscapeRight)
-                    .fireAndForget()
 
             case .animeDetail(.close):
                 return .init(value: .setAnimeDetail(nil))
@@ -163,8 +156,6 @@ extension ContentCore {
 
             case .videoPlayer(.close):
                 state.videoPlayer = nil
-                return environment.orientationClient.setOrientation(.portrait)
-                    .fireAndForget()
 
             default:
                 break
