@@ -110,7 +110,7 @@ extension HomeCore {
             case .fetchedAnimesInDB(let animesInDB):
                 var resumeWatchingAnimes = [EpisodeInfoWithAnimeId]()
                 for animeInfo in animesInDB {
-                    guard let recentEpisodeInfo = animeInfo.lastModifiedEpisode, !recentEpisodeInfo.finishedWatching else { continue }
+                    guard let recentEpisodeInfo = animeInfo.lastModifiedEpisode, !recentEpisodeInfo.almostFinished else { continue }
                     resumeWatchingAnimes.append(.init(animeId: animeInfo.id, episodeInfo: recentEpisodeInfo))
                 }
 

@@ -25,12 +25,8 @@ struct AirplayView: UIViewRepresentable {
     func updateUIView(_ uiView: AVRoutePickerView, context: Context) {}
 
     class Coordinator: NSObject, AVRoutePickerViewDelegate {
-        func routePickerViewDidEndPresentingRoutes(_ routePickerView: AVRoutePickerView) {
-            
-        }
+        func routePickerViewDidEndPresentingRoutes(_ routePickerView: AVRoutePickerView) {}
 
-        func routePickerViewWillBeginPresentingRoutes(_ routePickerView: AVRoutePickerView) {
-            
-        }
+        func routePickerViewWillBeginPresentingRoutes(_ routePickerView: AVRoutePickerView) {}
     }
 }

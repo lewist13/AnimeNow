@@ -8,18 +8,55 @@
 
 import SwiftUI
 import ComposableArchitecture
+import AVFoundation
 
 struct VideoPlayerView: View {
-    let store: Store<VideoPlayerCore.State, VideoPlayerCore.Action>
+    let store: Store<AnimeNowVideoPlayerCore.State, AnimeNowVideoPlayerCore.Action>
+
+    struct VideoPlayerState: Equatable {
+        let url: URL?
+        let action: VideoPlayer.Action?
+        let progress: Double
+
+        init(_ state: AnimeNowVideoPlayerCore.State) {
+            url = state.source?.url
+            action = state.playerAction
+            progress = state.playerProgress
+        }
+    }
 
     var body: some View {
-        WithViewStore(store.stateless) { viewStore in
-            AVPlayerView(
-                store: store.scope(
-                    state: \.player,
-                    action: VideoPlayerCore.Action.player
-                )
+        WithViewStore(
+            store.scope(
+                state: VideoPlayerState.init
             )
+        ) { viewStore in
+            VideoPlayer(
+                url: viewStore.url,
+                action: viewStore.binding(\.$playerAction, as: \.action),
+                progress: viewStore.binding(\.$playerProgress, as: \.progress)
+            )
+            .onStatusChanged { status in
+                viewStore.send(.playerStatus(status))
+            }
+            .onDurationChanged { duration in
+                viewStore.send(.playerDuration(duration))
+            }
+            .onBufferChanged { buffer in
+                viewStore.send(.playerBuffer(buffer))
+            }
+            .onPlayedToTheEnd {
+                viewStore.send(.playerPlayedToEnd)
+            }
+            .onPictureInPictureStatusChanged { status in
+                viewStore.send(.playerPiPStatus(status))
+            }
+            .onSubtitlesChanged { selection in
+                viewStore.send(.playerSubtitles(selection))
+            }
+            .onSubtitleSelectionChanged { selected in
+                viewStore.send(.playerSelectedSubtitle(selected))
+            }
             .frame(
                 maxWidth: .infinity,
                 maxHeight: .infinity,
@@ -106,10 +143,10 @@ extension VideoPlayerView {
 
 extension VideoPlayerView {
     private struct VideoStatusViewState: Equatable {
-        let status: VideoPlayerCore.State.Status?
+        let status: AnimeNowVideoPlayerCore.State.Status?
         let showingPlayerControls: Bool
 
-        init(_ state: VideoPlayerCore.State) {
+        init(_ state: AnimeNowVideoPlayerCore.State) {
             self.status = state.status
             self.showingPlayerControls = state.showPlayerOverlay
         }
@@ -170,7 +207,7 @@ extension VideoPlayerView {
                         topPlayerItems
                     }
                     Spacer()
-                    showNextEpisodeButton
+                    actionButton
                     if showPlayerOverlay.state {
                         VStack(spacing: 0) {
                             videoInfoWithActions
@@ -207,39 +244,54 @@ extension VideoPlayerView {
 }
 
 extension VideoPlayerView {
-    struct NextEpisodeViewState: Equatable {
+    struct SkipActionViewState: Equatable {
         let canShowButton: Bool
-        let nextEpisode: Episode?
+        let action: AnimeNowVideoPlayerCore.State.ActionType?
 
-        init(_ state: VideoPlayerCore.State) {
-            self.canShowButton = state.progress >= 0.9 && state.nextEpisode != nil && state.selectedSidebar == nil
-            self.nextEpisode = state.nextEpisode
+        init(_ state: AnimeNowVideoPlayerCore.State) {
+            self.action = state.skipAction
+            self.canShowButton = state.selectedSidebar == nil && self.action != nil
         }
     }
 
     @ViewBuilder
-    var showNextEpisodeButton: some View {
+    var actionButton: some View {
         WithViewStore(
             store.scope(
-                state: NextEpisodeViewState.init
+                state: SkipActionViewState.init
             )
         ) { viewState in
             Group {
-                if viewState.canShowButton,
-                   let nextEpisode = viewState.state.nextEpisode {
-                    HStack {
-                        Image(systemName: "play.fill")
-                        Text("Next Episode")
-                    }
-                    .font(.system(size: 13).weight(.heavy))
-                    .padding(10)
-                    .foregroundColor(Color.black)
-                    .background(Color.white)
-                    .cornerRadius(12)
-                    .shadow(color: Color.gray.opacity(0.25), radius: 10)
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        viewState.send(.selectEpisode(nextEpisode.id))
+                if viewState.state.canShowButton {
+                    switch viewState.state.action {
+                    case .some(.skipRecap(to: let end)),
+                            .some(.skipOpening(to: let end)),
+                            .some(.skipEnding(to: let end)):
+
+                        actionButtonBase(
+                            "forward.fill",
+                            viewState.state.action?.title ?? "",
+                            .white,
+                            .init(white: 0.25)
+                        )
+                            .onTapGesture {
+                                viewState.send(.startSeeking)
+                                viewState.send(.seeking(to: end))
+                                viewState.send(.stopSeeking)
+                            }
+
+                    case .some(.nextEpisode(let id)):
+                        actionButtonBase(
+                            "play.fill",
+                            viewState.state.action?.title ?? "",
+                            .black,
+                            .white
+                        )
+                            .onTapGesture {
+                                viewState.send(.selectEpisode(id))
+                            }
+                    case .none:
+                        EmptyView()
                     }
                 }
             }
@@ -253,6 +305,26 @@ extension VideoPlayerView {
                 value: viewState.canShowButton
             )
         }
+    }
+
+    @ViewBuilder
+    private func actionButtonBase(
+        _ image: String,
+        _ title: String,
+        _ textColor: Color,
+        _ background: Color
+    ) -> some View {
+        HStack {
+            Image(systemName: image)
+            Text(title)
+        }
+            .font(.system(size: 13).weight(.heavy))
+            .foregroundColor(textColor)
+            .padding(12)
+            .background(background)
+            .cornerRadius(12)
+            .shadow(color: Color.gray.opacity(0.25), radius: 6)
+            .contentShape(Rectangle())
     }
 }
 // MARK: Top Player Items
@@ -278,8 +350,8 @@ extension VideoPlayerView {
                 .foregroundColor(Color.black)
                 .font(.callout.weight(.black))
             )
-            .frame(width: 30, height: 30)
             .contentShape(Rectangle())
+            .frame(width: 30, height: 30)
             .onTapGesture {
                 ViewStore(store.stateless).send(.closeButtonTapped)
             }
@@ -307,10 +379,11 @@ extension VideoPlayerView {
         let header: String?
         let isMovie: Bool
 
-        init(_ state: VideoPlayerCore.State) {
-            self.title = state.anime.format == .movie ? state.anime.title : (state.episode?.name ?? "Loading...")
-            self.header = state.anime.format == .tv ? "E\(state.selectedEpisode) \u{2022} \(state.anime.title)" : nil
-            self.isMovie = state.anime.format == .movie
+        init(_ state: AnimeNowVideoPlayerCore.State) {
+            let isMovie = state.anime.format == .movie
+            self.isMovie = isMovie
+            self.title = isMovie ? state.anime.title : (state.episode?.name ?? "Loading...")
+            self.header = !isMovie ? "E\(state.selectedEpisode) \u{2022} \(state.anime.title)" : nil
         }
     }
 
@@ -358,7 +431,7 @@ extension VideoPlayerView {
     var playerOptionsButton: some View {
         HStack(spacing: 8) {
             airplayButton
-//            subtitlesButton
+            subtitlesButton
             settingsButton
         }
     }
@@ -377,11 +450,22 @@ extension VideoPlayerView {
 
     @ViewBuilder
     var subtitlesButton: some View {
-        Image(systemName: "captions.bubble.fill")
-            .foregroundColor(Color.white)
-            .font(.title2)
-            .padding(4)
-            .contentShape(Rectangle())
+        WithViewStore(
+            store.scope(
+                state: \.subtitles
+            )
+        ) { viewStore in
+            if let count = viewStore.state?.options.count, count > 0 {
+                Image(systemName: "captions.bubble.fill")
+                    .foregroundColor(Color.white)
+                    .font(.title2)
+                    .padding(4)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        viewStore.send(.showSubtitlesSidebar)
+                    }
+            }
+        }
     }
 
     @ViewBuilder
@@ -396,20 +480,24 @@ extension VideoPlayerView {
 extension VideoPlayerView {
     private struct ProgressViewState: Equatable {
         let progress: Double
-        let duration: Double?
-        let ready: Bool
+        let duration: Double
+        let buffered: Double
+
+        var canShow: Bool {
+            duration > 0.0
+        }
 
         var progressWithDuration: Double? {
-            if let duration = duration {
+            if duration > 0.0 {
                 return progress * duration
             }
             return nil
         }
 
-        init(_ state: VideoPlayerCore.State) {
-            self.progress = state.progress
-            self.duration = state.duration
-            self.ready = state.player.playerItemStatus == .readyToPlay
+        init(_ state: AnimeNowVideoPlayerCore.State) {
+            self.duration = state.playerDuration
+            self.progress = state.playerProgress
+            self.buffered = state.playerBuffered
         }
     }
 
@@ -419,38 +507,38 @@ extension VideoPlayerView {
             store.scope(
                 state: ProgressViewState.init
             )
-        ) { progressViewState in
+        ) { viewState in
             VStack(spacing: 0) {
                 SeekbarView(
                     progress: .init(
                         get: {
-                            progressViewState.progress
+                            viewState.progress
                         },
                         set: { progress in
-                            progressViewState.send(.seeking(to: progress))
+                            viewState.send(.seeking(to: progress))
                         }
                     ),
+                    buffered: viewState.state.buffered,
                     padding: 6
                 ) {
-                    progressViewState.send($0 ? .startSeeking : .stopSeeking)
+                    viewState.send($0 ? .startSeeking : .stopSeeking)
                 }
                 .frame(height: 24)
-                .disabled(progressViewState.state.duration == nil)
 
                 HStack(spacing: 4) {
                     Text(
-                        progressViewState.progressWithDuration?.timeFormatted ?? "--:--"
+                        viewState.progressWithDuration?.timeFormatted ?? "--:--"
                     )
                     Text("/")
                     Text(
-                        progressViewState.duration?.timeFormatted ?? "--:--"
+                        viewState.canShow ? viewState.duration.timeFormatted : "--:--"
                     )
                     Spacer()
                 }
                 .foregroundColor(.white)
                 .font(.footnote.bold().monospacedDigit())
             }
-            .disabled(progressViewState.duration == nil || !progressViewState.ready)
+            .disabled(!viewState.canShow)
         }
     }
 }
@@ -481,8 +569,8 @@ extension VideoPlayerView {
                                 episodesSidebar
                             case .settings:
                                 settingsSidebar
-                            default:
-                                EmptyView()
+                            case .subtitles:
+                                subtitlesSidebar
                             }
                         }
                         .padding([.horizontal, .top])
@@ -543,10 +631,12 @@ extension VideoPlayerView {
     private struct EpisodesSidebarViewState: Equatable {
         let episodes: IdentifiedArrayOf<Episode>
         let selectedEpisode: Episode.ID
+        let episodesStore: [EpisodeStore]
 
-        init(_ state: VideoPlayerCore.State) {
+        init(_ state: AnimeNowVideoPlayerCore.State) {
             self.episodes = state.episodes.value ?? []
             self.selectedEpisode = state.selectedEpisode
+            self.episodesStore = state.animeStore.value?.episodeStores ?? .init()
         }
     }
 
@@ -565,10 +655,11 @@ extension VideoPlayerView {
                     LazyVStack {
                         ForEach(viewStore.episodes) { episode in
                             ThumbnailItemCompactView(
-                                episode: episode
+                                episode: episode,
+                                progress: viewStore.episodesStore.first(where: { $0.number == episode.id })?.progress
                             )
                             .overlay(
-                                selectedOverlay(episode.id == viewStore.selectedEpisode)
+                                selectedEpisodeOverlay(episode.id == viewStore.selectedEpisode)
                             )
                             .onTapGesture {
                                 if viewStore.selectedEpisode != episode.id {
@@ -576,6 +667,7 @@ extension VideoPlayerView {
                                 }
                             }
                             .id(episode.id)
+                            .frame(height: 76)
                         }
                     }
                     .padding([.bottom])
@@ -595,7 +687,7 @@ extension VideoPlayerView {
     }
 
     @ViewBuilder
-    private func selectedOverlay(_ selected: Bool) -> some View {
+    private func selectedEpisodeOverlay(_ selected: Bool) -> some View {
         if selected {
             Text("Now Playing")
                 .font(.caption2.weight(.heavy))
@@ -624,7 +716,7 @@ extension VideoPlayerView {
 
 extension VideoPlayerView {
     private struct SettingsSidebarViewState: Equatable {
-        let selectedSetting: VideoPlayerCore.Sidebar.SettingsState.Section?
+        let selectedSetting: AnimeNowVideoPlayerCore.Sidebar.SettingsState.Section?
         let selectedProvider: Episode.Provider.ID?
         let selectedSource: Source.ID?
         let isLoading: Bool
@@ -716,7 +808,7 @@ extension VideoPlayerView {
             return nil
         }
 
-        init(_ state: VideoPlayerCore.State) {
+        init(_ state: AnimeNowVideoPlayerCore.State) {
             if case .settings(let item) = state.selectedSidebar {
                 self.selectedSetting = item.selectedSection
             } else {
@@ -891,6 +983,53 @@ extension VideoPlayerView {
     }
 }
 
+// MARK: Subtitles Sidebar
+
+extension VideoPlayerView {
+    private struct SubtitlesSidebarViewState: Equatable {
+        let subtitles: AVMediaSelectionGroup?
+        let selected: AVMediaSelectionOption?
+
+        init(_ state: AnimeNowVideoPlayerCore.State) {
+            self.subtitles = state.subtitles
+            self.selected = state.selectedSubtitle
+        }
+    }
+
+    @ViewBuilder
+    var subtitlesSidebar: some View {
+        ScrollViewReader { proxy in
+            ScrollView(
+                .vertical,
+                showsIndicators: false
+            ) {
+                WithViewStore(
+                    store.scope(
+                        state: SubtitlesSidebarViewState.init
+                    )
+                ) { viewStore in
+                    LazyVStack {
+                        ForEach(viewStore.subtitles?.options ?? [], id: \.self) { subtitle in
+                            Text(subtitle.displayName)
+                                .font(.callout.bold())
+                                .padding(12)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .onTapGesture {
+//                                    selectedItem?(item.id)
+                                }
+                                .background(subtitle == viewStore.selected ? Color.red : Color.clear)
+                                .cornerRadius(12)
+                                .id(subtitle.displayName)
+                        }
+                    }
+                    .padding([.bottom])
+                }
+            }
+        }
+
+    }
+}
+
 // MARK: Player Controls
 
 struct VideoPlayerView_Previews: PreviewProvider {
@@ -903,7 +1042,7 @@ struct VideoPlayerView_Previews: PreviewProvider {
                         episodes: .init(uniqueElements: Episode.demoEpisodes),
                         selectedEpisode: Episode.demoEpisodes.first!.id
                     ),
-                    reducer: VideoPlayerCore.reducer,
+                    reducer: AnimeNowVideoPlayerCore.reducer,
                     environment: .init(
                         animeClient: .mock,
                         mainQueue: .main.eraseToAnyScheduler(),

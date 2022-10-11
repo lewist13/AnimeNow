@@ -297,10 +297,11 @@ extension AnimeDetailView {
                 type: .episode(
                     image: episode.thumbnail.largest?.link,
                     name: episode.name,
+                    animeName: nil,
                     number: episode.number,
                     progress: progressState.state?.progress
                 ),
-                watched: progressState.state?.finishedWatching ?? false
+                watched: progressState.state?.almostFinished ?? false
             )
         }
 //            .overlay(

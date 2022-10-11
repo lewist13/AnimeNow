@@ -19,4 +19,5 @@ struct AnimeClient {
     let searchAnimes: (String) -> Effect<[Anime], EquatableError>
     let getEpisodes: (Anime.ID) -> Effect<[Episode], Never>
     let getSources: (Episode.Provider) -> Effect<[Source], EquatableError>
+    let getSkipTimes: (Int, Int) -> Effect<[SkipTime], EquatableError>
 }

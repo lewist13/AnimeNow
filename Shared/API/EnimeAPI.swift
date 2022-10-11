@@ -28,7 +28,7 @@ class EnimeAPI: APIRoute {
                 case anilist
             }
         }
-        
+
         struct PageSize: Equatable {
             var page = 1
             var perPage = 10

@@ -570,6 +570,7 @@ extension KitsuAPI {
 
             return AnimeNow.Anime(
                 id: 0,
+                malId: 0,
                 title: anime.titles.translated ?? anime.titles.romanized ?? anime.titles.canonical ?? anime.titles.original ?? "Untitled",
                 description: anime.description.en ?? "Anime description is not available.",
                 posterImage: .init(posterImageSizes),

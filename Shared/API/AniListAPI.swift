@@ -95,6 +95,7 @@ extension AniListAPI {
         }
         return Anime(
             id: media.id,
+            malId: media.idMal,
             title: media.title.english ?? media.title.romaji ?? media.title.native ?? "Untitled",
             description: media.description?.trimHTMLTags() ?? "No description",
             posterImage: coverImages,
@@ -188,6 +189,7 @@ extension AniListAPI {
     }
     struct Media: Decodable {
         let id: Int
+        let idMal: Int
         let title: Title
         let type: MType
         let format: Format?
@@ -221,6 +223,7 @@ extension AniListAPI {
         ) -> Object {
             var obj = Object(name) {
                 Field(CodingKeys.id)
+                Field(CodingKeys.idMal)
                 Title.createQueryObject(CodingKeys.title)
                 Field(CodingKeys.type)
                 Field(CodingKeys.format)

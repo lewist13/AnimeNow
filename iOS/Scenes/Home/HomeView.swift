@@ -165,6 +165,7 @@ extension HomeView {
                                         .episode(
                                             image: animeEpisodeInfo.episodeInfo.cover?.link,
                                             name: animeEpisodeInfo.episodeInfo.title,
+                                            animeName: animeEpisodeInfo.anime.title,
                                             number: Int(animeEpisodeInfo.episodeInfo.number),
                                             progress: animeEpisodeInfo.episodeInfo.progress
                                         )

@@ -21,7 +21,11 @@ struct EpisodeStore: Hashable, Codable, Identifiable {
 }
 
 extension EpisodeStore {
-    var finishedWatching: Bool {
+    var almostFinished: Bool {
         return progress >= 0.9
+    }
+
+    var finishedWatching: Bool {
+        return progress >= 1.0
     }
 }

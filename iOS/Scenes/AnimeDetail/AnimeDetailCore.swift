@@ -114,7 +114,7 @@ extension AnimeDetailCore.State {
 
         if let lastUpdatedProgress = lastUpdatedProgress,
            let episode = episodes.first(where: { $0.number == lastUpdatedProgress.number }) {
-            if !lastUpdatedProgress.finishedWatching {
+            if !lastUpdatedProgress.almostFinished {
                 return .resumeEpisode(
                     .init(
                         id: episode.id,
@@ -122,7 +122,7 @@ extension AnimeDetailCore.State {
                         episodeNumber: episode.number
                     )
                 )
-            } else if lastUpdatedProgress.finishedWatching,
+            } else if lastUpdatedProgress.almostFinished,
                       episodes.last != episode,
                       let nextEpisode = episodes.first(where: { $0.number == (lastUpdatedProgress.number + 1) }) {
                 return .playNextEpisode(

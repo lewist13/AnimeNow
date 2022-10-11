@@ -12,6 +12,8 @@ struct SeekbarView: View {
     typealias EditingChanged = (Bool) -> Void
 
     @Binding var progress: Double
+    var buffered = Double.zero
+
     var padding: Double = 8
     var onEditingCallback: EditingChanged?
 
@@ -26,6 +28,12 @@ struct SeekbarView: View {
                     // Background
 
                     BlurView(style: .systemThinMaterialDark)
+
+                    Color.gray.opacity(0.25)
+                        .frame(
+                            width: buffered * reader.size.width,
+                            alignment: .leading
+                        )
 
                     // Progress
 
@@ -72,7 +80,7 @@ struct SeekbarView_Previews: PreviewProvider {
         @State var progress = 0.25
 
         var body: some View {
-            SeekbarView(progress: $progress)
+            SeekbarView(progress: $progress, buffered: 0.5)
         }
     }
 

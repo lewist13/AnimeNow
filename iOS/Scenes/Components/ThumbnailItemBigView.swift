@@ -10,12 +10,12 @@ import Kingfisher
 
 struct ThumbnailItemBigView: View {
     enum InputType {
-        case episode(image: URL?, name: String, number: Int, progress: Double?)
+        case episode(image: URL?, name: String, animeName: String?, number: Int, progress: Double?)
         case movie(image: URL?, name: String, progress: Double?)
 
         var name: String {
             switch self {
-            case .episode(_, let name, _, _),
+            case .episode(_, let name,_,_,_),
                     .movie(_, let name, _):
                 return name
             }
@@ -23,7 +23,7 @@ struct ThumbnailItemBigView: View {
 
         var image: URL? {
             switch self {
-            case .episode(let image,_,_,_),
+            case .episode(let image,_,_,_,_),
                     .movie(let image,_,_):
                 return image
             }
@@ -31,7 +31,7 @@ struct ThumbnailItemBigView: View {
 
         var progress: Double? {
             switch self {
-            case .episode(_,_,_, let progress),
+            case .episode(_,_,_,_, let progress),
                     .movie(_,_, let progress):
                 return progress
             }
@@ -56,12 +56,14 @@ struct ThumbnailItemBigView: View {
                         height: reader.size.height,
                         alignment: .center
                     )
+                    .contentShape(Rectangle())
+                    .clipped()
                     .overlay(
                         LinearGradient(
                             colors: [
                                 .clear,
                                 .clear,
-                                .black.opacity(0.95)
+                                .black.opacity(0.65)
                             ],
                             startPoint: .top,
                             endPoint: .bottom
@@ -69,16 +71,24 @@ struct ThumbnailItemBigView: View {
                     )
 
                 VStack(alignment: .leading, spacing: 0) {
+
                     Text(type.name)
                         .multilineTextAlignment(.leading)
-                        .lineLimit(2)
-                        .font(.title2.bold())
+                        .lineLimit(1)
+                        .font(.title2.weight(.bold))
 
-                    if case .episode(_,_,let number, let progress) = type {
-                        Text("E\(number)")
-                            .font(.callout.bold())
-                            .foregroundColor(.white.opacity(0.9))
-                            .padding(.bottom, progress != nil && !watched ? 6 : 0)
+                    if case .episode(_,_, let animeName, let number, _) = type {
+                        HStack(spacing: 2) {
+                            Text("E\(number)")
+
+                            if let animeName = animeName {
+                                Text("\u{2022}")
+                                Text(animeName)
+                            }
+                        }
+                        .font(.callout.weight(.bold))
+                        .lineLimit(1)
+                        .foregroundColor(.init(white: 0.85))
                     }
 
                     if let progress = type.progress, !watched {
@@ -88,10 +98,11 @@ struct ThumbnailItemBigView: View {
                         )
                             .disabled(true)
                             .frame(height: 10)
+                            .padding(.top, 4)
                     }
                 }
                 .foregroundColor(Color.white)
-                .padding()
+                .padding(12)
 
                 if watched {
                     Text("Watched")
@@ -131,6 +142,7 @@ struct EpisodeItemBigView_Previews: PreviewProvider {
             type: .episode(
                 image: episode.thumbnail.largest?.link,
                 name: episode.name,
+                animeName: "Naruto Shippuden",
                 number: episode.number,
                 progress: 0.5
             )

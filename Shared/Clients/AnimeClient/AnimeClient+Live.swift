@@ -17,6 +17,7 @@ extension AnimeClient {
 
         let aniListApi = AniListAPI()
         let consumetApi = ConsumetAPI()
+        let aniskipApi = AniSkipAPI()
 
         return Self {
             let query = AniListAPI.MediaPage.createQuery(
@@ -256,6 +257,13 @@ extension AnimeClient {
             return API.request(consumetApi, sourcesPublisher, ConsumetAPI.StreamingLinksPayload.self)
                 .map(\.sources)
                 .map(ConsumetAPI.convert(from:))
+                .eraseToEffect()
+        } getSkipTimes: { malId, episodeNumber in
+            let endpoint = AniSkipAPI.Endpoint.skipTime((malId, episodeNumber))
+
+            return API.request(aniskipApi, endpoint, AniSkipAPI.Response.self)
+                .map(\.results)
+                .map(AniSkipAPI.convert(from:))
                 .eraseToEffect()
         }
     }()
