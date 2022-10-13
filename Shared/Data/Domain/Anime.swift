@@ -9,7 +9,7 @@ import Foundation
 
 struct Anime: Hashable, Identifiable {
     let id: Int
-    let malId: Int
+    let malId: Int?
     let title: String
     let description: String
     let posterImage: [ImageSize]

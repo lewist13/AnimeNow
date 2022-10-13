@@ -40,21 +40,8 @@ enum GraphQL {
     struct NodeList<T: Decodable, P: Decodable>: Decodable {
         let nodes: [T]
         let pageInfo: P
-
-//        enum CodingKeys: String, CodingKey {
-//            case nodes
-//            case pageInfo
-//        }
-//
-//        init(from decoder: Decoder) throws {
-//            let values = try decoder.container(keyedBy: CodingKeys.self)
-//            let throwables = try values.decode([Throwable<T>].self, forKey: .nodes)
-//            nodes = throwables.compactMap { try? $0.result.get() }
-//            pageInfo = try values.decode(P.self, forKey: .pageInfo)
-//        }
     }
 }
-
 
 extension Weave {
     public func format(removeOperation: Bool = true) -> String {

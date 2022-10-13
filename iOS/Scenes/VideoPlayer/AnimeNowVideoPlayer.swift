@@ -452,7 +452,7 @@ extension AnimeNowVideoPlayer {
     var subtitlesButton: some View {
         WithViewStore(
             store.scope(
-                state: \.subtitles
+                state: \.playerSubtitles
             )
         ) { viewStore in
             if let count = viewStore.state?.options.count, count > 0 {
@@ -991,8 +991,8 @@ extension AnimeNowVideoPlayer {
         let selected: AVMediaSelectionOption?
 
         init(_ state: AnimeNowVideoPlayerCore.State) {
-            self.subtitles = state.subtitles
-            self.selected = state.selectedSubtitle
+            self.subtitles = state.playerSubtitles
+            self.selected = state.playerSelectedSubtitle
         }
     }
 

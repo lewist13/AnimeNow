@@ -110,14 +110,29 @@ extension VideoPlayer.PlayerView {
         player.publisher(for: \.timeControlStatus)
             .sink { [unowned self] status in
                 switch status {
-                case .paused, .waitingToPlayAtSpecifiedRate:
+                case .waitingToPlayAtSpecifiedRate:
+                    if let waiting = player.reasonForWaitingToPlay {
+                        switch waiting {
+                        case .noItemToPlay:
+                            self.status = .idle
+                        case .toMinimizeStalls:
+                            self.status = .buffering
+                        case .evaluatingBufferingRate:
+                            break
+                        default:
+                            self.status = .loading
+                        }
+                    } else {
+                        self.status = .loading
+                    }
+                case .paused:
                     if self.status != .buffering {
                         self.status = .paused
                     }
                 case .playing:
                     self.status = .playing
                 default:
-                    break
+                    self.status = .loading
                 }
             }
             .store(in: &cancellables)
@@ -158,7 +173,7 @@ extension VideoPlayer.PlayerView {
         .sink { [unowned self] status in
             switch status {
             case .unknown:
-                self.status = .loading
+                self.status = .idle
             case .readyToPlay:
                 self.status = .readyToPlay
             case .failed:
@@ -183,7 +198,7 @@ extension VideoPlayer.PlayerView {
             for: \.isPlaybackLikelyToKeepUp
         )
         .sink { [unowned self] canKeepUp in
-            if canKeepUp && (self.status == .readyToPlay || self.status == .buffering) {
+            if canKeepUp && (self.status == .loading || self.status == .readyToPlay || self.status == .buffering) {
                 self.resume()
             }
         }
@@ -196,6 +211,7 @@ extension VideoPlayer.PlayerView {
     ) {
         guard status != previous else { return }
         statusDidChange?(status)
+        print("videoPlayer status: \(status)")
     }
 }
 
@@ -212,11 +228,15 @@ extension VideoPlayer.PlayerView {
     }
 
     func resume() {
-        player.play()
+        if player.currentItem != nil {
+            player.play()
+        }
     }
 
     func pause() {
-        player.pause()
+        if player.currentItem != nil {
+            player.pause()
+        }
     }
 
     func seek(to time: CMTime) {
@@ -317,5 +337,61 @@ extension AVPlayer {
     convenience init(asset: AVURLAsset) {
         self.init(playerItem: AVPlayerItem(asset: asset))
     }
-    
+}
+
+extension AVPlayerItem.Status: CustomStringConvertible, CustomDebugStringConvertible {
+    public var debugDescription: String {
+        description
+    }
+
+    public var description: String {
+        switch self {
+        case .unknown:
+            return "unknown"
+        case .readyToPlay:
+            return "readyToPlay"
+        case .failed:
+            return "failed"
+        @unknown default:
+            return "default-unknown"
+        }
+    }
+}
+
+extension AVPlayer.Status: CustomStringConvertible, CustomDebugStringConvertible {
+    public var debugDescription: String {
+        description
+    }
+
+    public var description: String {
+        switch self {
+        case .unknown:
+            return "unknown"
+        case .readyToPlay:
+            return "readyToPlay"
+        case .failed:
+            return "failed"
+        @unknown default:
+            return "default-unknown"
+        }
+    }
+}
+
+extension AVPlayer.TimeControlStatus: CustomStringConvertible, CustomDebugStringConvertible {
+    public var debugDescription: String {
+        description
+    }
+
+    public var description: String {
+        switch self {
+        case .paused:
+            return "paused"
+        case .waitingToPlayAtSpecifiedRate:
+            return "waitingToPlayAtSpecifiedRate"
+        case .playing:
+            return "playing"
+        @unknown default:
+            return "default-unknown"
+        }
+    }
 }

@@ -189,9 +189,9 @@ extension AniListAPI {
     }
     struct Media: Decodable {
         let id: Int
-        let idMal: Int
+        let idMal: Int?
         let title: Title
-        let type: MType
+        let type: MediaType
         let format: Format?
         let status: Status
         let description: String?
@@ -204,7 +204,7 @@ extension AniListAPI {
             case id(Int)
             case idIn([Int])
             case isAdult(Bool = false)
-            case type(MType = .ANIME)
+            case type(MediaType = .ANIME)
             case sort([TrendSort])
             case status(Status)
             case statusIn([Status])
@@ -329,7 +329,7 @@ extension AniListAPI {
             case ONE_SHOT
         }
 
-        enum MType: String, Decodable, EnumRawValueRepresentable {
+        enum MediaType: String, Decodable, EnumRawValueRepresentable {
             case ANIME
             case MANGA
         }

@@ -51,7 +51,7 @@ enum AnimeNowVideoPlayerCore {
         var selectedProvider: Episode.Provider.ID?
         var selectedSource: Source.ID?
         var selectedSidebar: Sidebar?
-        var selectedSubtitle: AVMediaSelectionOption?
+        var playerSelectedSubtitle: AVMediaSelectionOption?
 
         var showPlayerOverlay = true
 
@@ -66,9 +66,9 @@ enum AnimeNowVideoPlayerCore {
         @BindableState var playerProgress = Double.zero
         var playerBuffered = Double.zero
         var playerDuration = Double.zero
-        var playerState = VideoPlayer.Status.loading
+        var playerStatus = VideoPlayer.Status.idle
         var playerPiPStatus = VideoPlayer.PIPStatus.restoreUI
-        var subtitles: AVMediaSelectionGroup?
+        var playerSubtitles: AVMediaSelectionGroup?
 
         init(
             anime: Anime,
@@ -180,7 +180,7 @@ extension AnimeNowVideoPlayerCore.State {
             return .error("There was an error trying to retrieve sources. Please try again later.")
         } else if case .success(let sources) = sources, sources.count == 0 {
             return .error("There are currently no sources available for this episode. Please try again later.")
-        } else if case .error = playerState {
+        } else if case .error = playerStatus {
             return .error("There was an error starting video player. Please try again later.")
 
         // Loading States
@@ -189,13 +189,13 @@ extension AnimeNowVideoPlayerCore.State {
             return .loading
         } else if (episode?.providers.count ?? 0) > 0 && !sources.finished {
             return .loading
-        } else if playerState == .idle || playerState == .loading || playerState == .buffering {
+        } else if playerStatus == .idle || playerStatus == .loading || playerStatus == .buffering {
             return .loading
         } else if finishedWatching {
             return .replay
-        } else if playerState == .playing {
+        } else if playerStatus == .playing {
             return .playing
-        } else if playerState == .paused || playerState == .readyToPlay {
+        } else if playerStatus == .paused || playerStatus == .readyToPlay {
             return .paused
         }
         return nil
@@ -335,7 +335,7 @@ extension AnimeNowVideoPlayerCore {
                         .eraseToEffect()
                 ]
 
-                if showingOverlay && state.playerState == .playing{
+                if showingOverlay && state.playerStatus == .playing{
                     // Show overlay with timeout if the video is currently playing
                     effects.append(
                         .init(value: .hideOverlayAnimationDelay)
@@ -543,9 +543,11 @@ extension AnimeNowVideoPlayerCore {
             // Fetch Skip Times
 
             case .fetchSkipTimes:
-                guard let episode = state.episode else { break }
+                guard let episode = state.episode, let malId = state.anime.malId else {
+                    return .init(value: .fetchedSkipTimes(.success([])))
+                }
                 state.skipTimes = .loading
-                return environment.animeClient.getSkipTimes(state.anime.malId, episode.number)
+                return environment.animeClient.getSkipTimes(malId, episode.number)
                     .receive(on: environment.mainQueue)
                     .catchToEffect()
                     .map(Action.fetchedSkipTimes)
@@ -604,8 +606,8 @@ extension AnimeNowVideoPlayerCore {
                 state.playerProgress = to
 
             case .playerStatus(let status):
-                guard status != state.playerState else { break }
-                state.playerState = status
+                guard status != state.playerStatus else { break }
+                state.playerStatus = status
 
                 if case .playing = status, state.showPlayerOverlay {
                     return .init(value: .hideOverlayAnimationDelay)
@@ -641,19 +643,23 @@ extension AnimeNowVideoPlayerCore {
                 break
 
             case .selectSubtitle(let subtitle):
-                state.selectedSubtitle = subtitle
+                state.playerSelectedSubtitle = subtitle
 
             case .playerSubtitles(let subtitles):
-                state.subtitles = subtitles
+                state.playerSubtitles = subtitles
 
             case .playerSelectedSubtitle(let subtitle):
-                state.selectedSubtitle = subtitle
+                state.playerSelectedSubtitle = subtitle
 
             case .stopAndClearPlayer:
                 state.playerAction = .pause
+                state.playerStatus = .idle
                 state.playerProgress = .zero
                 state.playerBuffered = .zero
                 state.playerDuration = .zero
+                state.playerPiPStatus = .restoreUI
+                state.playerSubtitles = nil
+                state.playerSelectedSubtitle = nil
 
             case .binding:
                 break
@@ -662,7 +668,7 @@ extension AnimeNowVideoPlayerCore {
             return .none
         }
             .binding()
-            .debug()
+//            .debug()
 //            .debugActions("tca", actionFormat: .labelsOnly, environment: { _ in DebugEnvironment() })
     )
 }
