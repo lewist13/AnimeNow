@@ -24,7 +24,6 @@ extension VideoPlayer {
         #else
         override func makeBackingLayer() -> CALayer { AVPlayerLayer() }
         #endif
-        
 
         /// Muted
         open var isMuted: Bool {
@@ -139,6 +138,10 @@ extension VideoPlayer.PlayerView {
             self.periodicTimeChanged?(time)
         }
 
+        #if os(macOS)
+        self.wantsLayer = true
+        #endif
+
         self.playerLayer.player = player
     }
 
@@ -180,7 +183,7 @@ extension VideoPlayer.PlayerView {
             for: \.isPlaybackLikelyToKeepUp
         )
         .sink { [unowned self] canKeepUp in
-            if (self.status == .readyToPlay || self.status == .buffering) && canKeepUp {
+            if canKeepUp && (self.status == .readyToPlay || self.status == .buffering) {
                 self.resume()
             }
         }
@@ -197,12 +200,15 @@ extension VideoPlayer.PlayerView {
 }
 
 extension VideoPlayer.PlayerView {
-    func play(for url: URL) {
-        guard url != (player.currentItem?.asset as? AVURLAsset)?.url else { return }
+    func play(for url: URL) -> Bool {
+        guard url != (player.currentItem?.asset as? AVURLAsset)?.url else { return false }
+        stopAndRemoveItem()
 
         let asset = AVURLAsset(url: url)
         let item = AVPlayerItem(asset: asset)
         player.replaceCurrentItem(with: item)
+
+        return true
     }
 
     func resume() {

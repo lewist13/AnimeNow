@@ -9,9 +9,9 @@ import Foundation
 
 struct EpisodeStore: Hashable, Codable, Identifiable {
     var id = UUID()
-    let number: Int16
-    let title: String
-    let cover: ImageSize?
+    var number: Int16
+    var title: String
+    var cover: ImageSize?
     var isMovie: Bool
     var progress: Double
     var lastUpdatedProgress: Date

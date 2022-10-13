@@ -1,5 +1,5 @@
 //
-//  VideoPlayerView.swift
+//  AnimeNowVideoPlayer.swift
 //  Anime Now!
 //
 //  Created Erik Bautista on 10/1/22.
@@ -10,7 +10,7 @@ import SwiftUI
 import ComposableArchitecture
 import AVFoundation
 
-struct VideoPlayerView: View {
+struct AnimeNowVideoPlayer: View {
     let store: Store<AnimeNowVideoPlayerCore.State, AnimeNowVideoPlayerCore.Action>
 
     struct VideoPlayerState: Equatable {
@@ -102,7 +102,7 @@ struct VideoPlayerView: View {
 
 // MARK: Error Overlay
 
-extension VideoPlayerView {
+extension AnimeNowVideoPlayer {
     @ViewBuilder
     var errorOverlay: some View {
         WithViewStore(store.scope(state: \.status)) { status in
@@ -141,7 +141,7 @@ extension VideoPlayerView {
 
 // MARK: Status Overlay
 
-extension VideoPlayerView {
+extension AnimeNowVideoPlayer {
     private struct VideoStatusViewState: Equatable {
         let status: AnimeNowVideoPlayerCore.State.Status?
         let showingPlayerControls: Bool
@@ -193,7 +193,7 @@ extension VideoPlayerView {
 
 // MARK: Player Controls Overlay
 
-extension VideoPlayerView {
+extension AnimeNowVideoPlayer {
     @ViewBuilder
     var playerControlsOverlay: some View {
         WithViewStore(
@@ -243,7 +243,7 @@ extension VideoPlayerView {
     }
 }
 
-extension VideoPlayerView {
+extension AnimeNowVideoPlayer {
     struct SkipActionViewState: Equatable {
         let canShowButton: Bool
         let action: AnimeNowVideoPlayerCore.State.ActionType?
@@ -329,7 +329,7 @@ extension VideoPlayerView {
 }
 // MARK: Top Player Items
 
-extension VideoPlayerView {
+extension AnimeNowVideoPlayer {
     @ViewBuilder
     var topPlayerItems: some View {
         HStack {
@@ -360,7 +360,7 @@ extension VideoPlayerView {
 
 // MARK: Anime Info + Player Options
 
-extension VideoPlayerView {
+extension AnimeNowVideoPlayer {
     @ViewBuilder
     var videoInfoWithActions: some View {
         HStack(alignment: .bottom) {
@@ -373,7 +373,7 @@ extension VideoPlayerView {
 
 // MARK: Anime Info
 
-extension VideoPlayerView {
+extension AnimeNowVideoPlayer {
     private struct AnimeInfoViewState: Equatable {
         let title: String
         let header: String?
@@ -426,7 +426,7 @@ extension VideoPlayerView {
 
 // MARK: Player Options Buttons
 
-extension VideoPlayerView {
+extension AnimeNowVideoPlayer {
     @ViewBuilder
     var playerOptionsButton: some View {
         HStack(spacing: 8) {
@@ -477,7 +477,7 @@ extension VideoPlayerView {
 
 // MARK: Bottom Player Items
 
-extension VideoPlayerView {
+extension AnimeNowVideoPlayer {
     private struct ProgressViewState: Equatable {
         let progress: Double
         let duration: Double
@@ -545,7 +545,7 @@ extension VideoPlayerView {
 
 // MARK: Sidebar
 
-extension VideoPlayerView {
+extension AnimeNowVideoPlayer {
     @ViewBuilder
     var sidebarOverlay: some View {
         WithViewStore(
@@ -627,7 +627,7 @@ extension VideoPlayerView {
 
 // MARK: Episodes Sidebar
 
-extension VideoPlayerView {
+extension AnimeNowVideoPlayer {
     private struct EpisodesSidebarViewState: Equatable {
         let episodes: IdentifiedArrayOf<Episode>
         let selectedEpisode: Episode.ID
@@ -714,7 +714,7 @@ extension VideoPlayerView {
 
 // MARK: Settings Sidebar
 
-extension VideoPlayerView {
+extension AnimeNowVideoPlayer {
     private struct SettingsSidebarViewState: Equatable {
         let selectedSetting: AnimeNowVideoPlayerCore.Sidebar.SettingsState.Section?
         let selectedProvider: Episode.Provider.ID?
@@ -985,7 +985,7 @@ extension VideoPlayerView {
 
 // MARK: Subtitles Sidebar
 
-extension VideoPlayerView {
+extension AnimeNowVideoPlayer {
     private struct SubtitlesSidebarViewState: Equatable {
         let subtitles: AVMediaSelectionGroup?
         let selected: AVMediaSelectionOption?
@@ -1035,7 +1035,7 @@ extension VideoPlayerView {
 struct VideoPlayerView_Previews: PreviewProvider {
     static var previews: some View {
         if #available(iOS 15.0, *) {
-            VideoPlayerView(
+            AnimeNowVideoPlayer(
                 store: .init(
                     initialState: .init(
                         anime: .narutoShippuden,

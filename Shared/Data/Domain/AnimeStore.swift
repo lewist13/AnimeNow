@@ -49,6 +49,10 @@ extension AnimeStore {
             lastUpdatedProgress: .init()
         )
 
+        episodeStoredInfo.number = Int16(episode.number)
+        episodeStoredInfo.title = anime.format == .movie ? anime.title : episode.name
+        episodeStoredInfo.cover = anime.format == .movie ? anime.posterImage.largest :  episode.thumbnail.first
+        episodeStoredInfo.isMovie = anime.format == .movie
         episodeStoredInfo.progress = progress
         episodeStoredInfo.lastUpdatedProgress = .init()
 

@@ -124,9 +124,13 @@ extension VideoPlayer: PlatformAgnosticViewRepresentable {
 
     func updatePlatformView(_ view: PlayerView, context: Context) {
         if let url = url {
-            view.play(for: url)
+            if view.play(for: url) {
+                // Clear observer
+                context.coordinator.clearObservers()
+            }
         } else {
             view.stopAndRemoveItem()
+            context.coordinator.clearObservers()
         }
 
         if let action = action {
@@ -177,6 +181,10 @@ extension VideoPlayer: PlatformAgnosticViewRepresentable {
 
         func removeObservers(view: PlayerView) {
             stopObserver(view: view)
+            clearObservers()
+        }
+
+        func clearObservers() {
             observerProgress = nil
             observerBuffer = nil
             observerDuration = nil
