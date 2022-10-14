@@ -211,7 +211,6 @@ extension VideoPlayer.PlayerView {
     ) {
         guard status != previous else { return }
         statusDidChange?(status)
-        print("videoPlayer status: \(status)")
     }
 }
 
@@ -240,7 +239,7 @@ extension VideoPlayer.PlayerView {
     }
 
     func seek(to time: CMTime) {
-        player.seek(to: time, toleranceBefore: time, toleranceAfter: time)
+        player.seek(to: time, toleranceBefore: .zero, toleranceAfter: .zero)
     }
 
     func stopAndRemoveItem() {
@@ -260,12 +259,17 @@ extension VideoPlayer.PlayerView {
         cancellables.removeAll()
         playerItemCancellables.removeAll()
     }
+
+    func resize(_ size: AVLayerVideoGravity) {
+        playerLayer.videoGravity = size
+    }
 }
 
 // MARK: AVPlayerItem + Extension
 
 public extension AVPlayerItem {
     var bufferProgress: Double {
+        guard totalDuration > 0 else { return 0}
         return currentBufferDuration / totalDuration
     }
     
@@ -327,11 +331,11 @@ extension AVPlayer {
     #endif
     
     var playProgress: Double {
-        return currentItem?.playProgress ?? -1
+        return currentItem?.playProgress ?? 0
     }
     
     var totalDuration: Double {
-        return currentItem?.totalDuration ?? -1
+        return currentItem?.totalDuration ?? 0
     }
     
     convenience init(asset: AVURLAsset) {

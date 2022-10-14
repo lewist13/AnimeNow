@@ -57,44 +57,44 @@ struct AnimeNowVideoPlayer: View {
             .onSubtitleSelectionChanged { selected in
                 viewStore.send(.playerSelectedSubtitle(selected))
             }
-            .frame(
-                maxWidth: .infinity,
-                maxHeight: .infinity,
-                alignment: .center
-            )
-            .overlay(
-                HStack(spacing: 0) {
-                    Color.clear
-                        .contentShape(Rectangle())
-                        .onTapGesture(count: 2) {
-                            viewStore.send(.backwardsDoubleTapped)
-                        }
-                    Color.clear
-                        .contentShape(Rectangle())
-                        .onTapGesture(count: 2) {
-                            viewStore.send(.forwardDoubleTapped)
-                        }
-                }
-                    .frame(
-                        maxWidth: .infinity,
-                        maxHeight: .infinity,
-                        alignment: .center
-                    )
-            )
-            .onTapGesture {
-                viewStore.send(.playerTapped)
-            }
-            .overlay(errorOverlay)
-            .overlay(playerControlsOverlay)
-            .overlay(statusOverlay)
-            .overlay(sidebarOverlay)
-            .statusBar(hidden: true)
-            .ignoresSafeArea(edges: .vertical)
-            .background(Color.black.edgesIgnoringSafeArea(.all))
             .onAppear {
                 viewStore.send(.onAppear)
             }
         }
+        .frame(
+            maxWidth: .infinity,
+            maxHeight: .infinity,
+            alignment: .center
+        )
+        .overlay(
+            HStack(spacing: 0) {
+                Color.clear
+                    .contentShape(Rectangle())
+                    .onTapGesture(count: 2) {
+                        ViewStore(store.stateless).send(.backwardsDoubleTapped)
+                    }
+                Color.clear
+                    .contentShape(Rectangle())
+                    .onTapGesture(count: 2) {
+                        ViewStore(store.stateless).send(.forwardDoubleTapped)
+                    }
+            }
+                .frame(
+                    maxWidth: .infinity,
+                    maxHeight: .infinity,
+                    alignment: .center
+                )
+        )
+        .onTapGesture {
+            ViewStore(store.stateless).send(.playerTapped)
+        }
+        .overlay(errorOverlay)
+        .overlay(playerControlsOverlay)
+        .overlay(statusOverlay)
+        .overlay(sidebarOverlay)
+        .statusBar(hidden: true)
+        .ignoresSafeArea(edges: .vertical)
+        .background(Color.black.edgesIgnoringSafeArea(.all))
         .prefersHomeIndicatorAutoHidden(true)
         .supportedOrientation(.landscape)
     }
@@ -350,8 +350,8 @@ extension AnimeNowVideoPlayer {
                 .foregroundColor(Color.black)
                 .font(.callout.weight(.black))
             )
-            .contentShape(Rectangle())
             .frame(width: 30, height: 30)
+            .contentShape(Rectangle())
             .onTapGesture {
                 ViewStore(store.stateless).send(.closeButtonTapped)
             }
@@ -375,12 +375,14 @@ extension AnimeNowVideoPlayer {
 
 extension AnimeNowVideoPlayer {
     private struct AnimeInfoViewState: Equatable {
+        let hasContent: Bool
         let title: String
         let header: String?
         let isMovie: Bool
 
         init(_ state: AnimeNowVideoPlayerCore.State) {
             let isMovie = state.anime.format == .movie
+            self.hasContent = (state.episodes.value?.count ?? 0) > 0
             self.isMovie = isMovie
             self.title = isMovie ? state.anime.title : (state.episode?.name ?? "Loading...")
             self.header = !isMovie ? "E\(state.selectedEpisode) \u{2022} \(state.anime.title)" : nil
@@ -407,7 +409,7 @@ extension AnimeNowVideoPlayer {
                         .font(.largeTitle.bold())
                         .lineLimit(1)
 
-                    if !viewState.isMovie {
+                    if !viewState.isMovie && viewState.hasContent {
                         Image(systemName: "chevron.compact.right")
                             .font(.body.weight(.black))
                     }
@@ -416,7 +418,7 @@ extension AnimeNowVideoPlayer {
             .foregroundColor(.white)
             .contentShape(Rectangle())
             .onTapGesture {
-                if !viewState.isMovie {
+                if !viewState.isMovie && viewState.hasContent {
                     viewState.send(.showEpisodesSidebar)
                 }
             }
@@ -629,11 +631,13 @@ extension AnimeNowVideoPlayer {
 
 extension AnimeNowVideoPlayer {
     private struct EpisodesSidebarViewState: Equatable {
+        let loading: Bool
         let episodes: IdentifiedArrayOf<Episode>
         let selectedEpisode: Episode.ID
         let episodesStore: [EpisodeStore]
 
         init(_ state: AnimeNowVideoPlayerCore.State) {
+            self.loading = !state.episodes.finished
             self.episodes = state.episodes.value ?? []
             self.selectedEpisode = state.selectedEpisode
             self.episodesStore = state.animeStore.value?.episodeStores ?? .init()
@@ -652,33 +656,47 @@ extension AnimeNowVideoPlayer {
                         state: EpisodesSidebarViewState.init
                     )
                 ) { viewStore in
-                    LazyVStack {
-                        ForEach(viewStore.episodes) { episode in
-                            ThumbnailItemCompactView(
-                                episode: episode,
-                                progress: viewStore.episodesStore.first(where: { $0.number == episode.id })?.progress
-                            )
-                            .overlay(
-                                selectedEpisodeOverlay(episode.id == viewStore.selectedEpisode)
-                            )
-                            .onTapGesture {
-                                if viewStore.selectedEpisode != episode.id {
-                                    viewStore.send(.selectEpisode(episode.id))
-                                }
-                            }
-                            .id(episode.id)
-                            .frame(height: 76)
+                    if viewStore.state.loading {
+                        VStack {
+                            ProgressView()
+                                .colorInvert()
+                                .brightness(1)
+                                .scaleEffect(1.25)
+                                .frame(width: 32, height: 32, alignment: .center)
+
+                            Text("Loading")
+                                .font(.body.bold())
                         }
-                    }
-                    .padding([.bottom])
-                    .onAppear {
-                        proxy.scrollTo(viewStore.selectedEpisode, anchor: .top)
-                    }
-                    .onChange(
-                        of: viewStore.selectedEpisode
-                    ) { newValue in
-                        withAnimation {
-                            proxy.scrollTo(newValue, anchor: .top)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    } else if viewStore.state.episodes.count > 0 {
+                        LazyVStack {
+                            ForEach(viewStore.episodes) { episode in
+                                ThumbnailItemCompactView(
+                                    episode: episode,
+                                    progress: viewStore.episodesStore.first(where: { $0.number == episode.id })?.progress
+                                )
+                                .overlay(
+                                    selectedEpisodeOverlay(episode.id == viewStore.selectedEpisode)
+                                )
+                                .onTapGesture {
+                                    if viewStore.selectedEpisode != episode.id {
+                                        viewStore.send(.selectEpisode(episode.id))
+                                    }
+                                }
+                                .id(episode.id)
+                                .frame(height: 76)
+                            }
+                        }
+                        .padding([.bottom])
+                        .onAppear {
+                            proxy.scrollTo(viewStore.selectedEpisode, anchor: .top)
+                        }
+                        .onChange(
+                            of: viewStore.selectedEpisode
+                        ) { newValue in
+                            withAnimation {
+                                proxy.scrollTo(newValue, anchor: .top)
+                            }
                         }
                     }
                 }

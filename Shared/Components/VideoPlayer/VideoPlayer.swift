@@ -195,7 +195,7 @@ extension VideoPlayer: PlatformAgnosticViewRepresentable {
         func startObserver(view: PlayerView) {
             guard view.periodicTimeChanged == nil else { return }
 
-            view.periodicTimeChanged = { [unowned self] timer in
+            view.periodicTimeChanged = { [unowned self] _ in
                 let progress = max(0, min(1.0, view.playProgress))
 
                 self.videoPlayer.progress = progress
@@ -260,9 +260,9 @@ extension VideoPlayer: PlatformAgnosticViewRepresentable {
 
             guard duration != observerDuration else { return }
 
-            DispatchQueue.main.async { handler(duration) }
-
             observerDuration = duration
+
+            DispatchQueue.main.async { handler(duration) }
         }
     }
 }

@@ -106,6 +106,7 @@ enum AnimeNowVideoPlayerCore {
         case saveEpisodeProgress(Episode.ID?)
         case setSidebar(Sidebar?)
         case showPlayerOverlay(Bool)
+        case closeSidebarAndShowControls
         case hideOverlayAnimationDelay
         case cancelHideOverlayAnimationDelay
         case close
@@ -189,10 +190,10 @@ extension AnimeNowVideoPlayerCore.State {
             return .loading
         } else if (episode?.providers.count ?? 0) > 0 && !sources.finished {
             return .loading
-        } else if playerStatus == .idle || playerStatus == .loading || playerStatus == .buffering {
-            return .loading
         } else if finishedWatching {
             return .replay
+        } else if playerStatus == .idle || playerStatus == .loading || playerStatus == .buffering {
+            return .loading
         } else if playerStatus == .playing {
             return .playing
         } else if playerStatus == .paused || playerStatus == .readyToPlay {
@@ -289,386 +290,380 @@ extension AnimeNowVideoPlayerCore.State {
 }
 
 extension AnimeNowVideoPlayerCore {
-    static var reducer: Reducer<AnimeNowVideoPlayerCore.State, AnimeNowVideoPlayerCore.Action, AnimeNowVideoPlayerCore.Environment> = .combine(
-        .init { state, action, environment in
-            struct HidePlayerOverlayDelayCancellable: Hashable {}
-            struct FetchEpisodesCancellable: Hashable {}
-            struct FetchSourcesCancellable: Hashable {}
-            struct AnimeInfoStoreObservableCancellable: Hashable {}
-            struct FetchSkipTimesCancellable: Hashable {}
+    static var reducer = Reducer<AnimeNowVideoPlayerCore.State, AnimeNowVideoPlayerCore.Action, AnimeNowVideoPlayerCore.Environment>
+    { state, action, environment in
+        struct HidePlayerOverlayDelayCancellable: Hashable {}
+        struct FetchEpisodesCancellable: Hashable {}
+        struct FetchSourcesCancellable: Hashable {}
+        struct AnimeInfoStoreObservableCancellable: Hashable {}
+        struct FetchSkipTimesCancellable: Hashable {}
 
-            let overlayVisibilityAnimation = Animation.easeInOut(
-                duration: 0.3
+        let overlayVisibilityAnimation = Animation.easeInOut(
+            duration: 0.3
+        )
+
+        switch action {
+
+        // View Actions
+
+        case .onAppear:
+            guard !state.hasInitialized else { break }
+            return .merge(
+                .init(value: .initializeFirstTime),
+                environment.repositoryClient.observe(
+                    .init(
+                        format: "id == %d",
+                        state.anime.id
+                    ),
+                    []
+                )
+                .receive(on: environment.mainQueue)
+                .eraseToEffect()
+                .map(Action.fetchedAnimeInfoStore)
+                .cancellable(id: AnimeInfoStoreObservableCancellable())
             )
 
-            switch action {
-
-            // View Actions
-
-            case .onAppear:
-                guard !state.hasInitialized else { break }
-                return .merge(
-                    .init(value: .initializeFirstTime),
-                    environment.repositoryClient.observe(
-                        .init(
-                            format: "id == %d",
-                            state.anime.id
-                        ),
-                        []
-                    )
-                    .receive(on: environment.mainQueue)
-                    .eraseToEffect()
-                    .map(Action.fetchedAnimeInfoStore)
-                    .cancellable(id: AnimeInfoStoreObservableCancellable())
-                )
-
-            case .playerTapped:
-                guard state.selectedSidebar == nil else {
-                    return .init(value: .closeSidebar)
-                }
-
-                let showingOverlay = !state.showPlayerOverlay
-
-                var effects: [Effect<Action, Never>] = [
-                    .init(value: .showPlayerOverlay(showingOverlay))
-                        .receive(on: environment.mainQueue.animation(overlayVisibilityAnimation))
-                        .eraseToEffect()
-                ]
-
-                if showingOverlay && state.playerStatus == .playing{
-                    // Show overlay with timeout if the video is currently playing
-                    effects.append(
-                        .init(value: .hideOverlayAnimationDelay)
-                    )
-                } else {
-                    effects.append(
-                        .init(value: .cancelHideOverlayAnimationDelay)
-                    )
-                }
-
-                return .concatenate(effects)
-
-            case .showEpisodesSidebar:
-                return .init(value: .setSidebar(.episodes))
-                    .receive(on: environment.mainQueue.animation(.easeInOut(duration: 0.35)))
-                    .eraseToEffect()
-
-            case .showSettingsSidebar:
-                return .init(value: .setSidebar(.settings(.init())))
-                    .receive(on: environment.mainQueue.animation(.easeInOut(duration: 0.35)))
-                    .eraseToEffect()
-
-            case .showSubtitlesSidebar:
-                return .init(value: .setSidebar(.subtitles))
-                    .receive(on: environment.mainQueue.animation(.easeInOut(duration: 0.35)))
-                    .eraseToEffect()
-
-            case .closeButtonTapped:
-                return .concatenate(
-                    .init(value: .saveEpisodeProgress(state.episode?.id)),
-                    .cancel(id: FetchSourcesCancellable()),
-                    .cancel(id: FetchEpisodesCancellable()),
-                    .cancel(id: FetchSkipTimesCancellable()),
-                    .cancel(id: HidePlayerOverlayDelayCancellable()),
-                    .init(value: .close)
-                        .delay(for: 0.25, scheduler: environment.mainQueue)
-                        .eraseToEffect()
-                )
-
-            case .closeSidebar:
-                return .init(value: .setSidebar(nil))
-                    .receive(on: environment.mainQueue.animation(.easeInOut(duration: 0.25)))
-                    .eraseToEffect()
-
-            case .selectEpisode(let episodeId, let saveProgress):
-                var effects = [Effect<Action, Never>]()
-
-                // Before selecting episode, save progress
-
-                if saveProgress {
-                    effects.append(.init(value: .saveEpisodeProgress(state.episode?.id)))
-                }
-
-                state.selectedEpisode = episodeId
-
-                // TODO: Add user defaults for preferred provider or fallback to first
-                let provider = state.episode?.providers.first?.id
-
-                effects.append(.init(value: .stopAndClearPlayer))
-                effects.append(.init(value: .selectProvider(provider, saveProgress: false)))
-                effects.append(.init(value: .fetchSkipTimes))
-
-                return .merge(effects)
-
-            case .selectProvider(let providerId, let saveProgress):
-                var effects = [Effect<Action, Never>]()
-
-                // Before selecting provider, save progress
-
-                if saveProgress {
-                    effects.append(.init(value: .saveEpisodeProgress(state.episode?.id)))
-                }
-
-                state.selectedProvider = providerId
-
-                effects.append(.init(value: .stopAndClearPlayer))
-                effects.append(.init(value: .fetchSources))
-
-                return .merge(effects)
-
-            case .selectSource(let sourceId, let saveProgress):
-                var effects = [Effect<Action, Never>]()
-
-                // Before selecting source, save progress
-
-                if saveProgress {
-                    effects.append(.init(value: .saveEpisodeProgress(state.episode?.id)))
-                }
-
-                state.selectedSource = sourceId
-
-                state.playerAction = .play
-                state.playerDuration = .zero
-                state.playerProgress = .zero
-                state.playerBuffered = .zero
-
-                return .concatenate(effects)
-
-            case .selectSidebarSettings(let section):
-                return .init(value: .sidebarSettingsSection(section))
-                    .receive(on: environment.mainQueue.animation(.easeInOut(duration: 0.25)))
-                    .eraseToEffect()
-
-            // Internal Actions
-
-            case .initializeFirstTime:
-                state.hasInitialized = true
-                return .init(value: .fetchEpisodes)
-
-            case .showPlayerOverlay(let show):
-                state.showPlayerOverlay = show
-
-            case .hideOverlayAnimationDelay:
-                return .init(value: .showPlayerOverlay(false))
-                    .delay(
-                        for: 5,
-                        scheduler:  environment.mainQueue.animation(overlayVisibilityAnimation)
-                    )
-                    .eraseToEffect()
-                    .cancellable(id: HidePlayerOverlayDelayCancellable())
-
-            case .cancelHideOverlayAnimationDelay:
-                return .cancel(id: HidePlayerOverlayDelayCancellable())
-
-            case .saveEpisodeProgress(let episodeId):
-                guard let episodeId = episodeId, let episode = state.episodes.value?[id: episodeId] else { break }
-                guard state.playerDuration > 0 else { break }
-                guard var animeInfoStore = state.animeStore.value else { break }
-
-                let progress = state.playerProgress
-
-                animeInfoStore.updateProgress(for: episode, anime: state.anime, progress: progress)
-
-                return environment.repositoryClient.insertOrUpdate(animeInfoStore)
-                    .receive(on: environment.mainQueue)
-                    .fireAndForget()
-
-            case .close:
-                break
-
-            case .setSidebar(let route):
-                state.selectedSidebar = route
-
-                if route != nil {
-                    return .merge(
-                        .init(value: .cancelHideOverlayAnimationDelay),
-                        .init(value: .showPlayerOverlay(false))
-                    )
-                }
-
-            // Section actions
-
-            case .sidebarSettingsSection(let section):
-                if case .settings(var value) = state.selectedSidebar {
-                    state.selectedSidebar = .settings(.init(selectedSection: section))
-                }
-
-            // Fetched Anime Store
-
-            case .fetchedAnimeInfoStore(let animeStores):
-                state.animeStore = .success(.findOrCreate(state.anime.id, animeStores))
-
-            // Fetch Episodes
-
-            case .fetchEpisodes:
-                guard !state.episodes.hasInitialized else {
-                    if state.episode != nil {
-                        return .init(value: .selectEpisode(state.selectedEpisode, saveProgress: false))
-                    }
-                    break
-                }
-                state.episodes = .loading
-                return environment.animeClient.getEpisodes(state.anime.id)
-                    .receive(on: environment.mainQueue)
-                    .eraseToEffect()
-                    .map(Action.fetchedEpisodes)
-                    .cancellable(id: FetchEpisodesCancellable())
-
-            case .fetchedEpisodes(let episodes):
-                state.episodes = .success(.init(uniqueElements: episodes))
-                return .init(value: .selectEpisode(state.selectedEpisode, saveProgress: false))
-
-            // Fetch Sources
-
-            case .fetchSources:
-                guard let provider = state.provider else { break }
-
-                state.sources = .loading
-                return environment.animeClient.getSources(provider)
-                    .receive(on: environment.mainQueue)
-                    .catchToEffect()
-                    .map(Action.fetchedSources)
-                    .cancellable(id: FetchSourcesCancellable(), cancelInFlight: true)
-
-            case .fetchedSources(.success(let sources)):
-                let sources = sources.sorted(by: \.quality).reversed()
-                state.sources = .success(.init(uniqueElements: sources))
-                // TODO: Set quality based on user defaults or the first one based on the one received
-                return .init(value: .selectSource(sources.first?.id, saveProgress: false))
-
-            case .fetchedSources(.failure):
-                state.sources = .failed
-                state.selectedSource = nil
-
-            // Fetch Skip Times
-
-            case .fetchSkipTimes:
-                guard let episode = state.episode, let malId = state.anime.malId else {
-                    return .init(value: .fetchedSkipTimes(.success([])))
-                }
-                state.skipTimes = .loading
-                return environment.animeClient.getSkipTimes(malId, episode.number)
-                    .receive(on: environment.mainQueue)
-                    .catchToEffect()
-                    .map(Action.fetchedSkipTimes)
-                    .cancellable(id: FetchSkipTimesCancellable(), cancelInFlight: true)
-
-            case .fetchedSkipTimes(.success(let skipTimes)):
-                state.skipTimes = .success(skipTimes)
-
-            case .fetchedSkipTimes(.failure):
-                state.skipTimes = .success([])
-
-            // Video Player Actions
-
-            case .backwardsDoubleTapped:
-                guard state.playerDuration > 0.0 else { break }
-                let progress = state.playerProgress - 15 / state.playerDuration
-
-                let requestedTime = max(progress, .zero)
-                return .merge(
-                    .init(value: .startSeeking),
-                    .init(value: .seeking(to: requestedTime)),
-                    .init(value: .stopSeeking)
-                )
-
-            case .forwardDoubleTapped:
-                guard state.playerDuration > 0.0 else { break }
-                let progress = state.playerProgress + 15 / state.playerDuration
-
-                let requestedTime = min(progress, 1.0)
-                return .merge(
-                    .init(value: .startSeeking),
-                    .init(value: .seeking(to: requestedTime)),
-                    .init(value: .stopSeeking)
-                )
-
-            // Internal Video Player Logic
-
-            case .replayTapped:
-                state.playerProgress = .zero
-                state.playerAction = .play
-
-            case .togglePlayback:
-                if case .playing = state.status {
-                    state.playerAction = .pause
-                } else {
-                    state.playerAction = .play
-                }
-
-            case .startSeeking:
-                state.playerAction = .pause
-
-            case .stopSeeking:
-                state.playerAction = .play
-
-            case .seeking(to: let to):
-                state.playerProgress = to
-
-            case .playerStatus(let status):
-                guard status != state.playerStatus else { break }
-                state.playerStatus = status
-
-                if case .playing = status, state.showPlayerOverlay {
-                    return .init(value: .hideOverlayAnimationDelay)
-                }
-
-                if case .paused = status, state.showPlayerOverlay {
-                    return .init(value: .cancelHideOverlayAnimationDelay)
-                }
-
-            case .playerDuration(let duration):
-
-                // First time duration is set and is not zero, resume progress
-
-                if state.playerDuration == .zero && duration != .zero,
-                   let animeInfo = state.animeStore.value,
-                   let episode = state.episode,
-                   let savedEpisodeProgress = animeInfo.episodeStores.first(where: { $0.number ==  episode.number }),
-                   !savedEpisodeProgress.almostFinished {
-                    state.playerProgress = savedEpisodeProgress.progress
-                } else {
-                    state.playerProgress = .zero
-                }
-
-                state.playerDuration = duration
-
-            case .playerBuffer(let buffer):
-                state.playerBuffered = buffer
-
-            case .playerPiPStatus(let status):
-                state.playerPiPStatus = status
-
-            case .playerPlayedToEnd:
-                break
-
-            case .selectSubtitle(let subtitle):
-                state.playerSelectedSubtitle = subtitle
-
-            case .playerSubtitles(let subtitles):
-                state.playerSubtitles = subtitles
-
-            case .playerSelectedSubtitle(let subtitle):
-                state.playerSelectedSubtitle = subtitle
-
-            case .stopAndClearPlayer:
-                state.playerAction = .pause
-                state.playerStatus = .idle
-                state.playerProgress = .zero
-                state.playerBuffered = .zero
-                state.playerDuration = .zero
-                state.playerPiPStatus = .restoreUI
-                state.playerSubtitles = nil
-                state.playerSelectedSubtitle = nil
-
-            case .binding:
-                break
+        case .playerTapped:
+            guard state.selectedSidebar == nil else {
+                return .init(value: .closeSidebar)
             }
 
-            return .none
+            let showingOverlay = !state.showPlayerOverlay
+
+            var effects: [Effect<Action, Never>] = [
+                .init(value: .showPlayerOverlay(showingOverlay))
+                    .receive(on: environment.mainQueue.animation(overlayVisibilityAnimation))
+                    .eraseToEffect()
+            ]
+
+            if showingOverlay && state.playerStatus == .playing {
+                // Show overlay with timeout if the video is currently playing
+                effects.append(
+                    .init(value: .hideOverlayAnimationDelay)
+                )
+            } else {
+                effects.append(
+                    .init(value: .cancelHideOverlayAnimationDelay)
+                )
+            }
+
+            return .concatenate(effects)
+
+        case .showEpisodesSidebar:
+            return .init(value: .setSidebar(.episodes))
+                .receive(on: environment.mainQueue.animation(.easeInOut(duration: 0.35)))
+                .eraseToEffect()
+
+        case .showSettingsSidebar:
+            return .init(value: .setSidebar(.settings(.init())))
+                .receive(on: environment.mainQueue.animation(.easeInOut(duration: 0.35)))
+                .eraseToEffect()
+
+        case .showSubtitlesSidebar:
+            return .init(value: .setSidebar(.subtitles))
+                .receive(on: environment.mainQueue.animation(.easeInOut(duration: 0.35)))
+                .eraseToEffect()
+
+        case .closeButtonTapped:
+            return .concatenate(
+                .init(value: .saveEpisodeProgress(state.episode?.id)),
+                .cancel(id: FetchSourcesCancellable()),
+                .cancel(id: FetchEpisodesCancellable()),
+                .cancel(id: FetchSkipTimesCancellable()),
+                .cancel(id: HidePlayerOverlayDelayCancellable()),
+                .init(value: .close)
+                .delay(for: 0.25, scheduler: environment.mainQueue)
+                .eraseToEffect()
+            )
+
+        case .closeSidebar:
+            return .init(value: .setSidebar(nil))
+                .receive(on: environment.mainQueue.animation(.easeInOut(duration: 0.25)))
+                .eraseToEffect()
+
+        case .selectEpisode(let episodeId, let saveProgress):
+            var effects = [Effect<Action, Never>]()
+
+            // Before selecting episode, save progress
+
+            if saveProgress {
+                effects.append(.init(value: .saveEpisodeProgress(state.episode?.id)))
+            }
+
+            state.selectedEpisode = episodeId
+
+            // TODO: Add user defaults for preferred provider or fallback to first
+            let provider = state.episode?.providers.first?.id
+
+            effects.append(.init(value: .stopAndClearPlayer))
+            effects.append(.init(value: .selectProvider(provider, saveProgress: false)))
+            effects.append(.init(value: .fetchSkipTimes))
+
+            return .merge(effects)
+            
+        case .selectProvider(let providerId, let saveProgress):
+            var effects = [Effect<Action, Never>]()
+
+            // Before selecting provider, save progress
+
+            if saveProgress {
+                effects.append(.init(value: .saveEpisodeProgress(state.episode?.id)))
+            }
+
+            state.selectedProvider = providerId
+
+            effects.append(.init(value: .stopAndClearPlayer))
+            effects.append(.init(value: .fetchSources))
+
+            return .merge(effects)
+
+        case .selectSource(let sourceId, let saveProgress):
+            var effects = [Effect<Action, Never>]()
+
+            // Before selecting source, save progress
+
+            if saveProgress {
+                effects.append(.init(value: .saveEpisodeProgress(state.episode?.id)))
+            }
+
+            state.selectedSource = sourceId
+
+            return .concatenate(effects)
+
+        case .selectSidebarSettings(let section):
+            return .init(value: .sidebarSettingsSection(section))
+                .receive(on: environment.mainQueue.animation(.easeInOut(duration: 0.25)))
+                .eraseToEffect()
+
+        // Internal Actions
+    
+        case .initializeFirstTime:
+            state.hasInitialized = true
+            return .init(value: .fetchEpisodes)
+
+        case .showPlayerOverlay(let show):
+            state.showPlayerOverlay = show
+
+        case .hideOverlayAnimationDelay:
+            return .init(value: .showPlayerOverlay(false))
+                .delay(
+                    for: 5,
+                    scheduler:  environment.mainQueue.animation(overlayVisibilityAnimation)
+                )
+                .eraseToEffect()
+                .cancellable(id: HidePlayerOverlayDelayCancellable())
+
+        case .cancelHideOverlayAnimationDelay:
+            return .cancel(id: HidePlayerOverlayDelayCancellable())
+
+        case .saveEpisodeProgress(let episodeId):
+            guard let episodeId = episodeId, let episode = state.episodes.value?[id: episodeId] else { break }
+            guard state.playerDuration > 0 else { break }
+            guard var animeInfoStore = state.animeStore.value else { break }
+
+            let progress = state.playerProgress
+
+            animeInfoStore.updateProgress(for: episode, anime: state.anime, progress: progress)
+
+            return environment.repositoryClient.insertOrUpdate(animeInfoStore)
+                .receive(on: environment.mainQueue)
+                .fireAndForget()
+
+        case .closeSidebarAndShowControls:
+            state.selectedSidebar = nil
+            return .init(value: .showPlayerOverlay(true))
+
+        case .close:
+            break
+            
+        case .setSidebar(let route):
+            state.selectedSidebar = route
+
+            if route != nil {
+                return .merge(
+                    .init(value: .cancelHideOverlayAnimationDelay),
+                    .init(value: .showPlayerOverlay(false))
+                )
+            }
+
+        // Section actions
+
+        case .sidebarSettingsSection(let section):
+            if case .settings(var value) = state.selectedSidebar {
+                state.selectedSidebar = .settings(.init(selectedSection: section))
+            }
+
+        // Fetched Anime Store
+
+        case .fetchedAnimeInfoStore(let animeStores):
+            state.animeStore = .success(.findOrCreate(state.anime.id, animeStores))
+
+        // Fetch Episodes
+
+        case .fetchEpisodes:
+            guard !state.episodes.hasInitialized else {
+                if state.episode != nil {
+                    return .init(value: .selectEpisode(state.selectedEpisode, saveProgress: false))
+                }
+                break
+            }
+            state.episodes = .loading
+            return environment.animeClient.getEpisodes(state.anime.id)
+                .receive(on: environment.mainQueue)
+                .eraseToEffect()
+                .map(Action.fetchedEpisodes)
+                .cancellable(id: FetchEpisodesCancellable())
+
+        case .fetchedEpisodes(let episodes):
+            state.episodes = .success(.init(uniqueElements: episodes))
+            return .init(value: .selectEpisode(state.selectedEpisode, saveProgress: false))
+
+        // Fetch Sources
+
+        case .fetchSources:
+            guard let provider = state.provider else { break }
+
+            state.sources = .loading
+            return environment.animeClient.getSources(provider)
+                .receive(on: environment.mainQueue)
+                .catchToEffect()
+                .map(Action.fetchedSources)
+                .cancellable(id: FetchSourcesCancellable(), cancelInFlight: true)
+
+        case .fetchedSources(.success(let sources)):
+            let sources = sources.sorted(by: \.quality).reversed()
+            state.sources = .success(.init(uniqueElements: sources))
+            // TODO: Set quality based on user defaults or the first one based on the one received
+            return .init(value: .selectSource(sources.first?.id, saveProgress: false))
+
+        case .fetchedSources(.failure):
+            state.sources = .failed
+            state.selectedSource = nil
+
+        // Fetch Skip Times
+
+        case .fetchSkipTimes:
+            guard let episode = state.episode, let malId = state.anime.malId else {
+                return .init(value: .fetchedSkipTimes(.success([])))
+            }
+            state.skipTimes = .loading
+            return environment.animeClient.getSkipTimes(malId, episode.number)
+                .receive(on: environment.mainQueue)
+                .catchToEffect()
+                .map(Action.fetchedSkipTimes)
+                .cancellable(id: FetchSkipTimesCancellable(), cancelInFlight: true)
+
+        case .fetchedSkipTimes(.success(let skipTimes)):
+            state.skipTimes = .success(skipTimes)
+
+        case .fetchedSkipTimes(.failure):
+            state.skipTimes = .success([])
+
+        // Video Player Actions
+
+        case .backwardsDoubleTapped:
+            guard state.playerDuration > 0.0 else { break }
+            let progress = state.playerProgress - 15 / state.playerDuration
+
+            let requestedTime = max(progress, .zero)
+            return .merge(
+                .init(value: .startSeeking),
+                .init(value: .seeking(to: requestedTime)),
+                .init(value: .stopSeeking)
+            )
+
+        case .forwardDoubleTapped:
+            guard state.playerDuration > 0.0 else { break }
+            let progress = state.playerProgress + 15 / state.playerDuration
+
+            let requestedTime = min(progress, 1.0)
+            return .merge(
+                .init(value: .startSeeking),
+                .init(value: .seeking(to: requestedTime)),
+                .init(value: .stopSeeking)
+            )
+
+        // Internal Video Player Logic
+
+        case .replayTapped:
+            state.playerProgress = .zero
+            state.playerAction = .play
+
+        case .togglePlayback:
+            if case .playing = state.status {
+                state.playerAction = .pause
+            } else {
+                state.playerAction = .play
+            }
+
+        case .startSeeking:
+            state.playerAction = .pause
+
+        case .stopSeeking:
+            state.playerAction = .play
+
+        case .seeking(to: let to):
+            state.playerProgress = to
+
+        case .playerStatus(let status):
+            guard status != state.playerStatus else { break }
+            state.playerStatus = status
+
+            if case .playing = status, state.showPlayerOverlay {
+                return .init(value: .hideOverlayAnimationDelay)
+            } else if state.showPlayerOverlay {
+                return .init(value: .cancelHideOverlayAnimationDelay)
+            }
+
+        case .playerDuration(let duration):
+
+            // First time duration is set and is not zero, resume progress
+
+            if state.playerDuration == .zero && duration != .zero,
+               let animeInfo = state.animeStore.value,
+               let episode = state.episode,
+               let savedEpisodeProgress = animeInfo.episodeStores.first(where: { $0.number ==  episode.number }),
+               !savedEpisodeProgress.almostFinished {
+                state.playerProgress = savedEpisodeProgress.progress
+            } else {
+                state.playerProgress = .zero
+            }
+
+            state.playerDuration = duration
+
+        case .playerBuffer(let buffer):
+            state.playerBuffered = buffer
+
+        case .playerPiPStatus(let status):
+            state.playerPiPStatus = status
+
+        case .playerPlayedToEnd:
+            break
+
+        case .selectSubtitle(let subtitle):
+            state.playerSelectedSubtitle = subtitle
+
+        case .playerSubtitles(let subtitles):
+            state.playerSubtitles = subtitles
+
+        case .playerSelectedSubtitle(let subtitle):
+            state.playerSelectedSubtitle = subtitle
+
+        case .stopAndClearPlayer:
+            state.playerAction = .pause
+            state.playerStatus = .idle
+            state.playerProgress = .zero
+            state.playerBuffered = .zero
+            state.playerDuration = .zero
+            state.playerPiPStatus = .restoreUI
+            state.playerSubtitles = nil
+            state.playerSelectedSubtitle = nil
+
+        case .binding:
+            break
         }
-            .binding()
-//            .debug()
-//            .debugActions("tca", actionFormat: .labelsOnly, environment: { _ in DebugEnvironment() })
-    )
+
+        return .none
+    }
+    .binding()
 }
