@@ -21,7 +21,7 @@ struct AnimeItemView: View {
                         colors: [
                             .clear,
                             .clear,
-                            .black.opacity(0.85)
+                            .black.opacity(0.75)
                         ],
                         startPoint: .top,
                         endPoint: .bottom
@@ -32,6 +32,8 @@ struct AnimeItemView: View {
                 .font(.system(size: 16).weight(.bold))
                 .multilineTextAlignment(.leading)
                 .foregroundColor(.white)
+                .lineLimit(2)
+                .multilineTextAlignment(.leading)
                 .padding(12)
         }
         .aspectRatio(2/3, contentMode: .fit)

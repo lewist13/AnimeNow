@@ -11,8 +11,6 @@ import ComposableArchitecture
 struct ContentView: View {
     let store: Store<ContentCore.State, ContentCore.Action>
 
-    @State var visibility = TabBarVisibility.visible
-
     var body: some View {
 
         // MARK: Home View
@@ -20,37 +18,66 @@ struct ContentView: View {
         WithViewStore(
             store.scope(state: \.route)
         ) { viewStore in
-            TabBar(
-                selection: viewStore.binding(\.$route, as: \.self),
-                visibility: $visibility
-            ) {
-                HomeView(
-                    store: store.scope(
-                        state: \.home,
-                        action: ContentCore.Action.home
+            Group {
+                switch viewStore.state {
+                case .home:
+                    HomeView(
+                        store: store.scope(
+                            state: \.home,
+                            action: ContentCore.Action.home
+                        )
                     )
-                )
-                .tabItem(for: TabBarRoute.home)
 
-                SearchView(
-                    store: store.scope(
-                        state: \.search,
-                        action: ContentCore.Action.search
+                case .search:
+                    SearchView(
+                        store: store.scope(
+                            state: \.search,
+                            action: ContentCore.Action.search
+                        )
                     )
-                )
-                .tabItem(for: TabBarRoute.search)
 
-                DownloadsView(
-                    store: store.scope(
-                        state: \.downloads,
-                        action: ContentCore.Action.downloads
+                case .downloads:
+                    DownloadsView(
+                        store: store.scope(
+                            state: \.downloads,
+                            action: ContentCore.Action.downloads
+                        )
                     )
-                )
-                .tabItem(for: TabBarRoute.downloads)
+                }
             }
-            .tabBar(style: AnimeTabBarStyle())
-            .tabItem(style: AnimeTabItemStyle())
-            .animation(Animation.linear(duration: 0.15), value: viewStore.state)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .overlay(
+                HStack(spacing: 0) {
+                    ForEach(ContentCore.Route.allCases, id: \.self) { item in
+                        Image(
+                            systemName: "\(item == viewStore.state ? item.selectedIcon : item.icon)"
+                        )
+                        .foregroundColor(
+                            item == viewStore.state ? Color.red : Color.white
+                        )
+                        .font(.system(size: 20).weight(.semibold))
+                        .frame(
+                            width: 60,
+                            height: 60,
+                            alignment: .center
+                        )
+                        .onTapGesture {
+                            viewStore.send(
+                                .binding(.set(\.$route, item)),
+                                animation: .linear(duration: 0.15)
+                            )
+                        }
+                    }
+                }
+                    .padding(.horizontal, 8)
+                    .background(Color(white: 0.08))
+                    .clipShape(Capsule())
+                    .frame(
+                        maxWidth: .infinity,
+                        maxHeight: .infinity,
+                        alignment: .bottom
+                    )
+            )
         }
         .overlay(
             IfLetStore(
@@ -58,7 +85,7 @@ struct ContentView: View {
                     state: \.animeDetail,
                     action: ContentCore.Action.animeDetail
                 ),
-                then: { AnimeDetailView(store: $0) }
+                then: AnimeDetailView.init(store:)
             )
         )
         .overlay(
@@ -66,36 +93,12 @@ struct ContentView: View {
                 store.scope(
                     state: \.videoPlayer,
                     action: ContentCore.Action.videoPlayer
-                )
-            ) {
-                AnimeNowVideoPlayer(
-                    store: $0
-                )
-            }
+                ),
+                then: AnimeNowVideoPlayer.init(store:)
+            )
         )
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .preferredColorScheme(.dark)
-    }
-}
-
-struct AnimeTabBarStyle: TabBarStyle {
-    public func tabBar(with geometry: GeometryProxy, itemsContainer: @escaping () -> AnyView) -> some View {
-        itemsContainer()
-            .padding(.horizontal)
-            .background(Color(hue: 0, saturation: 0, brightness: 0.03))
-            .cornerRadius(geometry.size.height / 4)
-            .fixedSize()
-            .padding(.vertical, 28)
-            .frame(maxWidth: .infinity)
-    }
-}
-
-struct AnimeTabItemStyle: TabItemStyle {
-    public func tabItem(item: TabBarRoute, isSelected: Bool) -> some View {
-        Image(systemName: "\(isSelected ? item.selectedIcon : item.icon)")
-            .font(.system(size: 20).weight(.semibold))
-            .frame(width: 58, height: 58)
-            .foregroundColor(isSelected ? Color.red : Color.white)
     }
 }
 

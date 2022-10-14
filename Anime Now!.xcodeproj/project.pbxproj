@@ -62,7 +62,6 @@
 		136245BE28EA4DA000ECE46B /* EquatableError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 136245BC28EA4DA000ECE46B /* EquatableError.swift */; };
 		1363011C28C5C49F0076BF0A /* TinyGraphQL in Frameworks */ = {isa = PBXBuildFile; productRef = 1363011B28C5C49F0076BF0A /* TinyGraphQL */; };
 		1363011E28C5C4B00076BF0A /* TinyGraphQL in Frameworks */ = {isa = PBXBuildFile; productRef = 1363011D28C5C4B00076BF0A /* TinyGraphQL */; };
-		1364BA7A28E12BBC005BAEBA /* TabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1364BA7928E12BBC005BAEBA /* TabBar.swift */; };
 		1364BA9C28E13F6E005BAEBA /* DownloadsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1364BA9A28E13F6E005BAEBA /* DownloadsView.swift */; };
 		1364BA9D28E13F6E005BAEBA /* DownloadsCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1364BA9B28E13F6E005BAEBA /* DownloadsCore.swift */; };
 		13650F3328CFE0BF002E20DD /* AnimeClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13650F3228CFE0BF002E20DD /* AnimeClient.swift */; };
@@ -189,7 +188,6 @@
 		1359668C28E6100B00EB2AFC /* HapticEngineClient+Mock.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "HapticEngineClient+Mock.swift"; sourceTree = "<group>"; };
 		1359668D28E6100B00EB2AFC /* HapticEngineClient+Live.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "HapticEngineClient+Live.swift"; sourceTree = "<group>"; };
 		136245BC28EA4DA000ECE46B /* EquatableError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EquatableError.swift; sourceTree = "<group>"; };
-		1364BA7928E12BBC005BAEBA /* TabBar.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TabBar.swift; sourceTree = "<group>"; };
 		1364BA9A28E13F6E005BAEBA /* DownloadsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadsView.swift; sourceTree = "<group>"; };
 		1364BA9B28E13F6E005BAEBA /* DownloadsCore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadsCore.swift; sourceTree = "<group>"; };
 		13650F3228CFE0BF002E20DD /* AnimeClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimeClient.swift; sourceTree = "<group>"; };
@@ -294,7 +292,6 @@
 		13386AE928CC16F2005E8352 /* Components */ = {
 			isa = PBXGroup;
 			children = (
-				1364BA7928E12BBC005BAEBA /* TabBar.swift */,
 				1309D6C228E22BB500CC9036 /* View+Redacted.swift */,
 				138066EB28C5699F0012DAFB /* AnimeItemView.swift */,
 				1312FD6128DD7CB0004A415F /* AirplayView.swift */,
@@ -786,7 +783,6 @@
 				134E0E9228D125C000A5F5E5 /* UserDefaultsClient.swift in Sources */,
 				13FC21DF28C3A3FD000F0F79 /* Persistence.swift in Sources */,
 				13FC21C828C39762000F0F79 /* RepositoryClient.swift in Sources */,
-				1364BA7A28E12BBC005BAEBA /* TabBar.swift in Sources */,
 				132754FF28D28F5A00A6C525 /* Array+Duplicates.swift in Sources */,
 				1327550628D2A11A00A6C525 /* UserDefaultsClient+Live.swift in Sources */,
 				1380562128E9341A00B9B45B /* Cache.swift in Sources */,

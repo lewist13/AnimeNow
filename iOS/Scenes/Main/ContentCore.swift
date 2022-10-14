@@ -11,8 +11,40 @@ import Foundation
 import ComposableArchitecture
 
 enum ContentCore {
+    public enum Route: String, CaseIterable {
+        case home
+        case search
+        case downloads
+
+        var icon: String {
+            switch self {
+            case .home:
+                return "house"
+            case .search:
+                return "magnifyingglass"
+            case .downloads:
+                return "arrow.down"
+            }
+        }
+
+        var selectedIcon: String {
+            switch self {
+            case .home:
+                return "house.fill"
+            case .search:
+                return self.icon
+            case .downloads:
+                return self.icon
+            }
+        }
+
+        var title: String {
+            self.rawValue
+        }
+    }
+
     struct State: Equatable {
-        @BindableState var route = TabBarRoute.home
+        @BindableState var route = Route.home
 
         var home = HomeCore.State()
         var search = SearchCore.State()

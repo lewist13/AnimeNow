@@ -32,7 +32,7 @@ struct HomeView: View {
                     )
 
                     animeItems(
-                        title: "Top Airing Anime",
+                        title: "Top Airing",
                         isLoading: viewStore.state,
                         store: store.scope(
                             state: \.topAiringAnime
@@ -40,7 +40,7 @@ struct HomeView: View {
                     )
 
                     animeItems(
-                        title: "Upcoming Anime",
+                        title: "Upcoming",
                         isLoading: viewStore.state,
                         store: store.scope(
                             state: \.topUpcomingAnime
@@ -48,7 +48,7 @@ struct HomeView: View {
                     )
 
                     animeItems(
-                        title: "Highest Rated Anime",
+                        title: "Highest Rated",
                         isLoading: viewStore.state,
                         store: store.scope(
                             state: \.highestRatedAnime
@@ -56,7 +56,7 @@ struct HomeView: View {
                     )
 
                     animeItems(
-                        title: "Most Popular Anime",
+                        title: "Most Popular",
                         isLoading: viewStore.state,
                         store: store.scope(
                             state: \.mostPopularAnime
@@ -123,7 +123,7 @@ extension HomeView {
                     }
                 }
             }
-            .frame(height: 200)
+            .frame(height: 218)
         }
     }
 
