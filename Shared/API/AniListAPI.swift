@@ -71,12 +71,18 @@ extension AniListAPI {
         let format: Anime.Format
 
         switch media.format {
-        case .some(.MOVIE):
+        case .MOVIE:
             format = .movie
-        case .some(.TV_SHORT), .some(Media.Format.TV), .some(.OVA), .some(.SPECIAL):
+        case .TV:
             format = .tv
-        default:
-            format = .tv
+        case .TV_SHORT:
+            format = .tvShort
+        case .OVA:
+            format = .ova
+        case .ONA:
+            format = .ona
+        case .SPECIAL:
+            format = .special
         }
 
         let status: Anime.Status
@@ -93,6 +99,15 @@ extension AniListAPI {
         case .HIATUS:
             status = .tba
         }
+
+        let averageScore: Double?
+
+        if let averageRating = media.averageScore {
+            averageScore = Double(averageRating) / 100.0
+        } else {
+            averageScore = nil
+        }
+
         return Anime(
             id: media.id,
             malId: media.idMal,
@@ -100,10 +115,11 @@ extension AniListAPI {
             description: media.description?.trimHTMLTags() ?? "No description",
             posterImage: coverImages,
             coverImage: posterImage,
-            categories: [],
+            categories: media.genres.prefix(3).sorted(),
             status: status,
             format: format,
-            releaseYear: media.startDate.year
+            releaseYear: media.startDate.year,
+            avgRating: averageScore
         )
     }
 }
@@ -187,24 +203,28 @@ extension AniListAPI {
     struct MediaResponses: Decodable {
         let Media: Media
     }
+
     struct Media: Decodable {
         let id: Int
         let idMal: Int?
         let title: Title
         let type: MediaType
-        let format: Format?
+        let format: Format
         let status: Status
         let description: String?
         let seasonYear: Int?
         let coverImage: MediaCoverImage
         let bannerImage: String?
         let startDate: FuzzyDate
+        let averageScore: Int?
+        let genres: [String]
 
         enum ArgumentOptions {
             case id(Int)
             case idIn([Int])
             case isAdult(Bool = false)
             case type(MediaType = .ANIME)
+            case formatIn([Format] = Format.allCases)
             case sort([TrendSort])
             case status(Status)
             case statusIn([Status])
@@ -213,7 +233,7 @@ extension AniListAPI {
             case search(String)
 
             static let defaults: [ArgumentOptions] = {
-                [.isAdult(), .type()]
+                [.isAdult(), .type(), .formatIn()]
             }()
         }
 
@@ -233,6 +253,8 @@ extension AniListAPI {
                 MediaCoverImage.createQueryObject(CodingKeys.coverImage)
                 Field(CodingKeys.bannerImage)
                 FuzzyDate.createQueryObject(CodingKeys.startDate)
+                Field(CodingKeys.averageScore)
+                Field(CodingKeys.genres)
             }
 
             for argument in arguments {
@@ -245,6 +267,8 @@ extension AniListAPI {
                     obj = obj.argument(key: "isAdult", value: bool)
                 case .type(let mediaType):
                     obj = obj.argument(key: "type", value: mediaType)
+                case .formatIn(let formats):
+                    obj = obj.argument(key: "format_in", value: formats)
                 case .sort(let sort):
                     obj = obj.argument(key: "sort", value: sort)
                 case .search(let query):
@@ -316,17 +340,13 @@ extension AniListAPI {
             case HIATUS
         }
 
-        enum Format: String, Decodable {
+        enum Format: String, Decodable, EnumValueRepresentable, CaseIterable {
             case TV
             case TV_SHORT
             case MOVIE
             case SPECIAL
             case OVA
             case ONA
-            case MUSIC
-            case MANGA
-            case NOVEL
-            case ONE_SHOT
         }
 
         enum MediaType: String, Decodable, EnumRawValueRepresentable {

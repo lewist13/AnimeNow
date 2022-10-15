@@ -13,27 +13,17 @@ import Kingfisher
 struct AnimeDetailView: View {
     let store: Store<AnimeDetailCore.State, AnimeDetailCore.Action>
 
-    struct ViewState: Equatable {
-        let animeStatus: Anime.Status
-        let animeFormat: Anime.Format
-
-        init(_ state: AnimeDetailCore.State) {
-            self.animeStatus = state.anime.status
-            self.animeFormat = state.anime.format
-        }
-    }
-
     var body: some View {
-        WithViewStore(store.scope(state: \.loading)) { loadingViewState in
+        WithViewStore(store.scope(state: \.loading)) { viewStore in
             ScrollView(.vertical, showsIndicators: false) {
                 VStack(spacing: 16) {
                     topContainer
                     infoContainer
                     episodesContainer
                 }
-                .placeholder(active: loadingViewState.state)
+                .placeholder(active: viewStore.state)
                 .transition(.opacity)
-                .animation(.easeInOut(duration: 0.3), value: loadingViewState.state)
+                .animation(.easeInOut(duration: 0.3), value: viewStore.state)
             }
             .transition(.move(edge: .bottom).combined(with: .opacity))
             .frame(maxWidth: .infinity)
@@ -45,8 +35,9 @@ struct AnimeDetailView: View {
                     .ignoresSafeArea()
             )
             .onAppear {
-                loadingViewState.send(.onAppear)
+                viewStore.send(.onAppear)
             }
+            .disabled(viewStore.state)
         }
     }
 }
@@ -55,21 +46,19 @@ struct AnimeDetailView: View {
 
 extension AnimeDetailView {
     @ViewBuilder var closeButton: some View {
-        Button {
-            ViewStore(store.stateless)
-                .send(.closeButtonPressed)
-        } label: {
-            Image(
-                systemName: "xmark"
-            )
-            .font(Font.system(size: 14, weight: .black))
+        Image(systemName: "xmark")
+            .font(.system(size: 14, weight: .black))
             .foregroundColor(Color.white.opacity(0.9))
-        }
-        .buttonStyle(BlurredButtonStyle())
-        .clipShape(Circle())
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
-        .padding()
-        .edgesIgnoringSafeArea(.top)
+            .padding(12)
+            .background(BlurView(style: .systemThinMaterialDark))
+            .clipShape(Circle())
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+            .padding()
+            .edgesIgnoringSafeArea(.top)
+            .onTapGesture {
+                ViewStore(store.stateless)
+                    .send(.closeButtonPressed)
+            }
     }
 }
 
@@ -174,6 +163,7 @@ extension AnimeDetailView {
                                     )
                             }
                             .buttonStyle(BlurredButtonStyle())
+                            .background(BlurView(style: .systemThinMaterialDark))
                             .clipShape(Circle())
                         }
                     }
@@ -212,11 +202,20 @@ extension AnimeDetailView {
                 // Bubbles info
 
                 HStack {
+                    if let rating = anime.avgRating {
+                        ChipView(
+                            text: "\(ceil((rating * 5) / 0.5) * 0.5)"
+                        ) {
+                            Image(systemName: "star.fill")
+                                .foregroundColor(.yellow)
+                        }
+                    }
+
                     if let year = anime.releaseYear {
                         ChipView(text: "\(year)")
                     }
 
-                    ChipView(text: anime.format == .tv ? "TV" : "Movie")
+                    ChipView(text: anime.format.rawValue)
                 }
                 .font(.system(size: 14).bold())
             }
@@ -236,7 +235,7 @@ extension AnimeDetailView {
         IfLetStore(
             store.scope(
                 state: { state -> AnimeDetailCore.LoadableEpisodes? in
-                    state.anime.status != .upcoming && state.anime.format == .tv ? state.episodes : nil
+                    state.anime.status != .upcoming && state.anime.format != .movie ? state.episodes : nil
                 }
             )
         ) { episodesStore in
@@ -301,7 +300,8 @@ extension AnimeDetailView {
                     number: episode.number,
                     progress: progressState.state?.progress
                 ),
-                watched: progressState.state?.almostFinished ?? false
+                watched: progressState.state?.almostFinished ?? false,
+                progressSize: 10
             )
         }
 //            .overlay(
@@ -318,6 +318,8 @@ extension AnimeDetailView {
 //                        .foregroundColor(Color.white.opacity(0.9))
 //                    }
 //                    .buttonStyle(BlurredButtonStyle())
+//                    .background(BlurView(style: .systemThinMaterialDark))
+
 //                    .clipShape(Circle())
 //                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
 //                    .padding()

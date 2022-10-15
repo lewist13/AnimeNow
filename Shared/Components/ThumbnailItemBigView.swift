@@ -40,6 +40,7 @@ struct ThumbnailItemBigView: View {
 
     let type: InputType
     var watched: Bool = false
+    var progressSize: CGFloat = 10
 
     var body: some View {
         GeometryReader { reader in
@@ -60,10 +61,9 @@ struct ThumbnailItemBigView: View {
                     .clipped()
                     .overlay(
                         LinearGradient(
-                            colors: [
-                                .clear,
-                                .clear,
-                                .black.opacity(0.65)
+                            stops: [
+                                .init(color: .clear, location: 0.4),
+                                .init(color: .black.opacity(0.75), location: 1.0)
                             ],
                             startPoint: .top,
                             endPoint: .bottom
@@ -71,25 +71,23 @@ struct ThumbnailItemBigView: View {
                     )
 
                 VStack(alignment: .leading, spacing: 0) {
-
-                    Text(type.name)
-                        .multilineTextAlignment(.leading)
-                        .lineLimit(1)
-                        .font(.title2.weight(.bold))
-
                     if case .episode(_,_, let animeName, let number, _) = type {
                         HStack(spacing: 2) {
                             Text("E\(number)")
-
                             if let animeName = animeName {
                                 Text("\u{2022}")
                                 Text(animeName)
                             }
                         }
-                        .font(.callout.weight(.bold))
+                        .font(.footnote.weight(.bold))
                         .lineLimit(1)
-                        .foregroundColor(.init(white: 0.85))
+                        .foregroundColor(.init(white: 0.9))
                     }
+
+                    Text(type.name)
+                        .multilineTextAlignment(.leading)
+                        .lineLimit(1)
+                        .font(.title3.weight(.bold))
 
                     if let progress = type.progress, !watched {
                         SeekbarView(
@@ -97,7 +95,7 @@ struct ThumbnailItemBigView: View {
                             padding: 0
                         )
                             .disabled(true)
-                            .frame(height: 10)
+                            .frame(height: progressSize)
                             .padding(.top, 4)
                     }
                 }
@@ -109,7 +107,7 @@ struct ThumbnailItemBigView: View {
                         .font(.footnote.bold())
                         .foregroundColor(Color.white)
                         .padding(12)
-                        .background(BlurView(style: .systemUltraThinMaterialDark))
+//                        .background(BlurView(style: .systemUltraThinMaterialDark))
                         .clipShape(Capsule())
                         .frame(
                             maxWidth: .infinity,

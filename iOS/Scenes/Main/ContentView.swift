@@ -53,12 +53,12 @@ struct ContentView: View {
                             systemName: "\(item == viewStore.state ? item.selectedIcon : item.icon)"
                         )
                         .foregroundColor(
-                            item == viewStore.state ? Color.red : Color.white
+                            item == viewStore.state ? Color.white : Color.gray
                         )
                         .font(.system(size: 20).weight(.semibold))
                         .frame(
-                            width: 60,
-                            height: 60,
+                            width: 56,
+                            height: 56,
                             alignment: .center
                         )
                         .onTapGesture {
@@ -69,7 +69,7 @@ struct ContentView: View {
                         }
                     }
                 }
-                    .padding(.horizontal, 8)
+                    .padding(.horizontal, 12)
                     .background(Color(white: 0.08))
                     .clipShape(Capsule())
                     .frame(
@@ -77,8 +77,19 @@ struct ContentView: View {
                         maxHeight: .infinity,
                         alignment: .bottom
                     )
+                    .ignoresSafeArea(.keyboard, edges: .bottom)
             )
         }
+//        .sheetStore(
+//            store: store.scope(
+//                state: \.animeDetail,
+//                action: ContentCore.Action.animeDetail
+//            ),
+//            onDismiss: {
+//                ViewStore(store.stateless).send(.animeDetail(.closeButtonPressed))
+//            },
+//            destination: AnimeDetailView.init(store:)
+//        )
         .overlay(
             IfLetStore(
                 store.scope(

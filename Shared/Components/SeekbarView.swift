@@ -27,7 +27,7 @@ struct SeekbarView: View {
                 ZStack(alignment: .leading) {
                     // Background
 
-                    BlurView(style: .systemThinMaterialDark)
+                    Color.white.opacity(0.15)
 
                     Color.gray.opacity(0.25)
                         .frame(

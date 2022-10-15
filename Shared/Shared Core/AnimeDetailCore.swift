@@ -155,6 +155,7 @@ extension AnimeDetailCore {
         .init { state, action, environment in
             struct CancelFetchingEpisodesId: Hashable {}
             struct CancelFetchingSourcesId: Hashable {}
+            struct CancelObservingAnimeDB: Hashable {}
 
             switch action {
             case .onAppear:
@@ -171,6 +172,7 @@ extension AnimeDetailCore {
                         .receive(on: environment.mainQueue)
                         .eraseToEffect()
                         .map(Action.fetchedAnimeFromDB)
+                        .cancellable(id: CancelObservingAnimeDB())
                 )
             case .tappedFavorite:
                 if var animeStore = state.animeStore.value ?? nil {
@@ -205,6 +207,7 @@ extension AnimeDetailCore {
                 return .concatenate(
                     .cancel(id: CancelFetchingEpisodesId()),
                     .cancel(id: CancelFetchingSourcesId()),
+                    .cancel(id: CancelObservingAnimeDB()),
                     .init(value: .close)
                 )
             case .close:

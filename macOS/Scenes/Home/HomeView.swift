@@ -23,7 +23,12 @@ struct HomeView_Previews: PreviewProvider {
             store: .init(
                 initialState: .init(),
                 reducer: HomeCore.reducer,
-                environment: .init()
+                environment: .init(
+                    animeClient: .mock,
+                    mainQueue: .main,
+                    mainRunLoop: .main,
+                    repositoryClient: RepositoryClientMock.shared
+                )
             )
         )
     }

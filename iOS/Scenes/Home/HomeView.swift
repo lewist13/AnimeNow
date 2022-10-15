@@ -9,6 +9,7 @@
 import SwiftUI
 import ComposableArchitecture
 import SwiftUINavigation
+import Kingfisher
 
 struct HomeView: View {
     let store: Store<HomeCore.State, HomeCore.Action>
@@ -16,11 +17,8 @@ struct HomeView: View {
     var body: some View {
         WithViewStore(store.scope(state: \.isLoading)) { viewStore in
             ScrollView(.vertical, showsIndicators: false) {
-                topHeaderView
-
-                LazyVStack(spacing: 24) {
-                    animeItems(
-                        title: "Trending Now",
+                VStack(spacing: 24) {
+                    animeHeroItems(
                         isLoading: viewStore.state,
                         store: store.scope(
                             state: \.topTrendingAnime
@@ -28,14 +26,16 @@ struct HomeView: View {
                     )
 
                     resumeWatchingEpisodes(
-                        store: store.scope(state: \.resumeWatching)
+                        store: store.scope(
+                            state: \.resumeWatching
+                        )
                     )
 
                     animeItems(
-                        title: "Top Airing",
+                        title: "Last Watched",
                         isLoading: viewStore.state,
                         store: store.scope(
-                            state: \.topAiringAnime
+                            state: \.lastWatchedAnime
                         )
                     )
 
@@ -63,7 +63,10 @@ struct HomeView: View {
                         )
                     )
                 }
-                .placeholder(active: viewStore.state, duration:  2.0)
+                .placeholder(
+                    active: viewStore.state,
+                    duration:  2.0
+                )
                 .animation(.easeInOut(duration: 0.5), value: viewStore.state)
             }
             .disabled(viewStore.state)
@@ -72,16 +75,86 @@ struct HomeView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .ignoresSafeArea()
     }
 }
 
 extension HomeView {
     @ViewBuilder
     var topHeaderView: some View {
-        Text("Discover")
+        Text("Anime Now!")
             .font(.largeTitle.bold())
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding([.horizontal, .top])
+            .frame(maxWidth: .infinity, alignment: .center)
+            .padding()
+    }
+}
+
+extension HomeView {
+    @ViewBuilder
+    func animeHeroItems(
+        isLoading: Bool,
+        store: Store<HomeCore.LoadableAnime, HomeCore.Action>
+    ) -> some View {
+        Group {
+            if isLoading {
+                animeHero(.placeholder)
+            } else {
+                WithViewStore(store) { viewStore in
+                    if let animes = viewStore.state.value,
+                       animes.count > 0 {
+                        TabView {
+                            ForEach(animes) { anime in
+                                animeHero(anime)
+                                    .onTapGesture {
+                                        viewStore.send(.animeTapped(anime))
+                                    }
+                            }
+                        }
+                        .tabViewStyle(.page(indexDisplayMode: .automatic))
+                    }
+                }
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .aspectRatio(5/7, contentMode: .fill)
+    }
+
+    @ViewBuilder
+    private func animeHero(
+        _ anime: Anime
+    ) -> some View {
+        ZStack(alignment: .bottomLeading) {
+            KFImage(anime.posterImage.largest?.link)
+                .fade(duration: 0.5)
+                .resizable()
+                .contentShape(Rectangle())
+                .clipped()
+                .overlay(
+                    LinearGradient(
+                        colors: [
+                            Color.black.opacity(0.3),
+                            Color.clear,
+                            Color.black.opacity(0.75)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(anime.title)
+                    .font(.title.weight(.bold))
+                    .lineLimit(2)
+
+                Text(anime.description)
+                    .font(.callout)
+                    .lineLimit(3)
+            }
+            .foregroundColor(.white)
+            .multilineTextAlignment(.leading)
+            .padding()
+            .padding(.bottom, 36)
+        }
     }
 }
 
@@ -94,18 +167,15 @@ extension HomeView {
         isLoading: Bool,
         store: Store<HomeCore.LoadableAnime, HomeCore.Action>
     ) -> some View {
-        VStack(alignment: .leading) {
-            headerText(title)
+        WithViewStore(store) { viewStore in
+            if isLoading || viewStore.state.value != nil && viewStore.state.value!.count > 0 {
+                VStack(alignment: .leading) {
+                    headerText(title)
 
-            WithViewStore(store) { viewStore in
-                if case .failed = viewStore.state {
-                    failedToFetchAnimesView
-                        .padding(.horizontal)
-                } else {
                     ScrollView(.horizontal, showsIndicators: false) {
                         LazyHStack(alignment: .center, spacing: 12) {
                             if case let .success(animes) = viewStore.state, !isLoading {
-                                ForEach(animes, id: \.self) { anime in
+                                ForEach(animes) { anime in
                                     AnimeItemView(
                                         anime: anime
                                     )
@@ -115,15 +185,17 @@ extension HomeView {
                                 }
                             } else {
                                 ForEach(0...2, id: \.self) { _ in
-                                    AnimeItemView(anime: .placeholder)
+                                    AnimeItemView(
+                                        anime: .placeholder
+                                    )
                                 }
                             }
                         }
                         .padding(.horizontal)
                     }
+                    .frame(height: 200)
                 }
             }
-            .frame(height: 218)
         }
     }
 
@@ -136,6 +208,7 @@ extension HomeView {
             Text("There seems to be an error fetching shows.")
                 .foregroundColor(.red)
         }
+        .frame(maxWidth: .infinity)
     }
 }
 
@@ -147,7 +220,8 @@ extension HomeView {
         store: Store<HomeCore.LoadableEpisodes, HomeCore.Action>
     ) -> some View {
         WithViewStore(store) { viewStore in
-            if case .success(let animeEpisodesInfo) = viewStore.state, animeEpisodesInfo.count > 0 {
+            if let animeEpisodesInfo = viewStore.state.value,
+               animeEpisodesInfo.count > 0 {
                 VStack(alignment: .leading) {
                     headerText("Resume Watching")
 
@@ -168,7 +242,8 @@ extension HomeView {
                                             animeName: animeEpisodeInfo.anime.title,
                                             number: Int(animeEpisodeInfo.episodeInfo.number),
                                             progress: animeEpisodeInfo.episodeInfo.progress
-                                        )
+                                        ),
+                                    progressSize: 6
                                 )
                                 .frame(height: 150)
                                 .onTapGesture {
@@ -190,7 +265,8 @@ extension HomeView {
     @ViewBuilder
     func headerText(_ title: String) -> some View {
         Text(title)
-            .font(.title3.bold())
+            .font(.headline.bold())
+            .foregroundColor(.white)
             .padding(.horizontal)
             .opacity(0.9)
     }

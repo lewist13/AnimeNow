@@ -12,7 +12,13 @@ import SwiftUI
 struct AnimeNowApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ContentView(
+                store: .init(
+                    initialState: .init(),
+                    reducer: ContentCore.reducer,
+                    environment: .live
+                )
+            )
         }
     }
 }

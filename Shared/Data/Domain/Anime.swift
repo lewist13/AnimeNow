@@ -18,27 +18,15 @@ struct Anime: Hashable, Identifiable {
     let status: Status
     let format: Format
     let releaseYear: Int?
+    let avgRating: Double?  /// 0...1
 
-    enum AnimeListID: Hashable {
-        case kitsu(String)
-        case anilist(Int)
-        case mal(String)
-
-        var value: Decodable {
-            switch self {
-            case .kitsu(let id):
-                return id
-            case .anilist(let id):
-                return id
-            case .mal(let id):
-                return id
-            }
-        }
-    }
-
-    enum Format {
-        case tv
-        case movie
+    enum Format: String {
+        case tv = "TV"
+        case tvShort = "TV Short"
+        case special = "Special"
+        case ova = "OVA"
+        case ona = "ONA"
+        case movie = "Movie"
     }
 
     enum Status: String, Hashable {
@@ -65,7 +53,8 @@ extension Anime {
         ],
         status: .finished,
         format: .tv,
-        releaseYear: 2009
+        releaseYear: 2009,
+        avgRating: nil
     )
 
     static let attackOnTitan = Anime(
@@ -82,7 +71,8 @@ extension Anime {
         ],
         status: .current,
         format: .tv,
-        releaseYear: 2013
+        releaseYear: 2013,
+        avgRating: nil
     )
 
     static let empty = Anime(
@@ -95,7 +85,8 @@ extension Anime {
         categories: [],
         status: .tba,
         format: .tv,
-        releaseYear: nil
+        releaseYear: nil,
+        avgRating: nil
     )
 
     static let placeholder = Anime(
@@ -108,6 +99,7 @@ extension Anime {
         categories: [],
         status: .tba,
         format: .tv,
-        releaseYear: nil
+        releaseYear: nil,
+        avgRating: nil
     )
 }

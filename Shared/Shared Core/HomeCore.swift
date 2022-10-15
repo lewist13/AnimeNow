@@ -16,11 +16,11 @@ enum HomeCore {
 
     struct State: Equatable {
         var topTrendingAnime: LoadableAnime = .idle
-        var topAiringAnime: LoadableAnime = .idle
         var topUpcomingAnime: LoadableAnime = .idle
         var highestRatedAnime: LoadableAnime = .idle
         var mostPopularAnime: LoadableAnime = .idle
         var resumeWatching: LoadableEpisodes = .idle
+        var lastWatchedAnime: LoadableAnime = .idle
     }
 
     enum Action: Equatable, BindableAction {
@@ -30,7 +30,9 @@ enum HomeCore {
         case fetchedAnime(keyPath: WritableKeyPath<State, LoadableAnime>, result: Result<[Anime], EquatableError>)
         case fetchedAnimesInDB([AnimeStore])
         case fetchResumeWatchingAnimes([EpisodeInfoWithAnimeId])
-        case fetchedAnimeForResumeWatching(Result<[EpisodeInfoWithAnime], EquatableError>)
+        case fetchedResumeWatchingAnimes(Result<[EpisodeInfoWithAnime], EquatableError>)
+        case fetchLastWatchedAnimes([AnimeStore])
+        case fetchedLastWatchedAnimes([Anime])
         case binding(BindingAction<HomeCore.State>)
     }
 
@@ -44,38 +46,40 @@ enum HomeCore {
 
 extension HomeCore.State {
     var isLoading: Bool {
-        !topTrendingAnime.hasInitialized || topTrendingAnime.isLoading ||
-        !topAiringAnime.hasInitialized || topAiringAnime.isLoading ||
-        !topUpcomingAnime.hasInitialized || topUpcomingAnime.isLoading ||
-        !highestRatedAnime.hasInitialized || highestRatedAnime.isLoading ||
-        !mostPopularAnime.hasInitialized || mostPopularAnime.isLoading ||
-        !resumeWatching.hasInitialized || resumeWatching.isLoading
+        !topTrendingAnime.finished ||
+        !topUpcomingAnime.finished ||
+        !highestRatedAnime.finished ||
+        !mostPopularAnime.finished ||
+        !resumeWatching.finished ||
+        !lastWatchedAnime.finished
     }
 
     var hasInitialized: Bool {
         topTrendingAnime.hasInitialized &&
-        topAiringAnime.hasInitialized &&
         topUpcomingAnime.hasInitialized &&
         highestRatedAnime.hasInitialized &&
         mostPopularAnime.hasInitialized &&
-        resumeWatching.hasInitialized
+        resumeWatching.hasInitialized &&
+        lastWatchedAnime.hasInitialized
     }
 }
 
 extension HomeCore {
     static let reducer = Reducer<HomeCore.State, HomeCore.Action, HomeCore.Environment>.combine(
         .init { state, action, environment in
+            struct LastWatchAnimesFetchCancellable: Hashable {}
+            struct ResumeWatchingFetchAnimeCancellable: Hashable {}
+
             switch (action) {
             case .onAppear:
-                guard !state.hasInitialized else {
-                    break
-                }
+                guard !state.hasInitialized else { break }
                 state.topTrendingAnime = .loading
-                state.topAiringAnime = .loading
                 state.topUpcomingAnime = .loading
                 state.highestRatedAnime = .loading
                 state.mostPopularAnime = .loading
                 state.resumeWatching = .loading
+                state.lastWatchedAnime = .loading
+
                 return .merge(
                     environment.animeClient.getTopTrendingAnime()
                         .receive(on: environment.mainQueue)
@@ -85,10 +89,6 @@ extension HomeCore {
                         .receive(on: environment.mainQueue)
                         .catchToEffect()
                         .map { HomeCore.Action.fetchedAnime(keyPath: \.topUpcomingAnime, result: $0) },
-                    environment.animeClient.getTopAiringAnime()
-                        .receive(on: environment.mainQueue)
-                        .catchToEffect()
-                        .map { HomeCore.Action.fetchedAnime(keyPath: \.topAiringAnime, result: $0) },
                     environment.animeClient.getHighestRatedAnime()
                         .receive(on: environment.mainQueue)
                         .catchToEffect()
@@ -97,7 +97,11 @@ extension HomeCore {
                         .receive(on: environment.mainQueue)
                         .catchToEffect()
                         .map { HomeCore.Action.fetchedAnime(keyPath: \.mostPopularAnime, result: $0) },
-                    environment.repositoryClient.observe(nil, [])
+                    environment.repositoryClient.observe(
+                        .init(
+                            format: "episodeStores.@count > 0"),
+                            []
+                    )
                         .receive(on: environment.mainQueue)
                         .eraseToEffect()
                         .map(Action.fetchedAnimesInDB)
@@ -107,14 +111,26 @@ extension HomeCore {
             case .fetchedAnime(let keyPath, .failure(let error)):
                 print(error)
                 state[keyPath: keyPath] = .failed
-            case .fetchedAnimesInDB(let animesInDB):
-                var resumeWatchingAnimes = [EpisodeInfoWithAnimeId]()
-                for animeInfo in animesInDB {
-                    guard let recentEpisodeInfo = animeInfo.lastModifiedEpisode, !recentEpisodeInfo.almostFinished else { continue }
-                    resumeWatchingAnimes.append(.init(animeId: animeInfo.id, episodeInfo: recentEpisodeInfo))
+
+            case .fetchedAnimesInDB(let animesInDb):
+                let sortedAnimeStores = animesInDb.sorted { anime1, anime2 in
+                    guard let lastModifiedOne = anime1.lastModifiedEpisode,
+                          let lastModifiedTwo = anime2.lastModifiedEpisode else {
+                        return false
+                    }
+                    return lastModifiedOne.lastUpdatedProgress > lastModifiedTwo.lastUpdatedProgress
                 }
 
-                return .init(value: .fetchResumeWatchingAnimes(resumeWatchingAnimes))
+                var resumeWatchingAnimes = [EpisodeInfoWithAnimeId]()
+                for animeStore in sortedAnimeStores {
+                    guard let recentEpisodeInfo = animeStore.lastModifiedEpisode, !recentEpisodeInfo.almostFinished else { continue }
+                    resumeWatchingAnimes.append(.init(animeId: animeStore.id, episodeInfo: recentEpisodeInfo))
+                }
+
+                return .merge(
+                    .init(value: .fetchLastWatchedAnimes(sortedAnimeStores)),
+                    .init(value: .fetchResumeWatchingAnimes(resumeWatchingAnimes))
+                )
 
             case .fetchResumeWatchingAnimes(let episodeInfoWithAnimeIds):
                 guard episodeInfoWithAnimeIds.count > 0 else {
@@ -137,16 +153,49 @@ extension HomeCore {
                             return episodeInfosWithAnimes.sorted(by: \.episodeInfo.lastUpdatedProgress).reversed()
                         }
                     }
-                    .map(Action.fetchedAnimeForResumeWatching)
-            case .fetchedAnimeForResumeWatching(.success(let resumeWatchings)):
+                    .map(Action.fetchedResumeWatchingAnimes)
+                    .cancellable(id: ResumeWatchingFetchAnimeCancellable(), cancelInFlight: true)
+
+            case .fetchedResumeWatchingAnimes(.success(let resumeWatchings)):
                 state.resumeWatching = .success(.init(uniqueElements: resumeWatchings))
-            case .fetchedAnimeForResumeWatching(.failure):
-                state.resumeWatching = .failed
+
+            case .fetchedResumeWatchingAnimes(.failure):
+                state.resumeWatching = .success([])
+
+            case .fetchLastWatchedAnimes(let animeStores):
+                guard !animeStores.isEmpty else {
+                    state.lastWatchedAnime = .success([])
+                    break
+                }
+
+                // TODO: Improve fetching last watched by reducing calls
+
+                return environment.animeClient.getAnimes(animeStores.map(\.id))
+                    .receive(on: environment.mainQueue)
+                    .replaceError(with: [])
+                    .eraseToEffect()
+                    .map { animes in
+                        var sorted = [Anime]()
+
+                        for animeStore in animeStores {
+                            if let anime = animes.first(where: { $0.id == animeStore.id }) {
+                                sorted.append(anime)
+                            }
+                        }
+                        return sorted
+                    }
+                    .map(Action.fetchedLastWatchedAnimes)
+                    .cancellable(id: LastWatchAnimesFetchCancellable(), cancelInFlight: true)
+
+            case .fetchedLastWatchedAnimes(let animes):
+                state.lastWatchedAnime = .success(.init(uniqueElements: animes))
 
             case .resumeWatchingTapped:
                 break
+
             case .binding:
                 break
+
             case .animeTapped:
                 break
             }
