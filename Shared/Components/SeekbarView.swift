@@ -2,7 +2,7 @@
 //  SeekbarView.swift
 //  Anime Now! (iOS)
 //
-//  Created by Erik Bautista on 9/22/22.
+//  Created by ErrorErrorError on 9/22/22.
 //
 
 import SwiftUI

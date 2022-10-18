@@ -2,7 +2,7 @@
 //  ContentView.swift
 //  Shared
 //
-//  Created by Erik Bautista on 9/2/22.
+//  Created by ErrorErrorError on 9/2/22.
 //
 
 import SwiftUI
@@ -27,19 +27,19 @@ struct ContentView: View {
                             action: ContentCore.Action.home
                         )
                     )
-                case .collection:
-                    CollectionView(
-                        store: store.scope(
-                            state: \.collection,
-                            action: ContentCore.Action.collection
-                        )
-                    )
-
                 case .search:
                     SearchView(
                         store: store.scope(
                             state: \.search,
                             action: ContentCore.Action.search
+                        )
+                    )
+
+                case .collection:
+                    CollectionView(
+                        store: store.scope(
+                            state: \.collection,
+                            action: ContentCore.Action.collection
                         )
                     )
 
@@ -57,28 +57,29 @@ struct ContentView: View {
                 maxHeight: .infinity
             )
             .overlay(
-                HStack(spacing: 0) {
-                    ForEach(ContentCore.Route.allCases, id: \.self) { item in
-                        Image(
-                            systemName: "\(item == viewStore.state ? item.selectedIcon : item.icon)"
-                        )
-                        .foregroundColor(
-                            item == viewStore.state ? Color.white : Color.gray
-                        )
-                        .font(.system(size: 20).weight(.semibold))
-                        .frame(
-                            width: 56,
-                            height: 56,
-                            alignment: .center
-                        )
-                        .onTapGesture {
-                            viewStore.send(
-                                .binding(.set(\.$route, item)),
-                                animation: .linear(duration: 0.15)
+                GeometryReader { reader in
+                    HStack(spacing: 0) {
+                        ForEach(ContentCore.Route.allCases, id: \.self) { item in
+                            Image(
+                                systemName: "\(item == viewStore.state ? item.selectedIcon : item.icon)"
                             )
+                            .foregroundColor(
+                                item == viewStore.state ? Color.white : Color.gray
+                            )
+                            .font(.system(size: 20).weight(.semibold))
+                            .frame(
+                                width: 56,
+                                height: 56,
+                                alignment: .center
+                            )
+                            .onTapGesture {
+                                viewStore.send(
+                                    .binding(.set(\.$route, item)),
+                                    animation: .linear(duration: 0.15)
+                                )
+                            }
                         }
                     }
-                }
                     .padding(.horizontal, 12)
                     .background(Color(white: 0.08))
                     .clipShape(Capsule())
@@ -87,7 +88,13 @@ struct ContentView: View {
                         maxHeight: .infinity,
                         alignment: .bottom
                     )
+                    .padding(reader.safeAreaInsets.bottom > 0 ? 0 : 24)
                     .ignoresSafeArea(.keyboard, edges: .bottom)
+                }
+                .frame(
+                    maxWidth: .infinity,
+                    maxHeight: .infinity
+                )
             )
         }
         .overlay(

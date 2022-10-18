@@ -2,7 +2,7 @@
 //  ContentCore.swift
 //  Anime Now!
 //
-//  Created Erik Bautista on 9/4/22.
+//  Created by ErrorErrorError on 9/4/22.
 //  Copyright © 2022. All rights reserved.
 //
 
@@ -45,6 +45,10 @@ enum ContentCore {
 
         var title: String {
             .init(self.rawValue.prefix(1).capitalized + self.rawValue.dropFirst())
+        }
+
+        static var allCases: [ContentCore.Route] {
+            return [.home, .search]
         }
     }
 

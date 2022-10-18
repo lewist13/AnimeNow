@@ -2,7 +2,7 @@
 //  Cache.swift
 //  Anime Now!
 //
-//  Created by Erik Bautista on 10/1/22.
+//  Created by ErrorErrorError on 10/1/22.
 //
 //  From: https://www.swiftbysundell.com/articles/caching-in-swift/
 

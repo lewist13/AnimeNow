@@ -2,7 +2,7 @@
 //  Models.swift
 //  Anime Now! (iOS)
 //
-//  Created by Erik Bautista on 9/6/22.
+//  Created by ErrorErrorError on 9/6/22.
 //
 
 import Foundation

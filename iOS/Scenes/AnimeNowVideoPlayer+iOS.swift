@@ -2,7 +2,7 @@
 //  AnimeNowVideoPlayer+iOS.swift
 //  Anime Now! (iOS)
 //
-//  Created by Erik Bautista on 10/16/22.
+//  Created by ErrorErrorError on 10/16/22.
 //
 
 import SwiftUI

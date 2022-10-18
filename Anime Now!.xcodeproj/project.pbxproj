@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1304124D28FEF4C20011CE3C /* SideArrowsList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1304124C28FEF4C20011CE3C /* SideArrowsList.swift */; };
+		1304124E28FEF4C20011CE3C /* SideArrowsList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1304124C28FEF4C20011CE3C /* SideArrowsList.swift */; };
 		1306E77528E76D4D004FC3E9 /* CDAnimeStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1306E77428E76D4D004FC3E9 /* CDAnimeStore.swift */; };
 		1306E77628E76D4D004FC3E9 /* CDAnimeStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1306E77428E76D4D004FC3E9 /* CDAnimeStore.swift */; };
 		1309D6C328E22BB500CC9036 /* View+Redacted.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1309D6C228E22BB500CC9036 /* View+Redacted.swift */; };
@@ -189,6 +191,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		1304124C28FEF4C20011CE3C /* SideArrowsList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SideArrowsList.swift; sourceTree = "<group>"; };
 		1306E77428E76D4D004FC3E9 /* CDAnimeStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CDAnimeStore.swift; sourceTree = "<group>"; };
 		1309D6C228E22BB500CC9036 /* View+Redacted.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+Redacted.swift"; sourceTree = "<group>"; };
 		130ED93928E3EF72000811A6 /* ChipView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChipView.swift; sourceTree = "<group>"; };
@@ -405,8 +408,9 @@
 				1312FD5B28DD4BEA004A415F /* ThumbnailItemBigView.swift */,
 				1312FD5F28DD6934004A415F /* SeekbarView.swift */,
 				130ED93928E3EF72000811A6 /* ChipView.swift */,
-				13B2771128F7902200B4B4A3 /* VideoPlayer */,
 				13D83B8928FDAE340044F04A /* SnapCarousel.swift */,
+				13B2771128F7902200B4B4A3 /* VideoPlayer */,
+				1304124C28FEF4C20011CE3C /* SideArrowsList.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -840,6 +844,7 @@
 				13378BA828C9B4E5000FF0D8 /* Throwable.swift in Sources */,
 				1359668E28E6100B00EB2AFC /* HapticClient.swift in Sources */,
 				138066EA28C55BE30012DAFB /* HomeView.swift in Sources */,
+				1304124D28FEF4C20011CE3C /* SideArrowsList.swift in Sources */,
 				1364BA9C28E13F6E005BAEBA /* DownloadsView.swift in Sources */,
 				1380560928E8AD1800B9B45B /* Data+Extensions.swift in Sources */,
 				130ED93A28E3EF73000811A6 /* ChipView.swift in Sources */,
@@ -867,6 +872,7 @@
 				13DF206128FBBDF100EE804D /* CollectionCore.swift in Sources */,
 				13B2771B28F79FF200B4B4A3 /* ConsumetAPI.swift in Sources */,
 				13C1550A28FB672F0064885D /* HomeCore.swift in Sources */,
+				1304124E28FEF4C20011CE3C /* SideArrowsList.swift in Sources */,
 				13FC21E028C3A439000F0F79 /* Persistence.swift in Sources */,
 				13B2771928F79FF200B4B4A3 /* EnimeAPI.swift in Sources */,
 				137A819D28C5456400B69503 /* Episode.swift in Sources */,
@@ -1072,7 +1078,6 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "anime-now-ios-info.plist";
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "";
@@ -1090,7 +1095,7 @@
 				SDKROOT = iphoneos;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 1;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
 		};
@@ -1105,7 +1110,6 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "anime-now-ios-info.plist";
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "";
@@ -1123,7 +1127,7 @@
 				SDKROOT = iphoneos;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 1;
+				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;

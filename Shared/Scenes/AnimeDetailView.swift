@@ -2,7 +2,7 @@
 //  AnimeDetailView.swift
 //  Anime Now!
 //
-//  Created Erik Bautista on 9/6/22.
+//  Created by ErrorErrorError on 9/6/22.
 //  Copyright © 2022. All rights reserved.
 //
 
@@ -73,7 +73,9 @@ extension AnimeDetailView {
             )
         ) { animeViewStore in
             ZStack(alignment: .bottom) {
-                KFImage(animeViewStore.posterImage.largest?.link)
+                KFImage(
+                    (DeviceUtil.isPhone ? animeViewStore.posterImage.largest : animeViewStore.coverImage.largest ?? animeViewStore.posterImage.largest)?.link
+                )
                     .resizable()
                     .overlay(
                         LinearGradient(
@@ -175,7 +177,7 @@ extension AnimeDetailView {
                 .padding(.horizontal)
             }
         }
-        .aspectRatio(2/3, contentMode: .fill)
+        .aspectRatio(DeviceUtil.isPhone ? 2/3 : 8/3, contentMode: .fill)
     }
 }
 

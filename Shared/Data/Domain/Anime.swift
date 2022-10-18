@@ -2,7 +2,7 @@
 //  Anime.swift
 //  Anime Now! (macOS)
 //
-//  Created by Erik Bautista on 9/4/22.
+//  Created by ErrorErrorError on 9/4/22.
 //
 
 import Foundation

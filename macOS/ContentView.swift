@@ -2,7 +2,7 @@
 //  ContentView.swift
 //  Anime Now! (macOS)
 //
-//  Created by Erik Bautista on 9/3/22.
+//  Created by ErrorErrorError on 9/3/22.
 //
 
 import SwiftUI

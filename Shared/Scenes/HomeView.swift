@@ -2,7 +2,7 @@
 //  HomeView.swift
 //  Anime Now!
 //
-//  Created Erik Bautista on 9/4/22.
+//  Created by ErrorErrorError on 9/4/22.
 //  Copyright © 2022. All rights reserved.
 //
 
@@ -96,7 +96,7 @@ extension HomeView {
     ) -> some View {
         ZStack(alignment: .bottomLeading) {
             KFImage(
-                (DeviceUtil.isMac ? anime.coverImage.largest : anime.posterImage.largest)?.link ?? anime.posterImage.largest?.link
+                (DeviceUtil.isPhone ? anime.posterImage.largest : anime.coverImage.largest ?? anime.posterImage.largest)?.link
             )
                 .fade(duration: 0.5)
                 .resizable()
@@ -126,7 +126,7 @@ extension HomeView {
             .foregroundColor(.white)
             .multilineTextAlignment(.leading)
             .padding()
-            .padding(.bottom, 36)
+            .padding(.bottom, 24)
         }
     }
 }
@@ -198,7 +198,7 @@ extension HomeView {
                         }
                         .padding(.horizontal)
                     }
-                    .frame(height: 200)
+                    .frame(height: DeviceUtil.isPhone ? 200 : 275)
                 }
             }
         }
@@ -250,7 +250,7 @@ extension HomeView {
                                         ),
                                     progressSize: 6
                                 )
-                                .frame(height: 150)
+                                .frame(height: DeviceUtil.isPhone ? 150 : 225)
                                 .onTapGesture {
                                     viewStore.send(.resumeWatchingTapped(animeEpisodeInfo))
                                 }
@@ -270,7 +270,7 @@ extension HomeView {
     @ViewBuilder
     func headerText(_ title: String) -> some View {
         Text(title)
-            .font(.headline.bold())
+            .font(DeviceUtil.isPhone ? .headline.bold() : .title2.bold())
             .foregroundColor(.white)
             .padding(.horizontal)
             .opacity(0.9)

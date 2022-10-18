@@ -2,7 +2,7 @@
 //  Reducer+Relay.swift
 //  Anime Now!
 //
-//  Created by Erik Bautista on 10/5/22.
+//  Created by ErrorErrorError on 10/5/22.
 // From https://github.com/pointfreeco/swift-composable-architecture/discussions/851#discussioncomment-1469781
 
 import Foundation

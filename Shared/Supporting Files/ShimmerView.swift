@@ -2,7 +2,7 @@
 //  ShimmerView.swift
 //  Anime Now!
 //
-//  Created by Erik Bautista on 9/9/22.
+//  Created by ErrorErrorError on 9/9/22.
 //
 // From: https://github.com/markiv/SwiftUI-Shimmer/blob/main/Sources/Shimmer/Shimmer.swift
 

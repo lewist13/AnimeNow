@@ -2,7 +2,7 @@
 //  HapticClient+Mock.swift
 //  wLED Hue (iOS)
 //
-//  Created by Erik Bautista on 7/26/22.
+//  Created by ErrorErrorError on 7/26/22.
 //
 
 import Foundation

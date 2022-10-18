@@ -2,7 +2,7 @@
 //  Anilist.swift
 //  Anime Now! (iOS)
 //
-//  Created by Erik Bautista on 9/28/22.
+//  Created by ErrorErrorError on 9/28/22.
 //
 
 import Foundation

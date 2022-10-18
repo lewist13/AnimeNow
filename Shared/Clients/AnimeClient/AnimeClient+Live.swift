@@ -2,7 +2,7 @@
 //  AnimeClient+Live.swift
 //  Anime Now!
 //
-//  Created by Erik Bautista on 9/12/22.
+//  Created by ErrorErrorError on 9/12/22.
 //
 
 import Foundation

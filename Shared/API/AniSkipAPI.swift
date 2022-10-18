@@ -2,7 +2,7 @@
 //  AniSkipAPI.swift
 //  Anime Now!
 //
-//  Created by Erik Bautista on 10/11/22.
+//  Created by ErrorErrorError on 10/11/22.
 //
 
 import Foundation

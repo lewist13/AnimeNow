@@ -2,7 +2,7 @@
 //  CDEpisodeStore.swift
 //  Anime Now!
 //
-//  Created by Erik Bautista on 10/6/22.
+//  Created by ErrorErrorError on 10/6/22.
 //
 
 import Foundation

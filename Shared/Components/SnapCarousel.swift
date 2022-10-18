@@ -2,7 +2,7 @@
 //  SnapCarousel.swift
 //  Anime Now!
 //
-//  Created by Erik Bautista on 10/17/22.
+//  Created by ErrorErrorError on 10/17/22.
 //
 //  Modified version of https://github.com/manuelduarte077/CustomCarouselList/blob/main/Shared/View/SnapCarousel.swift
 
@@ -17,7 +17,6 @@ struct SnapCarousel<Content: View, T: Identifiable>: View {
 
     var spacing: CGFloat
     var trailingSpace: CGFloat
-    @State var index: Int = 0
 
     var list: IdentifiedArrayOf<T>
     var content: (T) -> Content
@@ -52,8 +51,8 @@ extension SnapCarousel {
     @ViewBuilder
     var scrollItems: some View {
         GeometryReader { proxy in
-            // One Sided Snap Carousel
-            let width = proxy.size.width - ( trailingSpace - spacing )
+
+            let width = proxy.size.width - (trailingSpace - spacing)
             let adjustMentWidth = (trailingSpace / 2) - spacing
 
             HStack (spacing: spacing) {
@@ -63,9 +62,7 @@ extension SnapCarousel {
                 }
             }
 
-            // Spacing will be horizontal padding...
             .padding(.horizontal, spacing)
-            // Setting only after 0th index...
             .offset(x: (CGFloat(position) * -width) + ( position != 0 ? adjustMentWidth : 0 ) + offset)
             .highPriorityGesture(
                 DragGesture()
@@ -73,44 +70,16 @@ extension SnapCarousel {
                         out = value.translation.width
                     })
                     .onEnded({ value in
-
-                        // Updating Current Index....
                         let offsetX = value.translation.width
-
-                        // Were going to convert the tranlsation into progreess ( 0 - 1 )
-                        // and round the value...
-                        // based on the progress increasing or decreasing the currentInde....
-
                         let progress = -offsetX / width
                         let roundIndex = progress.rounded()
 
-                        // setting max....
-                        position = max(min(position + Int(roundIndex), list.count - 1), 0)
+                        let limitedPosition = max(min(position + Int(roundIndex), list.count - 1), 0)
 
-                        // updating index....
-                        if position != index {
-                            position = index
-                        }
-                    })
-                    .onChanged({ value in
-                        // updating only index...
-
-                        // Updating Current Index....
-                        let offsetX = value.translation.width
-
-                        // Were going to convert the tranlsation into progreess ( 0 - 1 )
-                        // and round the value...
-                        // based on the progress increasing or decreasing the currentInde....
-
-                        let progress = -offsetX / width
-                        let roundIndex = progress.rounded()
-
-                        // setting max....
-                        index = max(min(position + Int(roundIndex), list.count - 1), 0)
+                        position = limitedPosition
                     })
             )
         }
-        // Animatiing when offset = 0
         .animation(.easeInOut, value: offset == 0)
     }
 }
@@ -125,7 +94,7 @@ extension SnapCarousel {
             ) { index, state in
                 if state != .gone {
                     Circle()
-                        .fill(Color.white.opacity(state == .selected ? 1 : 0.5))
+                        .fill(Color.white.opacity(state.selected ? 1 : 0.5))
                         .frame(width: 6, height: 6)
                         .scaleEffect(state.scale)
                 }
@@ -153,8 +122,12 @@ extension SnapCarousel {
             case .normal:
                 return 1.0
             case .selected:
-                return 1.35
+                return 1.4
             }
+        }
+
+        var selected: Bool {
+            self == .selected
         }
     }
 

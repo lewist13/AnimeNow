@@ -2,7 +2,7 @@
 //  EpisodeStore.swift
 //  Anime Now!
 //
-//  Created by Erik Bautista on 10/1/22.
+//  Created by ErrorErrorError on 10/1/22.
 //
 
 import Foundation

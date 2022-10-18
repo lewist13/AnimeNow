@@ -2,7 +2,7 @@
 //  AnimeItemView.swift
 //  Anime Now! (iOS)
 //
-//  Created by Erik Bautista on 9/4/22.
+//  Created by ErrorErrorError on 9/4/22.
 //
 
 import SwiftUI
@@ -28,7 +28,7 @@ struct AnimeItemView: View {
                 )
 
             Text(anime.title)
-                .font(.footnote.bold())
+                .font(.callout.bold())
                 .foregroundColor(.white)
                 .lineLimit(2)
                 .multilineTextAlignment(.center)

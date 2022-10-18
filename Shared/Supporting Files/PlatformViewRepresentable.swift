@@ -2,7 +2,7 @@
 //  PlatformViewRepresentable.swift
 //  Anime Now!
 //
-//  Created by Erik Bautista on 10/12/22.
+//  Created by ErrorErrorError on 10/12/22.
 //
 
 import SwiftUI

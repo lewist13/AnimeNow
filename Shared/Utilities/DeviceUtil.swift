@@ -2,7 +2,7 @@
 //  DeviceUtil.swift
 //  Anime Now! (iOS)
 //
-//  Created by Erik Bautista on 10/15/22.
+//  Created by ErrorErrorError on 10/15/22.
 //
 
 import SwiftUI

@@ -2,7 +2,7 @@
 //  AnimeNowHostingController.swift
 //  Anime Now! (iOS)
 //
-//  Created by Erik Bautista on 10/9/22.
+//  Created by ErrorErrorError on 10/9/22.
 //
 
 import Foundation

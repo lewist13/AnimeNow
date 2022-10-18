@@ -2,7 +2,7 @@
 //  VideoPlayer.swift
 //  Anime Now!
 //
-//  Created Erik Bautista on 9/14/22.
+//  Created by ErrorErrorError on 9/14/22.
 //  Copyright © 2022. All rights reserved.
 //
 //  Modified version of: https://github.com/wxxsw/GSPlayer/blob/master/GSPlayer/Classes/View/InternamVideoPlayerView.swift

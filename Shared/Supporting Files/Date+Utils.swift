@@ -2,7 +2,7 @@
 //  Date+Utils.swift
 //  Anime Now! (iOS)
 //
-//  Created by Erik Bautista on 9/27/22.
+//  Created by ErrorErrorError on 9/27/22.
 //
 
 import Foundation

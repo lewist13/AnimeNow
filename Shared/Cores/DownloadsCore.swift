@@ -2,7 +2,7 @@
 //  DownloadsCore.swift
 //  Anime Now!
 //
-//  Created Erik Bautista on 9/25/22.
+//  Created by ErrorErrorError on 9/25/22.
 //  Copyright © 2022. All rights reserved.
 //
 

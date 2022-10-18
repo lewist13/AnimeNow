@@ -2,7 +2,7 @@
 //  SettingsCore.swift
 //  Anime Now!
 //
-//  Created Erik Bautista on 9/8/22.
+//  Created by ErrorErrorError on 9/8/22.
 //  Copyright © 2022. All rights reserved.
 //
 

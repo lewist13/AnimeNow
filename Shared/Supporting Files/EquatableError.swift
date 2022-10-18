@@ -2,7 +2,7 @@
 //  EquatableError.swift
 //  Anime Now!
 //
-//  Created by Erik Bautista on 10/2/22.
+//  Created by ErrorErrorError on 10/2/22.
 //
 
 import Foundation

@@ -2,7 +2,7 @@
 //  Array+Duplicates.swift
 //  Anime Now!
 //
-//  Created by Erik Bautista on 9/14/22.
+//  Created by ErrorErrorError on 9/14/22.
 //
 
 import Foundation

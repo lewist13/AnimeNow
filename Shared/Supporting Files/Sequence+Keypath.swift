@@ -2,7 +2,7 @@
 //  Sequence+Keypath.swift
 //  Anime Now!
 //
-//  Created by Erik Bautista on 9/30/22.
+//  Created by ErrorErrorError on 9/30/22.
 //
 
 import Foundation

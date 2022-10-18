@@ -2,7 +2,7 @@
 //  AnimeNowVideoPlayerCore.swift
 //  Anime Now!
 //
-//  Created Erik Bautista on 10/1/22.
+//  Created by ErrorErrorError on 10/1/22.
 //  Copyright © 2022. All rights reserved.
 //
 

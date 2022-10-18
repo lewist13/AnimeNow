@@ -2,7 +2,7 @@
 //  Throwable.swift
 //  Anime Now!
 //
-//  Created by Erik Bautista on 9/8/22.
+//  Created by ErrorErrorError on 9/8/22.
 //
 
 import Foundation
