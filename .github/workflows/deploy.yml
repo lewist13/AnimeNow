@@ -20,9 +20,10 @@ env:
   IOS_PAYLOAD_PATH: '/tmp/action-builds/Payload'
   IOS_OUTPUT_PATH: '/tmp/action-builds/Anime Now! (iOS).ipa'
 
-#  MACOS_SCHEME_NAME: 'Anime Now! (macOS)'
-#  MACOS_ARCHIVE_PATH: '/tmp/action-builds/Anime Now! (macOS).xcarchive'
-#  MACOS_OUTPUT_PATH: '/tmp/action-builds/Anime Now! (macOS).app'
+  MACOS_SCHEME: 'Anime Now! (macOS)'
+  MACOS_ARCHIVE_PATH: '/tmp/action-builds/Anime Now! (macOS).xcarchive'
+  MACOS_PAYLOAD_PATH: '/tmp/action-builds/macos-payload'
+  MACOS_OUTPUT_PATH: '/tmp/action-builds/Anime Now! (macOS).dmg'
 
 jobs:
   build-and-deploy:
@@ -78,12 +79,25 @@ jobs:
           zip -r '${{ env.IOS_OUTPUT_PATH }}' './Payload'
           popd
 
+      - name: Build macOS Archive
+        run: xcodebuild archive -scheme '${{ env.MACOS_SCHEME }}' -archivePath '${{ env.MACOS_ARCHIVE_PATH }}' -xcconfig '${{ env.BUILD_CONFIG }}' CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO CODE_SIGN_IDENTITY= CODE_SIGN_ENTITLEMENTS= GCC_OPTIMIZATION_LEVEL=s SWIFT_OPTIMIZATION_LEVEL=-O
+
+      - name: Build App
+        run: |
+          mkdir -p '${{ env.MACOS_PAYLOAD_PATH }}'
+          mv '${{ env.MACOS_ARCHIVE_PATH }}/Products/Applications/${{ env.APP_NAME }}.app ${{ env.MACOS_PAYLOAD_PATH }}/${{ env.APP_NAME }}.app'
+          ls -s '~/Applications' '${{ env.MACOS_PAYLOAD_PATH }}/Applications'
+          pushd '${{ env.BUILD_PATH }}'
+          hdiutil create -volname '${{ env.APP_NAME }}' -srcfolder '${{ env.MACOS_PAYLOAD_PATH }}' -ov -format UDZO '${{ env.MACOS_SCHEME }}.dmg'
+          popd
+
       - name: Release to GitHub
         uses: softprops/action-gh-release@v1
         with:
          fail_on_unmatched_files: true
          files: |
             ${{ env.IOS_OUTPUT_PATH }}
+            ${{ env.MACOS_OUTPUT_PATH }}
 
          token: ${{ secrets.GITHUB_TOKEN }}
          generate_release_notes: true
