@@ -85,7 +85,7 @@ jobs:
       - name: Build App
         run: |
           mkdir -p '${{ env.MACOS_PAYLOAD_PATH }}'
-          mv '${{ env.MACOS_ARCHIVE_PATH }}/Products/Applications/${{ env.APP_NAME }}.app ${{ env.MACOS_PAYLOAD_PATH }}/${{ env.APP_NAME }}.app'
+          mv '${{ env.MACOS_ARCHIVE_PATH }}/Products/Applications/${{ env.APP_NAME }}.app' '${{ env.MACOS_PAYLOAD_PATH }}/${{ env.APP_NAME }}.app'
           ls -s '~/Applications' '${{ env.MACOS_PAYLOAD_PATH }}/Applications'
           pushd '${{ env.BUILD_PATH }}'
           hdiutil create -volname '${{ env.APP_NAME }}' -srcfolder '${{ env.MACOS_PAYLOAD_PATH }}' -ov -format UDZO '${{ env.MACOS_SCHEME }}.dmg'
