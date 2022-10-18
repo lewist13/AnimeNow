@@ -125,8 +125,8 @@ enum AnimeNowVideoPlayerCore {
 
         // Player Actions
 
-        case backwardsDoubleTapped
-        case forwardDoubleTapped
+        case backwardsTapped
+        case forwardsTapped
         case replayTapped
         case togglePlayback
         case startSeeking
@@ -561,7 +561,7 @@ extension AnimeNowVideoPlayerCore {
 
         // Video Player Actions
 
-        case .backwardsDoubleTapped:
+        case .backwardsTapped:
             guard state.playerDuration > 0.0 else { break }
             let progress = state.playerProgress - 15 / state.playerDuration
 
@@ -572,7 +572,7 @@ extension AnimeNowVideoPlayerCore {
                 .init(value: .stopSeeking)
             )
 
-        case .forwardDoubleTapped:
+        case .forwardsTapped:
             guard state.playerDuration > 0.0 else { break }
             let progress = state.playerProgress + 15 / state.playerDuration
 

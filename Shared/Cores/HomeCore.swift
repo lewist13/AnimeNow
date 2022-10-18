@@ -106,8 +106,10 @@ extension HomeCore {
                         .eraseToEffect()
                         .map(Action.fetchedAnimesInDB)
                 )
+
             case .fetchedAnime(let keyPath, .success(let anime)):
                 state[keyPath: keyPath] = .success(.init(uniqueElements: anime))
+
             case .fetchedAnime(let keyPath, .failure(let error)):
                 print(error)
                 state[keyPath: keyPath] = .failed

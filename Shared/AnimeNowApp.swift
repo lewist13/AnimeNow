@@ -20,6 +20,8 @@ struct AnimeNowApp: App {
                 )
             )
         }
+        .windowStyle(.hiddenTitleBar)
+        .windowToolbarStyle(.expanded)
     }
 }
 #endif

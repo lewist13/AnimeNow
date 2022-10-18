@@ -12,16 +12,22 @@ import UIKit
 
 typealias BlurEffectView = UIVisualEffectView
 typealias BlurStyle = UIBlurEffect.Style
+
+var `default` = BlurStyle.systemThinMaterialDark
+
 #else
 import AppKit
 
 typealias BlurEffectView = NSVisualEffectView
 typealias BlurStyle = NSVisualEffectView.Material
+
+var `default` = BlurStyle.toolTip
+
 #endif
 
 
 struct BlurView: PlatformAgnosticViewRepresentable {
-    var style: BlurStyle
+    var style: BlurStyle = `default`
 
     func makePlatformView(context: Context) -> BlurEffectView {
         BlurEffectView()

@@ -27,6 +27,13 @@ struct ContentView: View {
                             action: ContentCore.Action.home
                         )
                     )
+                case .collection:
+                    CollectionView(
+                        store: store.scope(
+                            state: \.collection,
+                            action: ContentCore.Action.collection
+                        )
+                    )
 
                 case .search:
                     SearchView(
@@ -45,7 +52,10 @@ struct ContentView: View {
                     )
                 }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .frame(
+                maxWidth: .infinity,
+                maxHeight: .infinity
+            )
             .overlay(
                 HStack(spacing: 0) {
                     ForEach(ContentCore.Route.allCases, id: \.self) { item in
@@ -80,23 +90,16 @@ struct ContentView: View {
                     .ignoresSafeArea(.keyboard, edges: .bottom)
             )
         }
-//        .sheetStore(
-//            store: store.scope(
-//                state: \.animeDetail,
-//                action: ContentCore.Action.animeDetail
-//            ),
-//            onDismiss: {
-//                ViewStore(store.stateless).send(.animeDetail(.closeButtonPressed))
-//            },
-//            destination: AnimeDetailView.init(store:)
-//        )
         .overlay(
             IfLetStore(
                 store.scope(
                     state: \.animeDetail,
                     action: ContentCore.Action.animeDetail
                 ),
-                then: AnimeDetailView.init(store:)
+                then: { store in
+                    AnimeDetailView(store: store)
+                        .statusBar(hidden: true)
+                }
             )
         )
         .overlay(
@@ -105,7 +108,12 @@ struct ContentView: View {
                     state: \.videoPlayer,
                     action: ContentCore.Action.videoPlayer
                 ),
-                then: AnimeNowVideoPlayer.init(store:)
+                then: { store in
+                  AnimeNowVideoPlayer(store: store)
+                    .statusBar(hidden: true)
+                    .prefersHomeIndicatorAutoHidden(true)
+                    .supportedOrientation(.landscape)
+                }
             )
         )
         .frame(maxWidth: .infinity, maxHeight: .infinity)

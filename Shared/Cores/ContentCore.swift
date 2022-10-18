@@ -11,9 +11,10 @@ import Foundation
 import ComposableArchitecture
 
 enum ContentCore {
-    public enum Route: String, CaseIterable {
+    enum Route: String, CaseIterable {
         case home
         case search
+        case collection
         case downloads
 
         var icon: String {
@@ -24,6 +25,8 @@ enum ContentCore {
                 return "magnifyingglass"
             case .downloads:
                 return "arrow.down"
+            case .collection:
+                return "folder"
             }
         }
 
@@ -35,11 +38,13 @@ enum ContentCore {
                 return self.icon
             case .downloads:
                 return self.icon
+            case .collection:
+                return "folder.fill"
             }
         }
 
         var title: String {
-            self.rawValue
+            .init(self.rawValue.prefix(1).capitalized + self.rawValue.dropFirst())
         }
     }
 
@@ -47,6 +52,7 @@ enum ContentCore {
         @BindableState var route = Route.home
 
         var home = HomeCore.State()
+        var collection = CollectionCore.State()
         var search = SearchCore.State()
         var settings = SettingsCore.State()
         var downloads = DownloadsCore.State()
@@ -59,6 +65,7 @@ enum ContentCore {
         case onAppear
         case setAnimeDetail(AnimeDetailCore.State?)
         case home(HomeCore.Action)
+        case collection(CollectionCore.Action)
         case search(SearchCore.Action)
         case downloads(DownloadsCore.Action)
         case settings(SettingsCore.Action)
@@ -174,7 +181,12 @@ extension ContentCore {
                 )
 
             case .setAnimeDetail(let animeMaybe):
-                state.animeDetail = animeMaybe
+                if let anime = animeMaybe, state.animeDetail == nil {
+                    // Allow only replacing anime detail one at a time
+                    state.animeDetail = anime
+                } else if animeMaybe == nil {
+                    state.animeDetail = nil
+                }
 
             case let .animeDetail(.play(anime, episodes, selected)):
                 state.videoPlayer = .init(anime: anime, episodes: episodes, selectedEpisode: selected)

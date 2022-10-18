@@ -91,40 +91,13 @@ extension HomeView {
 
 extension HomeView {
     @ViewBuilder
-    func animeHeroItems(
-        isLoading: Bool,
-        store: Store<HomeCore.LoadableAnime, HomeCore.Action>
-    ) -> some View {
-        Group {
-            if isLoading {
-                animeHero(.placeholder)
-            } else {
-                WithViewStore(store) { viewStore in
-                    if let animes = viewStore.state.value,
-                       animes.count > 0 {
-                        TabView {
-                            ForEach(animes) { anime in
-                                animeHero(anime)
-                                    .onTapGesture {
-                                        viewStore.send(.animeTapped(anime))
-                                    }
-                            }
-                        }
-                        .tabViewStyle(.page(indexDisplayMode: .automatic))
-                    }
-                }
-            }
-        }
-        .frame(maxWidth: .infinity)
-        .aspectRatio(5/7, contentMode: .fill)
-    }
-
-    @ViewBuilder
-    private func animeHero(
+    func animeHero(
         _ anime: Anime
     ) -> some View {
         ZStack(alignment: .bottomLeading) {
-            KFImage(anime.posterImage.largest?.link)
+            KFImage(
+                (DeviceUtil.isMac ? anime.coverImage.largest : anime.posterImage.largest)?.link ?? anime.posterImage.largest?.link
+            )
                 .fade(duration: 0.5)
                 .resizable()
                 .contentShape(Rectangle())
@@ -155,6 +128,38 @@ extension HomeView {
             .padding()
             .padding(.bottom, 36)
         }
+    }
+}
+
+// MARK: Anime Hero Items
+
+extension HomeView {
+    @ViewBuilder
+    func animeHeroItems(
+        isLoading: Bool,
+        store: Store<HomeCore.LoadableAnime, HomeCore.Action>
+    ) -> some View {
+        Group {
+            if isLoading {
+                animeHero(.placeholder)
+            } else {
+                WithViewStore(store) { viewStore in
+                    if let animes = viewStore.state.value,
+                       animes.count > 0 {
+                        SnapCarousel(
+                            items: animes
+                        ) { anime in
+                            animeHero(anime)
+                                .onTapGesture {
+                                    viewStore.send(.animeTapped(anime))
+                                }
+                        }
+                    }
+                }
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .aspectRatio(DeviceUtil.isPhone ? 5/7 : 8/3, contentMode: .fill)
     }
 }
 

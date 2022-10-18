@@ -27,8 +27,8 @@ struct AnimeDetailView: View {
             }
             .transition(.move(edge: .bottom).combined(with: .opacity))
             .frame(maxWidth: .infinity)
-            .statusBar(hidden: true)
             .ignoresSafeArea(edges: .top)
+            .disabled(viewStore.state)
             .overlay(closeButton)
             .background(
                 Color.black
@@ -37,7 +37,6 @@ struct AnimeDetailView: View {
             .onAppear {
                 viewStore.send(.onAppear)
             }
-            .disabled(viewStore.state)
         }
     }
 }
@@ -50,7 +49,7 @@ extension AnimeDetailView {
             .font(.system(size: 14, weight: .black))
             .foregroundColor(Color.white.opacity(0.9))
             .padding(12)
-            .background(BlurView(style: .systemThinMaterialDark))
+            .background(BlurView())
             .clipShape(Circle())
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
             .padding()
@@ -163,7 +162,7 @@ extension AnimeDetailView {
                                     )
                             }
                             .buttonStyle(BlurredButtonStyle())
-                            .background(BlurView(style: .systemThinMaterialDark))
+                            .background(BlurView())
                             .clipShape(Circle())
                         }
                     }
