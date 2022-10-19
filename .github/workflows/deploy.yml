@@ -97,7 +97,8 @@ jobs:
             --icon "${{ env.APP_NAME }}.app" 180 170 \
             --hide-extension "${{ env.APP_NAME }}.app" \
             --app-drop-link 480 170 \
-            "${{ env.MACOS_SCHEME }}.dmg" \
+            --no-internet-enable \
+            "${{ env.MACOS_OUTPUT_PATH }}" \
             "${{ env.MACOS_ARCHIVE_PATH }}/Products/Applications/"
 
       - name: Release to GitHub
