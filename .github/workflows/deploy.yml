@@ -13,7 +13,9 @@ env:
   APP_NAME: 'Anime Now!'
   BUILD_CONFIG: './MainConfig.xcconfig'
   BUILD_PATH: '/tmp/action-builds'
-  INCREMENT_SCRIPT_PATH: './actions-tool/increment_version.sh'
+  INCREMENT_SCRIPT_PATH: './Misc/Scripts/increment_version.sh'
+  CREATE_DMG_PATH: './Misc/Scripts/create_dmg.sh'
+  BACKGROUND_DMG_PATH: './Misc/Media/dmg_background.png'
 
   IOS_SCHEME: 'Anime Now! (iOS)'
   IOS_ARCHIVE_PATH: '/tmp/action-builds/Anime Now! (iOS).xcarchive'
@@ -22,7 +24,6 @@ env:
 
   MACOS_SCHEME: 'Anime Now! (macOS)'
   MACOS_ARCHIVE_PATH: '/tmp/action-builds/Anime Now! (macOS).xcarchive'
-  MACOS_PAYLOAD_PATH: '/tmp/action-builds/macos-payload'
   MACOS_OUTPUT_PATH: '/tmp/action-builds/Anime Now! (macOS).dmg'
 
 jobs:
@@ -35,6 +36,9 @@ jobs:
         run: |
           [[ ${{ github.event.pull_request != null }} == true ]] && [[ ${{ github.event.pull_request.user.login == github.repository.owner.login }} == true ]] && echo "is_release=1" >> $GITHUB_ENV || echo "is_release=0" >> $GITHUB_ENV
 
+      - name: Install create-dmg
+        run: brew install create-dmg
+
       - name: Get build info
         run: |
           echo "latest_commit_build=$(git log --format="%h" -n 1)" >> $GITHUB_ENV
@@ -46,7 +50,7 @@ jobs:
         run: |
            echo "marketing_version=1.0.0-beta" >> $GITHUB_ENV
 #          remember to uncomment this for when after you release 1.0.0 for beta releases
-#          sudo chmod 777 ${{ env.INCREMENT_SCRIPT_PATH }}
+#          sudo chmod +x ${{ env.INCREMENT_SCRIPT_PATH }}
 #          echo "marketing_version=$(${{ env.INCREMENT_SCRIPT_PATH }} ${{ env.marketing_version }} feature)-beta" >> $GITHUB_ENV
 
       - name: Bump Build Version and set build and commit
@@ -82,14 +86,19 @@ jobs:
       - name: Build macOS Archive
         run: xcodebuild archive -scheme '${{ env.MACOS_SCHEME }}' -archivePath '${{ env.MACOS_ARCHIVE_PATH }}' -xcconfig '${{ env.BUILD_CONFIG }}' CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO CODE_SIGN_IDENTITY= CODE_SIGN_ENTITLEMENTS= GCC_OPTIMIZATION_LEVEL=s SWIFT_OPTIMIZATION_LEVEL=-O
 
-      - name: Build App
+      - name: Build DMG
         run: |
-          mkdir -p '${{ env.MACOS_PAYLOAD_PATH }}'
-          mv '${{ env.MACOS_ARCHIVE_PATH }}/Products/Applications/${{ env.APP_NAME }}.app' '${{ env.MACOS_PAYLOAD_PATH }}/${{ env.APP_NAME }}.app'
-          ls -s '~/Applications' '${{ env.MACOS_PAYLOAD_PATH }}/Applications'
-          pushd '${{ env.BUILD_PATH }}'
-          hdiutil create -volname '${{ env.APP_NAME }}' -srcfolder '${{ env.MACOS_PAYLOAD_PATH }}' -ov -format UDZO '${{ env.MACOS_SCHEME }}.dmg'
-          popd
+          create-dmg \
+            --volname "${{ env.APP_NAME }}" \
+            --background "${{ env.BACKGROUND_DMG_PATH }}" \
+            --window-pos 200 120 \
+            --window-size 600 400 \
+            --icon-size 160 \
+            --icon "${{ env.APP_NAME }}.app" 180 170 \
+            --hide-extension "${{ env.APP_NAME }}.app" \
+            --app-drop-link 480 170 \
+            "${{ env.MACOS_SCHEME }}.dmg" \
+            "${{ env.MACOS_ARCHIVE_PATH }}/Products/Applications/"
 
       - name: Release to GitHub
         uses: softprops/action-gh-release@v1
