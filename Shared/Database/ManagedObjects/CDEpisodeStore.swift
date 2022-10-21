@@ -8,7 +8,7 @@
 import Foundation
 import CoreData
 
-extension CDEpisodeStore: ManagedModel {
+extension CDEpisodeStore: ManagedObjectConvertible {
     static func getFetchRequest() -> NSFetchRequest<CDEpisodeStore> {
         self.fetchRequest()
     }
@@ -16,9 +16,9 @@ extension CDEpisodeStore: ManagedModel {
     var asDomain: EpisodeStore {
         .init(
             id: id ?? .init(),
-            number: number,
+            number: Int(number),
             title: title ?? "Untitled",
-            cover: cover?.toObject() ?? .none,
+            thumbnail: cover?.toObject() ?? .none,
             isMovie: isMovie,
             progress: progress,
             lastUpdatedProgress: lastUpdatedProgress ?? .init(),
@@ -33,9 +33,9 @@ extension CDEpisodeStore: ManagedModel {
 
     func update(from domain: EpisodeStore) {
         id = domain.id
-        number = domain.number
+        number = Int16(domain.number)
         title = domain.title
-        cover = domain.cover.toData()
+        cover = domain.thumbnail.toData()
         isMovie = domain.isMovie
         progress = domain.progress
         lastUpdatedProgress = domain.lastUpdatedProgress
@@ -43,13 +43,13 @@ extension CDEpisodeStore: ManagedModel {
     }
 }
 
-extension EpisodeStore: DomainModel {
+extension EpisodeStore: DomainModelConvertible {
     func asManagedObject(in context: NSManagedObjectContext) -> CDEpisodeStore {
         let object = CDEpisodeStore(context: context)
         object.id = id
-        object.number = number
+        object.number = Int16(number)
         object.title = title
-        object.cover = cover?.toData()
+        object.cover = thumbnail?.toData()
         object.isMovie = isMovie
         object.progress = progress
         object.lastUpdatedProgress = lastUpdatedProgress

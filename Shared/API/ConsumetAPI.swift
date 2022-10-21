@@ -184,18 +184,19 @@ extension ConsumetAPI {
     }
 
     static func convert(from episode: ConsumetAPI.Episode) -> AnimeNow.Episode {
-        var thumbnailImages = [ImageSize]()
+        let thumbnail: ImageSize?
 
         if let thumbnailString = episode.image, let thumbnailURL = URL(string: thumbnailString) {
-            thumbnailImages.append(.original(thumbnailURL))
+            thumbnail = .original(thumbnailURL)
+        } else {
+            thumbnail = nil
         }
 
         return AnimeNow.Episode(
-            name: episode.title ?? "Untitled",
+            title: episode.title ?? "Untitled",
             number: episode.number,
             description: episode.description ?? "No description available for this episode.",
-            thumbnail: thumbnailImages,
-            length: nil
+            thumbnail: thumbnail
         )
     }
 }

@@ -138,8 +138,8 @@ struct EpisodeItemBigView_Previews: PreviewProvider {
         let episode = Episode.demoEpisodes.first!
         ThumbnailItemBigView(
             type: .episode(
-                image: episode.thumbnail.largest?.link,
-                name: episode.name,
+                image: episode.thumbnail?.link,
+                name: episode.title,
                 animeName: "Naruto Shippuden",
                 number: episode.number,
                 progress: 0.5

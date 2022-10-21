@@ -285,7 +285,7 @@ extension AnimeClient {
 
         for mainInx in 0..<maxEpisodesCount {
             let episodeNumber = mainInx + 1
-            var providers = [Episode.Provider]()
+            var providers = [Provider]()
 
             var mainEpisodeInfo: ConsumetAPI.Episode?
 

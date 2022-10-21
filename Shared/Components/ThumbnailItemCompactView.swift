@@ -9,13 +9,13 @@ import SwiftUI
 import Kingfisher
 
 struct ThumbnailItemCompactView: View {
-    let episode: Episode
+    let episode: AnyEpisodeRepresentable
     var progress: Double? = nil
 
     var body: some View {
         GeometryReader { reader in
             HStack(alignment: .center, spacing: 12) {
-                KFImage(episode.thumbnail.largest?.link)
+                KFImage(episode.thumbnail?.link)
                     .resizable()
                     .scaledToFill()
                     .frame(
@@ -28,16 +28,13 @@ struct ThumbnailItemCompactView: View {
 
                 VStack(alignment: .leading, spacing: 4) {
                     Spacer()
-                    Text(episode.name)
+                    Text(episode.title)
                         .font(.body)
                         .foregroundColor(Color.white)
                         .bold()
                         .lineLimit(1)
 
-                    Text(
-                        "E\(episode.number)" +
-                        (episode.length != nil ? " \u{2022} \(episode.lengthFormatted)" : "")
-                    )
+                    Text("E\(episode.number)")
                         .font(.footnote)
                         .bold()
                         .foregroundColor(Color.white.opacity(0.85))
@@ -64,7 +61,7 @@ struct ThumbnailItemCompactView: View {
 struct EpisodeItemCompactView_Previews: PreviewProvider {
     static var previews: some View {
         ThumbnailItemCompactView(
-            episode: .demoEpisodes.first!
+            episode: Episode.demoEpisodes.first!.asRepresentable()
         )
         .preferredColorScheme(.dark)
         .frame(height: 100)

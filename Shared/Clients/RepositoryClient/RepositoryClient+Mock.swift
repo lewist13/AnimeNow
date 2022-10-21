@@ -13,27 +13,33 @@ class RepositoryClientMock: RepositoryClient {
 
     private init() {}
 
-    func insert<T>(_ item: T) -> Effect<T, Error> where T : DomainModel {
+    func insert<T>(_ item: T) -> Effect<T, Error> where T: DomainModelConvertible {
         .none
     }
 
-    func update<T>(_ item: T) -> Effect<T, Error> where T : DomainModel {
+    func update<T>(_ item: T) -> Effect<T, Error> where T: DomainModelConvertible {
         .none
     }
 
-    func insertOrUpdate<T>(_ item: T) -> Effect<T, Error> where T : DomainModel {
+    func insertOrUpdate<T>(_ item: T) -> Effect<T, Error> where T: DomainModelConvertible {
         .none
     }
 
-    func delete<T>(_ item: T) -> Effect<Void, Error> where T : DomainModel {
+    func delete<T>(_ item: T) -> Effect<Void, Error> where T: DomainModelConvertible {
         .none
     }
 
-    func fetch<T>(_ predicate: NSPredicate?, _ sort: [NSSortDescriptor]) -> Effect<[T], Error> where T : DomainModel {
+    func fetch<T>(
+        _ predicate: NSPredicate?,
+        _ sort: [NSSortDescriptor]
+    ) -> Effect<[T], Error> where T: DomainModelConvertible {
         .none
     }
 
-    func observe<T>(_ predicate: NSPredicate?, _ sort: [NSSortDescriptor]) -> Effect<[T], Never> where T : DomainModel {
+    func observe<T>(
+        _ predicate: NSPredicate?,
+        _ sort: [NSSortDescriptor]
+    ) -> Effect<[T], Never> where T: DomainModelConvertible {
         .none
     }
 }

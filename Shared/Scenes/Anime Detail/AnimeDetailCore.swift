@@ -10,7 +10,7 @@ import Foundation
 import ComposableArchitecture
 
 enum AnimeDetailCore {
-    typealias LoadableEpisodes = LoadableState<IdentifiedArrayOf<Episode>>
+    typealias LoadableEpisodes = LoadableState<[Episode]>
     typealias LoadableAnimeStore = LoadableState<AnimeStore>
 
     struct State: Equatable {
@@ -28,7 +28,7 @@ enum AnimeDetailCore {
         case playResumeButtonClicked
         case fetchedEpisodes(Result<[Episode], Never>)
         case selectedEpisode(episode: Episode)
-        case play(anime: Anime, episodes: IdentifiedArrayOf<Episode>, selected: Episode.ID)
+        case play(anime: Anime, episodes: [Episode], selected: Episode.ID)
         case fetchedAnimeFromDB([AnimeStore])
     }
 
@@ -168,7 +168,7 @@ extension AnimeDetailCore {
                         .catchToEffect()
                         .map(Action.fetchedEpisodes)
                         .cancellable(id: CancelFetchingEpisodesId()),
-                    environment.repositoryClient.observe(.init(format: "id == %d", state.anime.id), [])
+                    environment.repositoryClient.observe(.init(format: "id == %d", state.anime.id))
                         .receive(on: environment.mainQueue)
                         .eraseToEffect()
                         .map(Action.fetchedAnimeFromDB)
@@ -187,7 +187,7 @@ extension AnimeDetailCore {
                     return .init(value: .selectedEpisode(episode: episode))
                 }
             case .fetchedEpisodes(.success(let episodes)):
-                state.episodes = .success(.init(uniqueElements: episodes))
+                state.episodes = .success(episodes)
             case .fetchedEpisodes(.failure(let error)):
                 print(error)
                 state.episodes = .failed
@@ -200,7 +200,7 @@ extension AnimeDetailCore {
                     )
                 )
             case .fetchedAnimeFromDB(let animesMatched):
-                state.animeStore = .success(.findOrCreate(state.anime.id, animesMatched))
+                state.animeStore = .success(.findOrCreate(state.anime, animesMatched))
             case .play:
                 break
             case .closeButtonPressed:

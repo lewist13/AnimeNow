@@ -7,7 +7,6 @@
 
 import Foundation
 
-
 extension UserDefaultsClient {
     static let live: Self = {
         let userDefaults = UserDefaults.standard

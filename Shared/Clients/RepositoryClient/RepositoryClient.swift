@@ -9,10 +9,27 @@ import Foundation
 import ComposableArchitecture
 
 protocol RepositoryClient {
-    func insert<T: DomainModel>(_ item: T) -> Effect<T, Error>
-    func update<T: DomainModel>(_ item: T) -> Effect<T, Error>
-    func insertOrUpdate<T: DomainModel>(_ item: T) -> Effect<T, Error>
-    func delete<T: DomainModel>(_ item: T) -> Effect<Void, Error>
-    func fetch<T: DomainModel>(_ predicate: NSPredicate?,_ sort: [NSSortDescriptor]) -> Effect<[T], Error>
-    func observe<T: DomainModel>(_ predicate: NSPredicate?, _ sort: [NSSortDescriptor]) -> Effect<[T], Never>
+    func insert<T: DomainModelConvertible>(_ item: T) -> Effect<T, Error>
+    func update<T: DomainModelConvertible>(_ item: T) -> Effect<T, Error>
+    func insertOrUpdate<T: DomainModelConvertible>(_ item: T) -> Effect<T, Error>
+    func delete<T: DomainModelConvertible>(_ item: T) -> Effect<Void, Error>
+    func fetch<T: DomainModelConvertible>(_ predicate: NSPredicate?, _ sort: [NSSortDescriptor]) -> Effect<[T], Error>
+    func observe<T: DomainModelConvertible>(_ predicate: NSPredicate?, _ sort: [NSSortDescriptor], _ allChanges: Bool) -> Effect<[T], Never>
+}
+
+extension RepositoryClient {
+    func observe<T: DomainModelConvertible>(
+        _ predicate: NSPredicate? = nil,
+        _ sort: [NSSortDescriptor] = [],
+        _ notifyChildChanges: Bool = false
+    ) -> Effect<[T], Never> {
+        observe(predicate, sort, notifyChildChanges)
+    }
+
+    func fetch<T: DomainModelConvertible>(
+        _ predicate: NSPredicate? = nil,
+        _ sort: [NSSortDescriptor] = []
+    ) -> Effect<[T], Error> {
+        fetch(predicate, sort)
+    }
 }

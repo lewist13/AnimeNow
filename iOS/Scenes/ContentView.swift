@@ -13,7 +13,7 @@ struct ContentView: View {
 
     var body: some View {
 
-        // MARK: Home View
+        // MARK: Content View
 
         WithViewStore(
             store.scope(state: \.route)
@@ -56,46 +56,38 @@ struct ContentView: View {
                 maxWidth: .infinity,
                 maxHeight: .infinity
             )
-            .overlay(
-                GeometryReader { reader in
-                    HStack(spacing: 0) {
-                        ForEach(ContentCore.Route.allCases, id: \.self) { item in
-                            Image(
-                                systemName: "\(item == viewStore.state ? item.selectedIcon : item.icon)"
+            .bottomSafeAreaInset(
+                HStack(spacing: 0) {
+                    ForEach(
+                        ContentCore.Route.allCases,
+                        id: \.self
+                    ) { item in
+                        Image(
+                            systemName: "\(item == viewStore.state ? item.selectedIcon : item.icon)"
+                        )
+                        .foregroundColor(
+                            item == viewStore.state ? Color.white : Color.gray
+                        )
+                        .font(.system(size: 20).weight(.semibold))
+                        .frame(
+                            width: 56,
+                            height: 56,
+                            alignment: .center
+                        )
+                        .onTapGesture {
+                            viewStore.send(
+                                .binding(.set(\.$route, item)),
+                                animation: .linear(duration: 0.15)
                             )
-                            .foregroundColor(
-                                item == viewStore.state ? Color.white : Color.gray
-                            )
-                            .font(.system(size: 20).weight(.semibold))
-                            .frame(
-                                width: 56,
-                                height: 56,
-                                alignment: .center
-                            )
-                            .onTapGesture {
-                                viewStore.send(
-                                    .binding(.set(\.$route, item)),
-                                    animation: .linear(duration: 0.15)
-                                )
-                            }
                         }
                     }
+                }
                     .padding(.horizontal, 12)
                     .background(Color(white: 0.08))
                     .clipShape(Capsule())
-                    .frame(
-                        maxWidth: .infinity,
-                        maxHeight: .infinity,
-                        alignment: .bottom
-                    )
-                    .padding(reader.safeAreaInsets.bottom > 0 ? 0 : 24)
-                    .ignoresSafeArea(.keyboard, edges: .bottom)
-                }
-                .frame(
-                    maxWidth: .infinity,
-                    maxHeight: .infinity
-                )
+                    .padding(.bottom, DeviceUtil.hasBottomIndicator ? 0 : 24)
             )
+            .ignoresSafeArea(.keyboard, edges: .bottom)
         }
         .overlay(
             IfLetStore(

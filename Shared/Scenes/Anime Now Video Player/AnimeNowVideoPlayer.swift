@@ -54,10 +54,10 @@ struct AnimeNowVideoPlayer: View {
                 viewStore.send(.playerPiPStatus(status))
             }
             .onSubtitlesChanged { selection in
-                viewStore.send(.playerSubtitles(selection))
+//                viewStore.send(.playerSubtitles(selection))
             }
             .onSubtitleSelectionChanged { selected in
-                viewStore.send(.playerSelectedSubtitle(selected))
+//                viewStore.send(.playerSelectedSubtitle(selected))
             }
             .onAppear {
                 viewStore.send(.onAppear)
@@ -241,22 +241,23 @@ extension AnimeNowVideoPlayer {
 
     @ViewBuilder
     var subtitlesButton: some View {
-        WithViewStore(
-            store.scope(
-                state: \.playerSubtitles
-            )
-        ) { viewStore in
-            if let count = viewStore.state?.options.count, count > 0 {
-                Image(systemName: "captions.bubble.fill")
-                    .foregroundColor(Color.white)
-                    .font(.title2)
-                    .padding(4)
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        viewStore.send(.showSubtitlesSidebar)
-                    }
-            }
-        }
+        EmptyView()
+//        WithViewStore(
+//            store.scope(
+//                state: \.playerSubtitles
+//            )
+//        ) { viewStore in
+//            if let count = viewStore.state?.options.count, count > 0 {
+//                Image(systemName: "captions.bubble.fill")
+//                    .foregroundColor(Color.white)
+//                    .font(.title2)
+//                    .padding(4)
+//                    .contentShape(Rectangle())
+//                    .onTapGesture {
+//                        viewStore.send(.showSubtitlesSidebar)
+//                    }
+//            }
+//        }
     }
 
     @ViewBuilder
@@ -309,8 +310,8 @@ struct VideoPlayerView_Previews: PreviewProvider {
             AnimeNowVideoPlayer(
                 store: .init(
                     initialState: .init(
-                        anime: .narutoShippuden,
-                        episodes: .init(uniqueElements: Episode.demoEpisodes),
+                        anime: .init(Anime.narutoShippuden),
+                        episodes: .init(Episode.demoEpisodes.map({ $0.asRepresentable() })),
                         selectedEpisode: Episode.demoEpisodes.first!.id
                     ),
                     reducer: AnimeNowVideoPlayerCore.reducer,

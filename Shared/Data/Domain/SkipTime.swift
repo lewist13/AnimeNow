@@ -7,12 +7,12 @@
 
 import Foundation
 
-struct SkipTime: Equatable {
+struct SkipTime: Hashable {
     let startTime: Double   // 0...1
     let endTime: Double     // 0...1
     let type: Option
 
-    enum Option: Equatable {
+    enum Option: Hashable {
         case recap
         case opening
         case ending

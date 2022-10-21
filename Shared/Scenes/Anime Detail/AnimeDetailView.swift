@@ -295,8 +295,8 @@ extension AnimeDetailView {
         ) { progressState in
             ThumbnailItemBigView(
                 type: .episode(
-                    image: episode.thumbnail.largest?.link,
-                    name: episode.name,
+                    image: episode.thumbnail?.link,
+                    name: episode.title,
                     animeName: nil,
                     number: episode.number,
                     progress: progressState.state?.progress
@@ -383,11 +383,15 @@ struct AnimeView_Previews: PreviewProvider {
             store: .init(
                 initialState: .init(
                     anime: .narutoShippuden,
-                    episodes: .success(.init(uniqueElements: Episode.demoEpisodes)),
+                    episodes: .success(Episode.demoEpisodes),
                     animeStore: .success(
                         .init(
                             id: 0,
+                            title: "",
+                            format: .tv,
+                            posterImage: [],
                             isFavorite: false,
+                            inWatchlist: false,
                             episodeStores: .init()
                         )
                     )

@@ -177,11 +177,10 @@ extension ContentCore {
                     )
                     .eraseToEffect()
 
-            case let .home(.resumeWatchingTapped(episodeInfoWithAnime)):
+            case let .home(.resumeWatchingTapped(resumeWatching)):
                 state.videoPlayer = .init(
-                    anime: episodeInfoWithAnime.anime,
-                    episodes: nil,
-                    selectedEpisode: Episode.ID(episodeInfoWithAnime.episodeInfo.number)
+                    anime: resumeWatching.anime.asRepresentable(),
+                    selectedEpisode: Episode.ID(resumeWatching.episodeStore.number)
                 )
 
             case .setAnimeDetail(let animeMaybe):
@@ -193,7 +192,11 @@ extension ContentCore {
                 }
 
             case let .animeDetail(.play(anime, episodes, selected)):
-                state.videoPlayer = .init(anime: anime, episodes: episodes, selectedEpisode: selected)
+                state.videoPlayer = .init(
+                    anime: anime.asRepresentable(),
+                    episodes: episodes.map({ $0.asRepresentable() }),
+                    selectedEpisode: selected
+                )
 
             case .animeDetail(.close):
                 return .init(value: .setAnimeDetail(nil))

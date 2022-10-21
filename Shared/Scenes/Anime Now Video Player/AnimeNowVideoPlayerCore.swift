@@ -12,7 +12,7 @@ import AVFoundation
 import SwiftUI
 
 enum AnimeNowVideoPlayerCore {
-    enum Sidebar: Equatable, CustomStringConvertible {
+    enum Sidebar: Hashable, CustomStringConvertible {
         case episodes
         case settings(SettingsState)
         case subtitles
@@ -28,8 +28,8 @@ enum AnimeNowVideoPlayerCore {
             }
         }
 
-        struct SettingsState: Equatable {
-            enum Section: Equatable {
+        struct SettingsState: Hashable {
+            enum Section: Hashable {
                 case provider
                 case quality
                 case language
@@ -40,24 +40,23 @@ enum AnimeNowVideoPlayerCore {
     }
 
     struct State: Equatable {
-        let anime: Anime
+        let anime: AnyAnimeRepresentable
 
-        var episodes = LoadableState<IdentifiedArrayOf<Episode>>.idle
-        var sources = LoadableState<IdentifiedArrayOf<Source>>.idle
+        var episodes = LoadableState<[AnyEpisodeRepresentable]>.idle
+        var sources = LoadableState<[Source]>.idle
         var animeStore = LoadableState<AnimeStore>.idle
         var skipTimes = LoadableState<[SkipTime]>.idle
 
         var selectedEpisode: Episode.ID
-        var selectedProvider: Episode.Provider.ID?
+        var selectedProvider: Provider.ID?
         var selectedSource: Source.ID?
         var selectedSidebar: Sidebar?
-        var playerSelectedSubtitle: AVMediaSelectionOption?
+//        var playerSelectedSubtitle: AVMediaSelectionOption?
 
         var showPlayerOverlay = true
 
         // Internal
 
-        var isOffline = false
         var hasInitialized = false
 
         // Player
@@ -68,15 +67,19 @@ enum AnimeNowVideoPlayerCore {
         var playerDuration = Double.zero
         var playerStatus = VideoPlayer.Status.idle
         var playerPiPStatus = VideoPlayer.PIPStatus.restoreUI
-        var playerSubtitles: AVMediaSelectionGroup?
+//        var playerSubtitles: AVMediaSelectionGroup?
 
         init(
-            anime: Anime,
-            episodes: IdentifiedArrayOf<Episode>?,
+            anime: AnyAnimeRepresentable,
+            episodes: [AnyEpisodeRepresentable]? = nil,
             selectedEpisode: Episode.ID
         ) {
             self.anime = anime
-            self.episodes = episodes != nil ? .success(episodes!) : .idle
+            if let episodes = episodes {
+                self.episodes = .success(episodes)
+            } else {
+                self.episodes = .idle
+            }
             self.selectedEpisode = selectedEpisode
         }
     }
@@ -96,14 +99,14 @@ enum AnimeNowVideoPlayerCore {
         case closeSidebar
 
         case selectEpisode(Episode.ID, saveProgress: Bool = true)
-        case selectProvider(Episode.Provider.ID?, saveProgress: Bool = true)
+        case selectProvider(Provider.ID?, saveProgress: Bool = true)
         case selectSource(Source.ID?, saveProgress: Bool = true)
-        case selectSubtitle(AVMediaSelectionOption)
+//        case selectSubtitle(AVMediaSelectionOption)
 
         // Internal Actions
 
         case initializeFirstTime
-        case saveEpisodeProgress(Episode.ID?)
+        case saveEpisodeProgress(AnyEpisodeRepresentable.ID?)
         case setSidebar(Sidebar?)
         case showPlayerOverlay(Bool)
         case closeSidebarAndShowControls
@@ -138,8 +141,8 @@ enum AnimeNowVideoPlayerCore {
         case playerBuffer(Double)
         case playerPiPStatus(VideoPlayer.PIPStatus)
         case playerPlayedToEnd
-        case playerSubtitles(AVMediaSelectionGroup?)
-        case playerSelectedSubtitle(AVMediaSelectionOption?)
+//        case playerSubtitles(AVMediaSelectionGroup?)
+//        case playerSelectedSubtitle(AVMediaSelectionOption?)
         case stopAndClearPlayer
 
         // Internal Video Player Actions
@@ -170,7 +173,6 @@ extension AnimeNowVideoPlayerCore.State {
     var status: Status? {
 
         // Error States
-
         if case .failed = episodes {
             return .error("There was an error retrieving episodes at this time. Please try again later.")
         } else if case .success(let episodes) = episodes, episodes.count == 0 {
@@ -185,7 +187,6 @@ extension AnimeNowVideoPlayerCore.State {
             return .error("There was an error starting video player. Please try again later.")
 
         // Loading States
-
         } else if !episodes.finished {
             return .loading
         } else if (episode?.providers.count ?? 0) > 0 && !sources.finished {
@@ -206,7 +207,7 @@ extension AnimeNowVideoPlayerCore.State {
 // MARK: Episode Properties
 
 extension AnimeNowVideoPlayerCore.State {
-    var episode: Episode? {
+    var episode: AnyEpisodeRepresentable? {
         if let episodes = episodes.value {
             return episodes[id: selectedEpisode]
         }
@@ -214,7 +215,7 @@ extension AnimeNowVideoPlayerCore.State {
         return nil
     }
 
-    fileprivate var provider: Episode.Provider? {
+    fileprivate var provider: Provider? {
         if let episode = episode, let selectedProvider = selectedProvider {
             return episode.providers.first(where: { $0.id == selectedProvider })
         }
@@ -229,7 +230,7 @@ extension AnimeNowVideoPlayerCore.State {
         return nil
     }
 
-    var nextEpisode: Episode? {
+    var nextEpisode: AnyEpisodeRepresentable? {
         if let episode = episode,
            let episodes = episodes.value,
            let index = episodes.index(id: episode.id),
@@ -295,8 +296,9 @@ extension AnimeNowVideoPlayerCore {
         struct HidePlayerOverlayDelayCancellable: Hashable {}
         struct FetchEpisodesCancellable: Hashable {}
         struct FetchSourcesCancellable: Hashable {}
-        struct AnimeInfoStoreObservableCancellable: Hashable {}
+        struct CancelAnimeStoreObservable: Hashable {}
         struct FetchSkipTimesCancellable: Hashable {}
+        struct CancelAnimeFetchId: Hashable {}
 
         let overlayVisibilityAnimation = Animation.easeInOut(
             duration: 0.3
@@ -308,20 +310,7 @@ extension AnimeNowVideoPlayerCore {
 
         case .onAppear:
             guard !state.hasInitialized else { break }
-            return .merge(
-                .init(value: .initializeFirstTime),
-                environment.repositoryClient.observe(
-                    .init(
-                        format: "id == %d",
-                        state.anime.id
-                    ),
-                    []
-                )
-                .receive(on: environment.mainQueue)
-                .eraseToEffect()
-                .map(Action.fetchedAnimeInfoStore)
-                .cancellable(id: AnimeInfoStoreObservableCancellable())
-            )
+            return .init(value: .initializeFirstTime)
 
         case .playerTapped:
             guard state.selectedSidebar == nil else {
@@ -367,6 +356,8 @@ extension AnimeNowVideoPlayerCore {
         case .closeButtonTapped:
             return .concatenate(
                 .init(value: .saveEpisodeProgress(state.episode?.id)),
+                .cancel(id: CancelAnimeStoreObservable()),
+                .cancel(id: CancelAnimeFetchId()),
                 .cancel(id: FetchSourcesCancellable()),
                 .cancel(id: FetchEpisodesCancellable()),
                 .cancel(id: FetchSkipTimesCancellable()),
@@ -439,7 +430,20 @@ extension AnimeNowVideoPlayerCore {
     
         case .initializeFirstTime:
             state.hasInitialized = true
-            return .init(value: .fetchEpisodes)
+            return .merge(
+                .init(value: .fetchEpisodes),
+                environment.repositoryClient.observe(
+                    .init(
+                        format: "id == %d",
+                        state.anime.id
+                    ),
+                    []
+                )
+                .receive(on: environment.mainQueue)
+                .eraseToEffect()
+                .map(Action.fetchedAnimeInfoStore)
+                .cancellable(id: CancelAnimeStoreObservable())
+            )
 
         case .showPlayerOverlay(let show):
             state.showPlayerOverlay = show
@@ -459,13 +463,17 @@ extension AnimeNowVideoPlayerCore {
         case .saveEpisodeProgress(let episodeId):
             guard let episodeId = episodeId, let episode = state.episodes.value?[id: episodeId] else { break }
             guard state.playerDuration > 0 else { break }
-            guard var animeInfoStore = state.animeStore.value else { break }
+            guard var animeStore = state.animeStore.value else { break }
 
             let progress = state.playerProgress
 
-            animeInfoStore.updateProgress(for: episode, anime: state.anime, progress: progress)
+            animeStore.updateProgress(
+                for: episode,
+                anime: state.anime,
+                progress: progress
+            )
 
-            return environment.repositoryClient.insertOrUpdate(animeInfoStore)
+            return environment.repositoryClient.insertOrUpdate(animeStore)
                 .receive(on: environment.mainQueue)
                 .fireAndForget()
 
@@ -496,7 +504,7 @@ extension AnimeNowVideoPlayerCore {
         // Fetched Anime Store
 
         case .fetchedAnimeInfoStore(let animeStores):
-            state.animeStore = .success(.findOrCreate(state.anime.id, animeStores))
+            state.animeStore = .success(.findOrCreate(state.anime, animeStores))
 
         // Fetch Episodes
 
@@ -515,7 +523,7 @@ extension AnimeNowVideoPlayerCore {
                 .cancellable(id: FetchEpisodesCancellable())
 
         case .fetchedEpisodes(let episodes):
-            state.episodes = .success(.init(uniqueElements: episodes))
+            state.episodes = .success(episodes.map({ $0.asRepresentable() }))
             return .init(value: .selectEpisode(state.selectedEpisode, saveProgress: false))
 
         // Fetch Sources
@@ -531,8 +539,8 @@ extension AnimeNowVideoPlayerCore {
                 .cancellable(id: FetchSourcesCancellable(), cancelInFlight: true)
 
         case .fetchedSources(.success(let sources)):
-            let sources = sources.sorted(by: \.quality).reversed()
-            state.sources = .success(.init(uniqueElements: sources))
+            let sources = Array(sources.sorted(by: \.quality).reversed())
+            state.sources = .success(sources)
             // TODO: Set quality based on user defaults or the first one based on the one received
             return .init(value: .selectSource(sources.first?.id, saveProgress: false))
 
@@ -640,14 +648,17 @@ extension AnimeNowVideoPlayerCore {
         case .playerPlayedToEnd:
             break
 
-        case .selectSubtitle(let subtitle):
-            state.playerSelectedSubtitle = subtitle
+//        case .selectSubtitle(let subtitle):
+//            break
+//            state.playerSelectedSubtitle = subtitle
 
-        case .playerSubtitles(let subtitles):
-            state.playerSubtitles = subtitles
+//        case .playerSubtitles(let subtitles):
+//            break
+//            state.playerSubtitles = subtitles
 
-        case .playerSelectedSubtitle(let subtitle):
-            state.playerSelectedSubtitle = subtitle
+//        case .playerSelectedSubtitle(let subtitle):
+//            break
+//            state.playerSelectedSubtitle = subtitle
 
         case .stopAndClearPlayer:
             state.playerAction = .pause
@@ -656,8 +667,8 @@ extension AnimeNowVideoPlayerCore {
             state.playerBuffered = .zero
             state.playerDuration = .zero
             state.playerPiPStatus = .restoreUI
-            state.playerSubtitles = nil
-            state.playerSelectedSubtitle = nil
+//            state.playerSubtitles = nil
+//            state.playerSelectedSubtitle = nil
 
         case .binding:
             break

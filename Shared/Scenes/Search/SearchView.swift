@@ -79,7 +79,7 @@ extension SearchView {
     }
 
     @ViewBuilder
-    func presentAnimes(_ animes: IdentifiedArrayOf<Anime>) -> some View {
+    func presentAnimes(_ animes: [Anime]) -> some View {
         if animes.count > 0 {
             ScrollView {
                 LazyVGrid(
@@ -88,7 +88,7 @@ extension SearchView {
                         .init(.flexible(), spacing: 16)
                     ]
                 ) {
-                    ForEach(animes, id: \.self) { anime in
+                    ForEach(animes, id: \.id) { anime in
                         AnimeItemView(anime: anime)
                             .onTapGesture {
                                 ViewStore(store.stateless).send(.onAnimeTapped(anime))
@@ -96,6 +96,9 @@ extension SearchView {
                     }
                 }
                 .padding([.top, .horizontal])
+
+                ExtraBottomSafeAreaInset()
+                Spacer(minLength: 32)
             }
         } else {
             noResultsFound

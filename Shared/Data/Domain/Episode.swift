@@ -7,106 +7,161 @@
 
 import Foundation
 
-struct Episode: Equatable, Identifiable {
+protocol EpisodeRepresentable  {
+    var number: Int { get }
+    var title: String { get }
+    var thumbnail: ImageSize? { get }
+    var providers: [Provider] { get }
+
+    func isEqualTo(_ item: EpisodeRepresentable) -> Bool
+    func asRepresentable() -> AnyEpisodeRepresentable
+}
+
+extension EpisodeRepresentable where Self: Equatable {
+    func isEqualTo(_ item: EpisodeRepresentable) -> Bool {
+        guard let item = item as? Self else { return false }
+        return self == item
+    }
+}
+
+extension EpisodeRepresentable {
+    func asRepresentable() -> AnyEpisodeRepresentable {
+        .init(self)
+    }
+}
+
+struct AnyEpisodeRepresentable: EpisodeRepresentable, Identifiable {
+    private let episode: EpisodeRepresentable
+
+    var id: Int {
+        episode.number
+    }
+
+    var number: Int {
+        episode.number
+    }
+
+    var title: String {
+        episode.title
+    }
+
+    var thumbnail: ImageSize? {
+        episode.thumbnail
+    }
+
+    var providers: [Provider] {
+        episode.providers
+    }
+
+    init(_ episode: EpisodeRepresentable) {
+        self.episode = episode
+    }
+}
+
+extension AnyEpisodeRepresentable: Equatable {
+    static func == (lhs: AnyEpisodeRepresentable, rhs: AnyEpisodeRepresentable) -> Bool {
+        lhs.episode.isEqualTo(rhs.episode)
+    }
+}
+
+struct Episode: EpisodeRepresentable, Hashable, Identifiable {
     var id: Int { number }
-    let name: String
+    let title: String
     let number: Int
     let description: String
-    let thumbnail: [ImageSize]
-    let length: Int?    // in Seconds
+    let thumbnail: ImageSize?
 
     var providers = [Provider]()
+}
 
-    enum Provider: Equatable, Identifiable, CustomStringConvertible {
-        case gogoanime(id: String, dub: Bool)
-        case zoro(id: String)
+enum Provider: Hashable, Identifiable, CustomStringConvertible {
+    case gogoanime(id: String, dub: Bool)
+    case zoro(id: String)
+    case downloaded(url: String)
 
-        var id: String {
-            switch self {
-            case .gogoanime(let id, _), .zoro(let id):
-                return id
-            }
+    var id: String {
+        switch self {
+        case .gogoanime(let id, _), .zoro(let id), .downloaded(let id):
+            return id
         }
+    }
 
-        var dub: Bool? {
-            if case .gogoanime(_, let dub) = self {
-                return dub
-            }
-            return nil
+    var dub: Bool? {
+        if case .gogoanime(_, let dub) = self {
+            return dub
         }
+        return nil
+    }
 
-        var description: String {
-            switch self {
-            case .gogoanime:
-                return "gogoanime"
-            case .zoro:
-                return "zoro"
-            }
+    var description: String {
+        switch self {
+        case .gogoanime:
+            return "gogoanime"
+        case .zoro:
+            return "zoro"
+        case .downloaded:
+            return "downloaded"
         }
     }
 }
 
 extension Episode {
-    var lengthFormatted: String {
-        guard let length = length else { return "" }
-        let hours = length / 3600
-        let minutes = (length % 3600) / 60
-        let seconds = (length % 3600) % 60
+//    var lengthFormatted: String {
+//        guard let length = length else { return "" }
+//        let hours = length / 3600
+//        let minutes = (length % 3600) / 60
+//        let seconds = (length % 3600) % 60
+//
+//        var retVal: [String] = []
+//
+//        if hours > 0 {
+//            retVal += ["\(hours) h"]
+//        }
+//
+//        if minutes > 0 {
+//            retVal += ["\(minutes) m"]
+//        }
+//
+//        if seconds > 0 && minutes == 0 {
+//            retVal += ["\(seconds) s"]
+//        }
+//
+//        return retVal.joined(separator: " ")
+//    }
 
-        var retVal: [String] = []
-
-        if hours > 0 {
-            retVal += ["\(hours) h"]
-        }
-
-        if minutes > 0 {
-            retVal += ["\(minutes) m"]
-        }
-
-        if seconds > 0 && minutes == 0 {
-            retVal += ["\(seconds) s"]
-        }
-
-        return retVal.joined(separator: " ")
-    }
-
-    var episodeNumberLengthFormat: String {
-        "E\(number)" + (length != nil ? " \u{2022} \(lengthFormatted)" : "")
-    }
+//    var episodeNumberLengthFormat: String {
+//        "E\(number)" + (length != nil ? " \u{2022} \(lengthFormatted)" : "")
+//    }
 }
 
 extension Episode {
     static let empty = Episode(
-        name: "",
+        title: "",
         number: 0,
         description: "",
-        thumbnail: [],
-        length: 0
+        thumbnail: nil
     )
 
     static let placeholder = Episode(
-        name: "Placeholder",
+        title: "Placeholder",
         number: 0,
         description: "Placeholder",
-        thumbnail: [],
-        length: 0
+        thumbnail: nil
     )
 
     static let demoEpisodes: [Episode] = [
         .init(
-            name: "Homecoming",
+            title: "Homecoming",
             number: 1,
             description: "An older and stronger Naruto returns from his two and a half years of training with Jiraiya. When he gets back he finds that many things have changed since he left. From Konohamaru becoming a Gennin and being under the supervision of Ebisu to Tsunade's, the Fifth Hokage, being added to the great stone faces. Now the tasks of starting things where they were left has begun. And what new danger does Jiraiya know about?",
-            thumbnail: [.original(URL(string: "https://artworks.thetvdb.com/banners/episodes/79824/320623.jpg")!)],
-            length: nil,
+            thumbnail: .original(URL(string: "https://artworks.thetvdb.com/banners/episodes/79824/320623.jpg")!),
             providers: [.gogoanime(id: "12345", dub: false), .gogoanime(id: "123456", dub: true)]
         ),
         .init(
-            name: "Homecoming 2",
+            title: "Homecoming 2",
             number: 2,
             description: "An older and stronger Naruto returns from his two and a half years of training with Jiraiya. When he gets back he finds that many things have changed since he left. From Konohamaru becoming a Gennin and being under the supervision of Ebisu to Tsunade's, the Fifth Hokage, being added to the great stone faces. Now the tasks of starting things where they were left has begun. And what new danger does Jiraiya know about?",
-            thumbnail: [.original(URL(string: "https://artworks.thetvdb.com/banners/episodes/79824/320623.jpg")!)],
-            length: nil
+            thumbnail: .original(URL(string: "https://artworks.thetvdb.com/banners/episodes/79824/320623.jpg")!)
         )
     ]
 }

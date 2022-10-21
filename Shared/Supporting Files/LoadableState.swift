@@ -12,7 +12,9 @@ enum LoadableState<T: Equatable>: Equatable {
     case loading
     case success(T)
     case failed
+}
 
+extension LoadableState {
     var isLoading: Bool {
         self == .loading
     }

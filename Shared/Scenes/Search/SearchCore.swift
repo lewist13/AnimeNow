@@ -10,7 +10,7 @@ import Foundation
 import ComposableArchitecture
 
 enum SearchCore {
-    typealias LoadableAnimes = LoadableState<IdentifiedArrayOf<Anime>>
+    typealias LoadableAnimes = LoadableState<[Anime]>
 
     struct State: Equatable {
         var loadable = LoadableAnimes.idle
@@ -52,7 +52,7 @@ extension SearchCore {
                     .debounce(id: SearchAnimesID.self, for: 0.3, scheduler: environment.mainQueue)
                     .catchToEffect(Action.searchResult)
             case .searchResult(.success(let anime)):
-                state.loadable = .success(.init(uniqueElements: anime))
+                state.loadable = .success(anime)
             case .searchResult(.failure):
                 state.loadable = .failed
             case .searchQueryChangeDebounce:

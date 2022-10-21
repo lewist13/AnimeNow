@@ -68,6 +68,10 @@ struct HomeView: View {
                     duration:  2.0
                 )
                 .animation(.easeInOut(duration: 0.5), value: viewStore.state)
+
+                ExtraBottomSafeAreaInset()
+
+                Spacer(minLength: 32)
             }
             .disabled(viewStore.state)
             .onAppear {
@@ -75,7 +79,7 @@ struct HomeView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .ignoresSafeArea()
+        .ignoresSafeArea(.container, edges: .top)
     }
 }
 
@@ -225,34 +229,44 @@ extension HomeView {
         store: Store<HomeCore.LoadableEpisodes, HomeCore.Action>
     ) -> some View {
         WithViewStore(store) { viewStore in
-            if let animeEpisodesInfo = viewStore.state.value,
-               animeEpisodesInfo.count > 0 {
+            if let resumeWatchingItems = viewStore.state.value,
+               resumeWatchingItems.count > 0 {
                 VStack(alignment: .leading) {
                     headerText("Resume Watching")
 
                     ScrollView(.horizontal, showsIndicators: false) {
                         LazyHStack(alignment: .center) {
-                            ForEach(animeEpisodesInfo, id: \.id) { animeEpisodeInfo in
+                            ForEach(resumeWatchingItems, id: \.id) { item in
                                 ThumbnailItemBigView(
                                     type:
-                                        animeEpisodeInfo.episodeInfo.isMovie ?
+                                        item.episodeStore.isMovie ?
                                         .movie(
-                                            image: animeEpisodeInfo.episodeInfo.cover?.link,
-                                            name: animeEpisodeInfo.episodeInfo.title,
-                                            progress: animeEpisodeInfo.episodeInfo.progress
+                                            image: item.episodeStore.thumbnail?.link,
+                                            name: item.episodeStore.title,
+                                            progress: item.episodeStore.progress
                                         ) :
                                         .episode(
-                                            image: animeEpisodeInfo.episodeInfo.cover?.link,
-                                            name: animeEpisodeInfo.episodeInfo.title,
-                                            animeName: animeEpisodeInfo.anime.title,
-                                            number: Int(animeEpisodeInfo.episodeInfo.number),
-                                            progress: animeEpisodeInfo.episodeInfo.progress
+                                            image: item.episodeStore.thumbnail?.link,
+                                            name: item.episodeStore.title,
+                                            animeName: item.title,
+                                            number: Int(item.episodeStore.number),
+                                            progress: item.episodeStore.progress
                                         ),
                                     progressSize: 6
                                 )
                                 .frame(height: DeviceUtil.isPhone ? 150 : 225)
                                 .onTapGesture {
-                                    viewStore.send(.resumeWatchingTapped(animeEpisodeInfo))
+                                    viewStore.send(.resumeWatchingTapped(item))
+                                }
+                                .contextMenu {
+                                    Button {
+                                        viewStore.send(.markAsWatched(item))
+                                    } label: {
+                                        Label(
+                                            "Mark as watched",
+                                            systemImage: "eye.fill"
+                                        )
+                                    }
                                 }
                             }
                         }

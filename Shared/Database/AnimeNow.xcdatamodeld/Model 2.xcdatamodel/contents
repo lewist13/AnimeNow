@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="20086" systemVersion="21A559" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+    <entity name="CDAnimeStore" representedClassName=".CDAnimeStore" syncable="YES" codeGenerationType="class">
+        <attribute name="id" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="inWatchlist" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="isFavorite" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="title" optional="YES" attributeType="String"/>
+        <relationship name="episodeStores" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="CDEpisodeStore" inverseName="anime" inverseEntity="CDEpisodeStore"/>
+    </entity>
+    <entity name="CDEpisodeStore" representedClassName="CDEpisodeStore" syncable="YES" codeGenerationType="class">
+        <attribute name="cover" optional="YES" attributeType="Binary"/>
+        <attribute name="downloadURL" optional="YES" attributeType="URI"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isMovie" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="lastUpdatedProgress" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="number" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="progress" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="title" attributeType="String"/>
+        <relationship name="anime" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="CDAnimeStore" inverseName="episodeStores" inverseEntity="CDAnimeStore"/>
+    </entity>
+    <elements>
+        <element name="CDAnimeStore" positionX="-194.68701171875" positionY="14.234375" width="128" height="104"/>
+        <element name="CDEpisodeStore" positionX="-180" positionY="54" width="128" height="164"/>
+    </elements>
+</model>

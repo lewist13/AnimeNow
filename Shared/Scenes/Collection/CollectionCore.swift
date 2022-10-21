@@ -8,7 +8,7 @@
 
 import ComposableArchitecture
 
-enum CollectionCore {
+struct CollectionCore: ReducerProtocol {
     struct State: Equatable {
         
     }
@@ -17,15 +17,7 @@ enum CollectionCore {
         case onAppear
     }
 
-    struct Environment {
-
-    }
-}
-
-extension CollectionCore {
-    static var reducer: Reducer<CollectionCore.State, CollectionCore.Action, CollectionCore.Environment> {
-        .init { state, action, environment in
-            return .none
-        }
+    func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
+        return .none
     }
 }

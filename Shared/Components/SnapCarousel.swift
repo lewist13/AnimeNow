@@ -18,13 +18,13 @@ struct SnapCarousel<Content: View, T: Identifiable>: View {
     var spacing: CGFloat
     var trailingSpace: CGFloat
 
-    var list: IdentifiedArrayOf<T>
+    var list: [T]
     var content: (T) -> Content
 
     init(
         spacing: CGFloat = 0,
         trailingSpace: CGFloat = 0,
-        items: IdentifiedArrayOf<T>,
+        items: [T],
         @ViewBuilder content: @escaping (T)->Content
     ) {
         self.list = items

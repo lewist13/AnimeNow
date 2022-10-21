@@ -7,17 +7,30 @@
 
 import Foundation
 
-struct EpisodeStore: Hashable, Codable, Identifiable {
+struct EpisodeStore: EpisodeRepresentable, Hashable, Codable, Identifiable {
     var id = UUID()
-    var number: Int16
+    var number: Int
     var title: String
-    var cover: ImageSize?
+    var thumbnail: ImageSize?
+
+    // Database Only
+
     var isMovie: Bool
     var progress: Double
     var lastUpdatedProgress: Date
     var downloadURL: URL?
 
     var objectURL: URL?
+}
+
+extension EpisodeStore {
+    var providers: [Provider] {
+        if let url = downloadURL {
+            return [.downloaded(url: url.absoluteString)]
+        } else {
+            return []
+        }
+    }
 }
 
 extension EpisodeStore {

@@ -36,6 +36,9 @@ jobs:
         run: |
           [[ ${{ github.event.pull_request != null }} == true ]] && [[ ${{ github.event.pull_request.user.login == github.repository.owner.login }} == true ]] && echo "is_release=1" >> $GITHUB_ENV || echo "is_release=0" >> $GITHUB_ENV
 
+      - name: Install Swiftlint
+        run: brew install swiftlint
+
       - name: Install create-dmg
         run: brew install create-dmg
 
@@ -92,7 +95,7 @@ jobs:
             --volname "${{ env.APP_NAME }}" \
             --background "${{ env.BACKGROUND_DMG_PATH }}" \
             --window-pos 200 120 \
-            --window-size 600 400 \
+            --window-size 660 400 \
             --icon-size 160 \
             --icon "${{ env.APP_NAME }}.app" 180 170 \
             --hide-extension "${{ env.APP_NAME }}.app" \

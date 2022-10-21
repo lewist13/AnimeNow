@@ -9,9 +9,9 @@ import Foundation
 import SwiftUI
 
 class AnimeNowHostingController: UIHostingController<AnyView> {
-    override var prefersHomeIndicatorAutoHidden: Bool { _prefersHomeIndicatorAutoHidden }
+    override var prefersHomeIndicatorAutoHidden: Bool { homeIndicatorAutoHidden }
 
-    var _prefersHomeIndicatorAutoHidden = false {
+    var homeIndicatorAutoHidden = false {
        didSet {
             setNeedsUpdateOfHomeIndicatorAutoHidden()
        }
@@ -47,7 +47,7 @@ class AnimeNowHostingController: UIHostingController<AnyView> {
                 AnyView(
                     wrappedView
                         .onPreferenceChange(HomeIndicatorAutoHiddenPreferenceKey.self) { value in
-                            box.delegate?._prefersHomeIndicatorAutoHidden = value
+                            box.delegate?.homeIndicatorAutoHidden = value
                         }
                         .onPreferenceChange(SupportedOrientationPreferenceKey.self) { value in
                             box.delegate?._supportedInterfaceOrientations = value

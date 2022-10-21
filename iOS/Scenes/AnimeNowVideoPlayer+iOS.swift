@@ -185,7 +185,7 @@ extension AnimeNowVideoPlayer {
                 self.title = state.anime.title
                 self.header = (state.episodes.value?.count ?? 0) > 1 ? "E\(state.selectedEpisode)" : nil
             } else {
-                self.title = state.episode?.name ?? "Loading..."
+                self.title = state.episode?.title ?? "Loading..."
                 self.header = "E\(state.selectedEpisode) \u{2022} \(state.anime.title)"
             }
         }
@@ -309,7 +309,7 @@ extension AnimeNowVideoPlayer {
 extension AnimeNowVideoPlayer {
     private struct EpisodesSidebarViewState: Equatable {
         let loading: Bool
-        let episodes: IdentifiedArrayOf<Episode>
+        let episodes: [AnyEpisodeRepresentable]
         let selectedEpisode: Episode.ID
         let episodesStore: [EpisodeStore]
 
@@ -412,23 +412,23 @@ extension AnimeNowVideoPlayer {
 extension AnimeNowVideoPlayer {
     private struct SettingsSidebarViewState: Equatable {
         let selectedSetting: AnimeNowVideoPlayerCore.Sidebar.SettingsState.Section?
-        let selectedProvider: Episode.Provider.ID?
+        let selectedProvider: Provider.ID?
         let selectedSource: Source.ID?
         let isLoading: Bool
 
-        private let providers: IdentifiedArrayOf<Episode.Provider>?
-        private let sources: IdentifiedArrayOf<Source>?
+        private let providers: [Provider]?
+        private let sources: [Source]?
 
-        var provider: Episode.Provider? {
+        var provider: Provider? {
             if let selectedProvider = selectedProvider {
                 return providers?[id: selectedProvider]
             }
             return nil
         }
 
-        var selectableProviders: IdentifiedArrayOf<Episode.Provider> {
+        var selectableProviders: [Provider] {
             if let providers = providers {
-                var returnVal = IdentifiedArrayOf<Episode.Provider>()
+                var returnVal = [Provider]()
 
                 if let selectedProvider = self.provider {
                     returnVal.append(selectedProvider)
@@ -460,9 +460,9 @@ extension AnimeNowVideoPlayer {
             }
         }
 
-        var selectableQualities: IdentifiedArrayOf<IdentifiedQuality>? {
+        var selectableQualities: [IdentifiedQuality]? {
             if let sources = sources {
-                return .init(uniqueElements: sources.map(IdentifiedQuality.init))
+                return sources.map(IdentifiedQuality.init)
             }
             return nil
         }
@@ -475,10 +475,10 @@ extension AnimeNowVideoPlayer {
         }
 
         struct IdentifiedAudio: Equatable, Identifiable, CustomStringConvertible {
-            let id: Episode.Provider.ID
+            let id: Provider.ID
             let language: String
 
-            init(_ provider: Episode.Provider) {
+            init(_ provider: Provider) {
                 self.id = provider.id
                 self.language = (provider.dub ?? false) ? "English" : "Japanese"
             }
@@ -488,10 +488,10 @@ extension AnimeNowVideoPlayer {
             }
         }
 
-        var selectableAudio: IdentifiedArrayOf<IdentifiedAudio>? {
+        var selectableAudio: [IdentifiedAudio]? {
             if let providers = providers, let provider = provider {
                 let filtered = providers.filter { $0.description == provider.description }
-                return .init(uniqueElements: filtered.map(IdentifiedAudio.init))
+                return filtered.map(IdentifiedAudio.init)
             }
             return nil
         }
@@ -510,7 +510,7 @@ extension AnimeNowVideoPlayer {
                 self.selectedSetting = nil
             }
             self.isLoading = !state.episodes.finished || !state.sources.finished
-            self.providers = state.episode?.providers != nil ? .init(uniqueElements: state.episode!.providers) : nil
+            self.providers = state.episode!.providers
             self.selectedProvider = state.selectedProvider
             self.sources = state.sources.value
             self.selectedSource = state.selectedSource
@@ -607,7 +607,7 @@ extension AnimeNowVideoPlayer {
     @ViewBuilder
     private func listsSettings<I: Identifiable>(
         _ selected: I.ID? = nil,
-        _ items: IdentifiedArrayOf<I>? = nil,
+        _ items: [I]? = nil,
         _ selectedItem: ((I.ID) -> Void)? = nil
     ) -> some View where I: CustomStringConvertible {
         if let items = items {
@@ -686,8 +686,10 @@ extension AnimeNowVideoPlayer {
         let selected: AVMediaSelectionOption?
 
         init(_ state: AnimeNowVideoPlayerCore.State) {
-            self.subtitles = state.playerSubtitles
-            self.selected = state.playerSelectedSubtitle
+            subtitles = nil
+            selected = nil
+//            self.subtitles = state.playerSubtitles
+//            self.selected = state.playerSelectedSubtitle
         }
     }
 

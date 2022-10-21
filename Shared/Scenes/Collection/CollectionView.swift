@@ -10,7 +10,7 @@ import ComposableArchitecture
 import SwiftUI
 
 struct CollectionView: View {
-    let store: Store<CollectionCore.State, CollectionCore.Action>
+    let store: StoreOf<CollectionCore>
 
     var body: some View {
         VStack(spacing: 12) {
@@ -39,8 +39,7 @@ struct LibraryView_Previews: PreviewProvider {
         CollectionView(
             store: .init(
                 initialState: .init(),
-                reducer: CollectionCore.reducer,
-                environment: .init()
+                reducer: CollectionCore()
             )
         )
         .preferredColorScheme(.dark)

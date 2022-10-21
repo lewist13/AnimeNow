@@ -16,7 +16,10 @@ public class Persistence {
     private init() {
         let bundle = Bundle(for: Persistence.self)
 
-        guard let databaseURL = bundle.url(forResource: "AnimeNow", withExtension: "momd") else {
+        guard let databaseURL = bundle.url(
+            forResource: "AnimeNow",
+            withExtension: "momd"
+        ) else {
             fatalError("Failed to find data model")
         }
 
@@ -28,9 +31,35 @@ public class Persistence {
 
         persistentContainer = .init(name: database, managedObjectModel: managedObjectModel)
         persistentContainer.loadPersistentStores { description, error in
+            description.shouldMigrateStoreAutomatically = true
+            description.shouldInferMappingModelAutomatically = true
             if let error = error {
                 fatalError("Unable to load persistent stores: \(error)")
             }
         }
     }
+}
+
+// MARK: Domain Model
+
+protocol DomainModelConvertible: Equatable, Identifiable {
+    associatedtype ManagedObject: ManagedObjectConvertible where ManagedObject.DomainModel == Self
+
+    var objectURL: URL? { get set }
+
+    func asManagedObject(in context: NSManagedObjectContext) -> ManagedObject
+}
+
+// MARK: Managed Model
+
+protocol ManagedObjectConvertible: NSManagedObject {
+    associatedtype DomainModel: DomainModelConvertible where DomainModel.ManagedObject == Self
+
+    static func getFetchRequest() -> NSFetchRequest<DomainModel.ManagedObject>
+
+    var asDomain: DomainModel { get }
+
+    func create(from domain: DomainModel)
+
+    func update(from domain: DomainModel)
 }

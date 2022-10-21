@@ -28,7 +28,7 @@ extension AnimeClient {
         .none
     } getSources: { _ in
         .none
-    } getSkipTimes: { _,_ in
+    } getSkipTimes: { _, _ in
         .none
     }
 }

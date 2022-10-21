@@ -17,7 +17,7 @@ class RepositoryClientLive: RepositoryClient {
 
     private init() {}
 
-    func insert<T>(_ item: T) -> Effect<T, Error> where T : DomainModel {
+    func insert<T>(_ item: T) -> Effect<T, Error> where T : DomainModelConvertible {
         .future { [unowned self] callback in
             let context = persistenceContainer.newBackgroundContext()
 
@@ -36,7 +36,7 @@ class RepositoryClientLive: RepositoryClient {
         }
     }
 
-    func update<T>(_ item: T) -> Effect<T, Error> where T : DomainModel {
+    func update<T>(_ item: T) -> Effect<T, Error> where T : DomainModelConvertible {
         .future { [unowned self] callback in
             if let objectIdURL = item.objectURL {
                 let context = persistenceContainer.newBackgroundContext()
@@ -69,7 +69,7 @@ class RepositoryClientLive: RepositoryClient {
         }
     }
 
-    func insertOrUpdate<T>(_ item: T) -> Effect<T, Error> where T : DomainModel {
+    func insertOrUpdate<T>(_ item: T) -> Effect<T, Error> where T : DomainModelConvertible {
         if item.objectURL != nil {
             return update(item)
         } else {
@@ -77,7 +77,7 @@ class RepositoryClientLive: RepositoryClient {
         }
     }
 
-    func delete<T>(_ item: T) -> Effect<Void, Error> where T : DomainModel {
+    func delete<T>(_ item: T) -> Effect<Void, Error> where T : DomainModelConvertible {
         .future { [unowned self] callback in
             if let objectIdURL = item.objectURL {
                 let context = persistenceContainer.newBackgroundContext()
@@ -103,7 +103,7 @@ class RepositoryClientLive: RepositoryClient {
         }
     }
     
-    func fetch<T>(_ predicate: NSPredicate?, _ sort: [NSSortDescriptor]) -> Effect<[T], Error> where T : DomainModel {
+    func fetch<T>(_ predicate: NSPredicate?, _ sort: [NSSortDescriptor]) -> Effect<[T], Error> where T : DomainModelConvertible {
         .future { [unowned self] callback in
             let fetchRequest: NSFetchRequest<T.ManagedObject> = T.ManagedObject.getFetchRequest()
             fetchRequest.sortDescriptors = sort
@@ -123,14 +123,30 @@ class RepositoryClientLive: RepositoryClient {
         }
     }
 
-    func observe<T>(_ predicate: NSPredicate?, _ sort: [NSSortDescriptor]) -> Effect<[T], Never> where T : DomainModel {
-        .run { [unowned self] subscriber in
-            let fetchRequest: NSFetchRequest<T.ManagedObject> = T.ManagedObject.getFetchRequest()
-            fetchRequest.predicate = predicate
-            fetchRequest.sortDescriptors = sort
+    func observe<T>(
+        _ predicate: NSPredicate?,
+        _ sort: [NSSortDescriptor],
+        _ notifyChildChanges: Bool
+    ) -> Effect<[T], Never> where T : DomainModelConvertible {
+        let fetchRequest: NSFetchRequest<T.ManagedObject> = T.ManagedObject.getFetchRequest()
+        fetchRequest.predicate = predicate
+        fetchRequest.sortDescriptors = sort
 
-            let context = persistenceContainer.newBackgroundContext()
-            context.automaticallyMergesChangesFromParent = true
+        let context = persistenceContainer.newBackgroundContext()
+        context.automaticallyMergesChangesFromParent = true
+
+        guard !notifyChildChanges else {
+            return Publishers.Merge(
+                Just((try? context.fetch(fetchRequest).map(\.asDomain)) ?? []),
+                NotificationCenter.default.publisher(for: .NSManagedObjectContextObjectsDidChange)
+                    .map { _ -> [T] in
+                        (try? context.fetch(fetchRequest).map(\.asDomain)) ?? []
+                    }
+            )
+            .eraseToEffect()
+        }
+
+        return .run { subscriber in
 
             let frc = NSFetchedResultsController(
                 fetchRequest: fetchRequest,
@@ -142,7 +158,11 @@ class RepositoryClientLive: RepositoryClient {
             let delegate = FetchedResultsControllerDelegate<T>(subscriber)
 
             frc.delegate = delegate
-            delegate.controllerDidChangeContent(frc as! NSFetchedResultsController<NSFetchRequestResult>)
+
+            if let fetchRequest = frc as? NSFetchedResultsController<NSFetchRequestResult> {
+                delegate.controllerDidChangeContent(fetchRequest)
+
+            }
 
             return AnyCancellable {
                 subscriber.send(completion: .finished)
@@ -153,7 +173,7 @@ class RepositoryClientLive: RepositoryClient {
     }
 }
 
-private class FetchedResultsControllerDelegate<T: DomainModel>: NSObject, NSFetchedResultsControllerDelegate {
+private class FetchedResultsControllerDelegate<T: DomainModelConvertible>: NSObject, NSFetchedResultsControllerDelegate {
     let subscriber: Effect<[T], Never>.Subscriber
 
     init(_ subscriber: Effect<[T], Never>.Subscriber) {
