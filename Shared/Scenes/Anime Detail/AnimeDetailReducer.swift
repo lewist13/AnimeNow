@@ -1,5 +1,5 @@
 //
-//  AnimeDetailCore.swift
+//  AnimeDetailReducer.swift
 //  Anime Now!
 //
 //  Created by ErrorErrorError on 9/6/22.
@@ -9,7 +9,7 @@
 import Foundation
 import ComposableArchitecture
 
-enum AnimeDetailCore {
+struct AnimeDetailReducer: ReducerProtocol {
     typealias LoadableEpisodes = LoadableState<[Episode]>
     typealias LoadableAnimeStore = LoadableState<AnimeStore>
 
@@ -23,10 +23,11 @@ enum AnimeDetailCore {
     enum Action: Equatable {
         case onAppear
         case tappedFavorite
+        case tappedInWatchlist
         case closeButtonPressed
         case close
         case playResumeButtonClicked
-        case fetchedEpisodes(Result<[Episode], Never>)
+        case fetchedEpisodes(TaskResult<[Episode]>)
         case selectedEpisode(episode: Episode)
         case play(anime: Anime, episodes: [Episode], selected: Episode.ID)
         case fetchedAnimeFromDB([AnimeStore])
@@ -38,9 +39,13 @@ enum AnimeDetailCore {
         let mainRunLoop: AnySchedulerOf<RunLoop>
         let repositoryClient: RepositoryClient
     }
+
+    @Dependency(\.animeClient) var animeClient
+    @Dependency(\.mainQueue) var mainQueue
+    @Dependency(\.repositoryClient) var repositoryClient
 }
 
-extension AnimeDetailCore {
+extension AnimeDetailReducer {
     enum PlayButtonState: Equatable {
         case unavailable
         case comingSoon
@@ -93,12 +98,12 @@ extension AnimeDetailCore {
     }
 }
 
-extension AnimeDetailCore.State {
+extension AnimeDetailReducer.State {
     var format: Anime.Format {
         anime.format
     }
 
-    var playButtonState: AnimeDetailCore.PlayButtonState {
+    var playButtonState: AnimeDetailReducer.PlayButtonState {
         guard anime.status != .upcoming else {
             return .comingSoon
         }
@@ -150,70 +155,94 @@ extension AnimeDetailCore.State {
     }
 }
 
-extension AnimeDetailCore {
-    static var reducer: Reducer<AnimeDetailCore.State, AnimeDetailCore.Action, AnimeDetailCore.Environment> {
-        .init { state, action, environment in
-            struct CancelFetchingEpisodesId: Hashable {}
-            struct CancelFetchingSourcesId: Hashable {}
-            struct CancelObservingAnimeDB: Hashable {}
+extension AnimeDetailReducer {
+    @ReducerBuilder<State, Action>
+    var body: Reduce<State, Action> {
+        Reduce(self.core)
+    }
 
-            switch action {
-            case .onAppear:
-                guard state.anime.status != .upcoming && !state.episodes.hasInitialized else { break }
-                state.episodes = .loading
-                state.animeStore = .loading
-                return .merge(
-                    environment.animeClient.getEpisodes(state.anime.id)
-                        .receive(on: environment.mainQueue)
-                        .catchToEffect()
-                        .map(Action.fetchedEpisodes)
-                        .cancellable(id: CancelFetchingEpisodesId()),
-                    environment.repositoryClient.observe(.init(format: "id == %d", state.anime.id))
-                        .receive(on: environment.mainQueue)
-                        .eraseToEffect()
-                        .map(Action.fetchedAnimeFromDB)
-                        .cancellable(id: CancelObservingAnimeDB())
-                )
-            case .tappedFavorite:
-                if var animeStore = state.animeStore.value ?? nil {
-                    animeStore.isFavorite.toggle()
+    struct CancelFetchingEpisodesId: Hashable {}
+    struct CancelFetchingSourcesId: Hashable {}
+    struct CancelObservingAnimeDB: Hashable {}
 
-                    return environment.repositoryClient.insertOrUpdate(animeStore)
-                        .receive(on: environment.mainQueue)
-                        .fireAndForget()
+    func core(state: inout State, action: Action) -> EffectTask<Action> {
+        switch action {
+        case .onAppear:
+            guard state.anime.status != .upcoming && !state.episodes.hasInitialized else { break }
+            state.episodes = .loading
+            state.animeStore = .loading
+
+            return .merge(
+                .task { [state] in
+                    await .fetchedEpisodes(.init { try await animeClient.getEpisodes(state.anime.id) })
                 }
-            case .playResumeButtonClicked:
-                if let episodeId = state.playButtonState.episodeId, let episode = state.episodes.value?[id: episodeId] {
-                    return .init(value: .selectedEpisode(episode: episode))
+                    .cancellable(id: CancelFetchingEpisodesId()),
+                .run { [state] send in
+                    let animeStoresStream: AsyncStream<[AnimeStore]> = repositoryClient.observe(.init(format: "id == %d", state.anime.id))
+
+                    for try await animeStores in animeStoresStream {
+                        await send(.fetchedAnimeFromDB(animeStores))
+                    }
                 }
-            case .fetchedEpisodes(.success(let episodes)):
-                state.episodes = .success(episodes)
-            case .fetchedEpisodes(.failure(let error)):
-                print(error)
-                state.episodes = .failed
-            case .selectedEpisode(episode: let episode):
-                return .init(
-                    value: .play(
-                        anime: state.anime,
-                        episodes: state.episodes.value ?? [],
-                        selected: episode.id
-                    )
-                )
-            case .fetchedAnimeFromDB(let animesMatched):
-                state.animeStore = .success(.findOrCreate(state.anime, animesMatched))
-            case .play:
-                break
-            case .closeButtonPressed:
-                return .concatenate(
-                    .cancel(id: CancelFetchingEpisodesId()),
-                    .cancel(id: CancelFetchingSourcesId()),
-                    .cancel(id: CancelObservingAnimeDB()),
-                    .init(value: .close)
-                )
-            case .close:
-                break
+                    .cancellable(id: CancelObservingAnimeDB())
+            )
+
+        case .tappedFavorite:
+            if var animeStore = state.animeStore.value {
+                animeStore.isFavorite.toggle()
+
+                return .fireAndForget { [animeStore] in
+                    _ = try await repositoryClient.insertOrUpdate(animeStore)
+                }
             }
-            return .none
+
+        case .tappedInWatchlist:
+            if var animeStore = state.animeStore.value {
+                animeStore.inWatchlist.toggle()
+
+                return .fireAndForget { [animeStore] in
+                    _ = try await repositoryClient.insertOrUpdate(animeStore)
+                }
+            }
+
+        case .playResumeButtonClicked:
+            if let episodeId = state.playButtonState.episodeId, let episode = state.episodes.value?[id: episodeId] {
+                return .task { .selectedEpisode(episode: episode) }
+            }
+
+        case .fetchedEpisodes(.success(let episodes)):
+            state.episodes = .success(episodes)
+
+        case .fetchedEpisodes(.failure(let error)):
+            print(error)
+            state.episodes = .failed
+
+        case .selectedEpisode(episode: let episode):
+            return .init(
+                value: .play(
+                    anime: state.anime,
+                    episodes: state.episodes.value ?? [],
+                    selected: episode.id
+                )
+            )
+
+        case .fetchedAnimeFromDB(let animesMatched):
+            state.animeStore = .success(.findOrCreate(state.anime, animesMatched))
+
+        case .play:
+            break
+
+        case .closeButtonPressed:
+            return .concatenate(
+                .cancel(id: CancelFetchingEpisodesId()),
+                .cancel(id: CancelFetchingSourcesId()),
+                .cancel(id: CancelObservingAnimeDB()),
+                .task { .close }
+            )
+
+        case .close:
+            break
         }
+        return .none
     }
 }

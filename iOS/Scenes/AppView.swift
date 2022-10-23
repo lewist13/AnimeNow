@@ -1,5 +1,5 @@
 //
-//  ContentView.swift
+//  AppView.swift
 //  Shared
 //
 //  Created by ErrorErrorError on 9/2/22.
@@ -8,15 +8,16 @@
 import SwiftUI
 import ComposableArchitecture
 
-struct ContentView: View {
-    let store: Store<ContentCore.State, ContentCore.Action>
+struct AppView: View {
+    let store: StoreOf<AppReducer>
 
     var body: some View {
 
         // MARK: Content View
 
         WithViewStore(
-            store.scope(state: \.route)
+            store,
+            observe: { $0.route }
         ) { viewStore in
             Group {
                 switch viewStore.state {
@@ -24,14 +25,15 @@ struct ContentView: View {
                     HomeView(
                         store: store.scope(
                             state: \.home,
-                            action: ContentCore.Action.home
+                            action: AppReducer.Action.home
                         )
                     )
+
                 case .search:
                     SearchView(
                         store: store.scope(
                             state: \.search,
-                            action: ContentCore.Action.search
+                            action: AppReducer.Action.search
                         )
                     )
 
@@ -39,7 +41,7 @@ struct ContentView: View {
                     CollectionView(
                         store: store.scope(
                             state: \.collection,
-                            action: ContentCore.Action.collection
+                            action: AppReducer.Action.collection
                         )
                     )
 
@@ -47,7 +49,7 @@ struct ContentView: View {
                     DownloadsView(
                         store: store.scope(
                             state: \.downloads,
-                            action: ContentCore.Action.downloads
+                            action: AppReducer.Action.downloads
                         )
                     )
                 }
@@ -59,7 +61,7 @@ struct ContentView: View {
             .bottomSafeAreaInset(
                 HStack(spacing: 0) {
                     ForEach(
-                        ContentCore.Route.allCases,
+                        AppReducer.Route.allCases,
                         id: \.self
                     ) { item in
                         Image(
@@ -76,8 +78,8 @@ struct ContentView: View {
                         )
                         .onTapGesture {
                             viewStore.send(
-                                .binding(.set(\.$route, item)),
-                                animation: .linear(duration: 0.15)
+                                .set(\.$route, item)
+//                                ,animation: .linear(duration: 0.15)
                             )
                         }
                     }
@@ -93,7 +95,7 @@ struct ContentView: View {
             IfLetStore(
                 store.scope(
                     state: \.animeDetail,
-                    action: ContentCore.Action.animeDetail
+                    action: AppReducer.Action.animeDetail
                 ),
                 then: { store in
                     AnimeDetailView(store: store)
@@ -105,10 +107,10 @@ struct ContentView: View {
             IfLetStore(
                 store.scope(
                     state: \.videoPlayer,
-                    action: ContentCore.Action.videoPlayer
+                    action: AppReducer.Action.videoPlayer
                 ),
                 then: { store in
-                  AnimeNowVideoPlayer(store: store)
+                  AnimePlayerView(store: store)
                     .statusBar(hidden: true)
                     .prefersHomeIndicatorAutoHidden(true)
                     .supportedOrientation(.landscape)
@@ -122,11 +124,10 @@ struct ContentView: View {
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        ContentView(
+        AppView(
             store: .init(
                 initialState: .init(),
-                reducer: ContentCore.reducer,
-                environment: .mock
+                reducer: AppReducer()
             )
         )
         .preferredColorScheme(.dark)

@@ -147,17 +147,25 @@ extension Anime {
         avgRating: nil
     )
 
-    static let placeholder = Anime(
-        id: 0,
-        malId: 0,
-        title: "Placeholder",
-        description: "Placeholder",
-        posterImage: [],
-        coverImage: [],
-        categories: [],
-        status: .tba,
-        format: .tv,
-        releaseYear: nil,
-        avgRating: nil
-    )
+    static let placeholder = createPlaceholder(0)
+
+    private static func createPlaceholder(_ id: Int) -> Anime {
+        Anime(
+            id: id,
+            malId: 0,
+            title: "Placeholder",
+            description: "Placeholder",
+            posterImage: [],
+            coverImage: [],
+            categories: [],
+            status: .tba,
+            format: .tv,
+            releaseYear: nil,
+            avgRating: nil
+        )
+    }
+
+    static func placeholders(_ count: Int) -> [Anime] {
+        (0..<count).map(createPlaceholder(_:))
+    }
 }

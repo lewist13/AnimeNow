@@ -11,7 +11,7 @@ import ComposableArchitecture
 import Kingfisher
 
 struct AnimeDetailView: View {
-    let store: Store<AnimeDetailCore.State, AnimeDetailCore.Action>
+    let store: Store<AnimeDetailReducer.State, AnimeDetailReducer.Action>
 
     var body: some View {
         WithViewStore(store.scope(state: \.loading)) { viewStore in
@@ -146,26 +146,49 @@ extension AnimeDetailView {
                             .disabled(!playButtonState.isAvailable)
                         }
 
-                        // MARK: Favorites Button
+                        // TODO: Decide on either keeping favorites, or have collection and allow
+                        // users to decide which collection the anime should go in.
+//                        WithViewStore(
+//                            store.scope(
+//                                state: \.animeStore.value?.isFavorite
+//                            )
+//                        ) { isFavoriteViewStore in
+//                            Button {
+//                                isFavoriteViewStore.send(.tappedFavorite)
+//                            } label: {
+//                                Image(
+//                                    systemName: isFavoriteViewStore.state == true ? "heart.fill" : "heart"
+//                                )
+//                                .foregroundColor(
+//                                    isFavoriteViewStore.state == true ? .red : .init(white: 0.75)
+//                                )
+//                            }
+//                            .padding()
+//                            .background(Color(white: 0.15))
+//                            .clipShape(Circle())
+//                        }
+
+                        Spacer()
 
                         WithViewStore(
-                            store.scope(
-                                state: \.animeStore.value?.isFavorite
-                            )
-                        ) { isFavoriteViewStore in
+                            store,
+                            observe: { $0.animeStore.value?.inWatchlist }
+                        ) { inWatchlistViewStore in
                             Button {
-                                isFavoriteViewStore.send(.tappedFavorite)
+                                inWatchlistViewStore.send(.tappedInWatchlist)
                             } label: {
                                 Image(
-                                    systemName: isFavoriteViewStore.state == true ? "heart.fill" : "heart"
+                                    systemName: inWatchlistViewStore.state == true ? "bookmark.fill" : "bookmark"
                                 )
-                                    .foregroundColor(
-                                        isFavoriteViewStore.state == true ? .red : .white
-                                    )
+                                .foregroundColor(
+                                    inWatchlistViewStore.state == true ? .white : .init(white: 0.75)
+                                )
                             }
-                            .buttonStyle(BlurredButtonStyle())
-                            .background(BlurView())
+                            .buttonStyle(.plain)
+                            .padding()
+                            .background(Color(white: 0.15))
                             .clipShape(Circle())
+                            .contentShape(Rectangle())
                         }
                     }
                 }
@@ -235,7 +258,7 @@ extension AnimeDetailView {
     var episodesContainer: some View {
         IfLetStore(
             store.scope(
-                state: { state -> AnimeDetailCore.LoadableEpisodes? in
+                state: { state -> AnimeDetailReducer.LoadableEpisodes? in
                     state.anime.status != .upcoming && state.anime.format != .movie ? state.episodes : nil
                 }
             )

@@ -16,11 +16,10 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             let window = UIWindow(windowScene: windowScene)
             window.rootViewController = AnimeNowHostingController(
                 wrappedView:
-                    ContentView(
+                    AppView(
                         store: .init(
                             initialState: .init(),
-                            reducer: ContentCore.reducer,
-                            environment: .live
+                            reducer: AppReducer()
                         )
                     )
             )

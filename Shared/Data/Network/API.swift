@@ -17,22 +17,61 @@ protocol APIRoute {
 }
 
 enum API {
-    static func request<API: APIRoute, Output: Decodable>(
+    static func request<API: APIRoute, Output>(
         _ api: API,
         _ endpoint: API.Endpoint,
-        _ type: Output.Type? = nil
-    ) -> AnyPublisher<Output, EquatableError> {
+        _ responseType: Output.Type = Output.self,
+        _ decoder: JSONDecoder = .init()
+    ) async throws -> Output where Output: Decodable {
         guard var request = try? api.router.baseURL(api.baseURL.absoluteString).request(for: endpoint) else {
-            return Fail(error: URLError(.badURL).toEquatableError())
-                .eraseToAnyPublisher()
+            throw URLError(.badURL)
         }
 
         api.configureRequest(request: &request)
 
-        return URLSession.shared.dataTaskPublisher(for: request)
-            .map(\.data)
-            .decode(type: Output.self, decoder: JSONDecoder())
-            .mapError { $0.toEquatableError() }
-            .eraseToAnyPublisher()
+        let (data, _) = try await URLSession.shared.data(for: request)
+
+        return try decoder.decode(Output.self, from: data)
     }
+
+    static func request<API: APIRoute>(
+        _ api: API,
+        _ endpoint: API.Endpoint
+    ) async throws -> Void {
+        guard var request = try? api.router.baseURL(api.baseURL.absoluteString).request(for: endpoint) else {
+            throw URLError(.badURL)
+        }
+
+        api.configureRequest(request: &request)
+
+        let (_, response) = try await URLSession.shared.data(for: request)
+
+        guard let response = response as? HTTPURLResponse, (200..<300).contains(response.statusCode) else {
+            throw URLError(.badServerResponse)
+        }
+
+        return ()
+    }
+}
+
+extension URLSession {
+    func data(for request: URLRequest) async throws -> (Data, URLResponse) {
+        if #available(iOS 15, macOS 12.0, *) {
+           return try await self.data(for: request, delegate: nil)
+        } else {
+            return try await withCheckedThrowingContinuation { continuation in
+                let task = self.dataTask(with: request) { data, response, error in
+                    guard let data = data, let response = response else {
+                        let error = error ?? URLError(.badServerResponse)
+                        return continuation.resume(throwing: error)
+                    }
+
+                    continuation.resume(returning: (data, response))
+                }
+
+                task.resume()
+            }
+        }
+    }
+
 }

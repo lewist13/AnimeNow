@@ -12,10 +12,13 @@ import SwiftUINavigation
 import Kingfisher
 
 struct HomeView: View {
-    let store: Store<HomeCore.State, HomeCore.Action>
+    let store: StoreOf<HomeReducer>
 
     var body: some View {
-        WithViewStore(store.scope(state: \.isLoading)) { viewStore in
+        WithViewStore(
+            store,
+            observe: { $0.isLoading }
+        ) { viewStore in
             ScrollView(.vertical, showsIndicators: false) {
                 VStack(spacing: 24) {
                     animeHeroItems(
@@ -141,7 +144,7 @@ extension HomeView {
     @ViewBuilder
     func animeHeroItems(
         isLoading: Bool,
-        store: Store<HomeCore.LoadableAnime, HomeCore.Action>
+        store: Store<HomeReducer.LoadableAnime, HomeReducer.Action>
     ) -> some View {
         Group {
             if isLoading {
@@ -174,30 +177,26 @@ extension HomeView {
     func animeItems(
         title: String,
         isLoading: Bool,
-        store: Store<HomeCore.LoadableAnime, HomeCore.Action>
+        store: Store<HomeReducer.LoadableAnime, HomeReducer.Action>
     ) -> some View {
-        WithViewStore(store) { viewStore in
-            if isLoading || viewStore.state.value != nil && viewStore.state.value!.count > 0 {
+        WithViewStore(
+            store,
+            observe: { $0 }
+        ) { viewStore in
+            if let items = isLoading ? Anime.placeholders(5) : viewStore.value, items.count > 0 {
                 VStack(alignment: .leading) {
                     headerText(title)
 
                     ScrollView(.horizontal, showsIndicators: false) {
                         LazyHStack(alignment: .center, spacing: 12) {
-                            if case let .success(animes) = viewStore.state, !isLoading {
-                                ForEach(animes) { anime in
-                                    AnimeItemView(
-                                        anime: anime
-                                    )
-                                    .onTapGesture {
-                                        viewStore.send(.animeTapped(anime))
-                                    }
+                            ForEach(items) { anime in
+                                AnimeItemView(
+                                    anime: anime
+                                )
+                                .onTapGesture {
+                                    viewStore.send(.animeTapped(anime))
                                 }
-                            } else {
-                                ForEach(0...2, id: \.self) { _ in
-                                    AnimeItemView(
-                                        anime: .placeholder
-                                    )
-                                }
+                                .disabled(isLoading)
                             }
                         }
                         .padding(.horizontal)
@@ -226,17 +225,19 @@ extension HomeView {
 extension HomeView {
     @ViewBuilder
     func resumeWatchingEpisodes(
-        store: Store<HomeCore.LoadableEpisodes, HomeCore.Action>
+        store: Store<HomeReducer.LoadableEpisodes, HomeReducer.Action>
     ) -> some View {
-        WithViewStore(store) { viewStore in
-            if let resumeWatchingItems = viewStore.state.value,
-               resumeWatchingItems.count > 0 {
+        WithViewStore(
+            store,
+            observe: { $0 }
+        ) { viewStore in
+            if let items = viewStore.state.value, items.count > 0 {
                 VStack(alignment: .leading) {
                     headerText("Resume Watching")
 
                     ScrollView(.horizontal, showsIndicators: false) {
                         LazyHStack(alignment: .center) {
-                            ForEach(resumeWatchingItems, id: \.id) { item in
+                            ForEach(items, id: \.id) { item in
                                 ThumbnailItemBigView(
                                     type:
                                         item.episodeStore.isMovie ?
@@ -296,13 +297,7 @@ struct HomeView_Previews: PreviewProvider {
         HomeView(
             store: .init(
                 initialState: .init(),
-                reducer: HomeCore.reducer,
-                environment: .init(
-                    animeClient: .mock,
-                    mainQueue: .main.eraseToAnyScheduler(),
-                    mainRunLoop: .main.eraseToAnyScheduler(),
-                    repositoryClient: RepositoryClientMock.shared
-                )
+                reducer: HomeReducer()
             )
         )
         .preferredColorScheme(.dark)

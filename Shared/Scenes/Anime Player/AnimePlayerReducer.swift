@@ -1,5 +1,5 @@
 //
-//  AnimeNowVideoPlayerCore.swift
+//  AnimePlayerReducer.swift
 //  Anime Now!
 //
 //  Created by ErrorErrorError on 10/1/22.
@@ -11,7 +11,7 @@ import ComposableArchitecture
 import AVFoundation
 import SwiftUI
 
-enum AnimeNowVideoPlayerCore {
+struct AnimePlayerReducer: ReducerProtocol {
     enum Sidebar: Hashable, CustomStringConvertible {
         case episodes
         case settings(SettingsState)
@@ -90,6 +90,7 @@ enum AnimeNowVideoPlayerCore {
 
         case onAppear
         case playerTapped
+        case isHoveringPlayer(Bool)
         case closeButtonTapped
 
         case showEpisodesSidebar
@@ -118,9 +119,9 @@ enum AnimeNowVideoPlayerCore {
         case fetchEpisodes
         case fetchedEpisodes([Episode])
         case fetchSources
-        case fetchedSources(Result<[Source], EquatableError>)
+        case fetchedSources(TaskResult<[Source]>)
         case fetchSkipTimes
-        case fetchedSkipTimes(Result<[SkipTime], EquatableError>)
+        case fetchedSkipTimes(TaskResult<[SkipTime]>)
 
         // Sidebar Actions
 
@@ -150,18 +151,16 @@ enum AnimeNowVideoPlayerCore {
         case binding(BindingAction<State>)
     }
 
-    struct Environment {
-        let animeClient: AnimeClient
-        let mainQueue: AnySchedulerOf<DispatchQueue>
-        let mainRunLoop: AnySchedulerOf<RunLoop>
-        let repositoryClient: RepositoryClient
-        let userDefaultsClient: UserDefaultsClient
-    }
+    @Dependency(\.animeClient) var animeClient
+    @Dependency(\.mainQueue) var mainQueue
+    @Dependency(\.mainRunLoop) var mainRunLoop
+    @Dependency(\.repositoryClient) var repositoryClient
+    @Dependency(\.userDefaultsClient) var userDefaultsClient
 }
 
 // MARK: Status State
 
-extension AnimeNowVideoPlayerCore.State {
+extension AnimePlayerReducer.State {
     enum Status: Equatable {
         case loading
         case playing
@@ -206,7 +205,7 @@ extension AnimeNowVideoPlayerCore.State {
 
 // MARK: Episode Properties
 
-extension AnimeNowVideoPlayerCore.State {
+extension AnimePlayerReducer.State {
     var episode: AnyEpisodeRepresentable? {
         if let episodes = episodes.value {
             return episodes[id: selectedEpisode]
@@ -242,7 +241,7 @@ extension AnimeNowVideoPlayerCore.State {
     }
 }
 
-extension AnimeNowVideoPlayerCore.State {
+extension AnimePlayerReducer.State {
     var almostEnding: Bool {
         playerProgress >= 0.9
     }
@@ -252,7 +251,7 @@ extension AnimeNowVideoPlayerCore.State {
     }
 }
 
-extension AnimeNowVideoPlayerCore.State {
+extension AnimePlayerReducer.State {
     enum ActionType: Equatable {
         case skipRecap(to: Double)
         case skipOpening(to: Double)
@@ -290,16 +289,21 @@ extension AnimeNowVideoPlayerCore.State {
     }
 }
 
-extension AnimeNowVideoPlayerCore {
-    static var reducer = Reducer<AnimeNowVideoPlayerCore.State, AnimeNowVideoPlayerCore.Action, AnimeNowVideoPlayerCore.Environment>
-    { state, action, environment in
-        struct HidePlayerOverlayDelayCancellable: Hashable {}
-        struct FetchEpisodesCancellable: Hashable {}
-        struct FetchSourcesCancellable: Hashable {}
-        struct CancelAnimeStoreObservable: Hashable {}
-        struct FetchSkipTimesCancellable: Hashable {}
-        struct CancelAnimeFetchId: Hashable {}
+extension AnimePlayerReducer {
+    struct HidePlayerOverlayDelayCancellable: Hashable {}
+    struct FetchEpisodesCancellable: Hashable {}
+    struct FetchSourcesCancellable: Hashable {}
+    struct CancelAnimeStoreObservable: Hashable {}
+    struct FetchSkipTimesCancellable: Hashable {}
+    struct CancelAnimeFetchId: Hashable {}
 
+    @ReducerBuilder<State, Action>
+    var body: Reduce<State, Action> {
+        BindingReducer()
+        Reduce(self.core)
+    }
+    
+    func core(state: inout State, action: Action) -> EffectTask<Action> {
         let overlayVisibilityAnimation = Animation.easeInOut(
             duration: 0.3
         )
@@ -310,67 +314,85 @@ extension AnimeNowVideoPlayerCore {
 
         case .onAppear:
             guard !state.hasInitialized else { break }
-            return .init(value: .initializeFirstTime)
+            return .task { .initializeFirstTime }
 
         case .playerTapped:
             guard state.selectedSidebar == nil else {
-                return .init(value: .closeSidebar)
+                return .task { .closeSidebar }
+            }
+
+            guard !DeviceUtil.isMac else {
+                break
             }
 
             let showingOverlay = !state.showPlayerOverlay
 
-            var effects: [Effect<Action, Never>] = [
-                .init(value: .showPlayerOverlay(showingOverlay))
-                    .receive(on: environment.mainQueue.animation(overlayVisibilityAnimation))
-                    .eraseToEffect()
+            var effects: [EffectTask<Action>] = [
+                .task { .showPlayerOverlay(showingOverlay) }
+                    .animation(overlayVisibilityAnimation)
             ]
 
             if showingOverlay && state.playerStatus == .playing {
                 // Show overlay with timeout if the video is currently playing
                 effects.append(
-                    .init(value: .hideOverlayAnimationDelay)
+                    .task { .hideOverlayAnimationDelay }
                 )
             } else {
                 effects.append(
-                    .init(value: .cancelHideOverlayAnimationDelay)
+                    .task { .cancelHideOverlayAnimationDelay }
                 )
             }
 
             return .concatenate(effects)
 
+        case .isHoveringPlayer(let hovering):
+            if hovering {
+                struct HideOverlayAnimationDebounce: Hashable { }
+                return .concatenate(
+                    .action(.showPlayerOverlay(true))
+                        .animation(.easeInOut(duration: 0.15)),
+                    .action(.hideOverlayAnimationDelay)
+                        .debounce(id: HideOverlayAnimationDebounce(), for: 1.5, scheduler: mainQueue)
+                )
+            } else {
+                return .merge(
+                    .action(.showPlayerOverlay(false))
+                        .animation(.easeInOut(duration: 0.15)),
+                    .action(.cancelHideOverlayAnimationDelay)
+                )
+            }
+
         case .showEpisodesSidebar:
-            return .init(value: .setSidebar(.episodes))
-                .receive(on: environment.mainQueue.animation(.easeInOut(duration: 0.35)))
-                .eraseToEffect()
+            return .task { .setSidebar(.episodes) }
+                .animation(.easeInOut(duration: 0.35))
 
         case .showSettingsSidebar:
-            return .init(value: .setSidebar(.settings(.init())))
-                .receive(on: environment.mainQueue.animation(.easeInOut(duration: 0.35)))
-                .eraseToEffect()
+            return .task { .setSidebar(.settings(.init())) }
+                .animation(.easeInOut(duration: 0.35))
 
         case .showSubtitlesSidebar:
-            return .init(value: .setSidebar(.subtitles))
-                .receive(on: environment.mainQueue.animation(.easeInOut(duration: 0.35)))
-                .eraseToEffect()
+            return .task { .setSidebar(.subtitles) }
+                .animation(.easeInOut(duration: 0.35))
 
         case .closeButtonTapped:
+            let selectedEpisodeId = state.selectedEpisode
             return .concatenate(
-                .init(value: .saveEpisodeProgress(state.episode?.id)),
+                .task { .saveEpisodeProgress(selectedEpisodeId) },
                 .cancel(id: CancelAnimeStoreObservable()),
                 .cancel(id: CancelAnimeFetchId()),
                 .cancel(id: FetchSourcesCancellable()),
                 .cancel(id: FetchEpisodesCancellable()),
                 .cancel(id: FetchSkipTimesCancellable()),
                 .cancel(id: HidePlayerOverlayDelayCancellable()),
-                .init(value: .close)
-                .delay(for: 0.25, scheduler: environment.mainQueue)
-                .eraseToEffect()
+                .task {
+                    try await mainQueue.sleep(for: 0.25)
+                    return .close
+                }
             )
 
         case .closeSidebar:
-            return .init(value: .setSidebar(nil))
-                .receive(on: environment.mainQueue.animation(.easeInOut(duration: 0.25)))
-                .eraseToEffect()
+            return .task { .setSidebar(nil) }
+                .animation(.easeInOut(duration: 0.25))
 
         case .selectEpisode(let episodeId, let saveProgress):
             var effects = [Effect<Action, Never>]()
@@ -378,19 +400,20 @@ extension AnimeNowVideoPlayerCore {
             // Before selecting episode, save progress
 
             if saveProgress {
-                effects.append(.init(value: .saveEpisodeProgress(state.episode?.id)))
+                let episodeId = state.selectedEpisode
+                effects.append(.task { .saveEpisodeProgress(episodeId) })
             }
 
             state.selectedEpisode = episodeId
 
             // TODO: Add user defaults for preferred provider or fallback to first
-            let provider = state.episode?.providers.first?.id
+            let providerId = state.episode?.providers.first?.id
 
-            effects.append(.init(value: .stopAndClearPlayer))
-            effects.append(.init(value: .selectProvider(provider, saveProgress: false)))
-            effects.append(.init(value: .fetchSkipTimes))
+            effects.append(.task { .stopAndClearPlayer })
+            effects.append(.task { .selectProvider(providerId, saveProgress: false) })
+            effects.append(.task { .fetchSkipTimes })
 
-            return .merge(effects)
+            return .concatenate(effects)
             
         case .selectProvider(let providerId, let saveProgress):
             var effects = [Effect<Action, Never>]()
@@ -398,15 +421,16 @@ extension AnimeNowVideoPlayerCore {
             // Before selecting provider, save progress
 
             if saveProgress {
-                effects.append(.init(value: .saveEpisodeProgress(state.episode?.id)))
+                let episodeId = state.selectedEpisode
+                effects.append(.task { [episodeId] in .saveEpisodeProgress(episodeId) })
             }
 
             state.selectedProvider = providerId
 
-            effects.append(.init(value: .stopAndClearPlayer))
-            effects.append(.init(value: .fetchSources))
+            effects.append(.task { .stopAndClearPlayer })
+            effects.append(.task { .fetchSources })
 
-            return .merge(effects)
+            return .concatenate(effects)
 
         case .selectSource(let sourceId, let saveProgress):
             var effects = [Effect<Action, Never>]()
@@ -414,7 +438,8 @@ extension AnimeNowVideoPlayerCore {
             // Before selecting source, save progress
 
             if saveProgress {
-                effects.append(.init(value: .saveEpisodeProgress(state.episode?.id)))
+                let episodeId = state.selectedEpisode
+                effects.append(.task { [episodeId] in .saveEpisodeProgress(episodeId) })
             }
 
             state.selectedSource = sourceId
@@ -422,39 +447,41 @@ extension AnimeNowVideoPlayerCore {
             return .concatenate(effects)
 
         case .selectSidebarSettings(let section):
-            return .init(value: .sidebarSettingsSection(section))
-                .receive(on: environment.mainQueue.animation(.easeInOut(duration: 0.25)))
-                .eraseToEffect()
+            return .task { .sidebarSettingsSection(section) }
+                .animation(.easeInOut(duration: 0.25))
 
         // Internal Actions
     
         case .initializeFirstTime:
             state.hasInitialized = true
+
+            let animeId = state.anime.id
+
             return .merge(
-                .init(value: .fetchEpisodes),
-                environment.repositoryClient.observe(
-                    .init(
-                        format: "id == %d",
-                        state.anime.id
-                    ),
-                    []
-                )
-                .receive(on: environment.mainQueue)
-                .eraseToEffect()
-                .map(Action.fetchedAnimeInfoStore)
-                .cancellable(id: CancelAnimeStoreObservable())
+                .task { .fetchEpisodes },
+                .run { [animeId] send in
+                    let animeStores: AsyncStream<[AnimeStore]> = repositoryClient.observe(
+                        .init(
+                            format: "id == %d",
+                            animeId
+                        )
+                    )
+
+                    for await animeStore in animeStores {
+                        await send(.fetchedAnimeInfoStore(animeStore))
+                    }
+                }
+                    .cancellable(id: CancelAnimeStoreObservable())
             )
 
         case .showPlayerOverlay(let show):
             state.showPlayerOverlay = show
 
         case .hideOverlayAnimationDelay:
-            return .init(value: .showPlayerOverlay(false))
-                .delay(
-                    for: 5,
-                    scheduler:  environment.mainQueue.animation(overlayVisibilityAnimation)
-                )
-                .eraseToEffect()
+            return .task {
+                try await self.mainQueue.sleep(for: 5)
+                return .showPlayerOverlay(false)
+            }
                 .cancellable(id: HidePlayerOverlayDelayCancellable())
 
         case .cancelHideOverlayAnimationDelay:
@@ -473,13 +500,13 @@ extension AnimeNowVideoPlayerCore {
                 progress: progress
             )
 
-            return environment.repositoryClient.insertOrUpdate(animeStore)
-                .receive(on: environment.mainQueue)
-                .fireAndForget()
+            return .fireAndForget { [animeStore] in
+                _ = try await repositoryClient.insertOrUpdate(animeStore)
+            }
 
         case .closeSidebarAndShowControls:
             state.selectedSidebar = nil
-            return .init(value: .showPlayerOverlay(true))
+            return .task { .showPlayerOverlay(true) }
 
         case .close:
             break
@@ -489,15 +516,15 @@ extension AnimeNowVideoPlayerCore {
 
             if route != nil {
                 return .merge(
-                    .init(value: .cancelHideOverlayAnimationDelay),
-                    .init(value: .showPlayerOverlay(false))
+                    .task { .cancelHideOverlayAnimationDelay },
+                    .task { .showPlayerOverlay(false) }
                 )
             }
 
         // Section actions
 
         case .sidebarSettingsSection(let section):
-            if case .settings(var value) = state.selectedSidebar {
+            if case .settings = state.selectedSidebar {
                 state.selectedSidebar = .settings(.init(selectedSection: section))
             }
 
@@ -511,20 +538,26 @@ extension AnimeNowVideoPlayerCore {
         case .fetchEpisodes:
             guard !state.episodes.hasInitialized else {
                 if state.episode != nil {
-                    return .init(value: .selectEpisode(state.selectedEpisode, saveProgress: false))
+                    let selectedEpisode = state.selectedEpisode
+                    return .task { .selectEpisode(selectedEpisode, saveProgress: false) }
                 }
                 break
             }
             state.episodes = .loading
-            return environment.animeClient.getEpisodes(state.anime.id)
-                .receive(on: environment.mainQueue)
-                .eraseToEffect()
-                .map(Action.fetchedEpisodes)
-                .cancellable(id: FetchEpisodesCancellable())
+
+            let animeId = state.anime.id
+
+            return .task { [animeId] in
+                .fetchedEpisodes(
+                    try await animeClient.getEpisodes(animeId)
+                )
+            }
+            .cancellable(id: FetchEpisodesCancellable())
 
         case .fetchedEpisodes(let episodes):
             state.episodes = .success(episodes.map({ $0.asRepresentable() }))
-            return .init(value: .selectEpisode(state.selectedEpisode, saveProgress: false))
+            let selectedEpisodeId = state.selectedEpisode
+            return .task { .selectEpisode(selectedEpisodeId, saveProgress: false) }
 
         // Fetch Sources
 
@@ -532,17 +565,21 @@ extension AnimeNowVideoPlayerCore {
             guard let provider = state.provider else { break }
 
             state.sources = .loading
-            return environment.animeClient.getSources(provider)
-                .receive(on: environment.mainQueue)
-                .catchToEffect()
-                .map(Action.fetchedSources)
-                .cancellable(id: FetchSourcesCancellable(), cancelInFlight: true)
+
+            return .task { [provider] in
+                await .fetchedSources(
+                    .init { try await animeClient.getSources(provider) }
+                )
+            }
+            .cancellable(id: FetchSourcesCancellable(), cancelInFlight: true)
 
         case .fetchedSources(.success(let sources)):
             let sources = Array(sources.sorted(by: \.quality).reversed())
             state.sources = .success(sources)
             // TODO: Set quality based on user defaults or the first one based on the one received
-            return .init(value: .selectSource(sources.first?.id, saveProgress: false))
+
+            let sourceId = sources.first?.id
+            return .task { [sourceId] in .selectSource(sourceId, saveProgress: false) }
 
         case .fetchedSources(.failure):
             state.sources = .failed
@@ -552,14 +589,18 @@ extension AnimeNowVideoPlayerCore {
 
         case .fetchSkipTimes:
             guard let episode = state.episode, let malId = state.anime.malId else {
-                return .init(value: .fetchedSkipTimes(.success([])))
+                return .task { .fetchedSkipTimes(.success([])) }
             }
+
             state.skipTimes = .loading
-            return environment.animeClient.getSkipTimes(malId, episode.number)
-                .receive(on: environment.mainQueue)
-                .catchToEffect()
-                .map(Action.fetchedSkipTimes)
-                .cancellable(id: FetchSkipTimesCancellable(), cancelInFlight: true)
+
+            let episodeNumber = episode.number
+            return .task { [malId, episodeNumber] in
+                await .fetchedSkipTimes(
+                    .init { try await animeClient.getSkipTimes(malId, episodeNumber) }
+                )
+            }
+            .cancellable(id: FetchSkipTimesCancellable(), cancelInFlight: true)
 
         case .fetchedSkipTimes(.success(let skipTimes)):
             state.skipTimes = .success(skipTimes)
@@ -575,9 +616,9 @@ extension AnimeNowVideoPlayerCore {
 
             let requestedTime = max(progress, .zero)
             return .merge(
-                .init(value: .startSeeking),
-                .init(value: .seeking(to: requestedTime)),
-                .init(value: .stopSeeking)
+                .task { .startSeeking },
+                .task { .seeking(to: requestedTime) },
+                .task { .stopSeeking }
             )
 
         case .forwardsTapped:
@@ -586,9 +627,9 @@ extension AnimeNowVideoPlayerCore {
 
             let requestedTime = min(progress, 1.0)
             return .merge(
-                .init(value: .startSeeking),
-                .init(value: .seeking(to: requestedTime)),
-                .init(value: .stopSeeking)
+                .task { .startSeeking },
+                .task { .seeking(to: requestedTime) },
+                .task { .stopSeeking }
             )
 
         // Internal Video Player Logic
@@ -618,9 +659,9 @@ extension AnimeNowVideoPlayerCore {
             state.playerStatus = status
 
             if case .playing = status, state.showPlayerOverlay {
-                return .init(value: .hideOverlayAnimationDelay)
+                return .task { .hideOverlayAnimationDelay }
             } else if state.showPlayerOverlay {
-                return .init(value: .cancelHideOverlayAnimationDelay)
+                return .task { .cancelHideOverlayAnimationDelay }
             }
 
         case .playerDuration(let duration):
@@ -676,5 +717,4 @@ extension AnimeNowVideoPlayerCore {
 
         return .none
     }
-    .binding()
 }

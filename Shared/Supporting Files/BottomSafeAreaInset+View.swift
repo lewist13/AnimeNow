@@ -2,7 +2,7 @@
 //  BottomSafeAreaInset+View.swift
 //  Anime Now!
 //
-//  Created by Erik Bautista on 10/19/22.
+//  Created by ErrorErrorError on 10/19/22.
 //  From https://github.com/FiveStarsBlog/CodeSamples/blob/main/SafeAreaInset/content.swift
 
 import SwiftUI

@@ -10,20 +10,19 @@ import ComposableArchitecture
 import SwiftUI
 
 struct SearchView: View {
-    let store: Store<SearchCore.State, SearchCore.Action>
+    let store: StoreOf<SearchReducer>
 
     var body: some View {
         VStack {
             WithViewStore(
-                store.scope(
-                    state: \.query
-                )
+                store,
+                observe: { $0 }
             ) { viewStore in
                 TextField(
                     "Search",
-                    text: .init(
-                        get: { viewStore.state },
-                        set: { query in viewStore.send(.searchQueryChanged(query)) }
+                    text: viewStore.binding(
+                        get: \.query,
+                        send: SearchReducer.Action.searchQueryChanged
                     )
                 )
                 .padding()
@@ -131,7 +130,6 @@ extension SearchView {
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
     }
-
 }
 
 struct SearchView_Previews: PreviewProvider {
@@ -141,11 +139,7 @@ struct SearchView_Previews: PreviewProvider {
                 initialState: .init(
                     loadable: .failed
                 ),
-                reducer: SearchCore.reducer,
-                environment: .init(
-                    mainQueue: DispatchQueue.main.eraseToAnyScheduler(),
-                    animeClient: .mock
-                )
+                reducer: SearchReducer()
             )
         )
         .preferredColorScheme(.dark)

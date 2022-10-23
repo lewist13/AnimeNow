@@ -7,16 +7,16 @@
 
 import SwiftUI
 
-#if os(macOS)
 @main
 struct AnimeNowApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+
     var body: some Scene {
         WindowGroup {
-            ContentView(
+            AppView(
                 store: .init(
                     initialState: .init(),
-                    reducer: ContentCore.reducer,
-                    environment: .live
+                    reducer: AppReducer()
                 )
             )
         }
@@ -24,4 +24,3 @@ struct AnimeNowApp: App {
         .windowToolbarStyle(.expanded)
     }
 }
-#endif

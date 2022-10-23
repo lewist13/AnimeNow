@@ -10,5 +10,5 @@ import ComposableArchitecture
 import CoreHaptics
 
 struct HapticClient {
-    let play: () -> Effect<Never, Never>
+    let play: () -> Void
 }

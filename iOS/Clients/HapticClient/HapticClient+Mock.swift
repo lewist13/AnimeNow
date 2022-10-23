@@ -9,6 +9,6 @@ import Foundation
 
 extension HapticClient {
     static let mock = HapticClient(
-        play: { .none }
+        play: { }
     )
 }

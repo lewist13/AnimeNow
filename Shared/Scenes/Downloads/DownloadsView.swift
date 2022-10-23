@@ -10,7 +10,7 @@ import ComposableArchitecture
 import SwiftUI
 
 struct DownloadsView: View {
-    let store: Store<DownloadsCore.State, DownloadsCore.Action>
+    let store: StoreOf<DownloadsReducer>
 
     var body: some View {
         VStack(spacing: 12) {
@@ -39,8 +39,7 @@ struct DownloadsView_Previews: PreviewProvider {
         DownloadsView(
             store: .init(
                 initialState: .init(),
-                reducer: DownloadsCore.reducer,
-                environment: .init()
+                reducer: DownloadsReducer()
             )
         )
         .preferredColorScheme(.dark)

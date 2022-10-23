@@ -1,5 +1,5 @@
 //
-//  AnimeNowVideoPlayer+iOS.swift
+//  AnimePlayerView+iOS.swift
 //  Anime Now! (iOS)
 //
 //  Created by ErrorErrorError on 10/16/22.
@@ -11,7 +11,7 @@ import ComposableArchitecture
 
 // MARK: Player Controls Overlay
 
-extension AnimeNowVideoPlayer {
+extension AnimePlayerView {
     @ViewBuilder
     var playerControlsOverlay: some View {
         WithViewStore(
@@ -61,13 +61,13 @@ extension AnimeNowVideoPlayer {
 
 // MARK: Player Status
 
-extension AnimeNowVideoPlayer {
+extension AnimePlayerView {
     private struct VideoStatusViewState: Equatable {
-        let status: AnimeNowVideoPlayerCore.State.Status?
+        let status: AnimePlayerReducer.State.Status?
         let showingPlayerControls: Bool
         let loaded: Bool
 
-        init(_ state: AnimeNowVideoPlayerCore.State) {
+        init(_ state: AnimePlayerReducer.State) {
             self.status = state.status
             self.showingPlayerControls = state.showPlayerOverlay
             self.loaded = state.playerDuration != 0
@@ -102,15 +102,7 @@ extension AnimeNowVideoPlayer {
 
                 switch viewState.status {
                 case .some(.loading):
-                    Rectangle()
-                        .foregroundColor(.clear)
-                        .overlay(
-                            ProgressView()
-                                .colorInvert()
-                                .brightness(1)
-                                .scaleEffect(1.5)
-                        )
-                        .frame(width: 48, height: 48)
+                    loadingView
                 case .some(.playing), .some(.paused):
                         if viewState.showingPlayerControls {
                             Image(systemName: viewState.status == .playing ? "pause.fill" : "play.fill")
@@ -154,7 +146,7 @@ extension AnimeNowVideoPlayer {
 
 // MARK: Top Player Items
 
-extension AnimeNowVideoPlayer {
+extension AnimePlayerView {
     @ViewBuilder
     var topPlayerItems: some View {
         HStack(alignment: .center) {
@@ -171,58 +163,9 @@ extension AnimeNowVideoPlayer {
     }
 }
 
-// MARK: Anime Info
-
-extension AnimeNowVideoPlayer {
-    private struct AnimeInfoViewState: Equatable {
-        let title: String
-        let header: String?
-
-        init(_ state: AnimeNowVideoPlayerCore.State) {
-            let isMovie = state.anime.format == .movie
-
-            if isMovie {
-                self.title = state.anime.title
-                self.header = (state.episodes.value?.count ?? 0) > 1 ? "E\(state.selectedEpisode)" : nil
-            } else {
-                self.title = state.episode?.title ?? "Loading..."
-                self.header = "E\(state.selectedEpisode) \u{2022} \(state.anime.title)"
-            }
-        }
-    }
-
-    @ViewBuilder
-    var animeInfoView: some View {
-        WithViewStore(
-            store.scope(
-                state: AnimeInfoViewState.init
-            )
-        ) { viewState in
-            VStack(
-                alignment: .leading,
-                spacing: 0
-            ) {
-                HStack {
-                    Text(viewState.state.title)
-                        .font(.title2.bold())
-                        .lineLimit(1)
-                }
-
-                if let header = viewState.header {
-                    Text(header)
-                        .font(.footnote.bold())
-                        .foregroundColor(.init(white: 0.85))
-                        .lineLimit(1)
-                }
-            }
-            .foregroundColor(.white)
-        }
-    }
-}
-
 // MARK: Sidebar overlay
 
-extension AnimeNowVideoPlayer {
+extension AnimePlayerView {
     @ViewBuilder
     var sidebarOverlay: some View {
         WithViewStore(
@@ -306,14 +249,14 @@ extension AnimeNowVideoPlayer {
 
 // MARK: Episodes Sidebar
 
-extension AnimeNowVideoPlayer {
+extension AnimePlayerView {
     private struct EpisodesSidebarViewState: Equatable {
         let loading: Bool
         let episodes: [AnyEpisodeRepresentable]
         let selectedEpisode: Episode.ID
         let episodesStore: [EpisodeStore]
 
-        init(_ state: AnimeNowVideoPlayerCore.State) {
+        init(_ state: AnimePlayerReducer.State) {
             self.loading = !state.episodes.finished
             self.episodes = state.episodes.value ?? []
             self.selectedEpisode = state.selectedEpisode
@@ -409,9 +352,9 @@ extension AnimeNowVideoPlayer {
 
 // MARK: Settings Sidebar
 
-extension AnimeNowVideoPlayer {
+extension AnimePlayerView {
     private struct SettingsSidebarViewState: Equatable {
-        let selectedSetting: AnimeNowVideoPlayerCore.Sidebar.SettingsState.Section?
+        let selectedSetting: AnimePlayerReducer.Sidebar.SettingsState.Section?
         let selectedProvider: Provider.ID?
         let selectedSource: Source.ID?
         let isLoading: Bool
@@ -503,14 +446,14 @@ extension AnimeNowVideoPlayer {
             return nil
         }
 
-        init(_ state: AnimeNowVideoPlayerCore.State) {
+        init(_ state: AnimePlayerReducer.State) {
             if case .settings(let item) = state.selectedSidebar {
                 self.selectedSetting = item.selectedSection
             } else {
                 self.selectedSetting = nil
             }
             self.isLoading = !state.episodes.finished || !state.sources.finished
-            self.providers = state.episode!.providers
+            self.providers = state.episode?.providers
             self.selectedProvider = state.selectedProvider
             self.sources = state.sources.value
             self.selectedSource = state.selectedSource
@@ -680,12 +623,12 @@ extension AnimeNowVideoPlayer {
 
 // MARK: Subtitles Sidebar
 
-extension AnimeNowVideoPlayer {
+extension AnimePlayerView {
     private struct SubtitlesSidebarViewState: Equatable {
         let subtitles: AVMediaSelectionGroup?
         let selected: AVMediaSelectionOption?
 
-        init(_ state: AnimeNowVideoPlayerCore.State) {
+        init(_ state: AnimePlayerReducer.State) {
             subtitles = nil
             selected = nil
 //            self.subtitles = state.playerSubtitles
@@ -729,7 +672,7 @@ extension AnimeNowVideoPlayer {
 
 // MARK: Bottom Player Items
 
-extension AnimeNowVideoPlayer {
+extension AnimePlayerView {
     @ViewBuilder
     var bottomPlayerItems: some View {
         seekbarAndDurationView
@@ -739,30 +682,7 @@ extension AnimeNowVideoPlayer {
 
 // MARK: Seekbar and Duration Items
 
-extension AnimeNowVideoPlayer {
-    private struct ProgressViewState: Equatable {
-        let progress: Double
-        let duration: Double
-        let buffered: Double
-
-        var canShow: Bool {
-            duration > 0.0
-        }
-
-        var progressWithDuration: Double? {
-            if duration > 0.0 {
-                return progress * duration
-            }
-            return nil
-        }
-
-        init(_ state: AnimeNowVideoPlayerCore.State) {
-            self.duration = state.playerDuration
-            self.progress = state.playerProgress
-            self.buffered = state.playerBuffered
-        }
-    }
-
+extension AnimePlayerView {
     @ViewBuilder
     var seekbarAndDurationView: some View {
         WithViewStore(

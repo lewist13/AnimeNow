@@ -10,7 +10,7 @@ import ComposableArchitecture
 import SwiftUI
 
 struct SettingsView: View {
-    let store: Store<SettingsCore.State, SettingsCore.Action>
+    let store: StoreOf<SettingsReducer>
 
     var body: some View {
         Text("Hello world!")
@@ -22,8 +22,7 @@ struct SettingsView_Previews: PreviewProvider {
         SettingsView(
             store: .init(
                 initialState: .init(),
-                reducer: SettingsCore.reducer,
-                environment: .init()
+                reducer: SettingsReducer()
             )
         )
     }

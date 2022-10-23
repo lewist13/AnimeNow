@@ -13,11 +13,9 @@ import UIKit
 extension HapticClient {
     static let live = HapticClient(
         play: {
-            .fireAndForget {
-                let generator = UISelectionFeedbackGenerator()
-                generator.prepare()
-                generator.selectionChanged()
-            }
+            let generator = UISelectionFeedbackGenerator()
+            generator.prepare()
+            generator.selectionChanged()
         }
     )
 }

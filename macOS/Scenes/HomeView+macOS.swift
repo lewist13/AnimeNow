@@ -1,6 +1,6 @@
 //
 //  HomeView+macOS.swift
-//  Anime Now! (iOS)
+//  Anime Now! (macOS)
 //
 //  Created by ErrorErrorError on 10/15/22.
 //

@@ -1,5 +1,5 @@
 //
-//  AnimeNowVideoPlayer.swift
+//  AnimePlayerView.swift
 //  Anime Now!
 //
 //  Created by ErrorErrorError on 10/1/22.
@@ -11,16 +11,15 @@ import ComposableArchitecture
 import AVFoundation
 
 
-struct AnimeNowVideoPlayer: View {
-
-    let store: Store<AnimeNowVideoPlayerCore.State, AnimeNowVideoPlayerCore.Action>
+struct AnimePlayerView: View {
+    let store: Store<AnimePlayerReducer.State, AnimePlayerReducer.Action>
 
     struct VideoPlayerState: Equatable {
         let url: URL?
         let action: VideoPlayer.Action?
         let progress: Double
 
-        init(_ state: AnimeNowVideoPlayerCore.State) {
+        init(_ state: AnimePlayerReducer.State) {
             url = state.source?.url
             action = state.playerAction
             progress = state.playerProgress
@@ -29,9 +28,8 @@ struct AnimeNowVideoPlayer: View {
 
     var body: some View {
         WithViewStore(
-            store.scope(
-                state: VideoPlayerState.init
-            )
+            store,
+            observe: VideoPlayerState.init
         ) { viewStore in
             VideoPlayer(
                 url: viewStore.url,
@@ -78,12 +76,32 @@ struct AnimeNowVideoPlayer: View {
     }
 }
 
+// MARK: Loading View
+
+extension AnimePlayerView {
+    @ViewBuilder
+    var loadingView: some View {
+        Rectangle()
+            .foregroundColor(.clear)
+            .overlay(
+                ProgressView()
+                    .colorInvert()
+                    .brightness(1)
+                    .scaleEffect(1.5)
+            )
+            .frame(width: 48, height: 48)
+    }
+}
+
 // MARK: Error Overlay
 
-extension AnimeNowVideoPlayer {
+extension AnimePlayerView {
     @ViewBuilder
     var errorOverlay: some View {
-        WithViewStore(store.scope(state: \.status)) { status in
+        WithViewStore(
+            store,
+            observe: { $0.status }
+        ) { status in
             switch status.state {
             case .some(.error(let description)):
                 buildErrorView(description)
@@ -117,14 +135,63 @@ extension AnimeNowVideoPlayer {
     }
 }
 
+// MARK: Anime Info
+
+extension AnimePlayerView {
+    private struct AnimeInfoViewState: Equatable {
+        let title: String
+        let header: String?
+
+        init(_ state: AnimePlayerReducer.State) {
+            let isMovie = state.anime.format == .movie
+
+            if isMovie {
+                self.title = state.anime.title
+                self.header = (state.episodes.value?.count ?? 0) > 1 ? "E\(state.selectedEpisode)" : nil
+            } else {
+                self.title = state.episode?.title ?? "Loading..."
+                self.header = "E\(state.selectedEpisode) \u{2022} \(state.anime.title)"
+            }
+        }
+    }
+
+    @ViewBuilder
+    var animeInfoView: some View {
+        WithViewStore(
+            store.scope(
+                state: AnimeInfoViewState.init
+            )
+        ) { viewState in
+            VStack(
+                alignment: .leading,
+                spacing: 0
+            ) {
+                HStack {
+                    Text(viewState.state.title)
+                        .font(.title.bold())
+                        .lineLimit(1)
+                }
+
+                if let header = viewState.header {
+                    Text(header)
+                        .font(.callout.bold())
+                        .foregroundColor(.init(white: 0.85))
+                        .lineLimit(1)
+                }
+            }
+            .foregroundColor(.white)
+        }
+    }
+}
+
 // MARK: Skip Button
 
-extension AnimeNowVideoPlayer {
+extension AnimePlayerView {
     struct SkipActionViewState: Equatable {
         let canShowButton: Bool
-        let action: AnimeNowVideoPlayerCore.State.ActionType?
+        let action: AnimePlayerReducer.State.ActionType?
 
-        init(_ state: AnimeNowVideoPlayerCore.State) {
+        init(_ state: AnimePlayerReducer.State) {
             self.action = state.skipAction
             self.canShowButton = state.selectedSidebar == nil && self.action != nil
         }
@@ -133,9 +200,8 @@ extension AnimeNowVideoPlayer {
     @ViewBuilder
     var skipButton: some View {
         WithViewStore(
-            store.scope(
-                state: SkipActionViewState.init
-            )
+            store,
+            observe: SkipActionViewState.init
         ) { viewState in
             Group {
                 if viewState.state.canShowButton {
@@ -207,7 +273,7 @@ extension AnimeNowVideoPlayer {
 
 // MARK: Dismiss Button
 
-extension AnimeNowVideoPlayer {
+extension AnimePlayerView {
     @ViewBuilder
     var dismissButton: some View {
         Image(
@@ -223,9 +289,36 @@ extension AnimeNowVideoPlayer {
     }
 }
 
+// MARK: Progress
+
+extension AnimePlayerView {
+    struct ProgressViewState: Equatable {
+        let progress: Double
+        let duration: Double
+        let buffered: Double
+
+        var canShow: Bool {
+            duration > 0.0
+        }
+
+        var progressWithDuration: Double? {
+            if duration > 0.0 {
+                return progress * duration
+            }
+            return nil
+        }
+
+        init(_ state: AnimePlayerReducer.State) {
+            self.duration = state.playerDuration
+            self.progress = state.playerProgress
+            self.buffered = state.playerBuffered
+        }
+    }
+}
+
 // MARK: Player Options Buttons
 
-extension AnimeNowVideoPlayer {
+extension AnimePlayerView {
 
     @ViewBuilder
     var settingsButton: some View {
@@ -269,7 +362,8 @@ extension AnimeNowVideoPlayer {
     @ViewBuilder
     var nextEpisodeButton: some View {
         WithViewStore(
-            store.scope(state: \.nextEpisode)
+            store,
+            observe: { $0.nextEpisode }
         ) { viewState in
             Image(systemName: "forward.end.fill")
                 .foregroundColor(viewState.state != nil ? Color.white : Color.gray)
@@ -288,7 +382,8 @@ extension AnimeNowVideoPlayer {
     @ViewBuilder
     var episodesButton: some View {
         WithViewStore(
-            store.scope(state: \.episodes)
+            store,
+            observe: { $0.episodes }
         ) { viewState in
             if let episodes = viewState.state.value, episodes.count > 1 {
                 Image("play.rectangle.on.rectangle.fill")
@@ -306,26 +401,15 @@ extension AnimeNowVideoPlayer {
 
 struct VideoPlayerView_Previews: PreviewProvider {
     static var previews: some View {
-        if #available(iOS 15.0, *) {
-            AnimeNowVideoPlayer(
-                store: .init(
-                    initialState: .init(
-                        anime: .init(Anime.narutoShippuden),
-                        episodes: .init(Episode.demoEpisodes.map({ $0.asRepresentable() })),
-                        selectedEpisode: Episode.demoEpisodes.first!.id
-                    ),
-                    reducer: AnimeNowVideoPlayerCore.reducer,
-                    environment: .init(
-                        animeClient: .mock,
-                        mainQueue: .main.eraseToAnyScheduler(),
-                        mainRunLoop: .main.eraseToAnyScheduler(),
-                        repositoryClient: RepositoryClientMock.shared,
-                        userDefaultsClient: .mock
-                    )
-                )
+        AnimePlayerView(
+            store: .init(
+                initialState: .init(
+                    anime: .init(Anime.narutoShippuden),
+                    episodes: .init(Episode.demoEpisodes.map({ $0.asRepresentable() })),
+                    selectedEpisode: Episode.demoEpisodes.first!.id
+                ),
+                reducer: AnimePlayerReducer()
             )
-        } else {
-            // Fallback on earlier versions
-        }
+        )
     }
 }

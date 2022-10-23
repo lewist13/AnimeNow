@@ -1,5 +1,5 @@
 //
-//  ContentView.swift
+//  AppView.swift
 //  Anime Now! (macOS)
 //
 //  Created by ErrorErrorError on 9/3/22.
@@ -8,8 +8,8 @@
 import SwiftUI
 import ComposableArchitecture
 
-struct ContentView: View {
-    let store: Store<ContentCore.State, ContentCore.Action>
+struct AppView: View {
+    let store: Store<AppReducer.State, AppReducer.Action>
 
     var body: some View {
         WithViewStore(
@@ -25,28 +25,28 @@ struct ContentView: View {
                     HomeView(
                         store: store.scope(
                             state: \.home,
-                            action: ContentCore.Action.home
+                            action: AppReducer.Action.home
                         )
                     )
                 case .search:
                     SearchView(
                         store: store.scope(
                             state: \.search,
-                            action: ContentCore.Action.search
+                            action: AppReducer.Action.search
                         )
                     )
                 case .downloads:
                     DownloadsView(
                         store: store.scope(
                             state: \.downloads,
-                            action: ContentCore.Action.downloads
+                            action: AppReducer.Action.downloads
                         )
                     )
                 case .collection:
                     CollectionView(
                         store: store.scope(
                             state: \.collection,
-                            action: ContentCore.Action.collection
+                            action: AppReducer.Action.collection
                         )
                     )
                 }
@@ -63,7 +63,7 @@ struct ContentView: View {
             IfLetStore(
                 store.scope(
                     state: \.animeDetail,
-                    action: ContentCore.Action.animeDetail
+                    action: AppReducer.Action.animeDetail
                 ),
                 then: AnimeDetailView.init(store:)
             )
@@ -76,18 +76,18 @@ struct ContentView: View {
             IfLetStore(
                 store.scope(
                     state: \.videoPlayer,
-                    action: ContentCore.Action.videoPlayer
+                    action: AppReducer.Action.videoPlayer
                 ),
-                then: AnimeNowVideoPlayer.init(store:)
+                then: AnimePlayerView.init(store:)
             )
         )
     }
 }
 
-extension ContentView {
+extension AppView {
 
     @ViewBuilder
-    func tabBar(_ selected: ContentCore.Route) -> some View {
+    func tabBar(_ selected: AppReducer.Route) -> some View {
         HStack(spacing: 32) {
 //            Text("Anime Now!")
 //                .font(.largeTitle.bold())
@@ -95,7 +95,7 @@ extension ContentView {
 
             HStack(spacing: 8) {
                 ForEach(
-                    ContentCore.Route.allCases,
+                    AppReducer.Route.allCases,
                     id: \.self
                 ) { route in
                     Text(route.title)
@@ -124,17 +124,10 @@ extension ContentView {
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        ContentView(
+        AppView(
             store: .init(
                 initialState: .init(),
-                reducer: ContentCore.reducer,
-                environment: .init(
-                    animeClient: .mock,
-                    mainQueue: .main,
-                    mainRunLoop: .main,
-                    repositoryClient: RepositoryClientMock.shared,
-                    userDefaultsClient: .mock
-                )
+                reducer: AppReducer()
             )
         )
     }
