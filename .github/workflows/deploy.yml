@@ -36,9 +36,6 @@ jobs:
         run: |
           [[ ${{ github.event.pull_request != null }} == true ]] && [[ ${{ github.event.pull_request.user.login == github.repository.owner.login }} == true ]] && echo "is_release=1" >> $GITHUB_ENV || echo "is_release=0" >> $GITHUB_ENV
 
-      - name: Install Swiftlint
-        run: brew install swiftlint
-
       - name: Install create-dmg
         run: brew install create-dmg
 
