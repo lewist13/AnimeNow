@@ -25,17 +25,13 @@ struct SeekbarView: View {
 
             ZStack {
                 ZStack(alignment: .leading) {
-                    // Background
+                    Color(white: 0.15)
 
-                    Color.white.opacity(0.15)
-
-                    Color.gray.opacity(0.25)
+                    Color(white: 0.25)
                         .frame(
                             width: buffered * reader.size.width,
                             alignment: .leading
                         )
-
-                    // Progress
 
                     Color.white
                         .frame(

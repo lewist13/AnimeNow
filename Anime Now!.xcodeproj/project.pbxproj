@@ -57,8 +57,6 @@
 		1359668E28E6100B00EB2AFC /* HapticClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1359668B28E6100B00EB2AFC /* HapticClient.swift */; };
 		1359668F28E6100B00EB2AFC /* HapticClient+Mock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1359668C28E6100B00EB2AFC /* HapticClient+Mock.swift */; };
 		1359669028E6100B00EB2AFC /* HapticClient+Live.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1359668D28E6100B00EB2AFC /* HapticClient+Live.swift */; };
-		136245BD28EA4DA000ECE46B /* EquatableError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 136245BC28EA4DA000ECE46B /* EquatableError.swift */; };
-		136245BE28EA4DA000ECE46B /* EquatableError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 136245BC28EA4DA000ECE46B /* EquatableError.swift */; };
 		1363011C28C5C49F0076BF0A /* TinyGraphQL in Frameworks */ = {isa = PBXBuildFile; productRef = 1363011B28C5C49F0076BF0A /* TinyGraphQL */; };
 		1363011E28C5C4B00076BF0A /* TinyGraphQL in Frameworks */ = {isa = PBXBuildFile; productRef = 1363011D28C5C4B00076BF0A /* TinyGraphQL */; };
 		1364BA9C28E13F6E005BAEBA /* DownloadsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1364BA9A28E13F6E005BAEBA /* DownloadsView.swift */; };
@@ -167,6 +165,8 @@
 		13E512C728C79E5E00B298BA /* GraphQLModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13E512C628C79E5E00B298BA /* GraphQLModels.swift */; };
 		13E95CF02904A4B100E85F28 /* Effect+Send.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13E95CEF2904A4B100E85F28 /* Effect+Send.swift */; };
 		13E95CF12904A4B100E85F28 /* Effect+Send.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13E95CEF2904A4B100E85F28 /* Effect+Send.swift */; };
+		13F52BDD29061D9400AC9315 /* NSWindow+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13F52BDC29061D9400AC9315 /* NSWindow+Extension.swift */; };
+		13F52BDF2906285B00AC9315 /* View+Hovered.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13F52BDE2906285B00AC9315 /* View+Hovered.swift */; };
 		13FC21C828C39762000F0F79 /* RepositoryClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13FC21C728C39762000F0F79 /* RepositoryClient.swift */; };
 		13FC21CA28C3976D000F0F79 /* RepositoryClient+Live.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13FC21C928C3976D000F0F79 /* RepositoryClient+Live.swift */; };
 		13FC21CC28C39779000F0F79 /* RepositoryClient+Mock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13FC21CB28C39779000F0F79 /* RepositoryClient+Mock.swift */; };
@@ -215,7 +215,6 @@
 		1359668B28E6100B00EB2AFC /* HapticClient.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HapticClient.swift; sourceTree = "<group>"; };
 		1359668C28E6100B00EB2AFC /* HapticClient+Mock.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "HapticClient+Mock.swift"; sourceTree = "<group>"; };
 		1359668D28E6100B00EB2AFC /* HapticClient+Live.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "HapticClient+Live.swift"; sourceTree = "<group>"; };
-		136245BC28EA4DA000ECE46B /* EquatableError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EquatableError.swift; sourceTree = "<group>"; };
 		1364BA9A28E13F6E005BAEBA /* DownloadsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadsView.swift; sourceTree = "<group>"; };
 		1364BA9B28E13F6E005BAEBA /* DownloadsReducer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadsReducer.swift; sourceTree = "<group>"; };
 		13650F3228CFE0BF002E20DD /* AnimeClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimeClient.swift; sourceTree = "<group>"; };
@@ -272,6 +271,8 @@
 		13E4BCEF28C829A80039D880 /* AnimeDetailReducer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AnimeDetailReducer.swift; sourceTree = "<group>"; };
 		13E512C628C79E5E00B298BA /* GraphQLModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GraphQLModels.swift; sourceTree = "<group>"; };
 		13E95CEF2904A4B100E85F28 /* Effect+Send.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Effect+Send.swift"; sourceTree = "<group>"; };
+		13F52BDC29061D9400AC9315 /* NSWindow+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSWindow+Extension.swift"; sourceTree = "<group>"; };
+		13F52BDE2906285B00AC9315 /* View+Hovered.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+Hovered.swift"; sourceTree = "<group>"; };
 		13FC21C728C39762000F0F79 /* RepositoryClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepositoryClient.swift; sourceTree = "<group>"; };
 		13FC21C928C3976D000F0F79 /* RepositoryClient+Live.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "RepositoryClient+Live.swift"; sourceTree = "<group>"; };
 		13FC21CB28C39779000F0F79 /* RepositoryClient+Mock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "RepositoryClient+Mock.swift"; sourceTree = "<group>"; };
@@ -577,6 +578,7 @@
 		13C3536928C308A000A54E7E /* macOS */ = {
 			isa = PBXGroup;
 			children = (
+				13F52BDB29061D8200AC9315 /* Extensions */,
 				1325FD6B2904F99100EA37D5 /* Main */,
 				13FC21E928C3F08E000F0F79 /* Scenes */,
 				13FC21F028C41648000F0F79 /* AppView.swift */,
@@ -599,6 +601,15 @@
 				13E512C628C79E5E00B298BA /* GraphQLModels.swift */,
 			);
 			path = GraphQL;
+			sourceTree = "<group>";
+		};
+		13F52BDB29061D8200AC9315 /* Extensions */ = {
+			isa = PBXGroup;
+			children = (
+				13F52BDC29061D9400AC9315 /* NSWindow+Extension.swift */,
+				13F52BDE2906285B00AC9315 /* View+Hovered.swift */,
+			);
+			path = Extensions;
 			sourceTree = "<group>";
 		};
 		13FC21C028C395FF000F0F79 /* Data */ = {
@@ -688,7 +699,6 @@
 				1380560828E8AD1800B9B45B /* Data+Extensions.swift */,
 				1380560B28E8B69E00B9B45B /* Array+Extension.swift */,
 				1380562028E9341A00B9B45B /* Cache.swift */,
-				136245BC28EA4DA000ECE46B /* EquatableError.swift */,
 				13B2771528F79EA300B4B4A3 /* PlatformViewRepresentable.swift */,
 				1398F35B28FFCAD600C93CFA /* BottomSafeAreaInset+View.swift */,
 				13E95CEF2904A4B100E85F28 /* Effect+Send.swift */,
@@ -886,7 +896,6 @@
 				1359669028E6100B00EB2AFC /* HapticClient+Live.swift in Sources */,
 				13D83B8A28FDAE340044F04A /* SnapCarousel.swift in Sources */,
 				1364BA9D28E13F6E005BAEBA /* DownloadsReducer.swift in Sources */,
-				136245BD28EA4DA000ECE46B /* EquatableError.swift in Sources */,
 				1398F35C28FFCAD600C93CFA /* BottomSafeAreaInset+View.swift in Sources */,
 				13E465F428E6231A001FF309 /* ConsumetAPI.swift in Sources */,
 				1359668828E56ACF00EB2AFC /* KitsuAPI.swift in Sources */,
@@ -898,6 +907,7 @@
 				130ED93A28E3EF73000811A6 /* ChipView.swift in Sources */,
 				137A819728C53B2A00B69503 /* AppReducer.swift in Sources */,
 				13FC21F828C46E06000F0F79 /* API.swift in Sources */,
+				13F52BDD29061D9400AC9315 /* NSWindow+Extension.swift in Sources */,
 				13FC747328CFA10A00A77818 /* Source.swift in Sources */,
 				1324366A28E7D4BE00F282EE /* AnimeStore.swift in Sources */,
 				137A819C28C5456400B69503 /* Episode.swift in Sources */,
@@ -955,7 +965,6 @@
 				13C1551428FB75780064885D /* AirplayView.swift in Sources */,
 				137F8FA228F62F6600ECDB30 /* SkipTime.swift in Sources */,
 				1327551128D2AACB00A6C525 /* AnimeClient.swift in Sources */,
-				136245BE28EA4DA000ECE46B /* EquatableError.swift in Sources */,
 				1327551228D2AAD300A6C525 /* GraphQLModels.swift in Sources */,
 				13B2771A28F79FF200B4B4A3 /* KitsuAPI.swift in Sources */,
 				13DF206528FBDB4500EE804D /* AnimePlayerView.swift in Sources */,
@@ -968,6 +977,7 @@
 				13D83B8828FCAAA40044F04A /* AnimePlayerView+macOS.swift in Sources */,
 				1325FD6D2904F9BC00EA37D5 /* AppDelegate.swift in Sources */,
 				13B2771428F7922900B4B4A3 /* VideoPlayer+View.swift in Sources */,
+				13F52BDF2906285B00AC9315 /* View+Hovered.swift in Sources */,
 				13C3536E28C308A000A54E7E /* AnimeNowApp.swift in Sources */,
 				1380560A28E8AD1800B9B45B /* Data+Extensions.swift in Sources */,
 				13C1551028FB72040064885D /* DownloadsReducer.swift in Sources */,

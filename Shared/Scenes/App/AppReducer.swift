@@ -105,7 +105,6 @@ extension AppReducer {
             }
             .ifLet(\.videoPlayer, action: /Action.videoPlayer) {
                 AnimePlayerReducer()
-                    ._printChanges()
             }
     }
 

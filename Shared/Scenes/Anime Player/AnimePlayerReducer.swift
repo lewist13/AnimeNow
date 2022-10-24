@@ -59,15 +59,19 @@ struct AnimePlayerReducer: ReducerProtocol {
 
         var hasInitialized = false
 
-        // Player
+        // Shared Player Properties
 
         @BindableState var playerAction: VideoPlayer.Action? = nil
-        @BindableState var playerProgress = Double.zero
+        var playerProgress = Double.zero
         var playerBuffered = Double.zero
         var playerDuration = Double.zero
         var playerStatus = VideoPlayer.Status.idle
         var playerPiPStatus = VideoPlayer.PIPStatus.restoreUI
 //        var playerSubtitles: AVMediaSelectionGroup?
+
+        // MacOS Properties
+
+        var playerVolume = 0.0
 
         init(
             anime: AnyAnimeRepresentable,
@@ -104,12 +108,13 @@ struct AnimePlayerReducer: ReducerProtocol {
         case selectSource(Source.ID?, saveProgress: Bool = true)
 //        case selectSubtitle(AVMediaSelectionOption)
 
+        case showPlayerOverlay(Bool)
+
         // Internal Actions
 
         case initializeFirstTime
         case saveEpisodeProgress(AnyEpisodeRepresentable.ID?)
         case setSidebar(Sidebar?)
-        case showPlayerOverlay(Bool)
         case closeSidebarAndShowControls
         case hideOverlayAnimationDelay
         case cancelHideOverlayAnimationDelay
@@ -129,6 +134,8 @@ struct AnimePlayerReducer: ReducerProtocol {
 
         // Player Actions
 
+        case togglePictureInPicture
+        case play
         case backwardsTapped
         case forwardsTapped
         case replayTapped
@@ -136,14 +143,18 @@ struct AnimePlayerReducer: ReducerProtocol {
         case startSeeking
         case stopSeeking
         case seeking(to: Double)
+        case volume(to: Double)
 
         case playerStatus(VideoPlayer.Status)
+        case playerAction(VideoPlayer.Action)
+        case playerProgress(Double)
         case playerDuration(Double)
         case playerBuffer(Double)
         case playerPiPStatus(VideoPlayer.PIPStatus)
         case playerPlayedToEnd
 //        case playerSubtitles(AVMediaSelectionGroup?)
 //        case playerSelectedSubtitle(AVMediaSelectionOption?)
+        case playerVolume(Double)
         case stopAndClearPlayer
 
         // Internal Video Player Actions
@@ -352,7 +363,7 @@ extension AnimePlayerReducer {
                     .action(.showPlayerOverlay(true))
                         .animation(.easeInOut(duration: 0.15)),
                     .action(.hideOverlayAnimationDelay)
-                        .debounce(id: HideOverlayAnimationDebounce(), for: 1.5, scheduler: mainQueue)
+                        .debounce(id: HideOverlayAnimationDebounce(), for: 1, scheduler: mainQueue)
                 )
             } else {
                 return .merge(
@@ -450,6 +461,9 @@ extension AnimePlayerReducer {
             return .task { .sidebarSettingsSection(section) }
                 .animation(.easeInOut(duration: 0.25))
 
+        case .showPlayerOverlay(let show):
+            state.showPlayerOverlay = show
+
         // Internal Actions
     
         case .initializeFirstTime:
@@ -474,15 +488,13 @@ extension AnimePlayerReducer {
                     .cancellable(id: CancelAnimeStoreObservable())
             )
 
-        case .showPlayerOverlay(let show):
-            state.showPlayerOverlay = show
-
         case .hideOverlayAnimationDelay:
             return .task {
-                try await self.mainQueue.sleep(for: 5)
+                try await self.mainQueue.sleep(for: 2.5)
                 return .showPlayerOverlay(false)
             }
-                .cancellable(id: HidePlayerOverlayDelayCancellable())
+            .animation(overlayVisibilityAnimation)
+            .cancellable(id: HidePlayerOverlayDelayCancellable(), cancelInFlight: true)
 
         case .cancelHideOverlayAnimationDelay:
             return .cancel(id: HidePlayerOverlayDelayCancellable())
@@ -610,6 +622,16 @@ extension AnimePlayerReducer {
 
         // Video Player Actions
 
+        case .play:
+            state.playerAction = .play
+
+        case .togglePictureInPicture:
+            if state.playerPiPStatus == .didStart {
+                state.playerAction = .pictureInPicture(enable: false)
+            } else {
+                state.playerAction = .pictureInPicture(enable: true)
+            }
+
         case .backwardsTapped:
             guard state.playerDuration > 0.0 else { break }
             let progress = state.playerProgress - 15 / state.playerDuration
@@ -649,10 +671,26 @@ extension AnimePlayerReducer {
             state.playerAction = .pause
 
         case .stopSeeking:
-            state.playerAction = .play
+            state.playerAction = .seekTo(state.playerProgress)
+            return .run { send in
+                try? await mainQueue.sleep(for: 0.5)
+                await send(.play)
+            }
 
         case .seeking(to: let to):
             state.playerProgress = to
+
+        case .volume(to: let volume):
+            struct PlayerVolumeDebounceId: Hashable {}
+
+            state.playerVolume = volume
+            return .action(.playerAction(.volume(state.playerVolume)))
+                .debounce(id: PlayerVolumeDebounceId(), for: 0.5, scheduler: mainQueue)
+
+        // Player Actions Observer
+
+        case .playerAction(let action):
+            state.playerAction = action
 
         case .playerStatus(let status):
             guard status != state.playerStatus else { break }
@@ -664,6 +702,10 @@ extension AnimePlayerReducer {
                 return .task { .cancelHideOverlayAnimationDelay }
             }
 
+        case .playerProgress(let progress):
+            guard progress != state.playerProgress else { break }
+            state.playerProgress = progress
+
         case .playerDuration(let duration):
 
             // First time duration is set and is not zero, resume progress
@@ -673,9 +715,11 @@ extension AnimePlayerReducer {
                let episode = state.episode,
                let savedEpisodeProgress = animeInfo.episodeStores.first(where: { $0.number ==  episode.number }),
                !savedEpisodeProgress.almostFinished {
+                state.playerAction = .seekTo(savedEpisodeProgress.progress)
                 state.playerProgress = savedEpisodeProgress.progress
             } else {
-                state.playerProgress = .zero
+                state.playerAction = .seekTo(.zero)
+                state.playerProgress = 0
             }
 
             state.playerDuration = duration
@@ -688,6 +732,9 @@ extension AnimePlayerReducer {
 
         case .playerPlayedToEnd:
             break
+
+        case .playerVolume(let volume):
+            state.playerVolume = volume
 
 //        case .selectSubtitle(let subtitle):
 //            break
@@ -708,6 +755,7 @@ extension AnimePlayerReducer {
             state.playerBuffered = .zero
             state.playerDuration = .zero
             state.playerPiPStatus = .restoreUI
+            state.playerVolume = .zero
 //            state.playerSubtitles = nil
 //            state.playerSelectedSubtitle = nil
 

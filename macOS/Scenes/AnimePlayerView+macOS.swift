@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import AppKit
 import ComposableArchitecture
 
 extension AnimePlayerView {
@@ -40,16 +41,35 @@ extension AnimePlayerView {
                 )
             }
         }
-        .onHover { isHovering in
-            NSApp.mainWindow?.standardWindowButton(.zoomButton)?.isHidden = !isHovering
-            NSApp.mainWindow?.standardWindowButton(.closeButton)?.isHidden = !isHovering
-            NSApp.mainWindow?.standardWindowButton(.miniaturizeButton)?.isHidden = !isHovering
-            ViewStore(store.stateless).send(
-                .isHoveringPlayer(isHovering)
-            )
-        }
         .overlay(statusOverlay)
         .overlay(sidebarOverlay)
+        .mouseEvents { isActive in
+            ViewStore(store.stateless).send(
+                .isHoveringPlayer(isActive)
+            )
+        }
+        .onReceive(
+            ViewStore(store).publisher.showPlayerOverlay
+        ) { showOverlay in
+            showOverlay ? NSCursor.unhide() : NSCursor.setHiddenUntilMouseMoves(true)
+        }
+        .onAppear {
+            NSWindow.ButtonType.allCases
+                .forEach {
+                    NSApp.mainWindow?
+                        .standardWindowButton($0)?
+                        .isHidden = true
+                }
+        }
+        .onDisappear {
+            NSWindow.ButtonType.allCases
+                .forEach {
+                    NSApp.mainWindow?
+                        .standardWindowButton($0)?
+                        .isHidden = false
+                }
+            NSCursor.unhide()
+        }
     }
 }
 
@@ -87,10 +107,30 @@ extension AnimePlayerView {
             dismissButton
             animeInfoView
             Spacer()
+            pipButton
             airplayButton
         }
         .frame(maxWidth: .infinity)
         .transition(.opacity)
+    }
+
+    @ViewBuilder
+    var pipButton: some View {
+        WithViewStore(
+            store,
+            observe: { $0.playerPiPStatus == .didStart }
+        ) { viewStore in
+            Image(
+                systemName: viewStore.state ? "rectangle.center.inset.filled" : "rectangle.inset.bottomright.filled"
+            )
+            .font(.title2.bold())
+            .contentShape(Rectangle())
+            .onTapGesture {
+                viewStore.send(.togglePictureInPicture)
+//                viewState.send(.togglePlayback)
+            }
+            .foregroundColor(Color.white)
+        }
     }
 }
 
@@ -100,7 +140,7 @@ extension AnimePlayerView {
     @ViewBuilder
     var bottomPlayerItems: some View {
         VStack {
-            sliderView
+            progressView
             HStack(spacing: 22) {
                 playStateView
                 volumeButton
@@ -113,7 +153,6 @@ extension AnimePlayerView {
             }
         }
     }
-
 
     @ViewBuilder
     var playStateView: some View {
@@ -132,7 +171,7 @@ extension AnimePlayerView {
     }
 
     @ViewBuilder
-    var sliderView: some View {
+    var progressView: some View {
         WithViewStore(
             store,
             observe: ProgressViewState.init
@@ -174,22 +213,31 @@ extension AnimePlayerView {
     private enum VolumeViewState: Equatable {
         case muted
         case low
-        case med
+        case mid
         case high
 
         init(_ state: AnimePlayerReducer.State) {
-            self = .med
+            if state.playerProgress > 2/3 {
+                self = .high
+            } else if state.playerVolume > 1/3 {
+                self = .mid
+            } else if state.playerVolume > 0 {
+                self = .low
+            } else {
+                self = .muted
+            }
         }
 
         var image: String {
             switch self {
-            case .muted:
-                return "speaker.slash.fill"
-            case .low:
-                return "speaker.wave.1.fill"
-            case .med:
-                return "speaker.wave.2.fill"
-            case .high:
+//            case .muted:
+//                return "speaker.slash.fill"
+//            case .low:
+//                return "speaker.wave.1.fill"
+//            case .mid:
+//                return "speaker.wave.2.fill"
+//            case .high:
+            default:
                 return "speaker.wave.3.fill"
             }
         }
@@ -197,18 +245,36 @@ extension AnimePlayerView {
 
     @ViewBuilder
     var volumeButton: some View {
-        WithViewStore(
-            store,
-            observe: VolumeViewState.init
-        ) { viewState in
-            Image(
-                systemName: viewState.image
-            )
+        HStack {
+            WithViewStore(
+                store,
+                observe: VolumeViewState.init
+            ) { viewState in
+                // TODO: Fix since this bugs the volume slider
+                Image(
+                    systemName: viewState.image
+                )
                 .font(.title2.bold())
                 .contentShape(Rectangle())
-                .onTapGesture {
-                }
                 .foregroundColor(Color.white)
+            }
+            
+            WithViewStore(
+                store,
+                observe: { $0.playerVolume }
+            ) { viewState in
+                SeekbarView(
+                    progress: .init(
+                        get: { viewState.state },
+                        set: { viewState.send(.volume(to: $0)) }
+                    ),
+                    padding: 0
+                )
+                .frame(
+                    width: 75,
+                    height: 6
+                )
+            }
         }
     }
 
@@ -220,10 +286,11 @@ extension AnimePlayerView {
         ) { viewState in
             Image(systemName: viewState.state ? "pause.fill" : "arrow.up.backward.and.arrow.down.forward")
                 .font(.title2.bold())
+                .foregroundColor(Color.white)
                 .contentShape(Rectangle())
                 .onTapGesture {
+                    NSApp.mainWindow?.toggleFullScreen(nil)
                 }
-                .foregroundColor(Color.white)
         }
     }
 }
@@ -240,5 +307,11 @@ struct VideoPlayerViewMacOS_Previews: PreviewProvider {
                 reducer: AnimePlayerReducer()
             )
         )
+    }
+}
+
+extension NSWindow.ButtonType: CaseIterable {
+    public static var allCases: [NSWindow.ButtonType] {
+        [.closeButton, .zoomButton, .miniaturizeButton, .documentIconButton, .documentVersionsButton, .toolbarButton]
     }
 }

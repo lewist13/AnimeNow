@@ -51,17 +51,15 @@ extension SnapCarousel {
     @ViewBuilder
     var scrollItems: some View {
         GeometryReader { proxy in
-
             let width = proxy.size.width - (trailingSpace - spacing)
             let adjustMentWidth = (trailingSpace / 2) - spacing
 
-            HStack (spacing: spacing) {
+            HStack(spacing: spacing) {
                 ForEach(list) { item in
                     content(item)
                         .frame(width: proxy.size.width - trailingSpace)
                 }
             }
-
             .padding(.horizontal, spacing)
             .offset(x: (CGFloat(position) * -width) + ( position != 0 ? adjustMentWidth : 0 ) + offset)
             .highPriorityGesture(
@@ -72,11 +70,15 @@ extension SnapCarousel {
                     .onEnded({ value in
                         let offsetX = value.translation.width
                         let progress = -offsetX / width
-                        let roundIndex = progress.rounded()
+                        let roundIndex: Int
 
-                        let limitedPosition = max(min(position + Int(roundIndex), list.count - 1), 0)
+                        if abs(progress) > 0.3 {
+                            roundIndex = progress > 0 ? 1 : -1
+                        } else {
+                            roundIndex = 0
+                        }
 
-                        position = limitedPosition
+                        position = max(min(position + roundIndex, list.count - 1), 0)
                     })
             )
         }
@@ -139,7 +141,7 @@ extension SnapCarousel {
         var indicatorStates = [IndicatorState](repeating: .gone, count: list.count)
         let indicatorCount = indicatorStates.count
 
-        let maxIndicators = min(9, max(1, indicatorCount))
+        let maxIndicators = 9
 
         let halfMaxIndicators = Int(floor(Double(maxIndicators) / 2))
         let halfMaxIndicatorsCeil = Int(ceil(Double(maxIndicators) / 2))

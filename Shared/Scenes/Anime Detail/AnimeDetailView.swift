@@ -11,10 +11,13 @@ import ComposableArchitecture
 import Kingfisher
 
 struct AnimeDetailView: View {
-    let store: Store<AnimeDetailReducer.State, AnimeDetailReducer.Action>
+    let store: StoreOf<AnimeDetailReducer>
 
     var body: some View {
-        WithViewStore(store.scope(state: \.loading)) { viewStore in
+        WithViewStore(
+            store,
+            observe: { $0.loading }
+        ) { viewStore in
             ScrollView(.vertical, showsIndicators: false) {
                 VStack(spacing: 16) {
                     topContainer
@@ -68,9 +71,8 @@ extension AnimeDetailView {
     @ViewBuilder
     var topContainer: some View {
         WithViewStore(
-            store.scope(
-                state: \.anime
-            )
+            store,
+            observe: { $0.anime }
         ) { animeViewStore in
             ZStack(alignment: .bottom) {
                 KFImage(
@@ -124,9 +126,8 @@ extension AnimeDetailView {
                         // MARK: Play Button
 
                         WithViewStore(
-                            store.scope(
-                                state: \.playButtonState
-                            )
+                            store,
+                            observe: { $0.playButtonState }
                         ) { playButtonState in
                             Button {
                                 animeViewStore.send(.playResumeButtonClicked)
@@ -211,7 +212,8 @@ extension AnimeDetailView {
     @ViewBuilder
     var infoContainer: some View {
         WithViewStore(
-            store.scope(state: \.anime)
+            store,
+            observe: { $0.anime }
         ) { anime in
             VStack(alignment: .leading, spacing: 12) {
 
@@ -249,7 +251,6 @@ extension AnimeDetailView {
     }
 }
 
-
 // MARK: Episodes Container
 
 extension AnimeDetailView {
@@ -258,17 +259,17 @@ extension AnimeDetailView {
     var episodesContainer: some View {
         IfLetStore(
             store.scope(
-                state: { state -> AnimeDetailReducer.LoadableEpisodes? in
-                    state.anime.status != .upcoming && state.anime.format != .movie ? state.episodes : nil
+                state: {
+                    $0.episodes.hasInitialized ? $0.episodes : nil
                 }
             )
         ) { episodesStore in
-            WithViewStore(episodesStore) { episodesViewStore in
-                if case let .success(episodes) = episodesViewStore.state {
-                    if episodes.count > 0 {
-                        buildSubHeading(title: "Episodes")
-                    }
-
+            WithViewStore(
+                episodesStore,
+                observe: { $0 }
+            ) { episodesViewStore in
+                if let episodes = episodesViewStore.value, episodes.count > 0 {
+                    buildSubHeading(title: "Episodes")
                     LazyVStack(spacing: 12) {
                         ForEach(episodes, id: \.id) { episode in
                             generateEpisodeItem(episode)
@@ -281,19 +282,7 @@ extension AnimeDetailView {
                                 }
                         }
                     }
-                } else if case .failed = episodesViewStore.state {
-                    buildSubHeading(title: "Episodes")
-
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 16)
-                            .episodeFrame()
-                            .foregroundColor(Color.gray.opacity(0.2))
-                        
-                        Label("Failed to load.", systemImage: "exclamationmark.triangle.fill")
-                            .font(.title3.bold())
-                            .foregroundColor(Color.red)
-                    }
-                } else {
+                } else if episodesViewStore.isLoading {
                     buildSubHeading(title: "Episodes")
                     generateEpisodeItem(.placeholder)
                 }
@@ -328,39 +317,6 @@ extension AnimeDetailView {
                 progressSize: 10
             )
         }
-//            .overlay(
-//                WithViewStore(
-//                    store.scope(state: { $0.moreInfo.contains(episode.id) })
-//                ) { visibleViewStore in
-//                    Button {
-//                        visibleViewStore.send(.moreInfo(id: episode.id), animation: Animation.easeInOut(duration: 0.15))
-//                    } label: {
-//                        Image(
-//                            systemName: visibleViewStore.state ? "chevron.up" : "chevron.down"
-//                        )
-//                        .font(Font.system(size: 12, weight: .black))
-//                        .foregroundColor(Color.white.opacity(0.9))
-//                    }
-//                    .buttonStyle(BlurredButtonStyle())
-//                    .background(BlurView(style: .systemThinMaterialDark))
-
-//                    .clipShape(Circle())
-//                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
-//                    .padding()
-//                }
-//            )
-
-//        WithViewStore(
-//            store.scope(state: { $0.moreInfo.contains(episode.id) })
-//        ) { visibleDescriptionViewStore in
-//            if visibleDescriptionViewStore.state {
-//                Text(episode.description)
-//                    .font(.footnote)
-//                    .padding(.horizontal)
-//                    .frame(maxWidth: .infinity, alignment: .leading)
-//                    .padding(.bottom)
-//            }
-//        }
     }
 }
 
@@ -405,24 +361,32 @@ struct AnimeView_Previews: PreviewProvider {
         AnimeDetailView(
             store: .init(
                 initialState: .init(
-                    anime: .narutoShippuden,
-                    episodes: .success(Episode.demoEpisodes),
-                    animeStore: .success(
-                        .init(
-                            id: 0,
-                            title: "",
-                            format: .tv,
-                            posterImage: [],
-                            isFavorite: false,
-                            inWatchlist: false,
-                            episodeStores: .init()
-                        )
-                    )
+                    anime: .narutoShippuden
                 ),
-                reducer: .empty,
-                environment: ()
+                reducer: AnimeDetailReducer()
             )
         )
+//        AnimeDetailView(
+//            store: .init(
+//                initialState: .init(
+////                    anime: .narutoShippuden,
+////                    episodes: .success(Episode.demoEpisodes),
+////                    animeStore: .success(
+////                        .init(
+////                            id: 0,
+////                            title: "",
+////                            format: .tv,
+////                            posterImage: [],
+////                            isFavorite: false,
+////                            inWatchlist: false,
+////                            episodeStores: .init()
+////                        )
+//                    )
+//                reducer: AnimeDetailReducer()
+//                )
+//            )
+//        )
         .preferredColorScheme(.dark)
+        .frame(height: 1000)
     }
 }

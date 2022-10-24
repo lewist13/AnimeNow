@@ -80,6 +80,8 @@ extension VideoPlayer {
 
         private var timerObserver: Any?
 
+        private var keyDownEventMonitor: Any?
+
         init() {
             super.init(frame: .zero)
             configureInit()
@@ -214,6 +216,57 @@ extension VideoPlayer.PlayerView {
     }
 }
 
+#if os(macOS)
+
+extension VideoPlayer.PlayerView {
+    private enum KeyCommands: UInt16 {
+        case spaceBar = 49
+        case leftArrow = 123
+        case rightArrow = 124
+    }
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        monitorKeyEvents()
+    }
+
+    func monitorKeyEvents() {
+        if let keyDownEventMonitor = keyDownEventMonitor {
+            NSEvent.removeMonitor(keyDownEventMonitor)
+            self.keyDownEventMonitor = nil
+        }
+
+        keyDownEventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [unowned self] event in
+            guard let command = KeyCommands(rawValue: event.keyCode) else {
+                return event
+            }
+            
+            let allWindows = NSApp.windows
+            let firstResponders = allWindows.compactMap { $0.firstResponder }
+            let fieldEditors = firstResponders.filter { ($0 as? NSText)?.isEditable == true }
+            guard fieldEditors.isEmpty else { return event }
+
+            switch command {
+            case .spaceBar:
+                if self.status == .playing {
+                    self.pause()
+                } else {
+                    self.resume()
+                }
+                return nil
+
+            case .leftArrow:
+                return nil
+
+            case .rightArrow:
+                return nil
+            }
+        }
+    }
+}
+
+#endif
+
 extension VideoPlayer.PlayerView {
     func play(for url: URL) -> Bool {
         guard url != (player.currentItem?.asset as? AVURLAsset)?.url else { return false }
@@ -240,6 +293,10 @@ extension VideoPlayer.PlayerView {
 
     func seek(to time: CMTime) {
         player.seek(to: time, toleranceBefore: .zero, toleranceAfter: .zero)
+    }
+
+    func volume(to volume: Double) {
+        player.volume = Float(volume)
     }
 
     func stopAndRemoveItem() {

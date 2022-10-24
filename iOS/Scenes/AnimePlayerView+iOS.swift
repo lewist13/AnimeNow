@@ -15,9 +15,8 @@ extension AnimePlayerView {
     @ViewBuilder
     var playerControlsOverlay: some View {
         WithViewStore(
-            store.scope(
-                state: \.showPlayerOverlay
-            )
+            store,
+            observe: { $0.showPlayerOverlay }
         ) { showPlayerOverlay in
             GeometryReader { proxy in
                 VStack(spacing: 0) {

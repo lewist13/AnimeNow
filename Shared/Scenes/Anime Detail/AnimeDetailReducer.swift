@@ -49,9 +49,9 @@ extension AnimeDetailReducer {
     enum PlayButtonState: Equatable {
         case unavailable
         case comingSoon
-        case playFromBeginning(EpisodeInfo)
-        case playNextEpisode(EpisodeInfo)
-        case resumeEpisode(EpisodeInfo)
+        case playFromBeginning(EpisodePlayback)
+        case playNextEpisode(EpisodePlayback)
+        case resumeEpisode(EpisodePlayback)
 
         var isAvailable: Bool {
             switch self {
@@ -90,7 +90,7 @@ extension AnimeDetailReducer {
             }
         }
 
-        struct EpisodeInfo: Equatable {
+        struct EpisodePlayback: Equatable {
             let id: Episode.ID
             let format: Anime.Format
             var episodeNumber: Int?

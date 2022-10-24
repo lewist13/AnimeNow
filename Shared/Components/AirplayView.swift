@@ -21,6 +21,8 @@ struct AirplayView: PlatformAgnosticViewRepresentable {
         #if os(iOS)
         view.prioritizesVideoDevices = true
         view.tintColor = .white
+        #elseif os(macOS)
+        view.setRoutePickerButtonColor(.white, for: .normal)
         #endif
 
         return view

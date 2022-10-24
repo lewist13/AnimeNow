@@ -44,82 +44,93 @@ struct ThumbnailItemBigView: View {
 
     var body: some View {
         GeometryReader { reader in
-            ZStack(alignment: .bottomLeading) {
-                KFImage(type.image)
-                    .placeholder {
-                        imageShimmeringView
-                    }
-                    .fade(duration: 0.5)
-                    .resizable()
-                    .scaledToFill()
-                    .frame(
-                        width: reader.size.width,
-                        height: reader.size.height,
-                        alignment: .center
+            KFImage(type.image)
+                .placeholder {
+                    imageShimmeringView
+                }
+                .fade(duration: 0.5)
+                .resizable()
+                .scaledToFill()
+                .frame(
+                    width: reader.size.width,
+                    height: reader.size.height,
+                    alignment: .center
+                )
+                .contentShape(Rectangle())
+                .clipped()
+                .overlay(
+                    LinearGradient(
+                        stops: [
+                            .init(color: .clear, location: 0.4),
+                            .init(color: .black.opacity(0.75), location: 1.0)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
                     )
-                    .contentShape(Rectangle())
-                    .clipped()
-                    .overlay(
-                        LinearGradient(
-                            stops: [
-                                .init(color: .clear, location: 0.4),
-                                .init(color: .black.opacity(0.75), location: 1.0)
-                            ],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
+                )
+                .overlay(
+                    VStack(spacing: 0) {
+                        if watched {
+                            Text("Watched")
+                                .font(.footnote.bold())
+                                .foregroundColor(Color.white)
+                                .padding(8)
+                                .background(Color(white: 0.15))
+                                .clipShape(Capsule())
+                                .frame(
+                                    maxWidth: .infinity,
+                                    maxHeight: .infinity,
+                                    alignment: .topTrailing
+                                )
+                        }
 
-                VStack(alignment: .leading, spacing: 0) {
-                    if case .episode(_,_, let animeName, let number, _) = type {
-                        HStack(spacing: 2) {
-                            Text("E\(number)")
-                            if let animeName = animeName {
-                                Text("\u{2022}")
-                                Text(animeName)
+                        Spacer()
+
+                        VStack(alignment: .leading, spacing: 0) {
+                            if case .episode(_,_, let animeName, let number, _) = type {
+                                HStack(spacing: 2) {
+                                    Text("E\(number)")
+                                    if let animeName = animeName {
+                                        Text("\u{2022}")
+                                        Text(animeName)
+                                    }
+                                }
+                                .font(.footnote.weight(.bold))
+                                .lineLimit(1)
+                                .foregroundColor(.init(white: 0.9))
+                            }
+
+                            Text(type.name)
+                                .multilineTextAlignment(.leading)
+                                .lineLimit(1)
+                                .font(.title3.weight(.bold))
+
+                            if let progress = type.progress, !watched {
+                                SeekbarView(
+                                    progress: .constant(progress),
+                                    padding: 0
+                                )
+                                .disabled(true)
+                                .frame(height: progressSize)
+                                .padding(.top, 4)
                             }
                         }
-                        .font(.footnote.weight(.bold))
-                        .lineLimit(1)
-                        .foregroundColor(.init(white: 0.9))
-                    }
-
-                    Text(type.name)
-                        .multilineTextAlignment(.leading)
-                        .lineLimit(1)
-                        .font(.title3.weight(.bold))
-
-                    if let progress = type.progress, !watched {
-                        SeekbarView(
-                            progress: .constant(progress),
-                            padding: 0
-                        )
-                            .disabled(true)
-                            .frame(height: progressSize)
-                            .padding(.top, 4)
-                    }
-                }
-                .foregroundColor(Color.white)
-                .padding(12)
-
-                if watched {
-                    Text("Watched")
-                        .font(.footnote.bold())
                         .foregroundColor(Color.white)
-                        .padding(12)
-//                        .background(BlurView(style: .systemUltraThinMaterialDark))
-                        .clipShape(Capsule())
                         .frame(
                             maxWidth: .infinity,
-                            maxHeight: .infinity,
-                            alignment: .topTrailing
+                            alignment: .leading
                         )
-                        .padding()
-                }
-            }
+                    }
+                    .frame(
+                        maxWidth: .infinity,
+                        maxHeight: .infinity,
+                        alignment: .bottom
+                    )
+                    .padding(max(reader.size.width, reader.size.height) / 24)
+                )
+                .cornerRadius(max(reader.size.width, reader.size.height) / 12)
         }
-        .aspectRatio(16/9, contentMode: .fill)
-        .cornerRadius(16)
+        .aspectRatio(16/9, contentMode: .fit)
         .clipped()
     }
 }
@@ -129,7 +140,7 @@ extension ThumbnailItemBigView {
     private var imageShimmeringView: some View {
         RoundedRectangle(cornerRadius: 16)
             .foregroundColor(Color.gray.opacity(0.2))
-            .shimmering()
+            .placeholder(active: true)
     }
 }
 
@@ -145,7 +156,6 @@ struct EpisodeItemBigView_Previews: PreviewProvider {
                 progress: 0.5
             )
         )
-         .frame(width: 300)
-        .frame(height: 0)
+        .frame(height: 150)
     }
 }

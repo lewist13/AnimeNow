@@ -17,12 +17,10 @@ struct AnimePlayerView: View {
     struct VideoPlayerState: Equatable {
         let url: URL?
         let action: VideoPlayer.Action?
-        let progress: Double
 
         init(_ state: AnimePlayerReducer.State) {
             url = state.source?.url
             action = state.playerAction
-            progress = state.playerProgress
         }
     }
 
@@ -33,11 +31,13 @@ struct AnimePlayerView: View {
         ) { viewStore in
             VideoPlayer(
                 url: viewStore.url,
-                action: viewStore.binding(\.$playerAction, as: \.action),
-                progress: viewStore.binding(\.$playerProgress, as: \.progress)
+                action: viewStore.binding(\.$playerAction, as: \.action)
             )
             .onStatusChanged { status in
                 viewStore.send(.playerStatus(status))
+            }
+            .onProgressChanged { progress in
+                viewStore.send(.playerProgress(progress))
             }
             .onDurationChanged { duration in
                 viewStore.send(.playerDuration(duration))
@@ -56,6 +56,9 @@ struct AnimePlayerView: View {
             }
             .onSubtitleSelectionChanged { selected in
 //                viewStore.send(.playerSelectedSubtitle(selected))
+            }
+            .onVolumeChanged { volume in
+                viewStore.send(.playerVolume(volume))
             }
             .onAppear {
                 viewStore.send(.onAppear)
@@ -168,13 +171,15 @@ extension AnimePlayerView {
             ) {
                 HStack {
                     Text(viewState.state.title)
-                        .font(.title.bold())
+                        .font(DeviceUtil.isPhone ? .title2 : .title)
+                        .bold()
                         .lineLimit(1)
                 }
 
                 if let header = viewState.header {
                     Text(header)
-                        .font(.callout.bold())
+                        .font(DeviceUtil.isPhone ? .footnote : .callout)
+                        .bold()
                         .foregroundColor(.init(white: 0.85))
                         .lineLimit(1)
                 }

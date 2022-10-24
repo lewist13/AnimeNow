@@ -14,8 +14,19 @@ import AVFoundation
 
 struct VideoPlayer {
     enum Action: Equatable {
+        /// Play  Video
         case play
+
+        /// Pause Video
         case pause
+
+        /// Change Progress
+        case seekTo(Double)
+
+        /// Change Volume
+        case volume(Double)
+
+        case pictureInPicture(enable: Bool)
     }
 
     enum Status: Equatable {
@@ -69,9 +80,6 @@ struct VideoPlayer {
     /// Play Binding
     @Binding private var action: Action?
 
-    /// Progress Binding - ranges from 0...1
-    @Binding private var progress: Double
-
     /// Status Changed Callback
     private var onStatusChangedCallback: ((Status) -> Void)?
 
@@ -87,14 +95,21 @@ struct VideoPlayer {
     /// Duration Changed Callback
     private var onDurationChangedCallback: ((Double) -> Void)?
 
+    /// Subtitles Changed Callback
     private var onSubtitlesChangedCallback: ((AVMediaSelectionGroup?) -> Void)?
 
+    /// Subtitle Selection Changed Callback
     private var onSubtitleSelectionChangedCallback: ((AVMediaSelectionOption?) -> Void)?
 
-    init(url: URL?, action: Binding<Action?>, progress: Binding<Double> = .constant(.zero)) {
+    /// Volume Changed Callback
+    private var onVolumeChangedCallback: ((Double) -> Void)?
+
+    /// Progress Changed Callback
+    private var onProgressChangedCallback: ((Double) -> Void)?
+
+    init(url: URL?, action: Binding<Action?>) {
         self.url = url
         self._action = action
-        self._progress = progress
     }
 }
 
@@ -134,19 +149,29 @@ extension VideoPlayer: PlatformAgnosticViewRepresentable {
         }
 
         if let action = action {
-            if action == .play {
+            switch action {
+            case .play:
                 view.resume()
-            } else if action == .pause {
+            case .pause:
                 view.pause()
+            case .seekTo(let progress):
+                let time = CMTime(seconds: round(progress * view.totalDuration), preferredTimescale: 1)
+                view.seek(to: time)
+            case .volume(let volume):
+                view.volume(to: volume)
+            case .pictureInPicture(enable: true):
+                context.coordinator.controller?.startPictureInPicture()
+            case .pictureInPicture(enable: false):
+                context.coordinator.controller?.stopPictureInPicture()
             }
 
             DispatchQueue.main.async { self.action = nil }
         }
 
-        if let observerProgress = context.coordinator.observerProgress, progress != observerProgress {
-            let time = CMTime(seconds: round(progress * view.totalDuration), preferredTimescale: 1)
-            view.seek(to: time)
-        }
+//        if let observerProgress = context.coordinator.observerProgress, progress != observerProgress {
+//            let time = CMTime(seconds: round(progress * view.totalDuration), preferredTimescale: 1)
+//            view.seek(to: time)
+//        }
     }
 
     static func dismantlePlatformView(_ view: PlayerView, coordinator: Coordinator) {
@@ -165,6 +190,7 @@ extension VideoPlayer: PlatformAgnosticViewRepresentable {
         var observerDuration: Double?
         var observerSubtitles: AVMediaSelectionGroup?
         var observerSubtitle: AVMediaSelectionOption?
+        var observerVolume: Double?
         var controller: AVPictureInPictureController?
 
         private var cancellables = Set<AnyCancellable>()
@@ -190,22 +216,36 @@ extension VideoPlayer: PlatformAgnosticViewRepresentable {
             observerDuration = nil
             observerSubtitles = nil
             observerSubtitle = nil
+            observerVolume = nil
+        }
+
+        func stopObserver(view: PlayerView) {
+            view.periodicTimeChanged = nil
         }
 
         func startObserver(view: PlayerView) {
             guard view.periodicTimeChanged == nil else { return }
 
             view.periodicTimeChanged = { [unowned self] _ in
-                let progress = max(0, min(1.0, view.playProgress))
-
-                self.videoPlayer.progress = progress
-                self.observerProgress = progress
-
+                self.updateProgress(view: view)
                 self.updateBuffer(view: view)
                 self.updateDuration(view: view)
                 self.updateSubtitles(view: view)
                 self.updateSubtitleSelected(view: view)
+                self.updateVolume(view: view)
             }
+        }
+
+        func updateProgress(view: PlayerView) {
+            guard let handler = videoPlayer.onProgressChangedCallback else { return }
+
+            let progress = max(0, min(1.0, view.playProgress))
+
+            guard progress != observerProgress else { return }
+
+            DispatchQueue.main.async { handler(progress) }
+
+            observerProgress = progress
         }
 
         func updateSubtitles(view: PlayerView) {
@@ -237,10 +277,6 @@ extension VideoPlayer: PlatformAgnosticViewRepresentable {
             observerSubtitle = selectedItem
         }
 
-        func stopObserver(view: PlayerView) {
-            view.periodicTimeChanged = nil
-        }
-
         func updateBuffer(view: PlayerView) {
             guard let handler = videoPlayer.onBufferChangedCallback else { return }
 
@@ -260,9 +296,21 @@ extension VideoPlayer: PlatformAgnosticViewRepresentable {
 
             guard duration != observerDuration else { return }
 
-            observerDuration = duration
-
             DispatchQueue.main.async { handler(duration) }
+
+            observerDuration = duration
+        }
+
+        func updateVolume(view: PlayerView) {
+            guard let handler = videoPlayer.onVolumeChangedCallback else { return }
+
+            let volume = view.volume
+
+            guard volume != observerVolume else { return }
+
+            DispatchQueue.main.async { handler(volume) }
+
+            observerVolume = volume
         }
     }
 }
@@ -307,6 +355,18 @@ extension VideoPlayer {
     func onSubtitleSelectionChanged(_ handler: @escaping (AVMediaSelectionOption?) -> Void) -> Self {
         var view = self
         view.onSubtitleSelectionChangedCallback = handler
+        return view
+    }
+
+    func onVolumeChanged(_ handler: @escaping (Double) -> Void) -> Self {
+        var view = self
+        view.onVolumeChangedCallback = handler
+        return view
+    }
+
+    func onProgressChanged(_ handler: @escaping (Double) -> Void) -> Self {
+        var view = self
+        view.onProgressChangedCallback = handler
         return view
     }
 }
