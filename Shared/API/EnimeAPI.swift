@@ -8,7 +8,7 @@
 import Foundation
 import URLRouting
 
-class EnimeAPI: APIRoute {
+class EnimeAPI: APIRoutable {
 
     // MARK: Enime Route Endpoints
 

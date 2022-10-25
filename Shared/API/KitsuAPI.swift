@@ -11,7 +11,7 @@ import SociableWeaver
 
 // MARK: - Kitsu API Endpoints
 
-public final class KitsuAPI: APIRoute {
+public final class KitsuAPI: APIRoutable {
     enum Endpoint: Equatable {
         case graphql(GraphQL.Paylod)
     }

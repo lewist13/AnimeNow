@@ -149,7 +149,7 @@ extension AnimeDetailReducer.State {
         )
     }
 
-    var loading: Bool {
+    var isLoading: Bool {
         anime.status != .upcoming && !episodes.finished ||
         anime.status != .upcoming && !animeStore.finished
     }

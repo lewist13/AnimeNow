@@ -9,7 +9,7 @@ import Foundation
 import URLRouting
 import Combine
 
-protocol APIRoute {
+protocol APIRoutable {
     associatedtype Endpoint
     var baseURL: URL { get }
     var router: AnyParserPrinter<URLRequestData, Endpoint> { get }
@@ -17,7 +17,7 @@ protocol APIRoute {
 }
 
 enum API {
-    static func request<API: APIRoute, Output>(
+    static func request<API: APIRoutable, Output>(
         _ api: API,
         _ endpoint: API.Endpoint,
         _ responseType: Output.Type = Output.self,
@@ -34,7 +34,7 @@ enum API {
         return try decoder.decode(Output.self, from: data)
     }
 
-    static func request<API: APIRoute>(
+    static func request<API: APIRoutable>(
         _ api: API,
         _ endpoint: API.Endpoint
     ) async throws -> Void {

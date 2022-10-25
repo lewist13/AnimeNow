@@ -14,6 +14,9 @@ struct SearchView: View {
 
     var body: some View {
         VStack {
+            ExtraTopSafeAreaInset()
+                .fixedSize()
+
             WithViewStore(
                 store,
                 observe: { $0 }
@@ -25,6 +28,7 @@ struct SearchView: View {
                         send: SearchReducer.Action.searchQueryChanged
                     )
                 )
+                .textFieldStyle(.plain)
                 .padding()
                 .background(Color.gray.opacity(0.15))
                 .clipShape(Capsule())
@@ -82,10 +86,13 @@ extension SearchView {
         if animes.count > 0 {
             ScrollView {
                 LazyVGrid(
-                    columns: [
-                        .init(.flexible(), spacing: 16),
-                        .init(.flexible(), spacing: 16)
-                    ]
+                    columns: .init(
+                        repeating: .init(
+                            .flexible(),
+                            spacing: 16
+                        ),
+                        count: DeviceUtil.isPhone ? 2 : 6
+                    )
                 ) {
                     ForEach(animes, id: \.id) { anime in
                         AnimeItemView(anime: anime)

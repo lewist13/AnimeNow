@@ -8,7 +8,7 @@
 import Foundation
 import URLRouting
 
-class AniSkipAPI: APIRoute {
+class AniSkipAPI: APIRoutable {
 
     // MARK: Enime Route Endpoints
 

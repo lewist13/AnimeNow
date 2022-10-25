@@ -9,17 +9,14 @@ import SwiftUI
 import ComposableArchitecture
 
 struct AppView: View {
-    let store: Store<AppReducer.State, AppReducer.Action>
+    let store: StoreOf<AppReducer>
 
     var body: some View {
         WithViewStore(
-            store.scope(
-                state: \.route
-            )
+            store,
+            observe: { $0.route }
         ) { viewStore in
-            VStack(spacing: 0) {
-                tabBar(viewStore.state)
-
+            ZStack {
                 switch viewStore.state {
                 case .home:
                     HomeView(
@@ -53,12 +50,7 @@ struct AppView: View {
             }
             .frame(maxWidth: 1700, alignment: .leading)
         }
-        .frame(
-            minWidth: 1000,
-            maxWidth: .infinity,
-            minHeight: 300,
-            maxHeight: .infinity
-        )
+        .topSafeAreaInset(tabBar)
         .overlay(
             IfLetStore(
                 store.scope(
@@ -68,8 +60,8 @@ struct AppView: View {
                 then: AnimeDetailView.init(store:)
             )
             .frame(
-                maxWidth: 500,
-                maxHeight: 700
+                maxWidth: .infinity,
+                maxHeight: .infinity
             )
         )
         .overlay(
@@ -81,44 +73,73 @@ struct AppView: View {
                 then: AnimePlayerView.init(store:)
             )
         )
+        .frame(
+            minWidth: 1000,
+            maxWidth: .infinity,
+            minHeight: 500,
+            maxHeight: .infinity
+        )
     }
 }
 
 extension AppView {
 
     @ViewBuilder
-    func tabBar(_ selected: AppReducer.Route) -> some View {
-        HStack(spacing: 32) {
-//            Text("Anime Now!")
-//                .font(.largeTitle.bold())
-//                .foregroundColor(.white)
+    var tabBar: some View {
+        WithViewStore(
+            store,
+            observe: { $0.route }
+        ) { selected in
+            HStack(spacing: 32) {
+                Text("Anime Now!")
+                    .font(.largeTitle.bold())
+                    .foregroundColor(.white)
 
-            HStack(spacing: 8) {
-                ForEach(
-                    AppReducer.Route.allCases,
-                    id: \.self
-                ) { route in
-                    Text(route.title)
-                        .font(.headline)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 10)
-                        .foregroundColor(selected == route ? Color.black : Color.white)
-                        .background(selected == route ? Color.white : Color.clear)
-                        .clipShape(Capsule())
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            ViewStore(store.stateless).send(
-                                .binding(.set(\.$route, route)),
-                                animation: .linear(duration: 0.15)
-                            )
-                        }
+                HStack(spacing: 8) {
+                    ForEach(
+                        AppReducer.Route.allCases,
+                        id: \.self
+                    ) { route in
+                        Text(route.title)
+                            .font(.headline)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 10)
+                            .foregroundColor(selected.state == route ? Color.black : Color.white)
+                            .background(selected.state == route ? Color.white : Color.clear)
+                            .clipShape(Capsule())
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                selected.send(
+                                    .set(\.$route, route),
+                                    animation: .linear(duration: 0.15)
+                                )
+                            }
+                    }
                 }
             }
-            .background(Color.gray.opacity(0.1))
-            .clipShape(Capsule())
+            .padding()
+            .frame(
+                maxWidth: .infinity,
+                alignment: .leading
+            )
+            .background(
+                LinearGradient(
+                    stops: [
+                        .init(
+                            color: .black.opacity(0.75),
+                            location: 0.0
+                        ),
+                        .init(
+                            color: .clear,
+                            location: 1.0
+                        ),
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .ignoresSafeArea(.container, edges: .top)
+            )
         }
-        .padding()
-        .frame(maxWidth: .infinity, alignment: .center)
     }
 }
 

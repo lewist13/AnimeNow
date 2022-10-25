@@ -637,22 +637,14 @@ extension AnimePlayerReducer {
             let progress = state.playerProgress - 15 / state.playerDuration
 
             let requestedTime = max(progress, .zero)
-            return .merge(
-                .task { .startSeeking },
-                .task { .seeking(to: requestedTime) },
-                .task { .stopSeeking }
-            )
+            state.playerAction = .seekTo(requestedTime)
 
         case .forwardsTapped:
             guard state.playerDuration > 0.0 else { break }
             let progress = state.playerProgress + 15 / state.playerDuration
 
             let requestedTime = min(progress, 1.0)
-            return .merge(
-                .task { .startSeeking },
-                .task { .seeking(to: requestedTime) },
-                .task { .stopSeeking }
-            )
+            state.playerAction = .seekTo(requestedTime)
 
         // Internal Video Player Logic
 

@@ -42,15 +42,18 @@ struct ThumbnailItemBigView: View {
     var watched: Bool = false
     var progressSize: CGFloat = 10
 
+    @State private var loaded = false
+
     var body: some View {
         GeometryReader { reader in
             KFImage(type.image)
-                .placeholder {
-                    imageShimmeringView
-                }
-                .fade(duration: 0.5)
+                .onSuccess { _ in loaded = true }
+                .onFailure { _ in loaded = true }
                 .resizable()
                 .scaledToFill()
+                .transaction { $0.animation = nil }
+                .opacity(loaded ? 1.0 : 0)
+                .background(Color(white: 0.05))
                 .frame(
                     width: reader.size.width,
                     height: reader.size.height,
@@ -128,7 +131,9 @@ struct ThumbnailItemBigView: View {
                     )
                     .padding(max(reader.size.width, reader.size.height) / 24)
                 )
-                .cornerRadius(max(reader.size.width, reader.size.height) / 12)
+                .cornerRadius(max(reader.size.width, reader.size.height) / 16)
+                .transition(.opacity)
+                .animation(.linear, value: loaded)
         }
         .aspectRatio(16/9, contentMode: .fit)
         .clipped()

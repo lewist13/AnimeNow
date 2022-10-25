@@ -8,7 +8,7 @@
 import Foundation
 import URLRouting
 
-final class ConsumetAPI: APIRoute {
+final class ConsumetAPI: APIRoutable {
     enum Endpoint: Equatable {
         case anilist(AnilistEndpoint)
         case enime(EnimeEndpoint)

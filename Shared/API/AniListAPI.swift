@@ -9,7 +9,7 @@ import Foundation
 import URLRouting
 import SociableWeaver
 
-final class AniListAPI: APIRoute {
+final class AniListAPI: APIRoutable {
     enum Endpoint: Equatable {
         case graphql(GraphQL.Paylod)
     }

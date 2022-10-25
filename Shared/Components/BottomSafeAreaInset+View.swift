@@ -7,21 +7,30 @@
 
 import SwiftUI
 
-#if os(iOS)
 extension View {
     @ViewBuilder
     func bottomSafeAreaInset<OverlayContent: View>(
         _ overlayContent: OverlayContent
     ) -> some View {
-        if #available(iOS 15.0, *) {
+        if #available(iOS 15.0, macOS 12.0, *) {
             self.safeAreaInset(edge: .bottom, spacing: 0, content: { overlayContent }) // 👈🏻 1
         } else {
             self.modifier(BottomInsetViewModifier(overlayContent: overlayContent))
         }
     }
+
+    @ViewBuilder
+    func topSafeAreaInset<OverlayContent: View>(
+        _ overlayContent: OverlayContent
+    ) -> some View {
+        if #available(iOS 15.0, macOS 12.0, *) {
+            self.safeAreaInset(edge: .top, spacing: 0, content: { overlayContent }) // 👈🏻 1
+        } else {
+            self.modifier(TopInsetViewModifier(overlayContent: overlayContent))
+        }
+    }
 }
 
-#endif
 extension View {
     func readHeight(onChange: @escaping (CGFloat) -> Void) -> some View {
         background(
@@ -46,7 +55,7 @@ struct BottomInsetViewModifier<OverlayContent: View>: ViewModifier {
     @Environment(\.bottomSafeAreaInset) var ancestorBottomSafeAreaInset: CGFloat
     var overlayContent: OverlayContent
     @State var overlayContentHeight: CGFloat = 0
-    
+
     func body(content: Self.Content) -> some View {
         content
             .environment(\.bottomSafeAreaInset, overlayContentHeight + ancestorBottomSafeAreaInset)
@@ -62,14 +71,51 @@ struct BottomInsetViewModifier<OverlayContent: View>: ViewModifier {
     }
 }
 
+struct TopInsetViewModifier<OverlayContent: View>: ViewModifier {
+    @Environment(\.topSafeAreaInset) var ancestorTopSafeAreaInset: CGFloat
+    var overlayContent: OverlayContent
+    @State var overlayContentHeight: CGFloat = 0
+
+    func body(content: Self.Content) -> some View {
+        content
+            .environment(\.topSafeAreaInset, overlayContentHeight + ancestorTopSafeAreaInset)
+            .overlay(
+                overlayContent
+                    .readHeight {
+                        overlayContentHeight = $0
+                    }
+                    .padding(.bottom, ancestorTopSafeAreaInset)
+                ,
+                alignment: .bottom
+            )
+    }
+}
+
+struct TopSafeAreaInsetKey: EnvironmentKey {
+    static var defaultValue: CGFloat = .zero
+}
+
 struct BottomSafeAreaInsetKey: EnvironmentKey {
-    static var defaultValue: CGFloat = 0
+    static var defaultValue: CGFloat = .zero
 }
 
 extension EnvironmentValues {
     var bottomSafeAreaInset: CGFloat {
         get { self[BottomSafeAreaInsetKey.self] }
         set { self[BottomSafeAreaInsetKey.self] = newValue }
+    }
+
+    var topSafeAreaInset: CGFloat {
+        get { self[TopSafeAreaInsetKey.self] }
+        set { self[TopSafeAreaInsetKey.self] = newValue }
+    }
+}
+
+struct ExtraTopSafeAreaInset: View {
+    @Environment(\.topSafeAreaInset) var topSafeAreaInset: CGFloat
+
+    var body: some View {
+        Spacer(minLength: topSafeAreaInset)
     }
 }
 

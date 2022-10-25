@@ -70,7 +70,10 @@ struct HomeView: View {
                     active: viewStore.state,
                     duration:  2.0
                 )
-                .animation(.easeInOut(duration: 0.5), value: viewStore.state)
+                .animation(
+                    .easeInOut(duration: 0.5),
+                    value: viewStore.state
+                )
 
                 ExtraBottomSafeAreaInset()
 

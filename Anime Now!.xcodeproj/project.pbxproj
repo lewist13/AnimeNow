@@ -364,12 +364,12 @@
 			path = UserDefaultsClient;
 			sourceTree = "<group>";
 		};
-		134FAA2128D7628400B081FE /* Clients */ = {
+		134FAA2128D7628400B081FE /* Dependencies */ = {
 			isa = PBXGroup;
 			children = (
 				1359668A28E6100200EB2AFC /* HapticClient */,
 			);
-			path = Clients;
+			path = Dependencies;
 			sourceTree = "<group>";
 		};
 		1359668A28E6100200EB2AFC /* HapticClient */ = {
@@ -418,6 +418,8 @@
 		13B2770928F76A8000B4B4A3 /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				13B2771128F7902200B4B4A3 /* VideoPlayer */,
+				1398F35B28FFCAD600C93CFA /* BottomSafeAreaInset+View.swift */,
 				1309D6C228E22BB500CC9036 /* View+Redacted.swift */,
 				138066EB28C5699F0012DAFB /* AnimeItemView.swift */,
 				1312FD6128DD7CB0004A415F /* AirplayView.swift */,
@@ -427,7 +429,6 @@
 				1312FD5F28DD6934004A415F /* SeekbarView.swift */,
 				130ED93928E3EF72000811A6 /* ChipView.swift */,
 				13D83B8928FDAE340044F04A /* SnapCarousel.swift */,
-				13B2771128F7902200B4B4A3 /* VideoPlayer */,
 				1304124C28FEF4C20011CE3C /* SideArrowsList.swift */,
 			);
 			path = Components;
@@ -626,7 +627,7 @@
 			isa = PBXGroup;
 			children = (
 				13BAE88628F3A09A00662C0C /* Main */,
-				134FAA2128D7628400B081FE /* Clients */,
+				134FAA2128D7628400B081FE /* Dependencies */,
 				137A818428C5342F00B69503 /* Scenes */,
 			);
 			path = iOS;
@@ -700,7 +701,6 @@
 				1380560B28E8B69E00B9B45B /* Array+Extension.swift */,
 				1380562028E9341A00B9B45B /* Cache.swift */,
 				13B2771528F79EA300B4B4A3 /* PlatformViewRepresentable.swift */,
-				1398F35B28FFCAD600C93CFA /* BottomSafeAreaInset+View.swift */,
 				13E95CEF2904A4B100E85F28 /* Effect+Send.swift */,
 			);
 			path = "Supporting Files";

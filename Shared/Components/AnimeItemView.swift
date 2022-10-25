@@ -11,12 +11,18 @@ import Kingfisher
 struct AnimeItemView: View {
     let anime: Anime
 
+    @State private var loaded = false
+
     var body: some View {
         GeometryReader { reader in
-            KFImage(anime.posterImage.largest?.link)
-                .fade(duration: 0.5)
+            KFImage.url(anime.posterImage.largest?.link)
+                .onSuccess { _ in loaded = true }
+                .onFailure { _ in loaded = true }
                 .resizable()
                 .scaledToFill()
+                .transaction { $0.animation = nil }
+                .opacity(loaded ? 1.0 : 0)
+                .background(Color(white: 0.05))
                 .frame(
                     width: reader.size.width,
                     height: reader.size.height,
@@ -38,11 +44,12 @@ struct AnimeItemView: View {
                     VStack {
 //                        if let year = anime.releaseYear {
 //                            Text(year.description)
-//                                .font(.caption2.bold().monospacedDigit())
+//                                .font(.caption.monospacedDigit())
+//                                .bold()
 //                                .foregroundColor(.white)
-//                                .padding(.horizontal, 10)
-//                                .padding(.vertical, 6)
-////                    .background(BlurView(style: .systemThinMaterialDark))
+//                                .padding(.horizontal, 8)
+//                                .padding(.vertical, 8)
+//                                .background(Color(white: 0.15))
 //                                .clipShape(Capsule())
 //                                .padding(12)
 //                                .frame(
@@ -59,7 +66,7 @@ struct AnimeItemView: View {
                             .lineLimit(2)
                             .multilineTextAlignment(.center)
                             .padding(.horizontal)
-                            .padding(.vertical, 4)
+                            .padding(.vertical, 8)
                             .frame(maxWidth: .infinity)
                     }
                         .frame(
@@ -67,6 +74,8 @@ struct AnimeItemView: View {
                             maxHeight: .infinity
                         )
                 )
+                .transition(.opacity)
+                .animation(.linear, value: loaded)
         }
         .aspectRatio(2/3, contentMode: .fit)
         .cornerRadius(12)

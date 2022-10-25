@@ -7,8 +7,8 @@
 //
 
 import SwiftUI
-import ComposableArchitecture
 import Kingfisher
+import ComposableArchitecture
 
 struct AnimeDetailView: View {
     let store: StoreOf<AnimeDetailReducer>
@@ -16,7 +16,7 @@ struct AnimeDetailView: View {
     var body: some View {
         WithViewStore(
             store,
-            observe: { $0.loading }
+            observe: { $0.isLoading }
         ) { viewStore in
             ScrollView(.vertical, showsIndicators: false) {
                 VStack(spacing: 16) {
@@ -28,19 +28,16 @@ struct AnimeDetailView: View {
                 .transition(.opacity)
                 .animation(.easeInOut(duration: 0.3), value: viewStore.state)
             }
-            .transition(.move(edge: .bottom).combined(with: .opacity))
-            .frame(maxWidth: .infinity)
-            .ignoresSafeArea(edges: .top)
             .disabled(viewStore.state)
-            .overlay(closeButton)
-            .background(
-                Color.black
-                    .ignoresSafeArea()
-            )
             .onAppear {
                 viewStore.send(.onAppear)
             }
         }
+        .transition(.move(edge: .bottom).combined(with: .opacity))
+        .frame(maxWidth: .infinity)
+        .overlay(closeButton)
+        .ignoresSafeArea(edges: .top)
+        .background(Color.black.ignoresSafeArea())
     }
 }
 
@@ -52,11 +49,14 @@ extension AnimeDetailView {
             .font(.system(size: 14, weight: .black))
             .foregroundColor(Color.white.opacity(0.9))
             .padding(12)
-            .background(BlurView())
+            .background(Color(white: 0.2))
             .clipShape(Circle())
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
             .padding()
-            .edgesIgnoringSafeArea(.top)
+            .frame(
+                maxWidth: .infinity,
+                maxHeight: .infinity,
+                alignment: .topTrailing
+            )
             .onTapGesture {
                 ViewStore(store.stateless)
                     .send(.closeButtonPressed)
@@ -74,17 +74,28 @@ extension AnimeDetailView {
             store,
             observe: { $0.anime }
         ) { animeViewStore in
-            ZStack(alignment: .bottom) {
-                KFImage(
-                    (DeviceUtil.isPhone ? animeViewStore.posterImage.largest : animeViewStore.coverImage.largest ?? animeViewStore.posterImage.largest)?.link
-                )
+            ZStack {
+                GeometryReader { reader in
+                    KFImage.url(
+                        (DeviceUtil.isPhone ? animeViewStore.posterImage.largest : animeViewStore.coverImage.largest ?? animeViewStore.posterImage.largest)?.link
+                    )
                     .resizable()
+                    .scaledToFill()
+                    .transaction { $0.animation = nil }
+                    .background(Color(white: 0.05))
+                    .frame(
+                        width: reader.size.width,
+                        height: reader.size.height + (reader.frame(in: .global).minY > 0 ? reader.frame(in: .global).minY : 0),
+                        alignment: .center
+                    )
+                    .contentShape(Rectangle())
+                    .clipped()
                     .overlay(
                         LinearGradient(
                             stops: [
                                 .init(
                                     color: .clear,
-                                    location: 0.5
+                                    location: 0.4
                                 ),
                                 .init(
                                     color: .black,
@@ -94,7 +105,10 @@ extension AnimeDetailView {
                             startPoint: .top,
                             endPoint: .bottom
                         )
+                        .transaction { $0.animation = nil }
                     )
+                    .offset(y: reader.frame(in: .global).minY <= 0 ? 0 : -reader.frame(in: .global).minY)
+                }
 
                 VStack(alignment: .leading, spacing: 0) {
                     Text(animeViewStore.title)
@@ -103,7 +117,7 @@ extension AnimeDetailView {
                         .multilineTextAlignment(.leading)
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity, alignment: .leading)
-
+                    
                     HStack(alignment: .top, spacing: 4) {
                         ForEach(
                             animeViewStore.categories,
@@ -148,6 +162,7 @@ extension AnimeDetailView {
                         }
 
                         // TODO: Decide on either keeping favorites, or have collection and allow
+
                         // users to decide which collection the anime should go in.
 //                        WithViewStore(
 //                            store.scope(
@@ -170,7 +185,7 @@ extension AnimeDetailView {
 //                        }
 
                         Spacer()
-
+                        
                         WithViewStore(
                             store,
                             observe: { $0.animeStore.value?.inWatchlist }
@@ -178,12 +193,10 @@ extension AnimeDetailView {
                             Button {
                                 inWatchlistViewStore.send(.tappedInWatchlist)
                             } label: {
-                                Image(
-                                    systemName: inWatchlistViewStore.state == true ? "bookmark.fill" : "bookmark"
-                                )
-                                .foregroundColor(
-                                    inWatchlistViewStore.state == true ? .white : .init(white: 0.75)
-                                )
+                                Image(systemName: inWatchlistViewStore.state ?? false ? "bookmark.fill" : "bookmark")
+                                    .foregroundColor(
+                                        inWatchlistViewStore.state ?? false ? .white : .init(white: 0.75)
+                                    )
                             }
                             .buttonStyle(.plain)
                             .padding()
@@ -201,7 +214,8 @@ extension AnimeDetailView {
                 .padding(.horizontal)
             }
         }
-        .aspectRatio(DeviceUtil.isPhone ? 2/3 : 8/3, contentMode: .fill)
+        .aspectRatio(DeviceUtil.isPhone ? 2/3 : 8/3, contentMode: .fit)
+        .frame(maxWidth: .infinity)
     }
 }
 
@@ -243,6 +257,7 @@ extension AnimeDetailView {
 
                     ChipView(text: anime.format.rawValue)
                 }
+                .foregroundColor(.white)
                 .font(.system(size: 14).bold())
             }
         }
@@ -386,7 +401,6 @@ struct AnimeView_Previews: PreviewProvider {
 //                )
 //            )
 //        )
-        .preferredColorScheme(.dark)
-        .frame(height: 1000)
+//        .preferredColorScheme(.dark)
     }
 }
