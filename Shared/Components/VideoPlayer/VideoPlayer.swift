@@ -167,11 +167,6 @@ extension VideoPlayer: PlatformAgnosticViewRepresentable {
 
             DispatchQueue.main.async { self.action = nil }
         }
-
-//        if let observerProgress = context.coordinator.observerProgress, progress != observerProgress {
-//            let time = CMTime(seconds: round(progress * view.totalDuration), preferredTimescale: 1)
-//            view.seek(to: time)
-//        }
     }
 
     static func dismantlePlatformView(_ view: PlayerView, coordinator: Coordinator) {

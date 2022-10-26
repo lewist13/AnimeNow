@@ -292,7 +292,7 @@ extension AnimePlayerView {
                             ForEach(viewStore.episodes) { episode in
                                 ThumbnailItemCompactView(
                                     episode: episode,
-                                    progress: viewStore.episodesStore.first(where: { $0.number == episode.id })?.progress
+                                    progress: viewStore.selectedEpisode != episode.id ? viewStore.episodesStore.first(where: { $0.number == episode.id })?.progress : nil
                                 )
                                 .overlay(
                                     selectedEpisodeOverlay(episode.id == viewStore.selectedEpisode)
@@ -714,13 +714,13 @@ extension AnimePlayerView {
                     )
                     Text("/")
                     Text(
-                        viewState.canShow ? viewState.duration.timeFormatted : "--:--"
+                        viewState.isLoaded ? viewState.duration.timeFormatted : "--:--"
                     )
                 }
                 .foregroundColor(.white)
                 .font(.footnote.bold().monospacedDigit())
             }
-            .disabled(!viewState.canShow)
+            .disabled(!viewState.isLoaded)
         }
     }
 }

@@ -104,25 +104,33 @@ extension HomeView {
     func animeHero(
         _ anime: Anime
     ) -> some View {
-        ZStack(alignment: .bottomLeading) {
-            KFImage(
-                (DeviceUtil.isPhone ? anime.posterImage.largest : anime.coverImage.largest ?? anime.posterImage.largest)?.link
+        ZStack(
+            alignment: .bottomLeading
+        ) {
+            KFImage.url(
+                (DeviceUtil.isPhone ? anime.posterImage.largest : anime.coverImage.largest ?? anime.posterImage.largest
+                )?.link
             )
-                .fade(duration: 0.5)
-                .resizable()
-                .contentShape(Rectangle())
-                .clipped()
-                .overlay(
-                    LinearGradient(
-                        colors: [
-                            Color.black.opacity(0.3),
-                            Color.clear,
-                            Color.black.opacity(0.75)
-                        ],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
+            .fade(duration: 0.5)
+            .resizable()
+            .contentShape(Rectangle())
+            .clipped()
+            .overlay(
+                LinearGradient(
+                    stops: [
+                        .init(
+                            color: .clear,
+                            location: 0.4
+                        ),
+                        .init(
+                            color: .black,
+                            location: 1.0
+                        )
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
                 )
+            )
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(anime.title)

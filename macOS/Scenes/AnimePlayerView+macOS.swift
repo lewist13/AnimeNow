@@ -202,7 +202,7 @@ extension AnimePlayerView {
                 )
                 Text("/")
                 Text(
-                    viewState.canShow ? viewState.duration.timeFormatted : "--:--"
+                    viewState.progressLoaded ? viewState.duration.timeFormatted : "--:--"
                 )
             }
             .foregroundColor(.white)

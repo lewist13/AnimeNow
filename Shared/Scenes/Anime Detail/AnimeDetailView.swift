@@ -23,6 +23,7 @@ struct AnimeDetailView: View {
                     topContainer
                     infoContainer
                     episodesContainer
+                    Spacer(minLength: 24)
                 }
                 .placeholder(active: viewStore.state)
                 .transition(.opacity)
@@ -270,26 +271,53 @@ extension AnimeDetailView {
 
 extension AnimeDetailView {
 
+    private struct EpisodesViewState: Equatable {
+        let episodes: AnimeDetailReducer.LoadableEpisodes
+        let compact: Bool
+
+        init?(_ state: AnimeDetailReducer.State) {
+            guard state.episodes.hasInitialized else { return nil }
+            self.episodes = state.episodes
+            self.compact = state.compactEpisodes
+        }
+    }
+
     @ViewBuilder
     var episodesContainer: some View {
         IfLetStore(
             store.scope(
-                state: {
-                    $0.episodes.hasInitialized ? $0.episodes : nil
-                }
+                state: EpisodesViewState.init
             )
-        ) { episodesStore in
+        ) { store in
             WithViewStore(
-                episodesStore,
+                store,
                 observe: { $0 }
-            ) { episodesViewStore in
-                if let episodes = episodesViewStore.value, episodes.count > 0 {
-                    buildSubHeading(title: "Episodes")
+            ) { viewState in
+                if let episodes = viewState.episodes.value, episodes.count > 0 {
+                    HStack(alignment: .center) {
+                        buildSubHeading(title: "Episodes")
+
+                        Spacer()
+
+                        Image(systemName: viewState.compact ? "rectangle.inset.filled" : "rectangle.grid.1x2.fill")
+                            .font(.body.bold())
+                            .foregroundColor(.white)
+                            .onTapGesture {
+                                viewState.send(
+                                    .toggleCompactEpisodes,
+                                    animation: .easeInOut(duration: 0.25)
+                                )
+                            }
+                    }
+
                     LazyVStack(spacing: 12) {
                         ForEach(episodes, id: \.id) { episode in
-                            generateEpisodeItem(episode)
+                            generateEpisodeItem(
+                                episode,
+                                compact: viewState.compact
+                            )
                                 .onTapGesture {
-                                    episodesViewStore.send(
+                                    viewState.send(
                                         .selectedEpisode(
                                             episode: episode
                                         )
@@ -297,9 +325,12 @@ extension AnimeDetailView {
                                 }
                         }
                     }
-                } else if episodesViewStore.isLoading {
+                } else if viewState.episodes.isLoading {
                     buildSubHeading(title: "Episodes")
-                    generateEpisodeItem(.placeholder)
+                    generateEpisodeItem(
+                        .placeholder,
+                        compact: viewState.compact
+                    )
                 }
             }
         }
@@ -309,28 +340,34 @@ extension AnimeDetailView {
 
     @ViewBuilder
     private func generateEpisodeItem(
-        _ episode: Episode
+        _ episode: Episode,
+        compact: Bool
     ) -> some View {
         WithViewStore(
-            store.scope(
-                state: { state -> EpisodeStore? in
-                    return state.animeStore.value?.episodeStores.first(where: {
-                        $0.number == episode.number
-                    })
-                }
-            )
-        ) { progressState in
-            ThumbnailItemBigView(
-                type: .episode(
-                    image: episode.thumbnail?.link,
-                    name: episode.title,
-                    animeName: nil,
-                    number: episode.number,
-                    progress: progressState.state?.progress
-                ),
-                watched: progressState.state?.almostFinished ?? false,
-                progressSize: 10
-            )
+            store,
+            observe: { state in
+                state.animeStore.value?.episodeStores.first(where: { $0.number == episode.number })
+            }
+        ) { viewStore in
+            if compact {
+                ThumbnailItemCompactView(
+                    episode: episode,
+                    progress: viewStore.state?.progress
+                )
+                .frame(height: 85)
+            } else {
+                ThumbnailItemBigView(
+                    type: .episode(
+                        image: episode.thumbnail?.link,
+                        name: episode.title,
+                        animeName: nil,
+                        number: episode.number,
+                        progress: viewStore.state?.progress
+                    ),
+                    watched: viewStore.state?.almostFinished ?? false,
+                    progressSize: 10
+                )
+            }
         }
     }
 }
@@ -376,31 +413,22 @@ struct AnimeView_Previews: PreviewProvider {
         AnimeDetailView(
             store: .init(
                 initialState: .init(
-                    anime: .narutoShippuden
+                    anime: .narutoShippuden,
+                    episodes: .success(Episode.demoEpisodes),
+                    animeStore: .success(
+                        .init(
+                            id: 0,
+                            title: "",
+                            format: .tv,
+                            posterImage: [],
+                            isFavorite: false,
+                            inWatchlist: false,
+                            episodeStores: .init()
+                        )
+                    )
                 ),
                 reducer: AnimeDetailReducer()
             )
         )
-//        AnimeDetailView(
-//            store: .init(
-//                initialState: .init(
-////                    anime: .narutoShippuden,
-////                    episodes: .success(Episode.demoEpisodes),
-////                    animeStore: .success(
-////                        .init(
-////                            id: 0,
-////                            title: "",
-////                            format: .tv,
-////                            posterImage: [],
-////                            isFavorite: false,
-////                            inWatchlist: false,
-////                            episodeStores: .init()
-////                        )
-//                    )
-//                reducer: AnimeDetailReducer()
-//                )
-//            )
-//        )
-//        .preferredColorScheme(.dark)
     }
 }

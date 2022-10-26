@@ -302,12 +302,12 @@ extension AnimePlayerView {
         let duration: Double
         let buffered: Double
 
-        var canShow: Bool {
-            duration > 0.0
+        var isLoaded: Bool {
+            duration != .zero
         }
 
         var progressWithDuration: Double? {
-            if duration > 0.0 {
+            if isLoaded {
                 return progress * duration
             }
             return nil

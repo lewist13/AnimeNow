@@ -11,8 +11,8 @@ import ComposableArchitecture
 import SwiftUI
 
 struct HomeReducer: ReducerProtocol {
-    typealias LoadableAnime = LoadableState<[Anime]>
-    typealias LoadableEpisodes = LoadableState<[ResumeWatchingEpisode]>
+    typealias LoadableAnime = Loadable<[Anime]>
+    typealias LoadableEpisodes = Loadable<[ResumeWatchingEpisode]>
 
     struct State: Equatable {
         var topTrendingAnime: LoadableAnime = .idle
@@ -81,25 +81,25 @@ extension HomeReducer {
             state.lastWatchedAnime = .loading
 
             return .merge(
-                .task {
+                .run {
                     await .fetchedAnime(
                         keyPath: \.topTrendingAnime,
                         result: .init { try await animeClient.getTopTrendingAnime() }
                     )
                 },
-                .task {
+                .run {
                     await .fetchedAnime(
                         keyPath: \.topUpcomingAnime,
                         result: .init { try await animeClient.getTopUpcomingAnime() }
                     )
                 },
-                .task {
+                .run {
                     await .fetchedAnime(
                         keyPath: \.highestRatedAnime,
                         result: .init { try await animeClient.getHighestRatedAnime() }
                     )
                 },
-                .task {
+                .run {
                     await .fetchedAnime(
                         keyPath: \.mostPopularAnime,
                         result: .init { try await animeClient.getMostPopularAnime() }
@@ -142,7 +142,7 @@ extension HomeReducer {
 
             state.resumeWatching = .success(resumeWatchingAnimes)
 
-            return .task { .fetchLastWatchedAnimes(sortedAnimeStores.map(\.id)) }
+            return .action(.fetchLastWatchedAnimes(sortedAnimeStores.map(\.id)))
 
         case .fetchLastWatchedAnimes(let animeIds):
             guard !animeIds.isEmpty else {
@@ -150,7 +150,7 @@ extension HomeReducer {
                 break
             }
 
-            return .task { [animeIds] in
+            return .run { send in
                 let animes = (try? await animeClient.getAnimes(animeIds)) ?? []
 
                 let sorted = animes.sorted {
@@ -165,7 +165,7 @@ extension HomeReducer {
                     return first < second
                 }
 
-                return .fetchedLastWatchedAnimes(sorted)
+                 await send(.fetchedLastWatchedAnimes(sorted))
             }
             .cancellable(id: LastWatchAnimesFetchCancellable(), cancelInFlight: true)
 

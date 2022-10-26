@@ -10,14 +10,16 @@ import Foundation
 import ComposableArchitecture
 
 struct AnimeDetailReducer: ReducerProtocol {
-    typealias LoadableEpisodes = LoadableState<[Episode]>
-    typealias LoadableAnimeStore = LoadableState<AnimeStore>
+    typealias LoadableEpisodes = Loadable<[Episode]>
+    typealias LoadableAnimeStore = Loadable<AnimeStore>
 
     struct State: Equatable {
         let anime: Anime
 
         var episodes = LoadableEpisodes.idle
         var animeStore = LoadableAnimeStore.idle
+
+        var compactEpisodes = false
     }
 
     enum Action: Equatable {
@@ -27,22 +29,17 @@ struct AnimeDetailReducer: ReducerProtocol {
         case closeButtonPressed
         case close
         case playResumeButtonClicked
+        case toggleCompactEpisodes
         case fetchedEpisodes(TaskResult<[Episode]>)
         case selectedEpisode(episode: Episode)
         case play(anime: Anime, episodes: [Episode], selected: Episode.ID)
         case fetchedAnimeFromDB([AnimeStore])
     }
 
-    struct Environment {
-        let animeClient: AnimeClient
-        let mainQueue: AnySchedulerOf<DispatchQueue>
-        let mainRunLoop: AnySchedulerOf<RunLoop>
-        let repositoryClient: RepositoryClient
-    }
-
     @Dependency(\.animeClient) var animeClient
     @Dependency(\.mainQueue) var mainQueue
     @Dependency(\.repositoryClient) var repositoryClient
+    @Dependency(\.userDefaultsClient) var userDefaultsClient
 }
 
 extension AnimeDetailReducer {
@@ -168,13 +165,16 @@ extension AnimeDetailReducer {
     func core(state: inout State, action: Action) -> EffectTask<Action> {
         switch action {
         case .onAppear:
+            state.compactEpisodes = userDefaultsClient.boolForKey(.compactEpisodes)
+
             guard state.anime.status != .upcoming && !state.episodes.hasInitialized else { break }
             state.episodes = .loading
             state.animeStore = .loading
 
+            let animeId = state.anime.id
             return .merge(
-                .task { [state] in
-                    await .fetchedEpisodes(.init { try await animeClient.getEpisodes(state.anime.id) })
+                .run {
+                    await .fetchedEpisodes(.init { try await animeClient.getEpisodes(animeId) })
                 }
                     .cancellable(id: CancelFetchingEpisodesId()),
                 .run { [state] send in
@@ -207,7 +207,7 @@ extension AnimeDetailReducer {
 
         case .playResumeButtonClicked:
             if let episodeId = state.playButtonState.episodeId, let episode = state.episodes.value?[id: episodeId] {
-                return .task { .selectedEpisode(episode: episode) }
+                return .action(.selectedEpisode(episode: episode))
             }
 
         case .fetchedEpisodes(.success(let episodes)):
@@ -229,6 +229,13 @@ extension AnimeDetailReducer {
         case .fetchedAnimeFromDB(let animesMatched):
             state.animeStore = .success(.findOrCreate(state.anime, animesMatched))
 
+        case .toggleCompactEpisodes:
+            state.compactEpisodes.toggle()
+
+            return .run { [state] in
+                await userDefaultsClient.setBool(.compactEpisodes, state.compactEpisodes)
+            }
+
         case .play:
             break
 
@@ -237,7 +244,7 @@ extension AnimeDetailReducer {
                 .cancel(id: CancelFetchingEpisodesId()),
                 .cancel(id: CancelFetchingSourcesId()),
                 .cancel(id: CancelObservingAnimeDB()),
-                .task { .close }
+                .action(.close)
             )
 
         case .close:

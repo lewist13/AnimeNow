@@ -276,6 +276,12 @@ extension VideoPlayer.PlayerView {
         let item = AVPlayerItem(asset: asset)
         player.replaceCurrentItem(with: item)
 
+        if !item.isPlaybackBufferEmpty || url.isFileURL {
+            player.play()
+        } else {
+            status = .loading
+        }
+
         return true
     }
 

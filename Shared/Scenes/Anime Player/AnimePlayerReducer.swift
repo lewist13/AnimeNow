@@ -42,10 +42,10 @@ struct AnimePlayerReducer: ReducerProtocol {
     struct State: Equatable {
         let anime: AnyAnimeRepresentable
 
-        var episodes = LoadableState<[AnyEpisodeRepresentable]>.idle
-        var sources = LoadableState<[Source]>.idle
-        var animeStore = LoadableState<AnimeStore>.idle
-        var skipTimes = LoadableState<[SkipTime]>.idle
+        var episodes = Loadable<[AnyEpisodeRepresentable]>.idle
+        var sources = Loadable<[Source]>.idle
+        var animeStore = Loadable<AnimeStore>.idle
+        var skipTimes = Loadable<[SkipTime]>.idle
 
         var selectedEpisode: Episode.ID
         var selectedProvider: Provider.ID?
@@ -113,8 +113,9 @@ struct AnimePlayerReducer: ReducerProtocol {
         // Internal Actions
 
         case initializeFirstTime
-        case saveEpisodeProgress(AnyEpisodeRepresentable.ID?)
         case setSidebar(Sidebar?)
+        case internalSetSource(Source.ID?)
+        case saveEpisodeProgress(AnyEpisodeRepresentable.ID?)
         case closeSidebarAndShowControls
         case hideOverlayAnimationDelay
         case cancelHideOverlayAnimationDelay
@@ -313,7 +314,7 @@ extension AnimePlayerReducer {
         BindingReducer()
         Reduce(self.core)
     }
-    
+
     func core(state: inout State, action: Action) -> EffectTask<Action> {
         let overlayVisibilityAnimation = Animation.easeInOut(
             duration: 0.3
@@ -324,12 +325,13 @@ extension AnimePlayerReducer {
         // View Actions
 
         case .onAppear:
-            guard !state.hasInitialized else { break }
-            return .task { .initializeFirstTime }
+            if !state.hasInitialized {
+                return .action(.initializeFirstTime)
+            }
 
         case .playerTapped:
             guard state.selectedSidebar == nil else {
-                return .task { .closeSidebar }
+                return .action(.closeSidebar)
             }
 
             guard !DeviceUtil.isMac else {
@@ -339,18 +341,18 @@ extension AnimePlayerReducer {
             let showingOverlay = !state.showPlayerOverlay
 
             var effects: [EffectTask<Action>] = [
-                .task { .showPlayerOverlay(showingOverlay) }
+                .action(.showPlayerOverlay(showingOverlay))
                     .animation(overlayVisibilityAnimation)
             ]
 
             if showingOverlay && state.playerStatus == .playing {
                 // Show overlay with timeout if the video is currently playing
                 effects.append(
-                    .task { .hideOverlayAnimationDelay }
+                    .action(.hideOverlayAnimationDelay)
                 )
             } else {
                 effects.append(
-                    .task { .cancelHideOverlayAnimationDelay }
+                    .action(.cancelHideOverlayAnimationDelay)
                 )
             }
 
@@ -374,35 +376,35 @@ extension AnimePlayerReducer {
             }
 
         case .showEpisodesSidebar:
-            return .task { .setSidebar(.episodes) }
+            return .action(.setSidebar(.episodes))
                 .animation(.easeInOut(duration: 0.35))
 
         case .showSettingsSidebar:
-            return .task { .setSidebar(.settings(.init())) }
+            return .action(.setSidebar(.settings(.init())))
                 .animation(.easeInOut(duration: 0.35))
 
         case .showSubtitlesSidebar:
-            return .task { .setSidebar(.subtitles) }
+            return .action(.setSidebar(.subtitles))
                 .animation(.easeInOut(duration: 0.35))
 
         case .closeButtonTapped:
             let selectedEpisodeId = state.selectedEpisode
             return .concatenate(
-                .task { .saveEpisodeProgress(selectedEpisodeId) },
+                .action(.saveEpisodeProgress(selectedEpisodeId)),
                 .cancel(id: CancelAnimeStoreObservable()),
                 .cancel(id: CancelAnimeFetchId()),
                 .cancel(id: FetchSourcesCancellable()),
                 .cancel(id: FetchEpisodesCancellable()),
                 .cancel(id: FetchSkipTimesCancellable()),
                 .cancel(id: HidePlayerOverlayDelayCancellable()),
-                .task {
+                .run {
                     try await mainQueue.sleep(for: 0.25)
-                    return .close
+                    await $0(.close)
                 }
             )
 
         case .closeSidebar:
-            return .task { .setSidebar(nil) }
+            return .action(.setSidebar(nil))
                 .animation(.easeInOut(duration: 0.25))
 
         case .selectEpisode(let episodeId, let saveProgress):
@@ -412,7 +414,7 @@ extension AnimePlayerReducer {
 
             if saveProgress {
                 let episodeId = state.selectedEpisode
-                effects.append(.task { .saveEpisodeProgress(episodeId) })
+                effects.append(.action(.saveEpisodeProgress(episodeId)))
             }
 
             state.selectedEpisode = episodeId
@@ -420,9 +422,9 @@ extension AnimePlayerReducer {
             // TODO: Add user defaults for preferred provider or fallback to first
             let providerId = state.episode?.providers.first?.id
 
-            effects.append(.task { .stopAndClearPlayer })
-            effects.append(.task { .selectProvider(providerId, saveProgress: false) })
-            effects.append(.task { .fetchSkipTimes })
+            effects.append(.action(.stopAndClearPlayer))
+            effects.append(.action(.selectProvider(providerId, saveProgress: false)))
+            effects.append(.action(.fetchSkipTimes))
 
             return .concatenate(effects)
             
@@ -432,14 +434,13 @@ extension AnimePlayerReducer {
             // Before selecting provider, save progress
 
             if saveProgress {
-                let episodeId = state.selectedEpisode
-                effects.append(.task { [episodeId] in .saveEpisodeProgress(episodeId) })
+                effects.append(.action(.saveEpisodeProgress(state.selectedEpisode)))
             }
 
             state.selectedProvider = providerId
 
-            effects.append(.task { .stopAndClearPlayer })
-            effects.append(.task { .fetchSources })
+            effects.append(.action(.stopAndClearPlayer))
+            effects.append(.action(.fetchSources))
 
             return .concatenate(effects)
 
@@ -449,16 +450,16 @@ extension AnimePlayerReducer {
             // Before selecting source, save progress
 
             if saveProgress {
-                let episodeId = state.selectedEpisode
-                effects.append(.task { [episodeId] in .saveEpisodeProgress(episodeId) })
+                effects.append(.action(.saveEpisodeProgress(state.selectedEpisode)))
             }
 
-            state.selectedSource = sourceId
+            effects.append(.action(.stopAndClearPlayer))
+            effects.append(.action(.internalSetSource(sourceId)))
 
             return .concatenate(effects)
 
         case .selectSidebarSettings(let section):
-            return .task { .sidebarSettingsSection(section) }
+            return .action(.sidebarSettingsSection(section))
                 .animation(.easeInOut(duration: 0.25))
 
         case .showPlayerOverlay(let show):
@@ -472,8 +473,8 @@ extension AnimePlayerReducer {
             let animeId = state.anime.id
 
             return .merge(
-                .task { .fetchEpisodes },
-                .run { [animeId] send in
+                .action(.fetchEpisodes),
+                .run { send in
                     let animeStores: AsyncStream<[AnimeStore]> = repositoryClient.observe(
                         .init(
                             format: "id == %d",
@@ -489,9 +490,9 @@ extension AnimePlayerReducer {
             )
 
         case .hideOverlayAnimationDelay:
-            return .task {
+            return .run {
                 try await self.mainQueue.sleep(for: 2.5)
-                return .showPlayerOverlay(false)
+                await $0(.showPlayerOverlay(false))
             }
             .animation(overlayVisibilityAnimation)
             .cancellable(id: HidePlayerOverlayDelayCancellable(), cancelInFlight: true)
@@ -518,7 +519,10 @@ extension AnimePlayerReducer {
 
         case .closeSidebarAndShowControls:
             state.selectedSidebar = nil
-            return .task { .showPlayerOverlay(true) }
+            return .action(.showPlayerOverlay(true))
+
+        case .internalSetSource(let source):
+            state.selectedSource = source
 
         case .close:
             break
@@ -528,8 +532,8 @@ extension AnimePlayerReducer {
 
             if route != nil {
                 return .merge(
-                    .task { .cancelHideOverlayAnimationDelay },
-                    .task { .showPlayerOverlay(false) }
+                    .action(.cancelHideOverlayAnimationDelay),
+                    .action(.showPlayerOverlay(false))
                 )
             }
 
@@ -551,7 +555,7 @@ extension AnimePlayerReducer {
             guard !state.episodes.hasInitialized else {
                 if state.episode != nil {
                     let selectedEpisode = state.selectedEpisode
-                    return .task { .selectEpisode(selectedEpisode, saveProgress: false) }
+                    return .action(.selectEpisode(selectedEpisode, saveProgress: false))
                 }
                 break
             }
@@ -559,7 +563,7 @@ extension AnimePlayerReducer {
 
             let animeId = state.anime.id
 
-            return .task { [animeId] in
+            return .run {
                 .fetchedEpisodes(
                     try await animeClient.getEpisodes(animeId)
                 )
@@ -569,7 +573,7 @@ extension AnimePlayerReducer {
         case .fetchedEpisodes(let episodes):
             state.episodes = .success(episodes.map({ $0.asRepresentable() }))
             let selectedEpisodeId = state.selectedEpisode
-            return .task { .selectEpisode(selectedEpisodeId, saveProgress: false) }
+            return .action(.selectEpisode(selectedEpisodeId, saveProgress: false))
 
         // Fetch Sources
 
@@ -578,7 +582,7 @@ extension AnimePlayerReducer {
 
             state.sources = .loading
 
-            return .task { [provider] in
+            return .run { [provider] in
                 await .fetchedSources(
                     .init { try await animeClient.getSources(provider) }
                 )
@@ -588,10 +592,11 @@ extension AnimePlayerReducer {
         case .fetchedSources(.success(let sources)):
             let sources = Array(sources.sorted(by: \.quality).reversed())
             state.sources = .success(sources)
-            // TODO: Set quality based on user defaults or the first one based on the one received
 
+            // TODO: Set quality based on user defaults or the first one based on the one received
             let sourceId = sources.first?.id
-            return .task { [sourceId] in .selectSource(sourceId, saveProgress: false) }
+
+            return .action(.selectSource(sourceId, saveProgress: false))
 
         case .fetchedSources(.failure):
             state.sources = .failed
@@ -601,13 +606,13 @@ extension AnimePlayerReducer {
 
         case .fetchSkipTimes:
             guard let episode = state.episode, let malId = state.anime.malId else {
-                return .task { .fetchedSkipTimes(.success([])) }
+                return .action(.fetchedSkipTimes(.success([])))
             }
 
             state.skipTimes = .loading
 
             let episodeNumber = episode.number
-            return .task { [malId, episodeNumber] in
+            return .run { [malId, episodeNumber] in
                 await .fetchedSkipTimes(
                     .init { try await animeClient.getSkipTimes(malId, episodeNumber) }
                 )
@@ -689,9 +694,9 @@ extension AnimePlayerReducer {
             state.playerStatus = status
 
             if case .playing = status, state.showPlayerOverlay {
-                return .task { .hideOverlayAnimationDelay }
+                return .action(.hideOverlayAnimationDelay)
             } else if state.showPlayerOverlay {
-                return .task { .cancelHideOverlayAnimationDelay }
+                return .action(.cancelHideOverlayAnimationDelay)
             }
 
         case .playerProgress(let progress):
@@ -746,8 +751,8 @@ extension AnimePlayerReducer {
             state.playerProgress = .zero
             state.playerBuffered = .zero
             state.playerDuration = .zero
-            state.playerPiPStatus = .restoreUI
             state.playerVolume = .zero
+            state.playerPiPStatus = .restoreUI
 //            state.playerSubtitles = nil
 //            state.playerSelectedSubtitle = nil
 

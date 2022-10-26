@@ -10,7 +10,7 @@ import Foundation
 import ComposableArchitecture
 
 struct SearchReducer: ReducerProtocol {
-    typealias LoadableAnimes = LoadableState<[Anime]>
+    typealias LoadableAnimes = Loadable<[Anime]>
 
     struct State: Equatable {
         var loadable = LoadableAnimes.idle
@@ -50,7 +50,7 @@ extension SearchReducer {
             }
             state.loadable = .loading
 
-            return .task { [query] in
+            return .run {
                 await .searchResult(.init { try await animeClient.searchAnimes(query) })
             }
             .debounce(id: SearchAnimesDebounceID.self, for: 0.3, scheduler: mainQueue)

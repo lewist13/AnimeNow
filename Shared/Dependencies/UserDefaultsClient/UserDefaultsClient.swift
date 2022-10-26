@@ -9,15 +9,25 @@ import Foundation
 import ComposableArchitecture
 
 struct UserDefaultsClient {
-    let dataForKey: (String) -> Data?
-    let boolForKey: (String) -> Bool
-    let doubleForKey: (String) -> Double
-    let intForKey: (String) -> Int
-    let setBool: (String, Bool) async -> Void
-    let setInt: (String, Int) async -> Void
-    let setDouble: (String, Double) async -> Void
-    let setData: (String, Data) async -> Void
-    let remove: (String) async -> Void
+    let dataForKey: (Keys) -> Data?
+    let boolForKey: (Keys) -> Bool
+    let doubleForKey: (Keys) -> Double
+    let intForKey: (Keys) -> Int
+    let setBool: (Keys, Bool) async -> Void
+    let setInt: (Keys, Int) async -> Void
+    let setDouble: (Keys, Double) async -> Void
+    let setData: (Keys, Data) async -> Void
+    let remove: (Keys) async -> Void
+}
+
+extension UserDefaultsClient {
+    enum Keys: String, CustomStringConvertible {
+        case compactEpisodes
+
+        var description: String {
+            self.rawValue
+        }
+    }
 }
 
 private enum UserDefaultsClientKey: DependencyKey {

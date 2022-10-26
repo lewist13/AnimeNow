@@ -1,5 +1,5 @@
 //
-//  LoadingState.swift
+//  Loadable.swift
 //  Anime Now!
 //
 //  Created by ErrorErrorError on 9/9/22.
@@ -7,14 +7,14 @@
 
 import Foundation
 
-enum LoadableState<T: Equatable>: Equatable {
+enum Loadable<T: Equatable>: Equatable {
     case idle
     case loading
     case success(T)
     case failed
 }
 
-extension LoadableState {
+extension Loadable {
     var isLoading: Bool {
         self == .loading
     }
@@ -33,11 +33,9 @@ extension LoadableState {
     }
 
     var value: T? {
-        switch self {
-        case .success(let value):
+        if case .success(let value) = self {
             return value
-        default:
-            return nil
         }
+        return nil
     }
 }

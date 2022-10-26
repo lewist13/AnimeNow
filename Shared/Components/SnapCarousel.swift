@@ -16,25 +16,22 @@ struct SnapCarousel<Content: View, T: Identifiable>: View {
     /// Properties....
 
     var spacing: CGFloat
-    var trailingSpace: CGFloat
 
     var list: [T]
     var content: (T) -> Content
 
     init(
         spacing: CGFloat = 0,
-        trailingSpace: CGFloat = 0,
         items: [T],
         @ViewBuilder content: @escaping (T)->Content
     ) {
         self.list = items
         self.spacing = spacing
-        self.trailingSpace = trailingSpace
         self.content = content
     }
 
     // Offset...
-    @GestureState private var offset: CGFloat = 0
+    @GestureState private var translation: CGFloat = 0
     @State private var position: Int = 0
 
     var body: some View {
@@ -51,29 +48,26 @@ extension SnapCarousel {
     @ViewBuilder
     var scrollItems: some View {
         GeometryReader { proxy in
-            let width = proxy.size.width - (trailingSpace - spacing)
-            let adjustMentWidth = (trailingSpace / 2) - spacing
-
             HStack(spacing: spacing) {
                 ForEach(list) { item in
                     content(item)
-                        .frame(width: proxy.size.width - trailingSpace)
+                        .frame(width: proxy.size.width)
                 }
             }
             .padding(.horizontal, spacing)
-            .offset(x: (CGFloat(position) * -width) + ( position != 0 ? adjustMentWidth : 0 ) + offset)
+            .offset(x: -CGFloat(position) * proxy.size.width)
+            .offset(x: translation)
             .highPriorityGesture(
                 DragGesture()
-                    .updating($offset, body: { value, out, _ in
+                    .updating($translation, body: { value, out, _ in
                         out = value.translation.width
                     })
                     .onEnded({ value in
-                        let offsetX = value.translation.width
-                        let progress = -offsetX / width
+                        let offset = -(value.translation.width / proxy.size.width)
                         let roundIndex: Int
 
-                        if abs(progress) > 0.3 {
-                            roundIndex = progress > 0 ? 1 : -1
+                        if abs(offset) > 0.3 {
+                            roundIndex = offset > 0 ? 1 : -1
                         } else {
                             roundIndex = 0
                         }
@@ -82,7 +76,7 @@ extension SnapCarousel {
                     })
             )
         }
-        .animation(.easeInOut, value: offset == 0)
+        .animation(.easeInOut, value: translation == 0)
     }
 }
 
@@ -91,10 +85,9 @@ extension SnapCarousel {
     var indicator: some View {
         HStack(spacing: 6) {
             ForEach(
-                Array(zip(indicatorStates.indices, indicatorStates)),
-                id: \.0.self
-            ) { index, state in
-                if state != .gone {
+                indicatorStates
+            ) { state in
+                if state.size != .gone {
                     Circle()
                         .fill(Color.white.opacity(state.selected ? 1 : 0.5))
                         .frame(width: 6, height: 6)
@@ -106,15 +99,20 @@ extension SnapCarousel {
         .padding()
     }
 
-    enum IndicatorState: Hashable {
-        case gone
-        case smallest
-        case small
-        case normal
-        case selected
+    struct IndicatorState: Hashable, Identifiable {
+        let id: Int
+        var size: Size
+
+        enum Size: Hashable {
+            case gone
+            case smallest
+            case small
+            case normal
+            case selected
+        }
 
         var scale: Double {
-            switch self {
+            switch size {
             case .gone:
                 return 0
             case .smallest:
@@ -129,7 +127,7 @@ extension SnapCarousel {
         }
 
         var selected: Bool {
-            self == .selected
+            size == .selected
         }
     }
 
@@ -138,7 +136,7 @@ extension SnapCarousel {
             return []
         }
 
-        var indicatorStates = [IndicatorState](repeating: .gone, count: list.count)
+        var indicatorStates = list.indices.map { IndicatorState.init(id: $0, size: .gone) }
         let indicatorCount = indicatorStates.count
 
         let maxIndicators = 9
@@ -157,19 +155,19 @@ extension SnapCarousel {
 
         for index in startIndex..<endIndex {
             if (startIndex == index && leftSideCount == 0) || (startIndex + 1 == index && leftSideCount >= 1) {
-                indicatorStates[index] = .small
+                indicatorStates[index].size = .small
             } else if startIndex == index && leftSideCount >= 1 {
-                indicatorStates[index] = .smallest
+                indicatorStates[index].size = .smallest
             } else if (endIndex - 2 == index && rightSideCount < indicatorCount) || (endIndex - 1 == index && rightSideCount == indicatorCount) {
-                indicatorStates[index] = .small
+                indicatorStates[index].size = .small
             } else if endIndex - 1 == index && rightSideCount < indicatorCount {
-                indicatorStates[index] = .smallest
+                indicatorStates[index].size = .smallest
             } else {
-                indicatorStates[index] = .normal
+                indicatorStates[index].size = .normal
             }
         }
 
-        indicatorStates[position] = .selected
+        indicatorStates[position].size = .selected
 
         return indicatorStates
     }
