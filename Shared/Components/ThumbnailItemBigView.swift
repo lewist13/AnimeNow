@@ -39,113 +39,95 @@ struct ThumbnailItemBigView: View {
     }
 
     let type: InputType
-    var watched: Bool = false
+    var nowPlaying = false
     var progressSize: CGFloat = 10
-
-    @State private var loaded = false
 
     var body: some View {
         GeometryReader { reader in
-            KFImage(type.image)
-                .onSuccess { _ in loaded = true }
-                .onFailure { _ in loaded = true }
-                .resizable()
-                .scaledToFill()
-                .transaction { $0.animation = nil }
-                .opacity(loaded ? 1.0 : 0)
-                .background(Color(white: 0.05))
-                .frame(
-                    width: reader.size.width,
-                    height: reader.size.height,
-                    alignment: .center
+            FillAspectImage(
+                url: type.image
+            )
+            .overlay(
+                LinearGradient(
+                    stops: [
+                        .init(color: .clear, location: 0.4),
+                        .init(color: .black.opacity(0.75), location: 1.0)
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
                 )
-                .contentShape(Rectangle())
-                .clipped()
-                .overlay(
-                    LinearGradient(
-                        stops: [
-                            .init(color: .clear, location: 0.4),
-                            .init(color: .black.opacity(0.75), location: 1.0)
-                        ],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
-                .overlay(
-                    VStack(spacing: 0) {
-                        if watched {
+            )
+            .overlay(
+                VStack(spacing: 0) {
+                    Group {
+                        if nowPlaying {
+                            Text("Now Playing")
+                        } else if let progress = type.progress, progress >= 0.9 {
                             Text("Watched")
-                                .font(.footnote.bold())
-                                .foregroundColor(Color.white)
-                                .padding(8)
-                                .background(Color(white: 0.15))
-                                .clipShape(Capsule())
-                                .frame(
-                                    maxWidth: .infinity,
-                                    maxHeight: .infinity,
-                                    alignment: .topTrailing
-                                )
+                        } else {
+                            EmptyView()
                         }
-
-                        Spacer()
-
-                        VStack(alignment: .leading, spacing: 0) {
-                            if case .episode(_,_, let animeName, let number, _) = type {
-                                HStack(spacing: 2) {
-                                    Text("E\(number)")
-                                    if let animeName = animeName {
-                                        Text("\u{2022}")
-                                        Text(animeName)
-                                    }
-                                }
-                                .font(.footnote.weight(.bold))
-                                .lineLimit(1)
-                                .foregroundColor(.init(white: 0.9))
-                            }
-
-                            Text(type.name)
-                                .multilineTextAlignment(.leading)
-                                .lineLimit(1)
-                                .font(.title3.weight(.bold))
-
-                            if let progress = type.progress, !watched {
-                                SeekbarView(
-                                    progress: .constant(progress),
-                                    padding: 0
-                                )
-                                .disabled(true)
-                                .frame(height: progressSize)
-                                .padding(.top, 4)
-                            }
-                        }
-                        .foregroundColor(Color.white)
-                        .frame(
-                            maxWidth: .infinity,
-                            alignment: .leading
-                        )
                     }
+                    .font(.footnote.weight(.heavy))
+                    .foregroundColor(nowPlaying ? Color.black : Color.white)
+                    .padding(12)
+                    .background(nowPlaying ? Color(white: 0.9) :  Color(white: 0.15))
+                    .clipShape(Capsule())
+                    .frame(
+                        maxWidth: .infinity,
+                        maxHeight: .infinity,
+                        alignment: .topTrailing
+                    )
+
+                    Spacer()
+
+                    VStack(alignment: .leading, spacing: 0) {
+                        if case .episode(_,_, let animeName, let number, _) = type {
+                            HStack(spacing: 2) {
+                                Text("E\(number)")
+                                if let animeName = animeName {
+                                    Text("\u{2022}")
+                                    Text(animeName)
+                                }
+                            }
+                            .font(.footnote.weight(.bold))
+                            .lineLimit(1)
+                            .foregroundColor(.init(white: 0.9))
+                        }
+
+                        Text(type.name)
+                            .multilineTextAlignment(.leading)
+                            .lineLimit(1)
+                            .font(.title3.weight(.bold))
+
+                        if !nowPlaying, let progress = type.progress, progress < 0.9 {
+                            SeekbarView(
+                                progress: .constant(progress),
+                                padding: 0
+                            )
+                            .disabled(true)
+                            .frame(height: progressSize)
+                            .padding(.top, 4)
+                        }
+                    }
+                    .foregroundColor(Color.white)
+                    .frame(
+                        maxWidth: .infinity,
+                        alignment: .leading
+                    )
+                }
                     .frame(
                         maxWidth: .infinity,
                         maxHeight: .infinity,
                         alignment: .bottom
                     )
                     .padding(max(reader.size.width, reader.size.height) / 24)
-                )
-                .cornerRadius(max(reader.size.width, reader.size.height) / 16)
-                .transition(.opacity)
-                .animation(.linear, value: loaded)
+            )
+            .cornerRadius(max(reader.size.width, reader.size.height) / 16)
+            .transition(.opacity)
         }
         .aspectRatio(16/9, contentMode: .fit)
         .clipped()
-    }
-}
-
-extension ThumbnailItemBigView {
-    @ViewBuilder
-    private var imageShimmeringView: some View {
-        RoundedRectangle(cornerRadius: 16)
-            .foregroundColor(Color.gray.opacity(0.2))
-            .placeholder(active: true)
     }
 }
 

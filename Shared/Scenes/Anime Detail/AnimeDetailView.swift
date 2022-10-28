@@ -299,7 +299,7 @@ extension AnimeDetailView {
 
                         Spacer()
 
-                        Image(systemName: viewState.compact ? "rectangle.inset.filled" : "rectangle.grid.1x2.fill")
+                        Image(viewState.compact ? "rectangle.inset.filled" : "rectangle.grid.1x2.fill")
                             .font(.body.bold())
                             .foregroundColor(.white)
                             .onTapGesture {
@@ -364,7 +364,6 @@ extension AnimeDetailView {
                         number: episode.number,
                         progress: viewStore.state?.progress
                     ),
-                    watched: viewStore.state?.almostFinished ?? false,
                     progressSize: 10
                 )
             }

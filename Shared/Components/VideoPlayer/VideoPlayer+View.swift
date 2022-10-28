@@ -15,14 +15,14 @@ import Combine
 import AVFoundation
 
 extension VideoPlayer {
-    class PlayerView: PlatformView {
+    public class PlayerView: PlatformView {
         var player = AVQueuePlayer()
         var playerLayer: AVPlayerLayer { layer as! AVPlayerLayer }
 
         #if os(iOS)
-        override class var layerClass: AnyClass { AVPlayerLayer.self }
+        public override class var layerClass: AnyClass { AVPlayerLayer.self }
         #else
-        override func makeBackingLayer() -> CALayer { AVPlayerLayer() }
+        public override func makeBackingLayer() -> CALayer { AVPlayerLayer() }
         #endif
 
         /// Muted
@@ -62,7 +62,7 @@ extension VideoPlayer {
             return player.totalDuration
         }
 
-        private(set) var status: Status = .idle {
+        private(set) var status: VideoPlayer.Status = .error {
             didSet { updateStatusCallback(status, oldValue) }
         }
 
@@ -70,7 +70,7 @@ extension VideoPlayer {
         var playedToEndTime: (() -> Void)?
 
         /// Status did changed callback
-        var statusDidChange: ((Status) -> Void)?
+        var statusDidChange: ((VideoPlayer.Status) -> Void)?
 
         var periodicTimeChanged: ((CMTime) -> Void)?
 
@@ -99,6 +99,8 @@ extension VideoPlayer {
 
 extension VideoPlayer.PlayerView {
     private func configureInit() {
+        player.automaticallyWaitsToMinimizeStalling = true
+
         NotificationCenter.default.publisher(for: .AVPlayerItemDidPlayToEndTime)
             .compactMap { $0.object as? AVPlayerItem }
             .filter { [unowned self] item in item == self.player.currentItem }
@@ -109,41 +111,45 @@ extension VideoPlayer.PlayerView {
 
         /// Observe Player
 
-        player.publisher(for: \.timeControlStatus)
-            .sink { [unowned self] status in
-                switch status {
-                case .waitingToPlayAtSpecifiedRate:
-                    if let waiting = player.reasonForWaitingToPlay {
-                        switch waiting {
-                        case .noItemToPlay:
-                            self.status = .idle
-                        case .toMinimizeStalls:
-                            self.status = .buffering
-                        case .evaluatingBufferingRate:
-                            break
-                        default:
-                            self.status = .loading
-                        }
-                    } else {
-                        self.status = .loading
-                    }
-                case .paused:
-                    if self.status != .buffering {
-                        self.status = .paused
-                    }
-                case .playing:
-                    self.status = .playing
-                default:
-                    self.status = .loading
-                }
-            }
-            .store(in: &cancellables)
+        player.publisher(
+            for: \.timeControlStatus
+        )
+        .dropFirst()
+        .filter { [unowned self] _ in self.status != .idle }
+        .sink { [unowned self] status in
+            switch status {
+            case .waitingToPlayAtSpecifiedRate:
+                if let waiting = player.reasonForWaitingToPlay {
+                    switch waiting {
+                    case .noItemToPlay:
+                        self.status = .idle
 
-        player.publisher(for: \.currentItem)
-            .sink { [unowned self] item in
-                self.observe(playerItem: item)
+                    case .toMinimizeStalls:
+                        self.status = .buffering
+                    default:
+                        break
+                    }
+                }
+
+            case .paused:
+                self.status = .paused
+
+            case .playing:
+                self.status = .playing
+
+            default:
+                self.status = .loading
             }
-            .store(in: &cancellables)
+        }
+        .store(in: &cancellables)
+
+        player.publisher(
+            for: \.currentItem
+        )
+        .sink { [unowned self] item in
+            self.observe(playerItem: item)
+        }
+        .store(in: &cancellables)
 
         timerObserver = player.addPeriodicTimeObserver(
             forInterval: .init(
@@ -172,14 +178,20 @@ extension VideoPlayer.PlayerView {
         playerItem.publisher(
             for: \.status
         )
+        .removeDuplicates()
+        .dropFirst()
         .sink { [unowned self] status in
             switch status {
             case .unknown:
                 self.status = .idle
+
             case .readyToPlay:
                 self.status = .readyToPlay
+                self.resume()
+
             case .failed:
                 self.status = .error
+
             default:
                 break
             }
@@ -189,6 +201,7 @@ extension VideoPlayer.PlayerView {
         playerItem.publisher(
             for: \.isPlaybackBufferEmpty
         )
+        .dropFirst()
         .sink { [unowned self] bufferEmpty in
             if bufferEmpty {
                 self.status = .buffering
@@ -199,9 +212,14 @@ extension VideoPlayer.PlayerView {
         playerItem.publisher(
             for: \.isPlaybackLikelyToKeepUp
         )
+        .dropFirst()
         .sink { [unowned self] canKeepUp in
-            if canKeepUp && (self.status == .loading || self.status == .readyToPlay || self.status == .buffering) {
-                self.resume()
+            if canKeepUp && self.status == .buffering {
+                if self.player.rate > 0 {
+                    self.status = .playing
+                } else {
+                    self.status = .paused
+                }
             }
         }
         .store(in: &playerItemCancellables)
@@ -218,6 +236,8 @@ extension VideoPlayer.PlayerView {
 
 #if os(macOS)
 
+// TODO: Handle this on macOS video player view
+
 extension VideoPlayer.PlayerView {
     private enum KeyCommands: UInt16 {
         case spaceBar = 49
@@ -225,7 +245,7 @@ extension VideoPlayer.PlayerView {
         case rightArrow = 124
     }
 
-    override func viewDidMoveToWindow() {
+    public override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
         monitorKeyEvents()
     }
@@ -240,7 +260,7 @@ extension VideoPlayer.PlayerView {
             guard let command = KeyCommands(rawValue: event.keyCode) else {
                 return event
             }
-            
+
             let allWindows = NSApp.windows
             let firstResponders = allWindows.compactMap { $0.firstResponder }
             let fieldEditors = firstResponders.filter { ($0 as? NSText)?.isEditable == true }
@@ -256,9 +276,19 @@ extension VideoPlayer.PlayerView {
                 return nil
 
             case .leftArrow:
+                let totalDuration = self.totalDuration
+                if player.currentItem != nil, totalDuration > 0 {
+                    let progress = max(0, (self.playProgress * totalDuration) - 15)
+                    self.seek(to: .init(seconds: round(progress), preferredTimescale: 1))
+                }
                 return nil
 
             case .rightArrow:
+                let totalDuration = self.totalDuration
+                if player.currentItem != nil, totalDuration > 0 {
+                    let progress = min(totalDuration, (self.playProgress * totalDuration) + 15)
+                    self.seek(to: .init(seconds: round(progress), preferredTimescale: 1))
+                }
                 return nil
             }
         }
@@ -274,13 +304,9 @@ extension VideoPlayer.PlayerView {
 
         let asset = AVURLAsset(url: url)
         let item = AVPlayerItem(asset: asset)
-        player.replaceCurrentItem(with: item)
 
-        if !item.isPlaybackBufferEmpty || url.isFileURL {
-            player.play()
-        } else {
-            status = .loading
-        }
+        player.replaceCurrentItem(with: item)
+        status = .loading
 
         return true
     }
@@ -306,7 +332,9 @@ extension VideoPlayer.PlayerView {
     }
 
     func stopAndRemoveItem() {
+//        player.pause()
         player.replaceCurrentItem(with: nil)
+        status = .idle
     }
 
     func destroy() {
@@ -321,6 +349,13 @@ extension VideoPlayer.PlayerView {
 
         cancellables.removeAll()
         playerItemCancellables.removeAll()
+
+        #if os(macOS)
+        if let keyDownEventMonitor = keyDownEventMonitor {
+            NSEvent.removeMonitor(keyDownEventMonitor)
+            self.keyDownEventMonitor = nil
+        }
+        #endif
     }
 
     func resize(_ size: AVLayerVideoGravity) {

@@ -13,9 +13,8 @@ extension AnimePlayerView {
     @ViewBuilder
     var playerControlsOverlay: some View {
         WithViewStore(
-            store.scope(
-                state: \.showPlayerOverlay
-            )
+            store,
+            observe: { $0.showPlayerOverlay }
         ) { showPlayerOverlay in
             GeometryReader { proxy in
                 VStack(spacing: 0) {
@@ -43,10 +42,10 @@ extension AnimePlayerView {
         }
         .overlay(statusOverlay)
         .overlay(sidebarOverlay)
-        .mouseEvents { isActive in
-            ViewStore(store.stateless).send(
-                .isHoveringPlayer(isActive)
-            )
+        .mouseEvents(
+            options: [.mouseMoved, .activeInKeyWindow, .mouseEnteredAndExited]
+        ) { isEvent in
+            ViewStore(store.stateless).send(.isHoveringPlayer(isEvent))
         }
         .onReceive(
             ViewStore(store).publisher.showPlayerOverlay
@@ -80,10 +79,18 @@ extension AnimePlayerView {
     var statusOverlay: some View {
         WithViewStore(
             store,
-            observe: { $0.status == .loading }
+            observe: { $0.status }
         ) { viewState in
-            if viewState.state {
+            if viewState.state == .loading {
                 loadingView
+            } else if viewState.state == .paused || viewState.state == .replay {
+                Image(systemName: viewState.state == .paused ? "play.fill" : "arrow.counterclockwise")
+                    .font(.title.bold())
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        viewState.send(viewState.state == .paused ? .togglePlayback : .replayTapped)
+                    }
+                    .foregroundColor(Color.white)
             }
         }
     }
@@ -202,7 +209,7 @@ extension AnimePlayerView {
                 )
                 Text("/")
                 Text(
-                    viewState.progressLoaded ? viewState.duration.timeFormatted : "--:--"
+                    viewState.isLoaded ? viewState.duration.timeFormatted : "--:--"
                 )
             }
             .foregroundColor(.white)

@@ -20,6 +20,8 @@ struct HomeView: View {
             observe: { $0.isLoading }
         ) { viewStore in
             ScrollView(.vertical, showsIndicators: false) {
+                ExtraTopSafeAreaInset()
+
                 VStack(spacing: 24) {
                     animeHeroItems(
                         isLoading: viewStore.state,
@@ -84,8 +86,13 @@ struct HomeView: View {
                 viewStore.send(.onAppear)
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .ignoresSafeArea(.container, edges: .top)
+        .frame(
+            maxWidth: .infinity,
+            maxHeight: .infinity
+        )
+        #if os(iOS)
+        .ignoresSafeArea(.container, edges: DeviceUtil.isPhone ? .top : [])
+        #endif
     }
 }
 
@@ -107,14 +114,9 @@ extension HomeView {
         ZStack(
             alignment: .bottomLeading
         ) {
-            KFImage.url(
-                (DeviceUtil.isPhone ? anime.posterImage.largest : anime.coverImage.largest ?? anime.posterImage.largest
-                )?.link
+            FillAspectImage(
+                url: (DeviceUtil.isPhone ? anime.posterImage.largest : anime.coverImage.largest ?? anime.posterImage.largest)?.link
             )
-            .fade(duration: 0.5)
-            .resizable()
-            .contentShape(Rectangle())
-            .clipped()
             .overlay(
                 LinearGradient(
                     stops: [
@@ -177,7 +179,11 @@ extension HomeView {
             }
         }
         .frame(maxWidth: .infinity)
-        .aspectRatio(DeviceUtil.isPhone ? 5/7 : 8/3, contentMode: .fill)
+        .aspectRatio(DeviceUtil.isPhone ? 5/7 : 9/3, contentMode: .fill)
+        .cornerRadius(DeviceUtil.isPhone ? 0 : 32)
+        #if os(macOS)
+        .padding(.horizontal)
+        #endif
     }
 }
 

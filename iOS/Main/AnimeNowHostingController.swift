@@ -17,22 +17,23 @@ class AnimeNowHostingController: UIHostingController<AnyView> {
        }
    }
 
-    override var supportedInterfaceOrientations: UIInterfaceOrientationMask { _supportedInterfaceOrientations }
+    override var supportedInterfaceOrientations: UIInterfaceOrientationMask { interfaceOrientations }
 
-    private var _supportedInterfaceOrientations = UIInterfaceOrientationMask.all {
+    private var interfaceOrientations = UIInterfaceOrientationMask.portrait {
         didSet {
             if #available(iOS 16, *) {
                 // TODO: Uncomment for iOS 16 and higher
 //                setNeedsUpdateOfSupportedInterfaceOrientations()
             } else {
-//                UIView.performWithoutAnimation {
-                    if _supportedInterfaceOrientations.contains(.portrait) {
+                UIView.performWithoutAnimation {
+                    if interfaceOrientations.contains(.portrait) {
                         UIDevice.current.setValue(UIDeviceOrientation.portrait.rawValue, forKey: "orientation")
-                    } else if _supportedInterfaceOrientations.contains(.landscape) {
-                        UIDevice.current.setValue(UIDeviceOrientation.landscapeLeft.rawValue, forKey: "orientation")
+                    } else if interfaceOrientations.contains(.landscape) {
+                        let orientation: UIDeviceOrientation = UIDevice.current.orientation == .landscapeRight ? .landscapeRight : .landscapeLeft
+                        UIDevice.current.setValue(orientation.rawValue, forKey: "orientation")
                     }
                     UIViewController.attemptRotationToDeviceOrientation()
-//                }
+                }
             }
         }
     }
@@ -50,7 +51,7 @@ class AnimeNowHostingController: UIHostingController<AnyView> {
                             box.delegate?.homeIndicatorAutoHidden = value
                         }
                         .onPreferenceChange(SupportedOrientationPreferenceKey.self) { value in
-                            box.delegate?._supportedInterfaceOrientations = value
+                            box.delegate?.interfaceOrientations = value
                         }
                 )
         )

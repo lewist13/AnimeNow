@@ -48,9 +48,16 @@ struct AppView: View {
                     )
                 }
             }
-            .frame(maxWidth: 1700, alignment: .leading)
         }
         .topSafeAreaInset(tabBar)
+        .frame(maxWidth: 1700)
+        .frame(
+            minWidth: 1000,
+            maxWidth: .infinity,
+            minHeight: 500,
+            maxHeight: .infinity
+        )
+        .background(Color.black.ignoresSafeArea())
         .overlay(
             IfLetStore(
                 store.scope(
@@ -72,12 +79,10 @@ struct AppView: View {
                 ),
                 then: AnimePlayerView.init(store:)
             )
-        )
-        .frame(
-            minWidth: 1000,
-            maxWidth: .infinity,
-            minHeight: 500,
-            maxHeight: .infinity
+            .frame(
+                maxWidth: .infinity,
+                maxHeight: .infinity
+            )
         )
     }
 }

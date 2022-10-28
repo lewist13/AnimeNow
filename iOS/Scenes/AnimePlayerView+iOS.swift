@@ -45,6 +45,7 @@ extension AnimePlayerView {
         }
         .overlay(statusOverlay)
         .overlay(sidebarOverlay)
+        .overlay(episodesOverlay)
     }
 
     func safeAreaInsetPadding(_ proxy: GeometryProxy) -> Double {
@@ -171,7 +172,7 @@ extension AnimePlayerView {
             store.scope(state: \.selectedSidebar)
         ) { selectedSidebar in
             Group {
-                if let selectedSidebar = selectedSidebar.state {
+                if let selectedSidebar = selectedSidebar.state, selectedSidebar != .episodes {
                     GeometryReader { proxy in
                         VStack {
                             HStack(alignment: .center) {
@@ -185,7 +186,7 @@ extension AnimePlayerView {
 
                             switch selectedSidebar {
                             case .episodes:
-                                episodesSidebar
+                                EmptyView()
                             case .settings:
                                 settingsSidebar
                             case .subtitles:
@@ -246,78 +247,108 @@ extension AnimePlayerView {
     }
 }
 
-// MARK: Episodes Sidebar
+// MARK: Episodes Overlay
 
 extension AnimePlayerView {
-    private struct EpisodesSidebarViewState: Equatable {
-        let loading: Bool
-        let episodes: [AnyEpisodeRepresentable]
+    private struct EpisodesOverlayViewState: Equatable {
+        let isVisible: Bool
+        let episodes: AnimePlayerReducer.LoadableEpisodes
         let selectedEpisode: Episode.ID
         let episodesStore: [EpisodeStore]
 
         init(_ state: AnimePlayerReducer.State) {
-            self.loading = !state.episodes.finished
-            self.episodes = state.episodes.value ?? []
+            self.isVisible = state.selectedSidebar == .episodes
+            self.episodes = state.episodes
             self.selectedEpisode = state.selectedEpisode
             self.episodesStore = state.animeStore.value?.episodeStores ?? .init()
         }
     }
 
     @ViewBuilder
-    var episodesSidebar: some View {
-        ScrollViewReader { proxy in
-            ScrollView(
-                .vertical,
-                showsIndicators: false
-            ) {
-                WithViewStore(
-                    store.scope(
-                        state: EpisodesSidebarViewState.init
-                    )
-                ) { viewStore in
-                    if viewStore.state.loading {
-                        VStack {
-                            ProgressView()
-                                .colorInvert()
-                                .brightness(1)
-                                .scaleEffect(1.25)
-                                .frame(width: 32, height: 32, alignment: .center)
-
-                            Text("Loading")
-                                .font(.body.bold())
+    var episodesOverlay: some View {
+        WithViewStore(
+            store,
+            observe: EpisodesOverlayViewState.init
+        ) { viewState in
+            if viewState.isVisible {
+                GeometryReader { reader in
+                    VStack {
+                        HStack {
+                            Image(
+                                systemName: "xmark"
+                            )
+                            .font(.body.bold())
+                            .padding(12)
+                            .background(Color(white: 0.12))
+                            .clipShape(Circle())
+                            .onTapGesture {
+                                viewState.send(.closeSidebar)
+                            }
+                            Spacer()
                         }
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    } else if viewStore.state.episodes.count > 0 {
-                        LazyVStack {
-                            ForEach(viewStore.episodes) { episode in
-                                ThumbnailItemCompactView(
-                                    episode: episode,
-                                    progress: viewStore.selectedEpisode != episode.id ? viewStore.episodesStore.first(where: { $0.number == episode.id })?.progress : nil
-                                )
-                                .overlay(
-                                    selectedEpisodeOverlay(episode.id == viewStore.selectedEpisode)
-                                )
-                                .onTapGesture {
-                                    if viewStore.selectedEpisode != episode.id {
-                                        viewStore.send(.selectEpisode(episode.id))
+
+                        if let episodes = viewState.episodes.value, episodes.count > 0 {
+                            ScrollViewReader { proxy in
+                                ScrollView(
+                                    .horizontal,
+                                    showsIndicators: false
+                                ) {
+                                    LazyHStack {
+                                        ForEach(episodes) { episode in
+                                            ThumbnailItemBigView(
+                                                type: .episode(
+                                                    image: episode.thumbnail?.link,
+                                                    name: episode.title,
+                                                    animeName: nil,
+                                                    number: episode.number,
+                                                    progress: viewState.episodesStore.first(where: { $0.number == episode.number })?.progress
+                                                ),
+                                                nowPlaying: episode.id == viewState.selectedEpisode,
+                                                progressSize: 8
+                                            )
+                                            .onTapGesture {
+                                                if viewState.selectedEpisode != episode.id {
+                                                    viewState.send(.selectEpisode(episode.id))
+                                                }
+                                            }
+                                            .id(episode.id)
+                                            .frame(
+                                                height: reader.size.height / 2
+                                            )
+                                        }
+                                    }
+                                    .onAppear {
+                                        proxy.scrollTo(viewState.selectedEpisode, anchor: .leading)
+                                        viewState.send(.playerAction(.pause))
+                                    }
+                                    .onDisappear(perform: {
+                                        viewState.send(.playerAction(.play))
+                                    })
+                                    .onChange(
+                                        of: viewState.selectedEpisode
+                                    ) { newValue in
+                                        withAnimation {
+                                            proxy.scrollTo(newValue, anchor: .leading)
+                                        }
                                     }
                                 }
-                                .id(episode.id)
-                                .frame(height: 76)
                             }
+                        } else if viewState.episodes.isLoading {
+                            loadingView
                         }
-                        .padding([.bottom])
-                        .onAppear {
-                            proxy.scrollTo(viewStore.selectedEpisode, anchor: .top)
-                        }
-                        .onChange(
-                            of: viewStore.selectedEpisode
-                        ) { newValue in
-                            withAnimation {
-                                proxy.scrollTo(newValue, anchor: .top)
-                            }
-                        }
+
+                        Spacer()
                     }
+                    .frame(
+                        maxWidth: .infinity,
+                        maxHeight: .infinity
+                    )
+                    .padding(safeAreaInsetPadding(reader))
+                    .ignoresSafeArea()
+                    .background(
+                        Color.black.opacity(0.5)
+                            .ignoresSafeArea()
+                    )
                 }
             }
         }

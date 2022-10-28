@@ -28,6 +28,26 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES">
       <Testables>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "13A1559B290A34DC006EB845"
+               BuildableName = "AnimeNowTests.xctest"
+               BlueprintName = "AnimeNowTests"
+               ReferencedContainer = "container:Anime Now!.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "13A155A8290A367A006EB845"
+               BuildableName = "AnimeNowUITests.xctest"
+               BlueprintName = "AnimeNowUITests"
+               ReferencedContainer = "container:Anime Now!.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction

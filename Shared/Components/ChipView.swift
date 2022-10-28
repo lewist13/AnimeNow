@@ -13,7 +13,10 @@ struct ChipView<Label: View>: View {
     var image: (() -> Label)?
 
     var body: some View {
-        HStack(alignment: .center, spacing: 4) {
+        HStack(
+            alignment: .center,
+            spacing: 4
+        ) {
             image?()
             Text(text)
         }

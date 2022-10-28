@@ -161,9 +161,8 @@ extension AnimePlayerView {
     @ViewBuilder
     var animeInfoView: some View {
         WithViewStore(
-            store.scope(
-                state: AnimeInfoViewState.init
-            )
+            store,
+            observe: AnimeInfoViewState.init
         ) { viewState in
             VStack(
                 alignment: .leading,

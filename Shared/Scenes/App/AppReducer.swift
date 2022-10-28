@@ -66,6 +66,7 @@ struct AppReducer: ReducerProtocol {
 
     enum Action: BindableAction {
         case onAppear
+        case setVideoPlayer(AnimePlayerReducer.State?)
         case setAnimeDetail(AnimeDetailReducer.State?)
         case home(HomeReducer.Action)
         case collection(CollectionReducer.Action)
@@ -105,11 +106,24 @@ extension AppReducer {
             }
             .ifLet(\.videoPlayer, action: /Action.videoPlayer) {
                 AnimePlayerReducer()
+                    ._printChanges()
             }
     }
 
     func core(state: inout State, action: Action) -> EffectTask<Action> {
         switch action {
+
+        case .setVideoPlayer(let item):
+            state.videoPlayer = item
+
+        case .setAnimeDetail(let animeMaybe):
+            if let anime = animeMaybe, state.animeDetail == nil {
+                // Allow only replacing anime detail one at a time
+                state.animeDetail = anime
+            } else if animeMaybe == nil {
+                state.animeDetail = nil
+            }
+
         case let .home(.animeTapped(anime)),
              let .search(.onAnimeTapped(anime)):
             return .run { send in
@@ -120,18 +134,15 @@ extension AppReducer {
             }
 
         case let .home(.resumeWatchingTapped(resumeWatching)):
-            state.videoPlayer = .init(
-                anime: resumeWatching.anime.asRepresentable(),
-                selectedEpisode: Episode.ID(resumeWatching.episodeStore.number)
+            return .action(
+                .setVideoPlayer(
+                    .init(
+                        anime: resumeWatching.anime.asRepresentable(),
+                        selectedEpisode: Episode.ID(resumeWatching.episodeStore.number)
+                    )
+                )
             )
-
-        case .setAnimeDetail(let animeMaybe):
-            if let anime = animeMaybe, state.animeDetail == nil {
-                // Allow only replacing anime detail one at a time
-                state.animeDetail = anime
-            } else if animeMaybe == nil {
-                state.animeDetail = nil
-            }
+            .animation(.easeInOut)
 
         case let .animeDetail(.play(anime, episodes, selected)):
             state.videoPlayer = .init(
@@ -149,7 +160,8 @@ extension AppReducer {
             }
 
         case .videoPlayer(.close):
-            state.videoPlayer = nil
+            return .action(.setVideoPlayer(nil))
+                .animation(.easeInOut)
 
         default:
             break

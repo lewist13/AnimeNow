@@ -58,6 +58,8 @@ struct AppView: View {
                 maxWidth: .infinity,
                 maxHeight: .infinity
             )
+            .background(Color.black.ignoresSafeArea())
+            .preferredColorScheme(.dark)
             .bottomSafeAreaInset(
                 HStack(spacing: 0) {
                     ForEach(
@@ -78,8 +80,8 @@ struct AppView: View {
                         )
                         .onTapGesture {
                             viewStore.send(
-                                .set(\.$route, item)
-//                                ,animation: .linear(duration: 0.15)
+                                .set(\.$route, item),
+                                animation: .linear(duration: 0.15)
                             )
                         }
                     }
@@ -116,9 +118,9 @@ struct AppView: View {
                     .supportedOrientation(.landscape)
                 }
             )
+            .transition(.opacity)
         )
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .preferredColorScheme(.dark)
     }
 }
 
@@ -130,6 +132,5 @@ struct ContentView_Previews: PreviewProvider {
                 reducer: AppReducer()
             )
         )
-        .preferredColorScheme(.dark)
     }
 }

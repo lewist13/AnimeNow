@@ -15,13 +15,9 @@ struct ThumbnailItemCompactView: View {
     var body: some View {
         GeometryReader { reader in
             HStack(alignment: .center, spacing: 12) {
-                KFImage(episode.thumbnail?.link)
-                    .resizable()
-                    .transaction { $0.animation = nil }
-                    .scaledToFill()
-                    .frame(height: reader.size.height)
-                    .contentShape(Rectangle())
-                    .clipped()
+                FillAspectImage(
+                    url: episode.thumbnail?.link
+                )
                     .cornerRadius(reader.size.height / 8)
                     .aspectRatio(16/9, contentMode: .fit)
                     .overlay(

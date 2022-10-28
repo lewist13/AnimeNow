@@ -8,15 +8,25 @@
 import SwiftUI
 
 extension View {
-    func mouseEvents(_ mouseActive: @escaping (Bool) -> Void) -> some View {
-        modifier(MouseInsideModifier(mouseActive))
+    func mouseEvents(options: NSTrackingArea.Options, _ mouseActive: @escaping (Bool) -> Void) -> some View {
+        modifier(
+            MouseInsideModifier(
+                options,
+                mouseActive
+            )
+        )
     }
 }
 
 struct MouseInsideModifier: ViewModifier {
+    let options: NSTrackingArea.Options
     let mouseActive: (Bool) -> Void
 
-    init(_ mouseActive: @escaping (Bool) -> Void) {
+    init(
+        _ options: NSTrackingArea.Options,
+        _ mouseActive: @escaping (Bool) -> Void
+    ) {
+        self.options = options
         self.mouseActive = mouseActive
     }
 
@@ -24,7 +34,8 @@ struct MouseInsideModifier: ViewModifier {
         content.background(
             GeometryReader { proxy in
                 Representable(
-                    mouseIsInside: mouseActive,
+                    options: options,
+                    onMouseEvent: mouseActive,
                     frame: proxy.frame(in: .global)
                 )
             }
@@ -32,41 +43,34 @@ struct MouseInsideModifier: ViewModifier {
     }
 
     private struct Representable: NSViewRepresentable {
-        let mouseIsInside: (Bool) -> Void
+        let options: NSTrackingArea.Options
+        let onMouseEvent: (Bool) -> Void
         let frame: NSRect
 
         func makeCoordinator() -> Coordinator {
             let coordinator = Coordinator()
-            coordinator.mouseIsInside = mouseIsInside
+            coordinator.onMouseEvent = onMouseEvent
             return coordinator
         }
 
         class Coordinator: NSResponder {
-            var mouseIsInside: ((Bool) -> Void)?
-            
+            var onMouseEvent: ((Bool) -> Void)?
+
             override func mouseEntered(with event: NSEvent) {
-                mouseIsInside?(true)
+                onMouseEvent?(true)
             }
 
             override func mouseExited(with event: NSEvent) {
-                mouseIsInside?(false)
+                onMouseEvent?(false)
             }
 
             override func mouseMoved(with event: NSEvent) {
-                mouseIsInside?(true)
+                onMouseEvent?(true)
             }
         }
 
         func makeNSView(context: Context) -> NSView {
             let view = NSView(frame: frame)
-
-            let options: NSTrackingArea.Options = [
-                .mouseEnteredAndExited,
-//                .inVisibleRect,
-                .activeAlways,
-                .mouseMoved,
-                .enabledDuringMouseDrag
-            ]
 
             let trackingArea = NSTrackingArea(
                 rect: frame,

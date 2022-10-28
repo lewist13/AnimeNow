@@ -12,8 +12,8 @@ import SwiftUI
 import Combine
 import AVFoundation
 
-struct VideoPlayer {
-    enum Action: Equatable {
+public struct VideoPlayer {
+    public enum Action: Equatable {
         /// Play  Video
         case play
 
@@ -26,10 +26,11 @@ struct VideoPlayer {
         /// Change Volume
         case volume(Double)
 
+        /// Start or stop PiP
         case pictureInPicture(enable: Bool)
     }
 
-    enum Status: Equatable {
+    public enum Status: Equatable {
 
         /// Idle
         case idle
@@ -53,7 +54,7 @@ struct VideoPlayer {
         case error
     }
 
-    enum PIPStatus: Equatable {
+    public enum PIPStatus: Equatable {
 
         /// PIP about to start
         case willStart
@@ -116,8 +117,11 @@ struct VideoPlayer {
 // MARK: View Representable
 
 extension VideoPlayer: PlatformAgnosticViewRepresentable {
-    func makePlatformView(context: Context) -> PlayerView {
+    public func makePlatformView(context: Context) -> PlayerView {
         let view = PlayerView()
+
+        context.coordinator.createPiPController(view: view)
+        context.coordinator.startObserver(view: view)
 
         view.statusDidChange = { status in
             DispatchQueue.main.async { onStatusChangedCallback?(status) }
@@ -131,21 +135,18 @@ extension VideoPlayer: PlatformAgnosticViewRepresentable {
         try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback, policy: .longFormVideo)
         #endif
 
-        context.coordinator.createPiPController(view: view)
-        context.coordinator.startObserver(view: view)
-
         return view
     }
 
-    func updatePlatformView(_ view: PlayerView, context: Context) {
+    public func updatePlatformView(_ view: PlayerView, context: Context) {
         if let url = url {
             if view.play(for: url) {
                 // Clear observer
                 context.coordinator.clearObservers()
             }
         } else {
-            view.stopAndRemoveItem()
             context.coordinator.clearObservers()
+            view.stopAndRemoveItem()
         }
 
         if let action = action {
@@ -169,16 +170,16 @@ extension VideoPlayer: PlatformAgnosticViewRepresentable {
         }
     }
 
-    static func dismantlePlatformView(_ view: PlayerView, coordinator: Coordinator) {
+    public static func dismantlePlatformView(_ view: PlayerView, coordinator: Coordinator) {
         coordinator.removeObservers(view: view)
         view.destroy()
     }
 
-    func makeCoordinator() -> Coordinator {
+    public func makeCoordinator() -> Coordinator {
         Coordinator(self)
     }
 
-    class Coordinator: NSObject {
+    public class Coordinator: NSObject {
         var videoPlayer: VideoPlayer
         var observerProgress: Double?
         var observerBuffer: Double?
@@ -367,30 +368,62 @@ extension VideoPlayer {
 }
 
 extension VideoPlayer.Coordinator: AVPictureInPictureControllerDelegate {
-    func pictureInPictureControllerDidStopPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
+    public func pictureInPictureControllerDidStopPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
         DispatchQueue.main.async { [weak self] in self?.videoPlayer.onPictureInPictureStatusChangedCallback?(.didStop) }
     }
 
-    func pictureInPictureControllerDidStartPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
+    public func pictureInPictureControllerDidStartPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
         DispatchQueue.main.async { [weak self] in self?.videoPlayer.onPictureInPictureStatusChangedCallback?(.didStart) }
     }
 
-    func pictureInPictureControllerWillStopPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
+    public func pictureInPictureControllerWillStopPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
         DispatchQueue.main.async { [weak self] in self?.videoPlayer.onPictureInPictureStatusChangedCallback?(.willStop) }
     }
 
-    func pictureInPictureControllerWillStartPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
+    public func pictureInPictureControllerWillStartPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
         DispatchQueue.main.async { [weak self] in self?.videoPlayer.onPictureInPictureStatusChangedCallback?(.willStart) }
     }
 
-    func pictureInPictureController(_ pictureInPictureController: AVPictureInPictureController, failedToStartPictureInPictureWithError error: Error) {
+    public func pictureInPictureController(_ pictureInPictureController: AVPictureInPictureController, failedToStartPictureInPictureWithError error: Error) {
         DispatchQueue.main.async { [weak self] in self?.videoPlayer.onPictureInPictureStatusChangedCallback?(.failedToStart) }
     }
 
-    func pictureInPictureController(_ pictureInPictureController: AVPictureInPictureController, restoreUserInterfaceForPictureInPictureStopWithCompletionHandler completionHandler: @escaping (Bool) -> Void) {
+    public func pictureInPictureController(_ pictureInPictureController: AVPictureInPictureController, restoreUserInterfaceForPictureInPictureStopWithCompletionHandler completionHandler: @escaping (Bool) -> Void) {
         DispatchQueue.main.async { [weak self] in
             self?.videoPlayer.onPictureInPictureStatusChangedCallback?(.restoreUI)
             completionHandler(true)
         }
     }
 }
+
+struct VideoPlayer_Previews: PreviewProvider {
+    @State static var action: VideoPlayer.Action?
+
+    static var previews: some View {
+        VideoPlayer(
+            url: URL(string: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8"),
+            action: $action
+        )
+        .onStatusChanged {
+            print("Status: \($0)")
+        }
+        .onDurationChanged {
+            print("Duration: \($0)")
+        }
+        .onProgressChanged {
+            print("Progress: \($0)")
+        }
+        .onPlayedToTheEnd {
+            print("Finished playing video")
+        }
+        .onBufferChanged {
+            print("Buffer: \($0)")
+        }
+        .onPictureInPictureStatusChanged {
+            print("Picture in Picture: \($0)")
+        }
+        .preferredColorScheme(.dark)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
