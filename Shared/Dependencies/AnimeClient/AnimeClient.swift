@@ -18,8 +18,15 @@ struct AnimeClient {
     var getAnime: @Sendable (Anime.ID) async throws -> Anime
     var searchAnimes: @Sendable (String) async throws -> [Anime]
     var getEpisodes: @Sendable (Anime.ID) async throws -> [Episode]
-    var getSources: @Sendable (Provider) async throws -> [Source]
+    var getSources: @Sendable (Provider) async throws -> SourcesOptions
     var getSkipTimes: @Sendable (Int, Int) async throws -> [SkipTime]
+}
+
+extension AnimeClient {
+    enum ClientError: Error {
+        case providerNotAvailable
+        case providerInvalidId
+    }
 }
 
 private enum AnimeClientKey: DependencyKey {

@@ -14,16 +14,16 @@ extension AnimePlayerView {
     var playerControlsOverlay: some View {
         WithViewStore(
             store,
-            observe: { $0.showPlayerOverlay }
-        ) { showPlayerOverlay in
+            observe: { $0.canShowPlayerOverlay }
+        ) { viewState in
             GeometryReader { proxy in
                 VStack(spacing: 0) {
-                    if showPlayerOverlay.state {
+                    if viewState.state {
                         topPlayerItems
                     }
                     Spacer()
                     skipButton
-                    if showPlayerOverlay.state {
+                    if viewState.state {
                         bottomPlayerItems
                     }
                 }
@@ -36,21 +36,38 @@ extension AnimePlayerView {
                     Color.black.opacity(0.5)
                         .ignoresSafeArea()
                         .allowsHitTesting(false)
-                        .opacity(showPlayerOverlay.state ? 1 : 0)
+                        .opacity(viewState.state ? 1 : 0)
                 )
             }
         }
         .overlay(statusOverlay)
         .overlay(sidebarOverlay)
         .mouseEvents(
-            options: [.mouseMoved, .activeInKeyWindow, .mouseEnteredAndExited]
-        ) { isEvent in
-            ViewStore(store.stateless).send(.isHoveringPlayer(isEvent))
+            options: [.activeAlways, .mouseEnteredAndExited, .mouseMoved]
+        ) { event in
+            let viewState = ViewStore(store.stateless)
+
+            if event == .mouseMoved {
+                viewState.send(.onMouseMoved)
+            } else {
+                viewState.send(.isHoveringPlayer(event == .mouseEntered))
+            }
         }
         .onReceive(
-            ViewStore(store).publisher.showPlayerOverlay
+            ViewStore(store).publisher.canShowPlayerOverlay
         ) { showOverlay in
             showOverlay ? NSCursor.unhide() : NSCursor.setHiddenUntilMouseMoves(true)
+        }
+        .onKeyDown { key in
+            let viewStore = ViewStore(store.stateless)
+            switch key {
+            case .spaceBar:
+                viewStore.send(.togglePlayback)
+            case .leftArrow:
+                viewStore.send(.backwardsTapped)
+            case .rightArrow:
+                viewStore.send(.forwardsTapped)
+            }
         }
         .onAppear {
             NSWindow.ButtonType.allCases
@@ -194,6 +211,7 @@ extension AnimePlayerView {
                 viewState.send($0 ? .startSeeking : .stopSeeking)
             }
             .frame(height: 20)
+            .disabled(!viewState.isLoaded)
         }
     }
 
@@ -265,7 +283,7 @@ extension AnimePlayerView {
                 .contentShape(Rectangle())
                 .foregroundColor(Color.white)
             }
-            
+
             WithViewStore(
                 store,
                 observe: { $0.playerVolume }
@@ -320,5 +338,11 @@ struct VideoPlayerViewMacOS_Previews: PreviewProvider {
 extension NSWindow.ButtonType: CaseIterable {
     public static var allCases: [NSWindow.ButtonType] {
         [.closeButton, .zoomButton, .miniaturizeButton, .documentIconButton, .documentVersionsButton, .toolbarButton]
+    }
+}
+
+extension AnimePlayerReducer.State {
+    var canShowPlayerOverlay: Bool {
+        showPlayerOverlay || playerStatus == .paused
     }
 }

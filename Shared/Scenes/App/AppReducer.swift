@@ -47,7 +47,7 @@ struct AppReducer: ReducerProtocol {
         }
 
         static var allCases: [AppReducer.Route] {
-            return [.home, .search]
+            return [.home, .search, .collection]
         }
     }
 
@@ -55,7 +55,7 @@ struct AppReducer: ReducerProtocol {
         @BindableState var route = Route.home
 
         var home = HomeReducer.State()
-        var collection = CollectionReducer.State()
+        var collection = CollectionsReducer.State()
         var search = SearchReducer.State()
         var settings = SettingsReducer.State()
         var downloads = DownloadsReducer.State()
@@ -69,7 +69,7 @@ struct AppReducer: ReducerProtocol {
         case setVideoPlayer(AnimePlayerReducer.State?)
         case setAnimeDetail(AnimeDetailReducer.State?)
         case home(HomeReducer.Action)
-        case collection(CollectionReducer.Action)
+        case collection(CollectionsReducer.Action)
         case search(SearchReducer.Action)
         case downloads(DownloadsReducer.Action)
         case settings(SettingsReducer.Action)
@@ -101,12 +101,12 @@ extension AppReducer {
         BindingReducer()
 
         Reduce(self.core)
-            .ifLet(\.animeDetail, action: /Action.animeDetail) {
-                AnimeDetailReducer()
-            }
             .ifLet(\.videoPlayer, action: /Action.videoPlayer) {
                 AnimePlayerReducer()
-                    ._printChanges()
+//                    ._printChanges()
+            }
+            .ifLet(\.animeDetail, action: /Action.animeDetail) {
+                AnimeDetailReducer()
             }
     }
 
@@ -126,12 +126,10 @@ extension AppReducer {
 
         case let .home(.animeTapped(anime)),
              let .search(.onAnimeTapped(anime)):
-            return .run { send in
-                await send(
-                    .setAnimeDetail(.init(anime: anime)),
-                    animation: .interactiveSpring(response: 0.35, dampingFraction: 1.0)
-                )
-            }
+            return .action(
+                .setAnimeDetail(.init(anime: anime)),
+                animation: .interactiveSpring(response: 0.35, dampingFraction: 1.0)
+            )
 
         case let .home(.resumeWatchingTapped(resumeWatching)):
             return .action(
@@ -140,28 +138,27 @@ extension AppReducer {
                         anime: resumeWatching.anime.asRepresentable(),
                         selectedEpisode: Episode.ID(resumeWatching.episodeStore.number)
                     )
-                )
+                ),
+                animation: .easeInOut
             )
-            .animation(.easeInOut)
 
         case let .animeDetail(.play(anime, episodes, selected)):
-            state.videoPlayer = .init(
-                anime: anime.asRepresentable(),
-                episodes: episodes.map({ $0.asRepresentable() }),
-                selectedEpisode: selected
+            return .action(
+                .setVideoPlayer(
+                    .init(
+                        anime: anime.asRepresentable(),
+                        episodes: episodes.map({ $0.asRepresentable() }),
+                        selectedEpisode: selected
+                    )
+                ),
+                animation: .easeInOut
             )
 
         case .animeDetail(.close):
-            return .run { send in
-                await send(
-                    .setAnimeDetail(nil),
-                    animation: .easeInOut(duration: 0.25)
-                )
-            }
+            return .action(.setAnimeDetail(nil), animation: .easeInOut(duration: 0.25))
 
         case .videoPlayer(.close):
-            return .action(.setVideoPlayer(nil))
-                .animation(.easeInOut)
+            return .action(.setVideoPlayer(nil), animation: .easeInOut)
 
         default:
             break

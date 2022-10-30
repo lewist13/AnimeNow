@@ -26,7 +26,7 @@ struct EpisodeStore: EpisodeRepresentable, Hashable, Codable, Identifiable {
 extension EpisodeStore {
     var providers: [Provider] {
         if let url = downloadURL {
-            return [.downloaded(url: url.absoluteString)]
+            return [.offline(url: url)]
         } else {
             return []
         }

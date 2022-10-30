@@ -16,37 +16,35 @@ struct AppView: View {
             store,
             observe: { $0.route }
         ) { viewStore in
-            ZStack {
-                switch viewStore.state {
-                case .home:
-                    HomeView(
-                        store: store.scope(
-                            state: \.home,
-                            action: AppReducer.Action.home
-                        )
+            switch viewStore.state {
+            case .home:
+                HomeView(
+                    store: store.scope(
+                        state: \.home,
+                        action: AppReducer.Action.home
                     )
-                case .search:
-                    SearchView(
-                        store: store.scope(
-                            state: \.search,
-                            action: AppReducer.Action.search
-                        )
+                )
+            case .search:
+                SearchView(
+                    store: store.scope(
+                        state: \.search,
+                        action: AppReducer.Action.search
                     )
-                case .downloads:
-                    DownloadsView(
-                        store: store.scope(
-                            state: \.downloads,
-                            action: AppReducer.Action.downloads
-                        )
+                )
+            case .downloads:
+                DownloadsView(
+                    store: store.scope(
+                        state: \.downloads,
+                        action: AppReducer.Action.downloads
                     )
-                case .collection:
-                    CollectionView(
-                        store: store.scope(
-                            state: \.collection,
-                            action: AppReducer.Action.collection
-                        )
+                )
+            case .collection:
+                CollectionsView(
+                    store: store.scope(
+                        state: \.collection,
+                        action: AppReducer.Action.collection
                     )
-                }
+                )
             }
         }
         .topSafeAreaInset(tabBar)
@@ -54,7 +52,7 @@ struct AppView: View {
         .frame(
             minWidth: 1000,
             maxWidth: .infinity,
-            minHeight: 500,
+            minHeight: 650,
             maxHeight: .infinity
         )
         .background(Color.black.ignoresSafeArea())

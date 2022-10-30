@@ -8,12 +8,11 @@
 import Foundation
 
 struct Source: Hashable, Identifiable {
-    let id: String
+    let id: Int
     let url: URL
     let quality: Quality
-    var sub: Bool? = nil          // not all providers have sub/dub, this is useful for zoro
 
-    enum Quality: Int, Hashable, Comparable, CustomStringConvertible {
+    enum Quality: Int, Hashable, Comparable, CustomStringConvertible, Codable {
         static func < (lhs: Source.Quality, rhs: Source.Quality) -> Bool {
             lhs.rawValue < rhs.rawValue
         }
@@ -45,14 +44,33 @@ struct Source: Hashable, Identifiable {
             }
         }
     }
+
+    struct Subtitle: Hashable, Identifiable {
+        let id: Int
+        let url: URL
+        let lang: String
+    }
 }
 
 extension Source {
     static let mock = [
         Source(
-            id: "",
+            id: 0,
             url: URL(string: "/")!,
             quality: .auto
         )
     ]
+}
+
+struct SourcesOptions: Hashable {
+    public let sources: [Source]
+    public let subtitles: [Source.Subtitle]
+
+    init(
+        _ sources: [Source],
+        subtitles: [Source.Subtitle] = []
+    ) {
+        self.sources = sources.sorted(by: \.quality).reversed()
+        self.subtitles = subtitles
+    }
 }

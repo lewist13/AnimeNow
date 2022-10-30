@@ -34,7 +34,14 @@ extension Array where Element: Identifiable {
             self.append(element)
         }
     }
+}
 
+public protocol IdentifiableArray: Collection where Element: Identifiable {
+    subscript(id id: Element.ID) -> Element? { get set }
+    func index(id: Element.ID) -> Int?
+}
+
+extension Array: IdentifiableArray where Element: Identifiable {
     public subscript(id id: Element.ID) -> Element? {
         get {
             first(where: { $0.id == id })
@@ -54,7 +61,7 @@ extension Array where Element: Identifiable {
         }
     }
 
-    func index(id: Element.ID) -> Int? {
+    public func index(id: Element.ID) -> Int? {
         firstIndex(where: { $0.id == id })
     }
 }

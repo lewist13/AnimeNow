@@ -31,6 +31,7 @@ struct HomeView: View {
                     )
 
                     resumeWatchingEpisodes(
+                        isLoading: viewStore.state,
                         store: store.scope(
                             state: \.resumeWatching
                         )
@@ -125,7 +126,7 @@ extension HomeView {
                             location: 0.4
                         ),
                         .init(
-                            color: .black,
+                            color: .black.opacity(0.75),
                             location: 1.0
                         )
                     ],
@@ -138,10 +139,6 @@ extension HomeView {
                 Text(anime.title)
                     .font(.title.weight(.bold))
                     .lineLimit(2)
-
-                Text(anime.description)
-                    .font(.callout)
-                    .lineLimit(3)
             }
             .foregroundColor(.white)
             .multilineTextAlignment(.leading)
@@ -242,56 +239,62 @@ extension HomeView {
 extension HomeView {
     @ViewBuilder
     func resumeWatchingEpisodes(
+        isLoading: Bool,
         store: Store<HomeReducer.LoadableEpisodes, HomeReducer.Action>
     ) -> some View {
         WithViewStore(
             store,
             observe: { $0 }
         ) { viewStore in
-            if let items = viewStore.state.value, items.count > 0 {
-                VStack(alignment: .leading) {
-                    headerText("Resume Watching")
+            Group {
+                if let items = viewStore.state.value, items.count > 0, !isLoading {
+                    VStack(alignment: .leading) {
+                        headerText("Resume Watching")
 
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        LazyHStack(alignment: .center) {
-                            ForEach(items, id: \.id) { item in
-                                ThumbnailItemBigView(
-                                    type:
-                                        item.episodeStore.isMovie ?
-                                        .movie(
-                                            image: item.episodeStore.thumbnail?.link,
-                                            name: item.episodeStore.title,
-                                            progress: item.episodeStore.progress
-                                        ) :
-                                        .episode(
-                                            image: item.episodeStore.thumbnail?.link,
-                                            name: item.episodeStore.title,
-                                            animeName: item.title,
-                                            number: Int(item.episodeStore.number),
-                                            progress: item.episodeStore.progress
-                                        ),
-                                    progressSize: 6
-                                )
-                                .frame(height: DeviceUtil.isPhone ? 150 : 225)
-                                .onTapGesture {
-                                    viewStore.send(.resumeWatchingTapped(item))
-                                }
-                                .contextMenu {
-                                    Button {
-                                        viewStore.send(.markAsWatched(item))
-                                    } label: {
-                                        Label(
-                                            "Mark as watched",
-                                            systemImage: "eye.fill"
-                                        )
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            LazyHStack(alignment: .center) {
+                                ForEach(items, id: \.id) { item in
+                                    ThumbnailItemBigView(
+                                        type:
+                                            item.episodeStore.isMovie ?
+                                            .movie(
+                                                image: item.episodeStore.thumbnail?.link,
+                                                name: item.episodeStore.title,
+                                                progress: item.episodeStore.progress
+                                            ) :
+                                            .episode(
+                                                image: item.episodeStore.thumbnail?.link,
+                                                name: item.episodeStore.title,
+                                                animeName: item.title,
+                                                number: Int(item.episodeStore.number),
+                                                progress: item.episodeStore.progress
+                                            ),
+                                        progressSize: 6
+                                    )
+                                    .frame(height: DeviceUtil.isPhone ? 150 : 225)
+                                    .onTapGesture {
+                                        viewStore.send(.resumeWatchingTapped(item))
+                                    }
+                                    .contextMenu {
+                                        Button {
+                                            viewStore.send(.markAsWatched(item))
+                                        } label: {
+                                            Label(
+                                                "Mark as watched",
+                                                systemImage: "eye.fill"
+                                            )
+                                        }
                                     }
                                 }
                             }
+                            .padding(.horizontal)
                         }
-                        .padding(.horizontal)
                     }
+                } else {
+                    EmptyView()
                 }
             }
+//            .animation(.linear, value: viewStore.state.value?.count)
         }
     }
 }

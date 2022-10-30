@@ -30,6 +30,7 @@ struct HomeReducer: ReducerProtocol {
         case markAsWatched(ResumeWatchingEpisode)
         case fetchedAnime(keyPath: WritableKeyPath<State, LoadableAnime>, result: TaskResult<[Anime]>)
         case observingAnimesInDB([AnimeStore])
+        case setResumeWatchingEpisodes(LoadableEpisodes)
         case fetchLastWatchedAnimes([Anime.ID])
         case fetchedLastWatchedAnimes([Anime])
         case binding(BindingAction<HomeReducer.State>)
@@ -122,27 +123,31 @@ extension HomeReducer {
             state[keyPath: keyPath] = .failed
 
         case .observingAnimesInDB(let animesInDb):
-            var lastWatched = [Anime.ID]()
-            var resumeWatchingAnimes = [ResumeWatchingEpisode]()
+            return .run { send in
+                var lastWatched = [Anime.ID]()
+                var resumeWatchingEpisodes = [ResumeWatchingEpisode]()
 
-            let sortedAnimeStores = animesInDb.sorted { anime1, anime2 in
-                guard let lastModifiedOne = anime1.lastModifiedEpisode,
-                      let lastModifiedTwo = anime2.lastModifiedEpisode else {
-                    return false
+                let sortedAnimeStores = animesInDb.sorted { anime1, anime2 in
+                    guard let lastModifiedOne = anime1.lastModifiedEpisode,
+                          let lastModifiedTwo = anime2.lastModifiedEpisode else {
+                        return false
+                    }
+                    return lastModifiedOne.lastUpdatedProgress > lastModifiedTwo.lastUpdatedProgress
                 }
-                return lastModifiedOne.lastUpdatedProgress > lastModifiedTwo.lastUpdatedProgress
+
+                for animeStore in sortedAnimeStores {
+                    lastWatched.append(animeStore.id)
+
+                    guard let recentEpisodeStore = animeStore.lastModifiedEpisode, !recentEpisodeStore.almostFinished else { continue }
+                    resumeWatchingEpisodes.append(.init(anime: animeStore, title: animeStore.title, episodeStore: recentEpisodeStore))
+                }
+
+                await send(.setResumeWatchingEpisodes(.success(resumeWatchingEpisodes)), animation: .easeInOut(duration: 0.25))
+                await send(.fetchLastWatchedAnimes(sortedAnimeStores.map(\.id)))
             }
 
-            for animeStore in sortedAnimeStores {
-                lastWatched.append(animeStore.id)
-
-                guard let recentEpisodeStore = animeStore.lastModifiedEpisode, !recentEpisodeStore.almostFinished else { continue }
-                resumeWatchingAnimes.append(.init(anime: animeStore, title: animeStore.title, episodeStore: recentEpisodeStore))
-            }
-
-            state.resumeWatching = .success(resumeWatchingAnimes)
-
-            return .action(.fetchLastWatchedAnimes(sortedAnimeStores.map(\.id)))
+        case .setResumeWatchingEpisodes(let episodes):
+            state.resumeWatching = episodes
 
         case .fetchLastWatchedAnimes(let animeIds):
             guard !animeIds.isEmpty else {

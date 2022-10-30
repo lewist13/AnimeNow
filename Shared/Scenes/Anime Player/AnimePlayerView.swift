@@ -51,12 +51,6 @@ struct AnimePlayerView: View {
             .onPictureInPictureStatusChanged { status in
                 viewStore.send(.playerPiPStatus(status))
             }
-            .onSubtitlesChanged { selection in
-//                viewStore.send(.playerSubtitles(selection))
-            }
-            .onSubtitleSelectionChanged { selected in
-//                viewStore.send(.playerSelectedSubtitle(selected))
-            }
             .onVolumeChanged { volume in
                 viewStore.send(.playerVolume(volume))
             }
@@ -72,6 +66,7 @@ struct AnimePlayerView: View {
         .onTapGesture {
             ViewStore(store.stateless).send(.playerTapped)
         }
+        .overlay(subtitlesOverlay)
         .overlay(errorOverlay)
         .overlay(playerControlsOverlay)
         .ignoresSafeArea(edges: .vertical)
@@ -336,25 +331,34 @@ extension AnimePlayerView {
             }
     }
 
+
+    struct SubtitlesViewState: Equatable {
+        let subtitles: [Source.Subtitle]?
+        let selected: Source.Subtitle.ID?
+
+        init(_ state: AnimePlayerReducer.State) {
+            self.subtitles = state.sourcesOptions.value?.subtitles
+            self.selected = state.selectedSubtitle
+        }
+    }
+
     @ViewBuilder
     var subtitlesButton: some View {
-        EmptyView()
-//        WithViewStore(
-//            store.scope(
-//                state: \.playerSubtitles
-//            )
-//        ) { viewStore in
-//            if let count = viewStore.state?.options.count, count > 0 {
-//                Image(systemName: "captions.bubble.fill")
-//                    .foregroundColor(Color.white)
-//                    .font(.title2)
-//                    .padding(4)
-//                    .contentShape(Rectangle())
-//                    .onTapGesture {
-//                        viewStore.send(.showSubtitlesSidebar)
-//                    }
-//            }
-//        }
+        WithViewStore(
+            store,
+            observe: { $0.sourcesOptions.value?.subtitles.count ?? 0 }
+        ) { viewStore in
+            if viewStore.state > 0 {
+                Image(systemName: "captions.bubble.fill")
+                    .foregroundColor(Color.white)
+                    .font(.title2)
+                    .padding(4)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        viewStore.send(.showSubtitlesSidebar)
+                    }
+            }
+        }
     }
 
     @ViewBuilder
@@ -399,6 +403,46 @@ extension AnimePlayerView {
                         viewState.send(.showEpisodesSidebar)
                     }
             }
+        }
+    }
+}
+
+// MARK: Subtitles View
+
+extension AnimePlayerView {
+    struct SubtitlesTextOverlayState: Equatable {
+        let subtitle: URL?
+        let progress: Double
+        let duration: Double
+
+        init(_ state: AnimePlayerReducer.State) {
+            if let subtitles = state.sourcesOptions.value?.subtitles,
+               let selected = state.selectedSubtitle,
+               let subtitle = subtitles[id: selected] {
+                self.subtitle = subtitle.url
+            } else {
+                self.subtitle = nil
+            }
+            self.progress = state.playerProgress
+            self.duration = state.playerDuration
+        }
+    }
+
+    @ViewBuilder
+    var subtitlesOverlay: some View {
+        WithViewStore(
+            store,
+            observe: SubtitlesTextOverlayState.init
+        ) { viewStore in
+            SubtitleTextView(
+                url: viewStore.subtitle,
+                progress: viewStore.progress,
+                duration: viewStore.duration
+            )
+            .frame(
+                maxWidth: .infinity,
+                maxHeight: .infinity
+            )
         }
     }
 }

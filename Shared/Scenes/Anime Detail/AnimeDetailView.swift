@@ -37,7 +37,9 @@ struct AnimeDetailView: View {
         .transition(.move(edge: .bottom).combined(with: .opacity))
         .frame(maxWidth: .infinity)
         .overlay(closeButton)
+        #if os(iOS)
         .ignoresSafeArea(edges: .top)
+        #endif
         .background(Color.black.ignoresSafeArea())
     }
 }
@@ -46,22 +48,22 @@ struct AnimeDetailView: View {
 
 extension AnimeDetailView {
     @ViewBuilder var closeButton: some View {
-        Image(systemName: "xmark")
+        Image(systemName: DeviceUtil.isMac ? "chevron.backward" : "xmark")
             .font(.system(size: 14, weight: .black))
             .foregroundColor(Color.white.opacity(0.9))
             .padding(12)
             .background(Color(white: 0.2))
             .clipShape(Circle())
             .padding()
-            .frame(
-                maxWidth: .infinity,
-                maxHeight: .infinity,
-                alignment: .topTrailing
-            )
             .onTapGesture {
                 ViewStore(store.stateless)
                     .send(.closeButtonPressed)
             }
+            .frame(
+                maxWidth: .infinity,
+                maxHeight: .infinity,
+                alignment: DeviceUtil.isMac ? .topLeading : .topTrailing
+            )
     }
 }
 

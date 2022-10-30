@@ -9,8 +9,6 @@
 
 import AVKit
 import SwiftUI
-import Combine
-import AVFoundation
 
 public struct VideoPlayer {
     public enum Action: Equatable {
@@ -96,12 +94,6 @@ public struct VideoPlayer {
     /// Duration Changed Callback
     private var onDurationChangedCallback: ((Double) -> Void)?
 
-    /// Subtitles Changed Callback
-    private var onSubtitlesChangedCallback: ((AVMediaSelectionGroup?) -> Void)?
-
-    /// Subtitle Selection Changed Callback
-    private var onSubtitleSelectionChangedCallback: ((AVMediaSelectionOption?) -> Void)?
-
     /// Volume Changed Callback
     private var onVolumeChangedCallback: ((Double) -> Void)?
 
@@ -171,8 +163,8 @@ extension VideoPlayer: PlatformAgnosticViewRepresentable {
     }
 
     public static func dismantlePlatformView(_ view: PlayerView, coordinator: Coordinator) {
-        coordinator.removeObservers(view: view)
         view.destroy()
+        coordinator.removeObservers(view: view)
     }
 
     public func makeCoordinator() -> Coordinator {
@@ -184,12 +176,8 @@ extension VideoPlayer: PlatformAgnosticViewRepresentable {
         var observerProgress: Double?
         var observerBuffer: Double?
         var observerDuration: Double?
-        var observerSubtitles: AVMediaSelectionGroup?
-        var observerSubtitle: AVMediaSelectionOption?
         var observerVolume: Double?
         var controller: AVPictureInPictureController?
-
-        private var cancellables = Set<AnyCancellable>()
 
         init(_ videoPlayer: VideoPlayer) {
             self.videoPlayer = videoPlayer
@@ -210,8 +198,6 @@ extension VideoPlayer: PlatformAgnosticViewRepresentable {
             observerProgress = nil
             observerBuffer = nil
             observerDuration = nil
-            observerSubtitles = nil
-            observerSubtitle = nil
             observerVolume = nil
         }
 
@@ -226,8 +212,6 @@ extension VideoPlayer: PlatformAgnosticViewRepresentable {
                 self.updateProgress(view: view)
                 self.updateBuffer(view: view)
                 self.updateDuration(view: view)
-                self.updateSubtitles(view: view)
-                self.updateSubtitleSelected(view: view)
                 self.updateVolume(view: view)
             }
         }
@@ -242,35 +226,6 @@ extension VideoPlayer: PlatformAgnosticViewRepresentable {
             DispatchQueue.main.async { handler(progress) }
 
             observerProgress = progress
-        }
-
-        func updateSubtitles(view: PlayerView) {
-            guard let handler = videoPlayer.onSubtitlesChangedCallback else { return }
-
-            let legibleGroup = view.player.currentItem?.asset.mediaSelectionGroup(forMediaCharacteristic: .legible)
-            guard legibleGroup != observerSubtitles else { return }
-
-            DispatchQueue.main.async { handler(legibleGroup) }
-
-            observerSubtitles = legibleGroup
-        }
-
-        func updateSubtitleSelected(view: PlayerView) {
-            guard let handler = videoPlayer.onSubtitleSelectionChangedCallback else { return }
-
-            let selectedItem: AVMediaSelectionOption?
-
-            if let legibleGroup = view.player.currentItem?.asset.mediaSelectionGroup(forMediaCharacteristic: .legible) {
-                selectedItem = view.player.currentItem?.currentMediaSelection.selectedMediaOption(in: legibleGroup)
-            } else {
-                selectedItem = nil
-            }
-
-            guard selectedItem != observerSubtitle else { return }
-
-            DispatchQueue.main.async { handler(selectedItem) }
-
-            observerSubtitle = selectedItem
         }
 
         func updateBuffer(view: PlayerView) {
@@ -342,18 +297,6 @@ extension VideoPlayer {
         return view
     }
 
-    func onSubtitlesChanged(_ handler: @escaping (AVMediaSelectionGroup?) -> Void) -> Self {
-        var view = self
-        view.onSubtitlesChangedCallback = handler
-        return view
-    }
-
-    func onSubtitleSelectionChanged(_ handler: @escaping (AVMediaSelectionOption?) -> Void) -> Self {
-        var view = self
-        view.onSubtitleSelectionChangedCallback = handler
-        return view
-    }
-
     func onVolumeChanged(_ handler: @escaping (Double) -> Void) -> Self {
         var view = self
         view.onVolumeChangedCallback = handler
@@ -401,7 +344,7 @@ struct VideoPlayer_Previews: PreviewProvider {
 
     static var previews: some View {
         VideoPlayer(
-            url: URL(string: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8"),
+            url: URL(string: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8")!,
             action: $action
         )
         .onStatusChanged {

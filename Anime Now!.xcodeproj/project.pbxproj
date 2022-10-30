@@ -25,6 +25,7 @@
 		1324366A28E7D4BE00F282EE /* AnimeStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1324366928E7D4BE00F282EE /* AnimeStore.swift */; };
 		1324366B28E7D4BE00F282EE /* AnimeStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1324366928E7D4BE00F282EE /* AnimeStore.swift */; };
 		1325FD6D2904F9BC00EA37D5 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1325FD6C2904F9BC00EA37D5 /* AppDelegate.swift */; };
+		1326285A290DDB61003A9AFB /* View+Keyboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13262858290DDB59003A9AFB /* View+Keyboard.swift */; };
 		1327550628D2A11A00A6C525 /* UserDefaultsClient+Live.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1327550528D2A11A00A6C525 /* UserDefaultsClient+Live.swift */; };
 		1327550728D2A11A00A6C525 /* UserDefaultsClient+Live.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1327550528D2A11A00A6C525 /* UserDefaultsClient+Live.swift */; };
 		1327550928D2A7C400A6C525 /* UserDefaultsClient+Mock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1327550828D2A7C400A6C525 /* UserDefaultsClient+Mock.swift */; };
@@ -47,6 +48,10 @@
 		13446E8228CA4AB100F815C6 /* SettingsReducer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13446E8028CA4AB100F815C6 /* SettingsReducer.swift */; };
 		134E0E9228D125C000A5F5E5 /* UserDefaultsClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 134E0E9128D125C000A5F5E5 /* UserDefaultsClient.swift */; };
 		134E0E9328D125C000A5F5E5 /* UserDefaultsClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 134E0E9128D125C000A5F5E5 /* UserDefaultsClient.swift */; };
+		134E5AB3290E53D300E41664 /* SwiftWebVTT in Frameworks */ = {isa = PBXBuildFile; productRef = 134E5AB2290E53D300E41664 /* SwiftWebVTT */; };
+		134E5AB5290E53EA00E41664 /* SwiftWebVTT in Frameworks */ = {isa = PBXBuildFile; productRef = 134E5AB4290E53EA00E41664 /* SwiftWebVTT */; };
+		134E5AB7290E61CE00E41664 /* SubtitleTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 134E5AB6290E61CE00E41664 /* SubtitleTextView.swift */; };
+		134E5AB8290E61CE00E41664 /* SubtitleTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 134E5AB6290E61CE00E41664 /* SubtitleTextView.swift */; };
 		134F600D28FE4E790024B0D5 /* SnapCarousel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13D83B8928FDAE340044F04A /* SnapCarousel.swift */; };
 		134FAA1C28D6FAFC00B081FE /* String+Time.swift in Sources */ = {isa = PBXBuildFile; fileRef = 134FAA1B28D6FAFC00B081FE /* String+Time.swift */; };
 		134FAA1D28D6FAFC00B081FE /* String+Time.swift in Sources */ = {isa = PBXBuildFile; fileRef = 134FAA1B28D6FAFC00B081FE /* String+Time.swift */; };
@@ -104,9 +109,6 @@
 		1395FF7528C6920E00F21FB1 /* SociableWeaver in Frameworks */ = {isa = PBXBuildFile; productRef = 1395FF7428C6920E00F21FB1 /* SociableWeaver */; };
 		1398F35C28FFCAD600C93CFA /* BottomSafeAreaInset+View.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1398F35B28FFCAD600C93CFA /* BottomSafeAreaInset+View.swift */; };
 		1398F35D28FFCAD600C93CFA /* BottomSafeAreaInset+View.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1398F35B28FFCAD600C93CFA /* BottomSafeAreaInset+View.swift */; };
-		13A1559F290A34DC006EB845 /* AnimeNowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13A1559E290A34DC006EB845 /* AnimeNowTests.swift */; };
-		13A155AC290A367A006EB845 /* AnimeNowUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13A155AB290A367A006EB845 /* AnimeNowUITests.swift */; };
-		13A155AE290A367A006EB845 /* AnimeNowUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13A155AD290A367A006EB845 /* AnimeNowUITestsLaunchTests.swift */; };
 		13A155B5290A3DDF006EB845 /* TestVideoPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13A155B4290A3DDF006EB845 /* TestVideoPlayer.swift */; };
 		13A155B6290A3DDF006EB845 /* TestVideoPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13A155B4290A3DDF006EB845 /* TestVideoPlayer.swift */; };
 		13B2770A28F7753100B4B4A3 /* VideoPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1327553228D2C16C00A6C525 /* VideoPlayer.swift */; };
@@ -119,6 +121,11 @@
 		13B2771A28F79FF200B4B4A3 /* KitsuAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1359668728E56ACF00EB2AFC /* KitsuAPI.swift */; };
 		13B2771B28F79FF200B4B4A3 /* ConsumetAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13E465F328E6231A001FF309 /* ConsumetAPI.swift */; };
 		13B2771C28F79FFA00B4B4A3 /* Date+Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 130ED93B28E3FD38000811A6 /* Date+Utils.swift */; };
+		13BA64C1290C9F32005C4A3F /* CDCollectionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13BA64C0290C9F32005C4A3F /* CDCollectionStore.swift */; };
+		13BA64C2290C9F32005C4A3F /* CDCollectionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13BA64C0290C9F32005C4A3F /* CDCollectionStore.swift */; };
+		13BA64C5290CA52C005C4A3F /* CollectionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13BA64C4290CA52C005C4A3F /* CollectionStore.swift */; };
+		13BA64C6290CA52C005C4A3F /* CollectionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13BA64C4290CA52C005C4A3F /* CollectionStore.swift */; };
+		13BA64C9290CC018005C4A3F /* CloudKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 13BA64C8290CC018005C4A3F /* CloudKit.framework */; };
 		13BAE88828F3A0AC00662C0C /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13BAE88728F3A0AC00662C0C /* SceneDelegate.swift */; };
 		13BAE88A28F3A22F00662C0C /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13BAE88928F3A22F00662C0C /* AppDelegate.swift */; };
 		13BAE88C28F3A66100662C0C /* AnimeNowHostingController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13BAE88B28F3A66100662C0C /* AnimeNowHostingController.swift */; };
@@ -157,10 +164,10 @@
 		13D83B8A28FDAE340044F04A /* SnapCarousel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13D83B8928FDAE340044F04A /* SnapCarousel.swift */; };
 		13DF205828FBA18B00EE804D /* DeviceUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13DF205728FBA18B00EE804D /* DeviceUtil.swift */; };
 		13DF205928FBA1A200EE804D /* DeviceUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13DF205728FBA18B00EE804D /* DeviceUtil.swift */; };
-		13DF205F28FBB0A900EE804D /* CollectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13DF205D28FBB0A900EE804D /* CollectionView.swift */; };
-		13DF206028FBB0A900EE804D /* CollectionReducer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13DF205E28FBB0A900EE804D /* CollectionReducer.swift */; };
-		13DF206128FBBDF100EE804D /* CollectionReducer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13DF205E28FBB0A900EE804D /* CollectionReducer.swift */; };
-		13DF206228FBBDF600EE804D /* CollectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13DF205D28FBB0A900EE804D /* CollectionView.swift */; };
+		13DF205F28FBB0A900EE804D /* CollectionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13DF205D28FBB0A900EE804D /* CollectionsView.swift */; };
+		13DF206028FBB0A900EE804D /* CollectionsReducer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13DF205E28FBB0A900EE804D /* CollectionsReducer.swift */; };
+		13DF206128FBBDF100EE804D /* CollectionsReducer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13DF205E28FBB0A900EE804D /* CollectionsReducer.swift */; };
+		13DF206228FBBDF600EE804D /* CollectionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13DF205D28FBB0A900EE804D /* CollectionsView.swift */; };
 		13DF206328FBD61C00EE804D /* SearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 138066F028C572B50012DAFB /* SearchView.swift */; };
 		13DF206428FBD64C00EE804D /* DownloadsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1364BA9A28E13F6E005BAEBA /* DownloadsView.swift */; };
 		13DF206528FBDB4500EE804D /* AnimePlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1380561B28E9223400B9B45B /* AnimePlayerView.swift */; };
@@ -172,7 +179,6 @@
 		13E512C728C79E5E00B298BA /* GraphQLModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13E512C628C79E5E00B298BA /* GraphQLModels.swift */; };
 		13E95CF02904A4B100E85F28 /* Effect+Send.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13E95CEF2904A4B100E85F28 /* Effect+Send.swift */; };
 		13E95CF12904A4B100E85F28 /* Effect+Send.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13E95CEF2904A4B100E85F28 /* Effect+Send.swift */; };
-		13F52BDD29061D9400AC9315 /* NSWindow+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13F52BDC29061D9400AC9315 /* NSWindow+Extension.swift */; };
 		13F52BDF2906285B00AC9315 /* View+Hovered.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13F52BDE2906285B00AC9315 /* View+Hovered.swift */; };
 		13FC21C828C39762000F0F79 /* RepositoryClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13FC21C728C39762000F0F79 /* RepositoryClient.swift */; };
 		13FC21CA28C3976D000F0F79 /* RepositoryClient+Live.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13FC21C928C3976D000F0F79 /* RepositoryClient+Live.swift */; };
@@ -189,23 +195,6 @@
 		13FC747428CFA10A00A77818 /* Source.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13FC747228CFA10A00A77818 /* Source.swift */; };
 /* End PBXBuildFile section */
 
-/* Begin PBXContainerItemProxy section */
-		13A155A0290A34DC006EB845 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 13C3535328C3089E00A54E7E /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 13C3536128C308A000A54E7E;
-			remoteInfo = "Anime Now! (iOS)";
-		};
-		13A155AF290A367A006EB845 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 13C3535328C3089E00A54E7E /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 13C3536128C308A000A54E7E;
-			remoteInfo = "Anime Now! (iOS)";
-		};
-/* End PBXContainerItemProxy section */
-
 /* Begin PBXFileReference section */
 		1304124C28FEF4C20011CE3C /* SideArrowsList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SideArrowsList.swift; sourceTree = "<group>"; };
 		1306E77428E76D4D004FC3E9 /* CDAnimeStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CDAnimeStore.swift; sourceTree = "<group>"; };
@@ -221,6 +210,7 @@
 		1324366628E7B40300F282EE /* Sequence+Keypath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sequence+Keypath.swift"; sourceTree = "<group>"; };
 		1324366928E7D4BE00F282EE /* AnimeStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimeStore.swift; sourceTree = "<group>"; };
 		1325FD6C2904F9BC00EA37D5 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		13262858290DDB59003A9AFB /* View+Keyboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+Keyboard.swift"; sourceTree = "<group>"; };
 		1327550528D2A11A00A6C525 /* UserDefaultsClient+Live.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UserDefaultsClient+Live.swift"; sourceTree = "<group>"; };
 		1327550828D2A7C400A6C525 /* UserDefaultsClient+Mock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UserDefaultsClient+Mock.swift"; sourceTree = "<group>"; };
 		1327553228D2C16C00A6C525 /* VideoPlayer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VideoPlayer.swift; sourceTree = "<group>"; };
@@ -232,6 +222,7 @@
 		13446E7F28CA4AB100F815C6 /* SettingsView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		13446E8028CA4AB100F815C6 /* SettingsReducer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SettingsReducer.swift; sourceTree = "<group>"; };
 		134E0E9128D125C000A5F5E5 /* UserDefaultsClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDefaultsClient.swift; sourceTree = "<group>"; };
+		134E5AB6290E61CE00E41664 /* SubtitleTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubtitleTextView.swift; sourceTree = "<group>"; };
 		134FAA1B28D6FAFC00B081FE /* String+Time.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+Time.swift"; sourceTree = "<group>"; };
 		134FAA1E28D6FBC200B081FE /* CMTime+String.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CMTime+String.swift"; sourceTree = "<group>"; };
 		1352A05428DBC89600A5B20D /* ImageSize.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageSize.swift; sourceTree = "<group>"; };
@@ -267,14 +258,13 @@
 		13944BAE2908D47800B947B5 /* FillAspectImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FillAspectImage.swift; sourceTree = "<group>"; };
 		13959E79290220A200861143 /* Model 3.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "Model 3.xcdatamodel"; sourceTree = "<group>"; };
 		1398F35B28FFCAD600C93CFA /* BottomSafeAreaInset+View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BottomSafeAreaInset+View.swift"; sourceTree = "<group>"; };
-		13A1559C290A34DC006EB845 /* AnimeNowTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AnimeNowTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		13A1559E290A34DC006EB845 /* AnimeNowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimeNowTests.swift; sourceTree = "<group>"; };
-		13A155A9290A367A006EB845 /* AnimeNowUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AnimeNowUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		13A155AB290A367A006EB845 /* AnimeNowUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimeNowUITests.swift; sourceTree = "<group>"; };
-		13A155AD290A367A006EB845 /* AnimeNowUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimeNowUITestsLaunchTests.swift; sourceTree = "<group>"; };
 		13A155B4290A3DDF006EB845 /* TestVideoPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestVideoPlayer.swift; sourceTree = "<group>"; };
 		13B2771228F7922900B4B4A3 /* VideoPlayer+View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "VideoPlayer+View.swift"; sourceTree = "<group>"; };
 		13B2771528F79EA300B4B4A3 /* PlatformViewRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlatformViewRepresentable.swift; sourceTree = "<group>"; };
+		13BA64C0290C9F32005C4A3F /* CDCollectionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CDCollectionStore.swift; sourceTree = "<group>"; };
+		13BA64C3290C9F58005C4A3F /* Model 4.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "Model 4.xcdatamodel"; sourceTree = "<group>"; };
+		13BA64C4290CA52C005C4A3F /* CollectionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionStore.swift; sourceTree = "<group>"; };
+		13BA64C8290CC018005C4A3F /* CloudKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CloudKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.5.sdk/System/Library/Frameworks/CloudKit.framework; sourceTree = DEVELOPER_DIR; };
 		13BAE88728F3A0AC00662C0C /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		13BAE88928F3A22F00662C0C /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		13BAE88B28F3A66100662C0C /* AnimeNowHostingController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimeNowHostingController.swift; sourceTree = "<group>"; };
@@ -294,15 +284,14 @@
 		13D83B8628FCAA800044F04A /* AnimePlayerView+macOS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AnimePlayerView+macOS.swift"; sourceTree = "<group>"; };
 		13D83B8928FDAE340044F04A /* SnapCarousel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnapCarousel.swift; sourceTree = "<group>"; };
 		13DF205728FBA18B00EE804D /* DeviceUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceUtil.swift; sourceTree = "<group>"; };
-		13DF205D28FBB0A900EE804D /* CollectionView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CollectionView.swift; sourceTree = "<group>"; };
-		13DF205E28FBB0A900EE804D /* CollectionReducer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CollectionReducer.swift; sourceTree = "<group>"; };
+		13DF205D28FBB0A900EE804D /* CollectionsView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CollectionsView.swift; sourceTree = "<group>"; };
+		13DF205E28FBB0A900EE804D /* CollectionsReducer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CollectionsReducer.swift; sourceTree = "<group>"; };
 		13E465F328E6231A001FF309 /* ConsumetAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsumetAPI.swift; sourceTree = "<group>"; };
 		13E465F528E62508001FF309 /* EnimeAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnimeAPI.swift; sourceTree = "<group>"; };
 		13E4BCEE28C829A80039D880 /* AnimeDetailView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AnimeDetailView.swift; sourceTree = "<group>"; };
 		13E4BCEF28C829A80039D880 /* AnimeDetailReducer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AnimeDetailReducer.swift; sourceTree = "<group>"; };
 		13E512C628C79E5E00B298BA /* GraphQLModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GraphQLModels.swift; sourceTree = "<group>"; };
 		13E95CEF2904A4B100E85F28 /* Effect+Send.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Effect+Send.swift"; sourceTree = "<group>"; };
-		13F52BDC29061D9400AC9315 /* NSWindow+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSWindow+Extension.swift"; sourceTree = "<group>"; };
 		13F52BDE2906285B00AC9315 /* View+Hovered.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+Hovered.swift"; sourceTree = "<group>"; };
 		13FC21C728C39762000F0F79 /* RepositoryClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepositoryClient.swift; sourceTree = "<group>"; };
 		13FC21C928C3976D000F0F79 /* RepositoryClient+Live.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "RepositoryClient+Live.swift"; sourceTree = "<group>"; };
@@ -314,20 +303,6 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		13A15599290A34DC006EB845 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		13A155A6290A367A006EB845 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		13C3535F28C308A000A54E7E /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -337,8 +312,10 @@
 				1318EEE828D5375100EB85FA /* AVFoundation.framework in Frameworks */,
 				1318EEE628D5374C00EB85FA /* AVKit.framework in Frameworks */,
 				13C3537F28C311B300A54E7E /* ComposableArchitecture in Frameworks */,
+				13BA64C9290CC018005C4A3F /* CloudKit.framework in Frameworks */,
 				1363011C28C5C49F0076BF0A /* TinyGraphQL in Frameworks */,
 				1384FF7728CB8D07003B011E /* SwiftUINavigation in Frameworks */,
+				134E5AB3290E53D300E41664 /* SwiftWebVTT in Frameworks */,
 				13D2846528CF08F500332556 /* XCTestDynamicOverlay in Frameworks */,
 				137A818128C51C7400B69503 /* URLRouting in Frameworks */,
 			);
@@ -350,6 +327,7 @@
 			files = (
 				13C1551E28FB7F300064885D /* AVFoundation.framework in Frameworks */,
 				13D2846728CF090700332556 /* XCTestDynamicOverlay in Frameworks */,
+				134E5AB5290E53EA00E41664 /* SwiftWebVTT in Frameworks */,
 				137A81A528C5572E00B69503 /* Kingfisher in Frameworks */,
 				13D2846928CF090B00332556 /* SwiftUINavigation in Frameworks */,
 				1327550C28D2AA8E00A6C525 /* SociableWeaver in Frameworks */,
@@ -388,6 +366,7 @@
 			children = (
 				1306E77428E76D4D004FC3E9 /* CDAnimeStore.swift */,
 				1376A49328EFA3E90010E614 /* CDEpisodeStore.swift */,
+				13BA64C0290C9F32005C4A3F /* CDCollectionStore.swift */,
 			);
 			path = ManagedObjects;
 			sourceTree = "<group>";
@@ -460,23 +439,6 @@
 			path = Scenes;
 			sourceTree = "<group>";
 		};
-		13A1559D290A34DC006EB845 /* AnimeNowTests */ = {
-			isa = PBXGroup;
-			children = (
-				13A1559E290A34DC006EB845 /* AnimeNowTests.swift */,
-			);
-			path = AnimeNowTests;
-			sourceTree = "<group>";
-		};
-		13A155AA290A367A006EB845 /* AnimeNowUITests */ = {
-			isa = PBXGroup;
-			children = (
-				13A155AB290A367A006EB845 /* AnimeNowUITests.swift */,
-				13A155AD290A367A006EB845 /* AnimeNowUITestsLaunchTests.swift */,
-			);
-			path = AnimeNowUITests;
-			sourceTree = "<group>";
-		};
 		13B2770928F76A8000B4B4A3 /* Components */ = {
 			isa = PBXGroup;
 			children = (
@@ -494,6 +456,7 @@
 				1304124C28FEF4C20011CE3C /* SideArrowsList.swift */,
 				13944BAE2908D47800B947B5 /* FillAspectImage.swift */,
 				13A155B4290A3DDF006EB845 /* TestVideoPlayer.swift */,
+				134E5AB6290E61CE00E41664 /* SubtitleTextView.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -544,13 +507,13 @@
 			path = "Anime Player";
 			sourceTree = "<group>";
 		};
-		13BD66E62901AF9B00D565F4 /* Collection */ = {
+		13BD66E62901AF9B00D565F4 /* Collections */ = {
 			isa = PBXGroup;
 			children = (
-				13DF205E28FBB0A900EE804D /* CollectionReducer.swift */,
-				13DF205D28FBB0A900EE804D /* CollectionView.swift */,
+				13DF205E28FBB0A900EE804D /* CollectionsReducer.swift */,
+				13DF205D28FBB0A900EE804D /* CollectionsView.swift */,
 			);
-			path = Collection;
+			path = Collections;
 			sourceTree = "<group>";
 		};
 		13BD66E72901AFAB00D565F4 /* Downloads */ = {
@@ -597,7 +560,7 @@
 				13BD66E82901AFB000D565F4 /* Search */,
 				13BD66E72901AFAB00D565F4 /* Downloads */,
 				13BD66E92901AFE300D565F4 /* Settings */,
-				13BD66E62901AF9B00D565F4 /* Collection */,
+				13BD66E62901AF9B00D565F4 /* Collections */,
 			);
 			path = Scenes;
 			sourceTree = "<group>";
@@ -610,8 +573,6 @@
 				13C3535728C3089E00A54E7E /* Shared */,
 				13FC21C128C3960E000F0F79 /* iOS */,
 				13C3536928C308A000A54E7E /* macOS */,
-				13A1559D290A34DC006EB845 /* AnimeNowTests */,
-				13A155AA290A367A006EB845 /* AnimeNowUITests */,
 				13C3536328C308A000A54E7E /* Products */,
 				13FC21D628C39FA5000F0F79 /* Frameworks */,
 			);
@@ -638,8 +599,6 @@
 			children = (
 				13C3536228C308A000A54E7E /* Anime Now!.app */,
 				13C3536828C308A000A54E7E /* Anime Now!.app */,
-				13A1559C290A34DC006EB845 /* AnimeNowTests.xctest */,
-				13A155A9290A367A006EB845 /* AnimeNowUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -674,8 +633,8 @@
 		13F52BDB29061D8200AC9315 /* Extensions */ = {
 			isa = PBXGroup;
 			children = (
-				13F52BDC29061D9400AC9315 /* NSWindow+Extension.swift */,
 				13F52BDE2906285B00AC9315 /* View+Hovered.swift */,
+				13262858290DDB59003A9AFB /* View+Keyboard.swift */,
 			);
 			path = Extensions;
 			sourceTree = "<group>";
@@ -715,9 +674,10 @@
 				137A819B28C5456400B69503 /* Episode.swift */,
 				13FC747228CFA10A00A77818 /* Source.swift */,
 				1352A05428DBC89600A5B20D /* ImageSize.swift */,
+				137F8FA028F62F6600ECDB30 /* SkipTime.swift */,
 				1324366928E7D4BE00F282EE /* AnimeStore.swift */,
 				1380560E28E8E68100B9B45B /* EpisodeStore.swift */,
-				137F8FA028F62F6600ECDB30 /* SkipTime.swift */,
+				13BA64C4290CA52C005C4A3F /* CollectionStore.swift */,
 			);
 			path = Domain;
 			sourceTree = "<group>";
@@ -745,6 +705,7 @@
 		13FC21D628C39FA5000F0F79 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				13BA64C8290CC018005C4A3F /* CloudKit.framework */,
 				13C1551F28FB7F380064885D /* AVKit.framework */,
 				1318EEE728D5375100EB85FA /* AVFoundation.framework */,
 				13C1551D28FB7F300064885D /* AVFoundation.framework */,
@@ -786,42 +747,6 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		13A1559B290A34DC006EB845 /* AnimeNowTests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 13A155A4290A34DC006EB845 /* Build configuration list for PBXNativeTarget "AnimeNowTests" */;
-			buildPhases = (
-				13A15598290A34DC006EB845 /* Sources */,
-				13A15599290A34DC006EB845 /* Frameworks */,
-				13A1559A290A34DC006EB845 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				13A155A1290A34DC006EB845 /* PBXTargetDependency */,
-			);
-			name = AnimeNowTests;
-			productName = AnimeNowTests;
-			productReference = 13A1559C290A34DC006EB845 /* AnimeNowTests.xctest */;
-			productType = "com.apple.product-type.bundle.unit-test";
-		};
-		13A155A8290A367A006EB845 /* AnimeNowUITests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 13A155B1290A367A006EB845 /* Build configuration list for PBXNativeTarget "AnimeNowUITests" */;
-			buildPhases = (
-				13A155A5290A367A006EB845 /* Sources */,
-				13A155A6290A367A006EB845 /* Frameworks */,
-				13A155A7290A367A006EB845 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				13A155B0290A367A006EB845 /* PBXTargetDependency */,
-			);
-			name = AnimeNowUITests;
-			productName = AnimeNowUITests;
-			productReference = 13A155A9290A367A006EB845 /* AnimeNowUITests.xctest */;
-			productType = "com.apple.product-type.bundle.ui-testing";
-		};
 		13C3536128C308A000A54E7E /* Anime Now! (iOS) */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 13C3537728C308A000A54E7E /* Build configuration list for PBXNativeTarget "Anime Now! (iOS)" */;
@@ -843,6 +768,7 @@
 				1395FF7428C6920E00F21FB1 /* SociableWeaver */,
 				1384FF7628CB8D07003B011E /* SwiftUINavigation */,
 				13D2846428CF08F500332556 /* XCTestDynamicOverlay */,
+				134E5AB2290E53D300E41664 /* SwiftWebVTT */,
 			);
 			productName = "Anime Now! (iOS)";
 			productReference = 13C3536228C308A000A54E7E /* Anime Now!.app */;
@@ -869,6 +795,7 @@
 				13D2846628CF090700332556 /* XCTestDynamicOverlay */,
 				13D2846828CF090B00332556 /* SwiftUINavigation */,
 				1327550B28D2AA8E00A6C525 /* SociableWeaver */,
+				134E5AB4290E53EA00E41664 /* SwiftWebVTT */,
 			);
 			productName = "Anime Now! (macOS)";
 			productReference = 13C3536828C308A000A54E7E /* Anime Now!.app */;
@@ -884,14 +811,6 @@
 				LastSwiftUpdateCheck = 1340;
 				LastUpgradeCheck = 1320;
 				TargetAttributes = {
-					13A1559B290A34DC006EB845 = {
-						CreatedOnToolsVersion = 13.4.1;
-						TestTargetID = 13C3536128C308A000A54E7E;
-					};
-					13A155A8290A367A006EB845 = {
-						CreatedOnToolsVersion = 13.4.1;
-						TestTargetID = 13C3536128C308A000A54E7E;
-					};
 					13C3536128C308A000A54E7E = {
 						CreatedOnToolsVersion = 13.2.1;
 					};
@@ -917,6 +836,7 @@
 				1395FF7328C6920E00F21FB1 /* XCRemoteSwiftPackageReference "SociableWeaver" */,
 				1384FF7528CB8D07003B011E /* XCRemoteSwiftPackageReference "swiftui-navigation" */,
 				13D2846328CF08F500332556 /* XCRemoteSwiftPackageReference "xctest-dynamic-overlay" */,
+				134E5AB1290E53D300E41664 /* XCRemoteSwiftPackageReference "SwiftWebVTT" */,
 			);
 			productRefGroup = 13C3536328C308A000A54E7E /* Products */;
 			projectDirPath = "";
@@ -924,27 +844,11 @@
 			targets = (
 				13C3536128C308A000A54E7E /* Anime Now! (iOS) */,
 				13C3536728C308A000A54E7E /* Anime Now! (macOS) */,
-				13A1559B290A34DC006EB845 /* AnimeNowTests */,
-				13A155A8290A367A006EB845 /* AnimeNowUITests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		13A1559A290A34DC006EB845 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		13A155A7290A367A006EB845 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		13C3536028C308A000A54E7E /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -964,23 +868,6 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		13A15598290A34DC006EB845 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				13A1559F290A34DC006EB845 /* AnimeNowTests.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		13A155A5290A367A006EB845 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				13A155AE290A367A006EB845 /* AnimeNowUITestsLaunchTests.swift in Sources */,
-				13A155AC290A367A006EB845 /* AnimeNowUITests.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		13C3535E28C308A000A54E7E /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1000,6 +887,7 @@
 				13E465F628E62508001FF309 /* EnimeAPI.swift in Sources */,
 				138066F328C572B50012DAFB /* SearchReducer.swift in Sources */,
 				13E4BCF128C829A80039D880 /* AnimeDetailReducer.swift in Sources */,
+				134E5AB7290E61CE00E41664 /* SubtitleTextView.swift in Sources */,
 				1380561C28E9223500B9B45B /* AnimePlayerReducer.swift in Sources */,
 				1327550928D2A7C400A6C525 /* UserDefaultsClient+Mock.swift in Sources */,
 				134E0E9228D125C000A5F5E5 /* UserDefaultsClient.swift in Sources */,
@@ -1009,11 +897,11 @@
 				13DF205828FBA18B00EE804D /* DeviceUtil.swift in Sources */,
 				13C1552328FB9C1D0064885D /* HomeView+iOS.swift in Sources */,
 				1327550628D2A11A00A6C525 /* UserDefaultsClient+Live.swift in Sources */,
-				13DF206028FBB0A900EE804D /* CollectionReducer.swift in Sources */,
+				13DF206028FBB0A900EE804D /* CollectionsReducer.swift in Sources */,
 				1380562128E9341A00B9B45B /* Cache.swift in Sources */,
 				13FC21CA28C3976D000F0F79 /* RepositoryClient+Live.swift in Sources */,
 				13B2771328F7922900B4B4A3 /* VideoPlayer+View.swift in Sources */,
-				13DF205F28FBB0A900EE804D /* CollectionView.swift in Sources */,
+				13DF205F28FBB0A900EE804D /* CollectionsView.swift in Sources */,
 				1384FF7928CB93FA003B011E /* Navigation+Extension.swift in Sources */,
 				137F8FA428F633CC00ECDB30 /* AniSkipAPI.swift in Sources */,
 				1359668F28E6100B00EB2AFC /* HapticClient+Mock.swift in Sources */,
@@ -1050,11 +938,11 @@
 				1304124D28FEF4C20011CE3C /* SideArrowsList.swift in Sources */,
 				1364BA9C28E13F6E005BAEBA /* DownloadsView.swift in Sources */,
 				1380560928E8AD1800B9B45B /* Data+Extensions.swift in Sources */,
+				13BA64C5290CA52C005C4A3F /* CollectionStore.swift in Sources */,
 				130ED93A28E3EF73000811A6 /* ChipView.swift in Sources */,
 				137A819728C53B2A00B69503 /* AppReducer.swift in Sources */,
 				13A155B5290A3DDF006EB845 /* TestVideoPlayer.swift in Sources */,
 				13FC21F828C46E06000F0F79 /* API.swift in Sources */,
-				13F52BDD29061D9400AC9315 /* NSWindow+Extension.swift in Sources */,
 				13FC747328CFA10A00A77818 /* Source.swift in Sources */,
 				1324366A28E7D4BE00F282EE /* AnimeStore.swift in Sources */,
 				137A819C28C5456400B69503 /* Episode.swift in Sources */,
@@ -1065,6 +953,7 @@
 				13FC21CC28C39779000F0F79 /* RepositoryClient+Mock.swift in Sources */,
 				134FAA1C28D6FAFC00B081FE /* String+Time.swift in Sources */,
 				13C3536F28C308A000A54E7E /* AppView.swift in Sources */,
+				13BA64C1290C9F32005C4A3F /* CDCollectionStore.swift in Sources */,
 				13446E8128CA4AB100F815C6 /* SettingsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1073,7 +962,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				13DF206128FBBDF100EE804D /* CollectionReducer.swift in Sources */,
+				13DF206128FBBDF100EE804D /* CollectionsReducer.swift in Sources */,
 				13B2771B28F79FF200B4B4A3 /* ConsumetAPI.swift in Sources */,
 				13C1550A28FB672F0064885D /* HomeReducer.swift in Sources */,
 				1304124E28FEF4C20011CE3C /* SideArrowsList.swift in Sources */,
@@ -1100,13 +989,14 @@
 				1306E77628E76D4D004FC3E9 /* CDAnimeStore.swift in Sources */,
 				13C1551B28FB75780064885D /* View+Redacted.swift in Sources */,
 				13C1551628FB75780064885D /* BlurView.swift in Sources */,
+				13BA64C6290CA52C005C4A3F /* CollectionStore.swift in Sources */,
 				1327550A28D2A7C400A6C525 /* UserDefaultsClient+Mock.swift in Sources */,
 				13938BAA28E0AF20001C8784 /* ImageSize.swift in Sources */,
 				137F8FA528F633CC00ECDB30 /* AniSkipAPI.swift in Sources */,
 				134E0E9328D125C000A5F5E5 /* UserDefaultsClient.swift in Sources */,
 				13C1550D28FB718D0064885D /* AppReducer.swift in Sources */,
 				13DF206328FBD61C00EE804D /* SearchView.swift in Sources */,
-				13DF206228FBBDF600EE804D /* CollectionView.swift in Sources */,
+				13DF206228FBBDF600EE804D /* CollectionsView.swift in Sources */,
 				13C1550F28FB71FE0064885D /* SettingsReducer.swift in Sources */,
 				13C1552128FB91880064885D /* HomeView.swift in Sources */,
 				13C1551428FB75780064885D /* AirplayView.swift in Sources */,
@@ -1121,6 +1011,7 @@
 				13B2771828F79FF200B4B4A3 /* AniListAPI.swift in Sources */,
 				1324366828E7B40300F282EE /* Sequence+Keypath.swift in Sources */,
 				134FAA2028D6FBC200B081FE /* CMTime+String.swift in Sources */,
+				1326285A290DDB61003A9AFB /* View+Keyboard.swift in Sources */,
 				13D83B8828FCAAA40044F04A /* AnimePlayerView+macOS.swift in Sources */,
 				1325FD6D2904F9BC00EA37D5 /* AppDelegate.swift in Sources */,
 				13B2771428F7922900B4B4A3 /* VideoPlayer+View.swift in Sources */,
@@ -1128,6 +1019,7 @@
 				13A155B6290A3DDF006EB845 /* TestVideoPlayer.swift in Sources */,
 				13C3536E28C308A000A54E7E /* AnimeNowApp.swift in Sources */,
 				13944BB02908D47800B947B5 /* FillAspectImage.swift in Sources */,
+				13BA64C2290C9F32005C4A3F /* CDCollectionStore.swift in Sources */,
 				1380560A28E8AD1800B9B45B /* Data+Extensions.swift in Sources */,
 				13C1551028FB72040064885D /* DownloadsReducer.swift in Sources */,
 				13FC21D528C39928000F0F79 /* RepositoryClient+Mock.swift in Sources */,
@@ -1147,6 +1039,7 @@
 				13FC21D428C39928000F0F79 /* RepositoryClient+Live.swift in Sources */,
 				134FAA1D28D6FAFC00B081FE /* String+Time.swift in Sources */,
 				13C1551528FB75780064885D /* ThumbnailItemCompactView.swift in Sources */,
+				134E5AB8290E61CE00E41664 /* SubtitleTextView.swift in Sources */,
 				134F600D28FE4E790024B0D5 /* SnapCarousel.swift in Sources */,
 				1380561028E8E68100B9B45B /* EpisodeStore.swift in Sources */,
 			);
@@ -1154,100 +1047,7 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
-/* Begin PBXTargetDependency section */
-		13A155A1290A34DC006EB845 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 13C3536128C308A000A54E7E /* Anime Now! (iOS) */;
-			targetProxy = 13A155A0290A34DC006EB845 /* PBXContainerItemProxy */;
-		};
-		13A155B0290A367A006EB845 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 13C3536128C308A000A54E7E /* Anime Now! (iOS) */;
-			targetProxy = 13A155AF290A367A006EB845 /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
-
 /* Begin XCBuildConfiguration section */
-		13A155A2290A34DC006EB845 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = A6HC4Y86NJ;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.errorerrorerror.AnimeNowTests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = iphoneos;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Anime Now!.app/Anime Now!";
-			};
-			name = Debug;
-		};
-		13A155A3290A34DC006EB845 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = A6HC4Y86NJ;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.errorerrorerror.AnimeNowTests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = iphoneos;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Anime Now!.app/Anime Now!";
-				VALIDATE_PRODUCT = YES;
-			};
-			name = Release;
-		};
-		13A155B2290A367A006EB845 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = A6HC4Y86NJ;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.5;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.errorerrorerror.AnimeNowUITests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = iphoneos;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = "Anime Now! (iOS)";
-			};
-			name = Debug;
-		};
-		13A155B3290A367A006EB845 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = A6HC4Y86NJ;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.5;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.errorerrorerror.AnimeNowUITests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = iphoneos;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = "Anime Now! (iOS)";
-				VALIDATE_PRODUCT = YES;
-			};
-			name = Release;
-		};
 		13C3537528C308A000A54E7E /* Debug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 13938BAB28E0CADD001C8784 /* MainConfig.xcconfig */;
@@ -1384,7 +1184,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.errorerrorerror.animenow;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.errorerrorerror.anime-now";
 				PRODUCT_MODULE_NAME = AnimeNow;
 				PRODUCT_NAME = "Anime Now!";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1416,7 +1216,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.errorerrorerror.animenow;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.errorerrorerror.anime-now";
 				PRODUCT_MODULE_NAME = AnimeNow;
 				PRODUCT_NAME = "Anime Now!";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1447,7 +1247,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 11.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.errorerrorerror.animenow;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.errorerrorerror.anime-now";
 				PRODUCT_MODULE_NAME = AnimeNow;
 				PRODUCT_NAME = "Anime Now!";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1466,7 +1266,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = A6HC4Y86NJ;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = NO;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -1476,7 +1276,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 11.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.errorerrorerror.animenow;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.errorerrorerror.anime-now";
 				PRODUCT_MODULE_NAME = AnimeNow;
 				PRODUCT_NAME = "Anime Now!";
 				SDKROOT = macosx;
@@ -1488,24 +1288,6 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		13A155A4290A34DC006EB845 /* Build configuration list for PBXNativeTarget "AnimeNowTests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				13A155A2290A34DC006EB845 /* Debug */,
-				13A155A3290A34DC006EB845 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		13A155B1290A367A006EB845 /* Build configuration list for PBXNativeTarget "AnimeNowUITests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				13A155B2290A367A006EB845 /* Debug */,
-				13A155B3290A367A006EB845 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		13C3535628C3089E00A54E7E /* Build configuration list for PBXProject "Anime Now!" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -1536,6 +1318,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		134E5AB1290E53D300E41664 /* XCRemoteSwiftPackageReference "SwiftWebVTT" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/thisIsTheFoxe/SwiftWebVTT.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.1.0;
+			};
+		};
 		1363011A28C5C49F0076BF0A /* XCRemoteSwiftPackageReference "TinyGraphQL" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/GetStream/TinyGraphQL";
@@ -1599,6 +1389,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 1395FF7328C6920E00F21FB1 /* XCRemoteSwiftPackageReference "SociableWeaver" */;
 			productName = SociableWeaver;
+		};
+		134E5AB2290E53D300E41664 /* SwiftWebVTT */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 134E5AB1290E53D300E41664 /* XCRemoteSwiftPackageReference "SwiftWebVTT" */;
+			productName = SwiftWebVTT;
+		};
+		134E5AB4290E53EA00E41664 /* SwiftWebVTT */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 134E5AB1290E53D300E41664 /* XCRemoteSwiftPackageReference "SwiftWebVTT" */;
+			productName = SwiftWebVTT;
 		};
 		1363011B28C5C49F0076BF0A /* TinyGraphQL */ = {
 			isa = XCSwiftPackageProductDependency;
@@ -1671,11 +1471,12 @@
 		133E55F529011DE200CD59DA /* AnimeNow.xcdatamodeld */ = {
 			isa = XCVersionGroup;
 			children = (
+				13BA64C3290C9F58005C4A3F /* Model 4.xcdatamodel */,
 				13959E79290220A200861143 /* Model 3.xcdatamodel */,
 				133E55F629011DE200CD59DA /* Model 2.xcdatamodel */,
 				133E55F729011DE200CD59DA /* Model.xcdatamodel */,
 			);
-			currentVersion = 13959E79290220A200861143 /* Model 3.xcdatamodel */;
+			currentVersion = 13BA64C3290C9F58005C4A3F /* Model 4.xcdatamodel */;
 			path = AnimeNow.xcdatamodeld;
 			sourceTree = "<group>";
 			versionGroupType = wrapper.xcdatamodel;

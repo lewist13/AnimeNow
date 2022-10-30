@@ -27,7 +27,7 @@ extension AnimeClient {
     } getEpisodes: { _ in
         []
     } getSources: { _ in
-        []
+        .init([], subtitles: [])
     } getSkipTimes: { _, _ in
         []
     }

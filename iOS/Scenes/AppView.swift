@@ -38,7 +38,7 @@ struct AppView: View {
                     )
 
                 case .collection:
-                    CollectionView(
+                    CollectionsView(
                         store: store.scope(
                             state: \.collection,
                             action: AppReducer.Action.collection

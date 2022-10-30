@@ -23,6 +23,10 @@ struct UserDefaultsClient {
 extension UserDefaultsClient {
     enum Keys: String, CustomStringConvertible {
         case compactEpisodes
+        case videoPlayerProvider
+        case videoPlayerAudioIsDub
+        case videoPlayerSubtitle
+        case videoPlayerQuality
 
         var description: String {
             self.rawValue

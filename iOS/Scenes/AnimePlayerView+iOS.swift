@@ -482,10 +482,10 @@ extension AnimePlayerView {
             } else {
                 self.selectedSetting = nil
             }
-            self.isLoading = !state.episodes.finished || !state.sources.finished
+            self.isLoading = !state.episodes.finished || !state.sourcesOptions.finished
             self.providers = state.episode?.providers
             self.selectedProvider = state.selectedProvider
-            self.sources = state.sources.value
+            self.sources = state.sourcesOptions.value?.sources
             self.selectedSource = state.selectedSource
         }
     }
@@ -531,12 +531,12 @@ extension AnimePlayerView {
                                 ) { id in
                                     viewState.send(.selectSource(id))
                                 }
-                            case .language:
+                            case .audio:
                                 listsSettings(
                                     viewState.state.selectedProvider,
                                     viewState.state.selectableAudio
                                 ) { id in
-                                    viewState.send(.selectProvider(id))
+                                    viewState.send(.selectAudio(id))
                                 }
                             }
                         } else {
@@ -562,7 +562,7 @@ extension AnimePlayerView {
                                     viewState.audio?.description ?? "Loading",
                                     viewState.selectableAudio?.count ?? 0
                                 ) {
-                                    viewState.send(.selectSidebarSettings(.language))
+                                    viewState.send(.selectSidebarSettings(.audio))
                                 }
                             }
                         }
@@ -590,6 +590,7 @@ extension AnimePlayerView {
                         .font(.callout.bold())
                         .padding(12)
                         .frame(maxWidth: .infinity, alignment: .leading)
+                        .contentShape(Rectangle())
                         .onTapGesture {
                             selectedItem?(item.id)
                         }
@@ -634,6 +635,7 @@ extension AnimePlayerView {
             if let selected = selected {
                 Text(selected)
                     .font(.footnote.bold())
+                    .foregroundColor(count > 1 ? Color.white : Color.gray)
                 if count > 1 {
                     Image(systemName: "chevron.compact.right")
                 }
@@ -644,28 +646,17 @@ extension AnimePlayerView {
         .padding(12)
         .background(Color.gray.opacity(0.08))
         .cornerRadius(38 / 4)
+        .contentShape(Rectangle())
         .onTapGesture {
             tapped?()
         }
-        .disabled(count <= 1)
+        .disabled(count < 2)
     }
 }
 
 // MARK: Subtitles Sidebar
 
 extension AnimePlayerView {
-    private struct SubtitlesSidebarViewState: Equatable {
-        let subtitles: AVMediaSelectionGroup?
-        let selected: AVMediaSelectionOption?
-
-        init(_ state: AnimePlayerReducer.State) {
-            subtitles = nil
-            selected = nil
-//            self.subtitles = state.playerSubtitles
-//            self.selected = state.playerSelectedSubtitle
-        }
-    }
-
     @ViewBuilder
     var subtitlesSidebar: some View {
         ScrollViewReader { proxy in
@@ -675,28 +666,40 @@ extension AnimePlayerView {
             ) {
                 WithViewStore(
                     store.scope(
-                        state: SubtitlesSidebarViewState.init
+                        state: SubtitlesViewState.init
                     )
                 ) { viewStore in
                     LazyVStack {
-                        ForEach(viewStore.subtitles?.options ?? [], id: \.self) { subtitle in
-                            Text(subtitle.displayName)
+                        Text("None")
+                            .font(.callout.bold())
+                            .padding(12)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background((viewStore.selected == nil) ? Color.red : Color.clear)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                viewStore.send(.selectSubtitle(nil))
+                            }
+                            .cornerRadius(12)
+
+                        ForEach(viewStore.subtitles ?? []) { subtitle in
+                            Text(subtitle.lang)
                                 .font(.callout.bold())
                                 .padding(12)
                                 .frame(maxWidth: .infinity, alignment: .leading)
+                                .background(
+                                    subtitle.id == viewStore.selected ? Color.red : Color.clear
+                                )
+                                .contentShape(Rectangle())
                                 .onTapGesture {
-//                                    selectedItem?(item.id)
+                                    viewStore.send(.selectSubtitle(subtitle.id))
                                 }
-                                .background(subtitle == viewStore.selected ? Color.red : Color.clear)
                                 .cornerRadius(12)
-                                .id(subtitle.displayName)
                         }
                     }
                     .padding([.bottom])
                 }
             }
         }
-
     }
 }
 

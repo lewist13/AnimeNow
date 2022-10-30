@@ -13,7 +13,7 @@ extension View {
         _ overlayContent: OverlayContent
     ) -> some View {
         if #available(iOS 15.0, macOS 12.0, *) {
-            self.safeAreaInset(edge: .bottom, spacing: 0, content: { overlayContent }) // 👈🏻 1
+            self.safeAreaInset(edge: .bottom, spacing: 0, content: { overlayContent })
         } else {
             self.modifier(BottomInsetViewModifier(overlayContent: overlayContent))
         }
@@ -24,7 +24,7 @@ extension View {
         _ overlayContent: OverlayContent
     ) -> some View {
         if #available(iOS 15.0, macOS 12.0, *) {
-            self.safeAreaInset(edge: .top, spacing: 0, content: { overlayContent }) // 👈🏻 1
+            self.safeAreaInset(edge: .top, spacing: 0, content: { overlayContent })
         } else {
             self.modifier(TopInsetViewModifier(overlayContent: overlayContent))
         }
@@ -32,23 +32,23 @@ extension View {
 }
 
 extension View {
-    func readHeight(onChange: @escaping (CGFloat) -> Void) -> some View {
+    func readSize(onChange: @escaping (CGSize) -> Void) -> some View {
         background(
             GeometryReader { geometryProxy in
                 Spacer()
                     .preference(
-                        key: HeightPreferenceKey.self,
-                        value: geometryProxy.size.height
+                        key: FramePreferenceKey.self,
+                        value: geometryProxy.size
                     )
             }
         )
-        .onPreferenceChange(HeightPreferenceKey.self, perform: onChange)
+        .onPreferenceChange(FramePreferenceKey.self, perform: onChange)
     }
 }
 
-private struct HeightPreferenceKey: PreferenceKey {
-    static var defaultValue: CGFloat = .zero
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {}
+private struct FramePreferenceKey: PreferenceKey {
+    static var defaultValue: CGSize = .zero
+    static func reduce(value: inout CGSize, nextValue: () -> CGSize) {}
 }
 
 struct BottomInsetViewModifier<OverlayContent: View>: ViewModifier {
@@ -61,8 +61,8 @@ struct BottomInsetViewModifier<OverlayContent: View>: ViewModifier {
             .environment(\.bottomSafeAreaInset, overlayContentHeight + ancestorBottomSafeAreaInset)
             .overlay(
                 overlayContent
-                    .readHeight {
-                        overlayContentHeight = $0
+                    .readSize {
+                        overlayContentHeight = $0.height
                     }
                     .padding(.bottom, ancestorBottomSafeAreaInset)
                 ,
@@ -81,8 +81,8 @@ struct TopInsetViewModifier<OverlayContent: View>: ViewModifier {
             .environment(\.topSafeAreaInset, overlayContentHeight + ancestorTopSafeAreaInset)
             .overlay(
                 overlayContent
-                    .readHeight {
-                        overlayContentHeight = $0
+                    .readSize {
+                        overlayContentHeight = $0.height
                     }
                     .padding(.bottom, ancestorTopSafeAreaInset)
                 ,

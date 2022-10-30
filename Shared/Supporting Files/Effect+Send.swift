@@ -7,15 +7,17 @@
 
 import Foundation
 import ComposableArchitecture
+import SwiftUI
 
 extension EffectTask where Failure == Never {
 
     /// Custom version of sending action using run
     public static func action(
       priority: TaskPriority? = nil,
-      _ action: Action
+      _ action: Action,
+      animation: Animation? = nil
     ) -> Self {
-        self.run(priority: priority) { await $0(action) }
+        self.run(priority: priority) { await $0(action, animation: animation) }
     }
 
     /// Custom version of `.fireAndForget` using run.

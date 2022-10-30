@@ -159,7 +159,6 @@ extension AnimeDetailReducer {
     }
 
     struct CancelFetchingEpisodesId: Hashable {}
-    struct CancelFetchingSourcesId: Hashable {}
     struct CancelObservingAnimeDB: Hashable {}
 
     func core(state: inout State, action: Action) -> EffectTask<Action> {
@@ -242,7 +241,6 @@ extension AnimeDetailReducer {
         case .closeButtonPressed:
             return .concatenate(
                 .cancel(id: CancelFetchingEpisodesId()),
-                .cancel(id: CancelFetchingSourcesId()),
                 .cancel(id: CancelObservingAnimeDB()),
                 .action(.close)
             )

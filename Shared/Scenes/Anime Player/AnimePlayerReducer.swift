@@ -13,7 +13,7 @@ import SwiftUI
 
 struct AnimePlayerReducer: ReducerProtocol {
     typealias LoadableEpisodes = Loadable<[AnyEpisodeRepresentable]>
-    typealias LoadableSources = Loadable<[Source]>
+    typealias LoadableSourcesOptions = Loadable<SourcesOptions>
 
     enum Sidebar: Hashable, CustomStringConvertible {
         case episodes
@@ -35,7 +35,7 @@ struct AnimePlayerReducer: ReducerProtocol {
             enum Section: Hashable {
                 case provider
                 case quality
-                case language
+                case audio
             }
 
             var selectedSection: Section?
@@ -46,7 +46,7 @@ struct AnimePlayerReducer: ReducerProtocol {
         let anime: AnyAnimeRepresentable
 
         var episodes = LoadableEpisodes.idle
-        var sources = LoadableSources.idle
+        var sourcesOptions = LoadableSourcesOptions.idle
         var animeStore = Loadable<AnimeStore>.idle
         var skipTimes = Loadable<[SkipTime]>.idle
 
@@ -54,7 +54,7 @@ struct AnimePlayerReducer: ReducerProtocol {
         var selectedProvider: Provider.ID?
         var selectedSource: Source.ID?
         var selectedSidebar: Sidebar?
-//        var playerSelectedSubtitle: AVMediaSelectionOption?
+        var selectedSubtitle: Source.Subtitle.ID?
 
         var showPlayerOverlay = true
 
@@ -70,7 +70,6 @@ struct AnimePlayerReducer: ReducerProtocol {
         var playerDuration = Double.zero
         var playerStatus = VideoPlayer.Status.idle
         var playerPiPStatus = VideoPlayer.PIPStatus.restoreUI
-//        var playerSubtitles: AVMediaSelectionGroup?
 
         // MacOS Properties
 
@@ -97,7 +96,6 @@ struct AnimePlayerReducer: ReducerProtocol {
 
         case onAppear
         case playerTapped
-        case isHoveringPlayer(Bool)
         case closeButtonTapped
 
         case showEpisodesSidebar
@@ -107,26 +105,27 @@ struct AnimePlayerReducer: ReducerProtocol {
         case closeSidebar
 
         case selectEpisode(AnyEpisodeRepresentable.ID, saveProgress: Bool = true)
-        case selectProvider(Provider.ID?, saveProgress: Bool = true)
-        case selectSource(Source.ID?, saveProgress: Bool = true)
-//        case selectSubtitle(AVMediaSelectionOption)
+        case selectProvider(Provider.ID)
+        case selectSource(Source.ID?)
+        case selectSubtitle(Source.Subtitle.ID?)
+        case selectAudio(Provider.ID)
 
-        case showPlayerOverlay(Bool)
+        // MacOS Specific
+        case isHoveringPlayer(Bool)
+        case onMouseMoved
 
         // Internal Actions
-
-        case setSidebar(Sidebar?)
+        case showPlayerOverlay(Bool)
+        case internalSetSidebar(Sidebar?)
         case internalSetSource(Source.ID?)
         case saveEpisodeProgress(AnyEpisodeRepresentable.ID?)
         case closeSidebarAndShowControls
-        case hideOverlayAnimationDelay
-        case cancelHideOverlayAnimationDelay
         case close
 
         case fetchedAnimeInfoStore([AnimeStore])
         case fetchedEpisodes(TaskResult<[Episode]>)
-        case fetchSources
-        case fetchedSources(TaskResult<[Source]>)
+        case fetchSourcesOptions
+        case fetchedSourcesOptions(TaskResult<SourcesOptions>)
         case fetchSkipTimes
         case fetchedSkipTimes(TaskResult<[SkipTime]>)
 
@@ -154,8 +153,6 @@ struct AnimePlayerReducer: ReducerProtocol {
         case playerBuffer(Double)
         case playerPiPStatus(VideoPlayer.PIPStatus)
         case playerPlayedToEnd
-//        case playerSubtitles(AVMediaSelectionGroup?)
-//        case playerSelectedSubtitle(AVMediaSelectionOption?)
         case playerVolume(Double)
 
         // Internal Video Player Actions
@@ -190,9 +187,9 @@ extension AnimePlayerReducer.State {
             return .error("There are no available episodes as of this time. Please try again later.")
         } else if let episode = episode, episode.providers.count == 0 {
             return .error("There are no providers available for this episode. Please try again later.")
-        } else if case .failed = sources {
+        } else if case .failed = sourcesOptions {
             return .error("There was an error trying to retrieve sources. Please try again later.")
-        } else if case .success(let sources) = sources, sources.count == 0 {
+        } else if case .success(let sourcesOptions) = sourcesOptions, sourcesOptions.sources.count == 0 {
             return .error("There are currently no sources available for this episode. Please try again later.")
         } else if case .error = playerStatus {
             return .error("There was an error starting video player. Please try again later.")
@@ -200,7 +197,7 @@ extension AnimePlayerReducer.State {
         // Loading States
         } else if !episodes.finished {
             return .loading
-        } else if (episode?.providers.count ?? 0) > 0 && !sources.finished {
+        } else if (episode?.providers.count ?? 0) > 0 && !sourcesOptions.finished {
             return .loading
         } else if finishedWatching {
             return .replay
@@ -235,7 +232,7 @@ extension AnimePlayerReducer.State {
     }
 
     var source: Source? {
-        if let sourceId = selectedSource, let sources = sources.value {
+        if let sourceId = selectedSource, let sources = sourcesOptions.value?.sources {
             return sources[id: sourceId]
         }
         return nil
@@ -247,7 +244,13 @@ extension AnimePlayerReducer.State {
            let index = episodes.index(id: episode.id),
            (index + 1) < episodes.count {
             return episodes[index + 1]
+        }
+        return nil
+    }
 
+    var subtitle: Source.Subtitle? {
+        if let subtitleId = selectedSubtitle, let subtitles = sourcesOptions.value?.subtitles {
+            return subtitles[id: subtitleId]
         }
         return nil
     }
@@ -316,10 +319,6 @@ extension AnimePlayerReducer {
     }
 
     func core(state: inout State, action: Action) -> EffectTask<Action> {
-        let overlayVisibilityAnimation = Animation.easeInOut(
-            duration: 0.3
-        )
-
         switch action {
 
         // View Actions
@@ -383,80 +382,95 @@ extension AnimePlayerReducer {
 
             var effects: [EffectTask<Action>] = [
                 .action(.showPlayerOverlay(showingOverlay))
-                    .animation(overlayVisibilityAnimation)
+                .animation(AnimePlayerReducer.overlayVisibilityAnimation)
             ]
 
             if showingOverlay && state.playerStatus == .playing {
                 // Show overlay with timeout if the video is currently playing
                 effects.append(
-                    .action(.hideOverlayAnimationDelay)
+                    hideOverlayAnimationDelay()
                 )
             } else {
                 effects.append(
-                    .action(.cancelHideOverlayAnimationDelay)
+                    cancelHideOverlayAnimationDelay()
                 )
             }
 
             return .concatenate(effects)
 
+        // MacOS specific
         case .isHoveringPlayer(let isHovering):
-            struct HideOverlayAnimationDebounce: Hashable {}
-
-            let overlay = state.showPlayerOverlay
-
             if isHovering {
-                return .run { send in
-                    if !overlay {
-                        await send(
-                            .showPlayerOverlay(true),
-                            animation: overlayVisibilityAnimation
-                        )
-                    }
-
-                    if overlay {
-                        await withTaskCancellation(id: HideOverlayAnimationDebounce(), cancelInFlight: true) {
-                            try? await mainQueue.sleep(for: 5)
-                            await send(
-                                .showPlayerOverlay(false),
-                                animation: overlayVisibilityAnimation
-                            )
-                        }
-                    }
-                }
+                // TODO: fix issue when trying to select router
+//                return .merge(
+//                    .run { send in
+//                        await send(
+//                            .showPlayerOverlay(true),
+//                            animation: AnimePlayerReducer.overlayVisibilityAnimation
+//                        )
+//                    },
+//                    hideOverlayAnimationDelay()
+//                )
             } else {
-                return .concatenate(
+                return .merge(
                     .run { send in
                         await send(
                             .showPlayerOverlay(false),
-                            animation: overlayVisibilityAnimation
+                            animation: AnimePlayerReducer.overlayVisibilityAnimation
                         )
                     },
-                    .cancel(id: HideOverlayAnimationDebounce())
+                    cancelHideOverlayAnimationDelay()
                 )
             }
 
+        case .onMouseMoved:
+            var effects = [EffectTask<Action>]()
+
+            if !state.showPlayerOverlay {
+                effects.append(
+                    .run { send in
+                        await send(
+                            .showPlayerOverlay(true),
+                            animation: AnimePlayerReducer.overlayVisibilityAnimation
+                        )
+                    }
+                )
+            }
+
+            effects.append(
+                hideOverlayAnimationDelay()
+            )
+
+            return .merge(effects)
+
         case .showEpisodesSidebar:
-            return .action(.setSidebar(.episodes))
-                .animation(.easeInOut(duration: 0.35))
+            return .action(
+                .internalSetSidebar(.episodes),
+                animation: .easeInOut(duration: 0.35)
+            )
 
         case .showSettingsSidebar:
-            return .action(.setSidebar(.settings(.init())))
-                .animation(.easeInOut(duration: 0.35))
+            return .action(
+                .internalSetSidebar(.settings(.init())),
+                animation: .easeInOut(duration: 0.35)
+            )
 
         case .showSubtitlesSidebar:
-            return .action(.setSidebar(.subtitles))
-                .animation(.easeInOut(duration: 0.35))
+            return .action(
+                .internalSetSidebar(.subtitles),
+                animation: .easeInOut(duration: 0.35)
+            )
 
         case .closeButtonTapped:
             let selectedEpisodeId = state.selectedEpisode
             return .concatenate(
                 .action(.saveEpisodeProgress(selectedEpisodeId)),
+                .cancel(id: HidePlayerOverlayDelayCancellable()),
                 .cancel(id: CancelAnimeStoreObservable()),
                 .cancel(id: CancelAnimeFetchId()),
                 .cancel(id: FetchSourcesCancellable()),
                 .cancel(id: FetchEpisodesCancellable()),
                 .cancel(id: FetchSkipTimesCancellable()),
-                .cancel(id: HidePlayerOverlayDelayCancellable()),
                 .run {
                     try await mainQueue.sleep(for: 0.25)
                     await $0(.close)
@@ -464,8 +478,10 @@ extension AnimePlayerReducer {
             )
 
         case .closeSidebar:
-            return .action(.setSidebar(nil))
-                .animation(.easeInOut(duration: 0.25))
+            return .action(
+                .internalSetSidebar(nil),
+                animation: .easeInOut(duration: 0.25)
+            )
 
         case .selectEpisode(let episodeId, let saveProgress):
             var effects = [Effect<Action, Never>]()
@@ -479,61 +495,79 @@ extension AnimePlayerReducer {
 
             state.selectedEpisode = episodeId
 
-            // TODO: Add user defaults for preferred provider or fallback to first
-            let providerId = state.episode?.providers.first?.id
+            let lastSelectedProvider: String? = userDefaultsClient.dataForKey(.videoPlayerProvider)?.toObject()
+            let lastSelectedIsDub: Bool? = userDefaultsClient.boolForKey(.videoPlayerAudioIsDub)
 
-            effects.append(.action(.selectProvider(providerId, saveProgress: false)))
+            var providerId = state.episode?.providers.first(
+                where: { $0.description == lastSelectedProvider && $0.dub == lastSelectedIsDub }
+            )?.id
+
+            providerId = providerId ?? state.episode?.providers.first(
+                where: { $0.dub == lastSelectedIsDub }
+            )?.id
+
+            providerId = providerId ?? state.episode?.providers.first(
+                where: { $0.description == lastSelectedProvider }
+            )?.id
+
+            providerId = providerId ?? state.episode?.providers.first?.id
+
+            effects.append(self.internalSetProvider(providerId, state: &state))
             effects.append(.action(.fetchSkipTimes))
 
             return .concatenate(effects)
-            
-        case .selectProvider(let providerId, let saveProgress):
-            var effects = [Effect<Action, Never>]()
 
-            // Before selecting provider, save progress
+        case .selectProvider(let providerId):
+            guard let providerName = state.episode?.providers[id: providerId]?.description else { break }
+            guard providerName != state.provider?.description else { break }
 
-            if saveProgress {
-                effects.append(.action(.saveEpisodeProgress(state.selectedEpisode)))
+            let lastSelectedIsDub: Bool? = userDefaultsClient.boolForKey(.videoPlayerAudioIsDub)
+
+            var providerId = state.episode?.providers.first(where: { $0.description == providerName && $0.dub == lastSelectedIsDub })?.id
+            providerId = providerId ?? state.episode?.providers.first(where: { $0.description == providerName })?.id
+
+            guard let providerId = providerId else { break }
+
+            return .concatenate(
+                .action(.saveEpisodeProgress(state.selectedEpisode)),
+                self.internalSetProvider(providerId, state: &state)
+            )
+
+        case .selectSource(let sourceId):
+            let selectedEpisode = state.selectedEpisode
+            return .concatenate(
+                .action(.saveEpisodeProgress(selectedEpisode)),
+                .action(.internalSetSource(sourceId))
+            )
+
+        case .selectSubtitle(let subtitleId):
+            state.selectedSubtitle = subtitleId
+
+            let subtitleData = state.subtitle?.lang.toData()
+            return .run {
+                await userDefaultsClient.setData(.videoPlayerSubtitle, subtitleData ?? .empty)
             }
-
-            state.selectedProvider = providerId
-
-            effects.append(.action(.fetchSources))
-
-            return .concatenate(effects)
-
-        case .selectSource(let sourceId, let saveProgress):
-            var effects = [Effect<Action, Never>]()
-
-            // Before selecting source, save progress
-
-            if saveProgress {
-                effects.append(.action(.saveEpisodeProgress(state.selectedEpisode)))
-            }
-
-            effects.append(.action(.internalSetSource(sourceId)))
-
-            return .concatenate(effects)
 
         case .selectSidebarSettings(let section):
             return .action(.sidebarSettingsSection(section))
                 .animation(.easeInOut(duration: 0.25))
 
+        case .selectAudio(let providerId):
+            guard providerId != state.provider?.id else { break }
+            guard let provider = state.episode?.providers[id: providerId] else { break }
+
+            return .concatenate(
+                .run {
+                    await userDefaultsClient.setBool(.videoPlayerAudioIsDub, provider.dub ?? false)
+                },
+                .action(.saveEpisodeProgress(state.selectedEpisode)),
+                self.internalSetProvider(providerId, state: &state)
+            )
+
         case .showPlayerOverlay(let show):
             state.showPlayerOverlay = show
 
         // Internal Actions
-
-        case .hideOverlayAnimationDelay:
-            return .run {
-                try await self.mainQueue.sleep(for: 2.5)
-                await $0(.showPlayerOverlay(false))
-            }
-            .animation(overlayVisibilityAnimation)
-            .cancellable(id: HidePlayerOverlayDelayCancellable(), cancelInFlight: true)
-
-        case .cancelHideOverlayAnimationDelay:
-            return .cancel(id: HidePlayerOverlayDelayCancellable())
 
         case .saveEpisodeProgress(let episodeId):
             guard let episodeId = episodeId, let episode = state.episodes.value?[id: episodeId] else { break }
@@ -558,19 +592,24 @@ extension AnimePlayerReducer {
 
         case .internalSetSource(let source):
             state.selectedSource = source
+            if let qualityData = state.source?.quality.toData() {
+                return .run {
+                    await userDefaultsClient.setData(.videoPlayerQuality, qualityData)
+                }
+            }
 
-        case .close:
-            break
-            
-        case .setSidebar(let route):
+        case .internalSetSidebar(let route):
             state.selectedSidebar = route
 
             if route != nil {
                 return .merge(
-                    .action(.cancelHideOverlayAnimationDelay),
+                    self.cancelHideOverlayAnimationDelay(),
                     .action(.showPlayerOverlay(false))
                 )
             }
+
+        case .close:
+            break
 
         // Section actions
 
@@ -592,34 +631,34 @@ extension AnimePlayerReducer {
         case .fetchedEpisodes(.failure):
             state.episodes = .failed
 
-        // Fetch Sources
+        // Fetch SourcesOptions
 
-        case .fetchSources:
+        case .fetchSourcesOptions:
             guard let provider = state.provider else { break }
 
-            state.sources = .loading
+            state.sourcesOptions = .loading
 
-            if case .downloaded(let url) = provider {
-                return .action(.fetchedSources(.success([.init(id: "0", url: .init(string: url)!, quality: .auto)])))
-            }
- 
-            return .run { [provider] in
-                await .fetchedSources(
+            return .run {
+                await .fetchedSourcesOptions(
                     .init { try await animeClient.getSources(provider) }
                 )
             }
             .cancellable(id: FetchSourcesCancellable(), cancelInFlight: true)
 
-        case .fetchedSources(.success(let sources)):
-            let sources = Array(sources.sorted(by: \.quality).reversed())
-            state.sources = .success(sources)
+        case .fetchedSourcesOptions(.success(let sources)):
+            state.sourcesOptions = .success(sources)
 
-            // TODO: Set quality based on user defaults or the first one based on the one received
-            let sourceId = sources.first?.id
-            return .action(.selectSource(sourceId, saveProgress: false))
+            let lastSelectedQuality: Source.Quality? = userDefaultsClient.dataForKey(.videoPlayerQuality)?.toObject()
+            let lastSelectedSubtitles: String? = userDefaultsClient.dataForKey(.videoPlayerSubtitle)?.toObject()
 
-        case .fetchedSources(.failure):
-            state.sources = .failed
+            let sourceId = sources.sources.first(where: { $0.quality == lastSelectedQuality })?.id ?? sources.sources.first?.id
+            let subtitleId = sources.subtitles.first(where: { $0.lang == lastSelectedSubtitles })?.id ?? nil
+
+            state.selectedSubtitle = subtitleId
+            state.selectedSource = sourceId
+
+        case .fetchedSourcesOptions(.failure):
+            state.sourcesOptions = .failed
             state.selectedSource = nil
 
         // Fetch Skip Times
@@ -717,10 +756,12 @@ extension AnimePlayerReducer {
             guard status != state.playerStatus else { break }
             state.playerStatus = status
 
+            guard !DeviceUtil.isMac else { break }
+
             if case .playing = status, state.showPlayerOverlay {
-                return .action(.hideOverlayAnimationDelay)
+                return hideOverlayAnimationDelay()
             } else if state.showPlayerOverlay {
-                return .action(.cancelHideOverlayAnimationDelay)
+                return cancelHideOverlayAnimationDelay()
             }
 
         case .playerProgress(let progress):
@@ -753,27 +794,61 @@ extension AnimePlayerReducer {
             state.playerPiPStatus = status
 
         case .playerPlayedToEnd:
-            break
+            // TODO: Check if autoplay is set
+            return .action(.saveEpisodeProgress(state.selectedEpisode))
 
         case .playerVolume(let volume):
             state.playerVolume = volume
-
-//        case .selectSubtitle(let subtitle):
-//            break
-//            state.playerSelectedSubtitle = subtitle
-
-//        case .playerSubtitles(let subtitles):
-//            break
-//            state.playerSubtitles = subtitles
-
-//        case .playerSelectedSubtitle(let subtitle):
-//            break
-//            state.playerSelectedSubtitle = subtitle
 
         case .binding:
             break
         }
 
         return .none
+    }
+
+}
+
+extension AnimePlayerReducer {
+    static let overlayVisibilityAnimation = Animation.easeInOut(
+        duration: 0.3
+    )
+
+    // Internal Effects
+
+    private func hideOverlayAnimationDelay() -> EffectTask<Action> {
+        struct HideOverlayAnimationDebounceID: Hashable {}
+
+        return .run { send in
+            try await withTaskCancellation(id: HideOverlayAnimationDebounceID(), cancelInFlight: true) {
+                try await self.mainQueue.sleep(for: .seconds(2.5))
+                await send(
+                    .showPlayerOverlay(false),
+                    animation: AnimePlayerReducer.overlayVisibilityAnimation
+                )
+            }
+        }
+    }
+
+    private func cancelHideOverlayAnimationDelay() -> EffectTask<Action> {
+        .cancel(id: HidePlayerOverlayDelayCancellable())
+    }
+
+    private func internalSetProvider(_ providerId: Provider.ID?, state: inout State) -> EffectTask<Action> {
+        // Before selecting provider, save progress
+
+        state.selectedProvider = providerId
+
+        let providerData = state.provider?.description.toData()
+
+        return .concatenate(
+            .run { send in
+                if let providerData = providerData {
+                    await userDefaultsClient.setData(.videoPlayerProvider, providerData)
+                }
+
+                await send(.fetchSourcesOptions)
+            }
+        )
     }
 }

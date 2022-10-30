@@ -126,6 +126,7 @@ extension ConsumetAPI {
         let sources: [StreamingLink]
         let subtitles: [Subtitle]?
         let intro: Intro?
+        let headers: [String: String]?
     }
 
     struct StreamingLink: Decodable {
@@ -135,7 +136,7 @@ extension ConsumetAPI {
     }
 
     struct Subtitle: Decodable {
-        let url: URL
+        let url: String
         let lang: String
     }
 
@@ -148,9 +149,9 @@ extension ConsumetAPI {
 // MARK: - Converters
 
 extension ConsumetAPI {
-    static func convert(from sources: [ConsumetAPI.StreamingLink]) -> [AnimeNow.Source] {
-        zip(sources.indices, sources)
-            .map { (index, streamingLink) in
+    static func convert(from payload: StreamingLinksPayload) -> AnimeNow.SourcesOptions {
+        let sources: [AnimeNow.Source] = zip(payload.sources.indices, payload.sources)
+            .compactMap { (index, streamingLink) in
                 let quality: Source.Quality
 
                 if streamingLink.quality == "default" {
@@ -171,12 +172,24 @@ extension ConsumetAPI {
                     quality = .autoalt
                 }
 
-                return Source(
-                    id: "\(index)",
-                    url: URL(string: streamingLink.url)!,
+                guard let url = URL(string: streamingLink.url) else { return nil }
+
+                return AnimeNow.Source(
+                    id: index,
+                    url: url,
                     quality: quality
                 )
             }
+
+        let subtitles: [AnimeNow.Source.Subtitle] = payload.subtitles?.enumerated().compactMap({ index, subtitle in
+            guard let url = URL(string: subtitle.url), subtitle.lang != "Thumbnails" else { return nil }
+            return AnimeNow.Source.Subtitle(
+                id: index,
+                url: url,
+                lang: subtitle.lang
+            )
+        }) ?? []
+        return .init(sources, subtitles: subtitles)
     }
 
     static func convert(from episodes: [ConsumetAPI.Episode]) -> [AnimeNow.Episode] {

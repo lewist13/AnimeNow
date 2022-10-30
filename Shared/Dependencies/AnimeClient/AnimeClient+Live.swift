@@ -221,10 +221,25 @@ extension AnimeClient {
                 [ConsumetAPI.Episode].self
             )
 
+            async let zoroDub = try? API.request(
+                consumetApi,
+                .anilist(
+                    .episodes(
+                        animeId: animeId,
+                        options: .init(
+                            dub: true,
+                            provider: .zoro
+                        )
+                    )
+                ),
+                [ConsumetAPI.Episode].self
+            )
+
             let episodes = await AnimeClient.mergeSources(
                 gogoSub ?? [],
                 gogoDub ?? [],
-                zoroSub ?? []
+                zoroSub ?? [],
+                zoroDub ?? []
             )
 
             if episodes.count > 0 {
@@ -238,13 +253,21 @@ extension AnimeClient {
 
             if case .gogoanime = provider {
                 consumetProvider = .gogoanime
-            } else {
+            } else if case .zoro = provider {
                 consumetProvider = .zoro
+            } else if case .offline(let url) = provider {
+                return .init([.init(id: 0, url: url, quality: .auto)])
+            } else {
+                throw ClientError.providerNotAvailable
+            }
+
+            guard let providerId = provider.id else {
+                throw ClientError.providerInvalidId
             }
 
             let sourcesPublisher = ConsumetAPI.Endpoint.anilist(
                 .watch(
-                    episodeId: provider.id,
+                    episodeId: providerId,
                     options: .init(
                         dub: provider.dub ?? false,
                         provider: consumetProvider
@@ -258,7 +281,7 @@ extension AnimeClient {
                 ConsumetAPI.StreamingLinksPayload.self
             )
 
-            return ConsumetAPI.convert(from: response.sources)
+            return ConsumetAPI.convert(from: response)
 
         } getSkipTimes: { malId, episodeNumber in
             let endpoint = AniSkipAPI.Endpoint.skipTime((malId, episodeNumber))
@@ -269,16 +292,23 @@ extension AnimeClient {
 }
 
 extension AnimeClient {
-    fileprivate static func mergeSources(_ gogoSub: [ConsumetAPI.Episode], _ gogoDub: [ConsumetAPI.Episode], _ zoro: [ConsumetAPI.Episode]) -> [Episode] {
+    fileprivate static func mergeSources(
+        _ gogoSub: [ConsumetAPI.Episode],
+        _ gogoDub: [ConsumetAPI.Episode],
+        _ zoroSub: [ConsumetAPI.Episode],
+        _ zoroDub: [ConsumetAPI.Episode]
+    ) -> [Episode] {
         var episodes = [Episode]()
 
         let primary = gogoSub
         let secondary = gogoDub
-        let tertiary = zoro
+        let tertiary = zoroSub
+        let quartery = zoroDub
 
         var primaryIndex = 0
         var secondaryIndex = 0
         var tertiaryIndex = 0
+        var quarteryIndex = 0
 
         let maxEpisodesCount = max(primary.count, max(secondary.count, tertiary.count))
 
@@ -310,8 +340,17 @@ extension AnimeClient {
                 let episode = tertiary[tertiaryIndex]
                 if episode.number == episodeNumber {
                     mainEpisodeInfo = mainEpisodeInfo ?? episode
-                    providers.append(.zoro(id: episode.id))
+                    providers.append(.zoro(id: episode.id, dub: false))
                     tertiaryIndex += 1
+                }
+            }
+
+            if quarteryIndex < quartery.count {
+                let episode = quartery[quarteryIndex]
+                if episode.number == episodeNumber {
+                    mainEpisodeInfo = mainEpisodeInfo ?? episode
+                    providers.append(.zoro(id: episode.id, dub: true))
+                    quarteryIndex += 1
                 }
             }
 

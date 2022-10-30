@@ -5,29 +5,30 @@
 //  
 //
 
+import AppKit
 import SwiftUI
 
 extension View {
-    func mouseEvents(options: NSTrackingArea.Options, _ mouseActive: @escaping (Bool) -> Void) -> some View {
+    func mouseEvents(options: NSTrackingArea.Options, _ mouseEvents: @escaping (NSEvent.EventType) -> Void) -> some View {
         modifier(
-            MouseInsideModifier(
+            MouseEventsModifier(
                 options,
-                mouseActive
+                mouseEvents
             )
         )
     }
 }
 
-struct MouseInsideModifier: ViewModifier {
+struct MouseEventsModifier: ViewModifier {
     let options: NSTrackingArea.Options
-    let mouseActive: (Bool) -> Void
+    let mouseEvents: (NSEvent.EventType) -> Void
 
     init(
         _ options: NSTrackingArea.Options,
-        _ mouseActive: @escaping (Bool) -> Void
+        _ mouseEvents: @escaping (NSEvent.EventType) -> Void
     ) {
         self.options = options
-        self.mouseActive = mouseActive
+        self.mouseEvents = mouseEvents
     }
 
     func body(content: Content) -> some View {
@@ -35,7 +36,7 @@ struct MouseInsideModifier: ViewModifier {
             GeometryReader { proxy in
                 Representable(
                     options: options,
-                    onMouseEvent: mouseActive,
+                    onMouseEvent: mouseEvents,
                     frame: proxy.frame(in: .global)
                 )
             }
@@ -44,7 +45,7 @@ struct MouseInsideModifier: ViewModifier {
 
     private struct Representable: NSViewRepresentable {
         let options: NSTrackingArea.Options
-        let onMouseEvent: (Bool) -> Void
+        let onMouseEvent: (NSEvent.EventType) -> Void
         let frame: NSRect
 
         func makeCoordinator() -> Coordinator {
@@ -53,24 +54,18 @@ struct MouseInsideModifier: ViewModifier {
             return coordinator
         }
 
-        class Coordinator: NSResponder {
-            var onMouseEvent: ((Bool) -> Void)?
-
-            override func mouseEntered(with event: NSEvent) {
-                onMouseEvent?(true)
-            }
-
-            override func mouseExited(with event: NSEvent) {
-                onMouseEvent?(false)
-            }
-
-            override func mouseMoved(with event: NSEvent) {
-                onMouseEvent?(true)
-            }
-        }
-
         func makeNSView(context: Context) -> NSView {
             let view = NSView(frame: frame)
+            updateTrackingAreas(view: view, context: context)
+            return view
+        }
+
+        func updateNSView(_ nsView: NSView, context: Context) {
+            updateTrackingAreas(view: nsView, context: context)
+        }
+
+        private func updateTrackingAreas(view: NSView, context: Context) {
+            Representable.dismantleNSView(view, coordinator: context.coordinator)
 
             let trackingArea = NSTrackingArea(
                 rect: frame,
@@ -80,14 +75,26 @@ struct MouseInsideModifier: ViewModifier {
             )
 
             view.addTrackingArea(trackingArea)
-
-            return view
         }
-
-        func updateNSView(_ nsView: NSView, context: Context) {}
 
         static func dismantleNSView(_ nsView: NSView, coordinator: Coordinator) {
             nsView.trackingAreas.forEach { nsView.removeTrackingArea($0) }
+        }
+
+        class Coordinator: NSResponder {
+            var onMouseEvent: ((NSEvent.EventType) -> Void)?
+
+            override func mouseEntered(with event: NSEvent) {
+                onMouseEvent?(.mouseEntered)
+            }
+
+            override func mouseExited(with event: NSEvent) {
+                onMouseEvent?(.mouseExited)
+            }
+
+            override func mouseMoved(with event: NSEvent) {
+                onMouseEvent?(.mouseMoved)
+            }
         }
     }
 }

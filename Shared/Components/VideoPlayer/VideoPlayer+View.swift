@@ -80,7 +80,7 @@ extension VideoPlayer {
 
         private var timerObserver: Any?
 
-        private var keyDownEventMonitor: Any?
+        private var observingUrl: URL?
 
         init() {
             super.init(frame: .zero)
@@ -234,78 +234,16 @@ extension VideoPlayer.PlayerView {
     }
 }
 
-#if os(macOS)
-
-// TODO: Handle this on macOS video player view
-
-extension VideoPlayer.PlayerView {
-    private enum KeyCommands: UInt16 {
-        case spaceBar = 49
-        case leftArrow = 123
-        case rightArrow = 124
-    }
-
-    public override func viewDidMoveToWindow() {
-        super.viewDidMoveToWindow()
-        monitorKeyEvents()
-    }
-
-    func monitorKeyEvents() {
-        if let keyDownEventMonitor = keyDownEventMonitor {
-            NSEvent.removeMonitor(keyDownEventMonitor)
-            self.keyDownEventMonitor = nil
-        }
-
-        keyDownEventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [unowned self] event in
-            guard let command = KeyCommands(rawValue: event.keyCode) else {
-                return event
-            }
-
-            let allWindows = NSApp.windows
-            let firstResponders = allWindows.compactMap { $0.firstResponder }
-            let fieldEditors = firstResponders.filter { ($0 as? NSText)?.isEditable == true }
-            guard fieldEditors.isEmpty else { return event }
-
-            switch command {
-            case .spaceBar:
-                if self.status == .playing {
-                    self.pause()
-                } else {
-                    self.resume()
-                }
-                return nil
-
-            case .leftArrow:
-                let totalDuration = self.totalDuration
-                if player.currentItem != nil, totalDuration > 0 {
-                    let progress = max(0, (self.playProgress * totalDuration) - 15)
-                    self.seek(to: .init(seconds: round(progress), preferredTimescale: 1))
-                }
-                return nil
-
-            case .rightArrow:
-                let totalDuration = self.totalDuration
-                if player.currentItem != nil, totalDuration > 0 {
-                    let progress = min(totalDuration, (self.playProgress * totalDuration) + 15)
-                    self.seek(to: .init(seconds: round(progress), preferredTimescale: 1))
-                }
-                return nil
-            }
-        }
-    }
-}
-
-#endif
-
 extension VideoPlayer.PlayerView {
     func play(for url: URL) -> Bool {
-        guard url != (player.currentItem?.asset as? AVURLAsset)?.url else { return false }
-        stopAndRemoveItem()
+        guard url != observingUrl else { return false }
+
+        observingUrl = url
 
         let asset = AVURLAsset(url: url)
-        let item = AVPlayerItem(asset: asset)
 
-        player.replaceCurrentItem(with: item)
+        let playerItem = AVPlayerItem(asset: asset)
+        player.replaceCurrentItem(with: playerItem)
         status = .loading
 
         return true
@@ -332,7 +270,7 @@ extension VideoPlayer.PlayerView {
     }
 
     func stopAndRemoveItem() {
-//        player.pause()
+        observingUrl = nil
         player.replaceCurrentItem(with: nil)
         status = .idle
     }
@@ -349,13 +287,6 @@ extension VideoPlayer.PlayerView {
 
         cancellables.removeAll()
         playerItemCancellables.removeAll()
-
-        #if os(macOS)
-        if let keyDownEventMonitor = keyDownEventMonitor {
-            NSEvent.removeMonitor(keyDownEventMonitor)
-            self.keyDownEventMonitor = nil
-        }
-        #endif
     }
 
     func resize(_ size: AVLayerVideoGravity) {
@@ -495,5 +426,59 @@ extension AVPlayer.TimeControlStatus: CustomStringConvertible, CustomDebugString
         @unknown default:
             return "default-unknown"
         }
+    }
+}
+
+// MARK: VTT Loader: Modified version of https://github.com/jbweimar/external-webvtt-example/blob/master/External%20WebVTT%20Example/CustomResourceLoaderDelegate.swift
+
+extension VideoPlayer.PlayerView: AVAssetResourceLoaderDelegate {
+    static let assetScheme = "custom"
+    static let defaultScheme = "https"
+
+    public func resourceLoader(
+        _ resourceLoader: AVAssetResourceLoader,
+        shouldWaitForLoadingOfRequestedResource loadingRequest: AVAssetResourceLoadingRequest
+    ) -> Bool {
+        guard let url = loadingRequest.request.url, let scheme = url.scheme else {
+            return false
+        }
+
+        switch scheme {
+        case Self.assetScheme:
+            return handleCustomURL(url: url, loadingRequest)
+        default:
+            return handleURL(url: url, loadingRequest)
+        }
+    }
+
+    private func handleCustomURL(url: URL, _ request: AVAssetResourceLoadingRequest) -> Bool {
+        guard let fixedURL = url.setScheme(Self.defaultScheme) else {
+            return false
+        }
+
+        return handleURL(url: fixedURL, request)
+    }
+
+    private func handleURL(url: URL, _ request: AVAssetResourceLoadingRequest) -> Bool {
+        Task {
+            do {
+                let (data, _) = try await URLSession.shared.data(from: url)
+                print(String(data: data, encoding: .utf8) ?? "")
+                request.dataRequest?.respond(with: data)
+                request.finishLoading()
+            } catch {
+                request.finishLoading(with: error)
+            }
+        }
+
+        return true
+    }
+}
+
+private extension URL {
+    func setScheme(_ newScheme: String) -> URL? {
+        let components = NSURLComponents(url: self, resolvingAgainstBaseURL: true)
+        components?.scheme = newScheme
+        return components?.url
     }
 }

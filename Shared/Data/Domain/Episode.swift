@@ -74,33 +74,37 @@ struct Episode: EpisodeRepresentable, Hashable, Identifiable {
     var providers = [Provider]()
 }
 
-enum Provider: Hashable, Identifiable, CustomStringConvertible {
+enum Provider: Hashable, Identifiable, CustomStringConvertible, Codable {
     case gogoanime(id: String, dub: Bool)
-    case zoro(id: String)
-    case downloaded(url: String)
+    case zoro(id: String, dub: Bool = false)
+    case offline(url: URL)
 
-    var id: String {
+    var id: String? {
         switch self {
-        case .gogoanime(let id, _), .zoro(let id), .downloaded(let id):
+        case .gogoanime(let id, _), .zoro(let id, _):
             return id
+        default:
+            return nil
         }
     }
 
     var dub: Bool? {
-        if case .gogoanime(_, let dub) = self {
+        switch self {
+        case .gogoanime(_, let dub), .zoro(_, let dub):
             return dub
+        default:
+            return nil
         }
-        return nil
     }
 
     var description: String {
         switch self {
         case .gogoanime:
-            return "gogoanime"
+            return "Gogoanime"
         case .zoro:
-            return "zoro"
-        case .downloaded:
-            return "downloaded"
+            return "Zoro"
+        case .offline:
+            return "Offline"
         }
     }
 }
