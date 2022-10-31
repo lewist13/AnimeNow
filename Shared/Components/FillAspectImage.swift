@@ -14,7 +14,6 @@ struct FillAspectImage: View {
     var body: some View {
         GeometryReader { proxy in
             KFImage.url(url)
-//                .resizable()
                 .fade(duration: 0.5)
                 .configure { $0.resizable() }
                 .scaledToFill()

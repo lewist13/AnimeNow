@@ -21,7 +21,7 @@ import AppKit
 typealias BlurEffectView = NSVisualEffectView
 typealias BlurStyle = NSVisualEffectView.Material
 
-var `default` = BlurStyle.toolTip
+var `default` = BlurStyle.fullScreenUI
 
 #endif
 
@@ -38,6 +38,8 @@ struct BlurView: PlatformAgnosticViewRepresentable {
         view.effect = UIBlurEffect(style: style)
         #else
         view.material = style
+        view.blendingMode = .withinWindow
+        view.state = .active
         #endif
     }
 

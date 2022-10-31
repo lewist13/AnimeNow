@@ -284,6 +284,8 @@ extension AnimePlayerView {
                             .onTapGesture {
                                 viewState.send(.closeSidebar)
                             }
+                            .padding(.horizontal, safeAreaInsetPadding(reader))
+
                             Spacer()
                         }
 
@@ -317,6 +319,7 @@ extension AnimePlayerView {
                                             )
                                         }
                                     }
+                                    .padding(.horizontal, safeAreaInsetPadding(reader))
                                     .onAppear {
                                         proxy.scrollTo(viewState.selectedEpisode, anchor: .leading)
                                         viewState.send(.playerAction(.pause))
@@ -343,7 +346,7 @@ extension AnimePlayerView {
                         maxWidth: .infinity,
                         maxHeight: .infinity
                     )
-                    .padding(safeAreaInsetPadding(reader))
+                    .padding(.vertical, safeAreaInsetPadding(reader))
                     .ignoresSafeArea()
                     .background(
                         Color.black.opacity(0.5)

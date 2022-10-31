@@ -26,6 +26,8 @@ public struct VideoPlayer {
 
         /// Start or stop PiP
         case pictureInPicture(enable: Bool)
+
+        case destroy
     }
 
     public enum Status: Equatable {
@@ -156,6 +158,8 @@ extension VideoPlayer: PlatformAgnosticViewRepresentable {
                 context.coordinator.controller?.startPictureInPicture()
             case .pictureInPicture(enable: false):
                 context.coordinator.controller?.stopPictureInPicture()
+            case .destroy:
+                Self.dismantlePlatformView(view, coordinator: context.coordinator)
             }
 
             DispatchQueue.main.async { self.action = nil }
@@ -163,8 +167,8 @@ extension VideoPlayer: PlatformAgnosticViewRepresentable {
     }
 
     public static func dismantlePlatformView(_ view: PlayerView, coordinator: Coordinator) {
-        view.destroy()
         coordinator.removeObservers(view: view)
+        view.destroy()
     }
 
     public func makeCoordinator() -> Coordinator {

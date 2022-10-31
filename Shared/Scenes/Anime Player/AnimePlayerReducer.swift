@@ -462,6 +462,7 @@ extension AnimePlayerReducer {
             )
 
         case .closeButtonTapped:
+            state.playerAction = .destroy
             let selectedEpisodeId = state.selectedEpisode
             return .concatenate(
                 .action(.saveEpisodeProgress(selectedEpisodeId)),

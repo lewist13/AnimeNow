@@ -79,63 +79,49 @@ extension AnimeDetailView {
         ) { animeViewStore in
             ZStack {
                 GeometryReader { reader in
-                    KFImage.url(
-                        (DeviceUtil.isPhone ? animeViewStore.posterImage.largest : animeViewStore.coverImage.largest ?? animeViewStore.posterImage.largest)?.link
+                    FillAspectImage(
+                        url: (DeviceUtil.isPhone ? animeViewStore.posterImage.largest : animeViewStore.coverImage.largest ?? animeViewStore.posterImage.largest)?.link
                     )
-                    .resizable()
-                    .scaledToFill()
                     .transaction { $0.animation = nil }
-                    .background(Color(white: 0.05))
                     .frame(
-                        width: reader.size.width,
                         height: reader.size.height + (reader.frame(in: .global).minY > 0 ? reader.frame(in: .global).minY : 0),
                         alignment: .center
                     )
                     .contentShape(Rectangle())
                     .clipped()
-                    .overlay(
-                        LinearGradient(
-                            stops: [
-                                .init(
-                                    color: .clear,
-                                    location: 0.4
-                                ),
-                                .init(
-                                    color: .black,
-                                    location: 1.0
-                                )
-                            ],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                        .transaction { $0.animation = nil }
-                    )
                     .offset(y: reader.frame(in: .global).minY <= 0 ? 0 : -reader.frame(in: .global).minY)
                 }
 
-                VStack(alignment: .leading, spacing: 0) {
-                    Text(animeViewStore.title)
-                        .font(.largeTitle)
-                        .bold()
-                        .multilineTextAlignment(.leading)
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    
-                    HStack(alignment: .top, spacing: 4) {
-                        ForEach(
-                            animeViewStore.categories,
-                            id: \.self
-                        ) { category in
-                            Text(category)
-                                .font(.footnote)
-                                .bold()
-                                .foregroundColor(.white.opacity(0.8))
-                            if animeViewStore.categories.last != category {
-                                Text("\u{2022}")
+                VStack(alignment: .leading, spacing: 8) {
+                    VStack {
+                        Text(animeViewStore.title)
+                            .font(.largeTitle)
+                            .bold()
+                            .multilineTextAlignment(.leading)
+                            .foregroundColor(.white)
+                            .lineLimit(2)
+                            .frame(
+                                maxWidth: .infinity,
+                                alignment: .leading
+                            )
+
+                        HStack(alignment: .top, spacing: 4) {
+                            ForEach(
+                                animeViewStore.categories,
+                                id: \.self
+                            ) { category in
+                                Text(category)
                                     .font(.footnote)
-                                    .fontWeight(.black)
+                                    .bold()
                                     .foregroundColor(.white.opacity(0.8))
+                                if animeViewStore.categories.last != category {
+                                    Text("\u{2022}")
+                                        .font(.footnote)
+                                        .fontWeight(.black)
+                                        .foregroundColor(.white.opacity(0.8))
+                                }
                             }
+                            Spacer()
                         }
                     }
 
@@ -160,32 +146,8 @@ extension AnimeDetailView {
                                 }
                             }
                             .buttonStyle(PlayButtonStyle(isEnabled: playButtonState.isAvailable))
-                            .padding(.vertical, 12)
                             .disabled(!playButtonState.isAvailable)
                         }
-
-                        // TODO: Decide on either keeping favorites, or have collection and allow
-
-                        // users to decide which collection the anime should go in.
-//                        WithViewStore(
-//                            store.scope(
-//                                state: \.animeStore.value?.isFavorite
-//                            )
-//                        ) { isFavoriteViewStore in
-//                            Button {
-//                                isFavoriteViewStore.send(.tappedFavorite)
-//                            } label: {
-//                                Image(
-//                                    systemName: isFavoriteViewStore.state == true ? "heart.fill" : "heart"
-//                                )
-//                                .foregroundColor(
-//                                    isFavoriteViewStore.state == true ? .red : .init(white: 0.75)
-//                                )
-//                            }
-//                            .padding()
-//                            .background(Color(white: 0.15))
-//                            .clipShape(Circle())
-//                        }
 
                         Spacer()
                         
@@ -203,21 +165,38 @@ extension AnimeDetailView {
                             }
                             .buttonStyle(.plain)
                             .padding()
-                            .background(Color(white: 0.15))
+                            .background(Color(white: 0.18))
                             .clipShape(Circle())
                             .contentShape(Rectangle())
                         }
                     }
                 }
+                .padding(.horizontal)
+                .padding(.vertical)
+                .background(
+                    LinearGradient(
+                        stops: [
+                            .init(
+                                color: .clear,
+                                location: 0.0
+                            ),
+                            .init(
+                                color: .black.opacity(0.85),
+                                location: 1.0
+                            )
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
                 .frame(
                     maxWidth: .infinity,
                     maxHeight: .infinity,
                     alignment: .bottomLeading
                 )
-                .padding(.horizontal)
             }
         }
-        .aspectRatio(DeviceUtil.isPhone ? 2/3 : 8/3, contentMode: .fit)
+        .aspectRatio(DeviceUtil.isPhone ? 2/3 : DeviceUtil.isPad ? 7/3 : 9/3, contentMode: .fill)
         .frame(maxWidth: .infinity)
     }
 }
@@ -295,29 +274,33 @@ extension AnimeDetailView {
                 store,
                 observe: { $0 }
             ) { viewState in
-                if let episodes = viewState.episodes.value, episodes.count > 0 {
+                if let episodes = viewState.episodes.value ?? (viewState.episodes.isLoading ? [.placeholder] : nil) {
                     HStack(alignment: .center) {
                         buildSubHeading(title: "Episodes")
 
                         Spacer()
 
-                        Image(viewState.compact ? "rectangle.inset.filled" : "rectangle.grid.1x2.fill")
-                            .font(.body.bold())
-                            .foregroundColor(.white)
-                            .onTapGesture {
-                                viewState.send(
-                                    .toggleCompactEpisodes,
-                                    animation: .easeInOut(duration: 0.25)
-                                )
-                            }
+                        if DeviceUtil.isPhone {
+                            Image(viewState.compact ? "rectangle.inset.filled" : "rectangle.grid.1x2.fill")
+                                .font(.body.bold())
+                                .foregroundColor(.white)
+                                .onTapGesture {
+                                    viewState.send(
+                                        .toggleCompactEpisodes,
+                                        animation: .easeInOut(duration: 0.25)
+                                    )
+                                }
+                        }
                     }
+                    .padding(.horizontal)
 
-                    LazyVStack(spacing: 12) {
-                        ForEach(episodes, id: \.id) { episode in
-                            generateEpisodeItem(
-                                episode,
-                                compact: viewState.compact
-                            )
+                    if DeviceUtil.isPhone {
+                        LazyVStack(spacing: 12) {
+                            ForEach(episodes, id: \.id) { episode in
+                                generateEpisodeItem(
+                                    episode,
+                                    compact: viewState.compact
+                                )
                                 .onTapGesture {
                                     viewState.send(
                                         .selectedEpisode(
@@ -325,19 +308,34 @@ extension AnimeDetailView {
                                         )
                                     )
                                 }
+                            }
                         }
+                        .padding(.horizontal)
+                    } else {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            LazyHStack {
+                                ForEach(episodes, id: \.id) { episode in
+                                    generateEpisodeItem(
+                                        episode,
+                                        compact: false
+                                    )
+                                    .onTapGesture {
+                                        viewState.send(
+                                            .selectedEpisode(
+                                                episode: episode
+                                            )
+                                        )
+                                    }
+                                }
+                            }
+                            .padding(.horizontal)
+                        }
+                        .frame(height: 200)
                     }
-                } else if viewState.episodes.isLoading {
-                    buildSubHeading(title: "Episodes")
-                    generateEpisodeItem(
-                        .placeholder,
-                        compact: viewState.compact
-                    )
                 }
             }
         }
         .frame(maxWidth: .infinity)
-        .padding(.horizontal)
     }
 
     @ViewBuilder
@@ -431,5 +429,6 @@ struct AnimeView_Previews: PreviewProvider {
                 reducer: AnimeDetailReducer()
             )
         )
+        .frame(width: 800, height: 600)
     }
 }

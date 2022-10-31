@@ -176,7 +176,7 @@ extension HomeView {
             }
         }
         .frame(maxWidth: .infinity)
-        .aspectRatio(DeviceUtil.isPhone ? 5/7 : 9/3, contentMode: .fill)
+        .aspectRatio(DeviceUtil.isPhone ? 5/7 : 6/2, contentMode: .fill)
         .cornerRadius(DeviceUtil.isPhone ? 0 : 32)
         #if os(macOS)
         .padding(.horizontal)

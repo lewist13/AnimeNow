@@ -343,6 +343,6 @@ extension NSWindow.ButtonType: CaseIterable {
 
 extension AnimePlayerReducer.State {
     var canShowPlayerOverlay: Bool {
-        showPlayerOverlay || playerStatus == .paused
+        showPlayerOverlay || playerStatus == .paused || selectedSidebar != nil
     }
 }
