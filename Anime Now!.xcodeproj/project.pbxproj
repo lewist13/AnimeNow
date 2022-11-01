@@ -155,6 +155,8 @@
 		13C3537328C308A000A54E7E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13C3535D28C308A000A54E7E /* Assets.xcassets */; };
 		13C3537428C308A000A54E7E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13C3535D28C308A000A54E7E /* Assets.xcassets */; };
 		13C3537F28C311B300A54E7E /* ComposableArchitecture in Frameworks */ = {isa = PBXBuildFile; productRef = 13C3537E28C311B300A54E7E /* ComposableArchitecture */; };
+		13CB97F12911B20A00E074B8 /* NotificationCenter+Async.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13CB97F02911B20A00E074B8 /* NotificationCenter+Async.swift */; };
+		13CB97F22911B20A00E074B8 /* NotificationCenter+Async.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13CB97F02911B20A00E074B8 /* NotificationCenter+Async.swift */; };
 		13D235C628E16F32004E51BB /* ComposableArchitecture+Binding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13D235C528E16F32004E51BB /* ComposableArchitecture+Binding.swift */; };
 		13D235C728E16F32004E51BB /* ComposableArchitecture+Binding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13D235C528E16F32004E51BB /* ComposableArchitecture+Binding.swift */; };
 		13D2846528CF08F500332556 /* XCTestDynamicOverlay in Frameworks */ = {isa = PBXBuildFile; productRef = 13D2846428CF08F500332556 /* XCTestDynamicOverlay */; };
@@ -280,6 +282,7 @@
 		13C3536228C308A000A54E7E /* Anime Now!.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Anime Now!.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		13C3536828C308A000A54E7E /* Anime Now!.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Anime Now!.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		13C3536A28C308A000A54E7E /* macOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = macOS.entitlements; sourceTree = "<group>"; };
+		13CB97F02911B20A00E074B8 /* NotificationCenter+Async.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NotificationCenter+Async.swift"; sourceTree = "<group>"; };
 		13D235C328E16801004E51BB /* anime-now-ios-info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "anime-now-ios-info.plist"; sourceTree = "<group>"; };
 		13D235C528E16F32004E51BB /* ComposableArchitecture+Binding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ComposableArchitecture+Binding.swift"; sourceTree = "<group>"; };
 		13D83B8428FCA8290044F04A /* AnimePlayerView+iOS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AnimePlayerView+iOS.swift"; sourceTree = "<group>"; };
@@ -733,6 +736,7 @@
 				1380562028E9341A00B9B45B /* Cache.swift */,
 				13B2771528F79EA300B4B4A3 /* PlatformViewRepresentable.swift */,
 				13E95CEF2904A4B100E85F28 /* Effect+Send.swift */,
+				13CB97F02911B20A00E074B8 /* NotificationCenter+Async.swift */,
 			);
 			path = "Supporting Files";
 			sourceTree = "<group>";
@@ -885,6 +889,7 @@
 				1312FD5C28DD4BEA004A415F /* ThumbnailItemBigView.swift in Sources */,
 				13650F3328CFE0BF002E20DD /* AnimeClient.swift in Sources */,
 				13D235C628E16F32004E51BB /* ComposableArchitecture+Binding.swift in Sources */,
+				13CB97F12911B20A00E074B8 /* NotificationCenter+Async.swift in Sources */,
 				13650F3628D014B1002E20DD /* AnimeClient+Live.swift in Sources */,
 				1312FD6228DD7CB0004A415F /* AirplayView.swift in Sources */,
 				13E465F628E62508001FF309 /* EnimeAPI.swift in Sources */,
@@ -1021,6 +1026,7 @@
 				13B2771428F7922900B4B4A3 /* VideoPlayer+View.swift in Sources */,
 				13F52BDF2906285B00AC9315 /* View+Hovered.swift in Sources */,
 				13A155B6290A3DDF006EB845 /* TestVideoPlayer.swift in Sources */,
+				13CB97F22911B20A00E074B8 /* NotificationCenter+Async.swift in Sources */,
 				13C3536E28C308A000A54E7E /* AnimeNowApp.swift in Sources */,
 				13944BB02908D47800B947B5 /* FillAspectImage.swift in Sources */,
 				13BA64C2290C9F32005C4A3F /* CDCollectionStore.swift in Sources */,

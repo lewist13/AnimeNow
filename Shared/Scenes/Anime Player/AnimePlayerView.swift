@@ -215,11 +215,11 @@ extension AnimePlayerView {
                             .white,
                             .init(white: 0.25)
                         )
-                            .onTapGesture {
-                                viewState.send(.startSeeking)
-                                viewState.send(.seeking(to: end))
-                                viewState.send(.stopSeeking)
-                            }
+                        .onTapGesture {
+                            viewState.send(.startSeeking)
+                            viewState.send(.seeking(to: end))
+                            viewState.send(.stopSeeking)
+                        }
 
                     case .some(.nextEpisode(let id)):
                         actionButtonBase(
@@ -228,9 +228,9 @@ extension AnimePlayerView {
                             .black,
                             .white
                         )
-                            .onTapGesture {
-                                viewState.send(.selectEpisode(id))
-                            }
+                        .onTapGesture {
+                            viewState.send(.selectEpisode(id))
+                        }
                     case .none:
                         EmptyView()
                     }
@@ -441,40 +441,63 @@ extension AnimePlayerView {
 extension AnimePlayerView {
     @ViewBuilder
     var sidebarOverlay: some View {
-        WithViewStore(
-            store,
-            observe: { $0.selectedSidebar }
-        ) { selectedSidebar in
-            Group {
-                if let selectedSidebar = selectedSidebar.state,
-                   selectedSidebar != .episodes {
-                    GeometryReader { proxy in
-                        VStack {
-                            HStack(alignment: .center) {
-                                Text("\(selectedSidebar.description)")
-                                    .foregroundColor(Color.white)
-                                    .font(.title2)
-                                    .bold()
-                                Spacer()
-                            }
-
-                            switch selectedSidebar {
-                            case .episodes:
-                                EmptyView()
-                            case .settings:
-                                settingsSidebar
-                            case .subtitles:
-                                subtitlesSidebar
-                            }
-                        }
-                    }
-                    .aspectRatio(8/9, contentMode: .fit)
-                    .padding(24)
-                    .background(
-                        Color(white: 0.05)
-                    )
-                    .transition(.opacity)
+        IfLetStore(
+            store.scope(
+                state: {
+                    $0.selectedSidebar != .episodes ? $0.selectedSidebar : nil
                 }
+            )
+        ) { store in
+            WithViewStore(
+                store,
+                observe: { $0 }
+            ) { selectedSidebar in
+                VStack {
+                    HStack(alignment: .center) {
+                        if case .settings(let options) = selectedSidebar.state,
+                           let section = options.selectedSection {
+                            Image(systemName: "chevron.backward")
+                                .font(.body.weight(.heavy))
+                                .padding(2)
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    selectedSidebar                                        .send(.selectSidebarSettings(nil))
+                                }
+
+                            Text("\(section.description)")
+                                .foregroundColor(Color.white)
+                                .font(.title2)
+                                .bold()
+                        } else {
+
+                            Text("\(selectedSidebar.description)")
+                                .foregroundColor(Color.white)
+                                .font(.title2)
+                                .bold()
+                        }
+                        Spacer()
+                    }
+
+                    switch selectedSidebar.state {
+                    case .episodes:
+                        EmptyView()
+
+                    case .settings:
+                        settingsSidebar
+
+                    case .subtitles:
+                        subtitlesSidebar
+                    }
+                }
+                .frame(
+                    maxWidth: .infinity,
+                    maxHeight: .infinity
+                )
+                .aspectRatio(8/9, contentMode: .fit)
+                .padding(24)
+                .background(
+                    Color(white: 0.05)
+                )
             }
         }
     }
@@ -602,82 +625,63 @@ extension AnimePlayerView {
                 state: SettingsSidebarViewState.init
             )
         ) { viewState in
-            Group {
-                if viewState.isLoading {
-                    VStack {
-                        ProgressView()
-                            .frame(
-                                width: 32,
-                                height: 32,
-                                alignment: .center
-                            )
-
-                        Text("Loading")
-                            .font(.body.bold())
+            ScrollView(
+                .vertical,
+                showsIndicators: false
+            ) {
+                if let item = viewState.selectedSetting {
+                    switch item {
+                    case .provider:
+                        listsSettings(
+                            viewState.state.selectedProvider,
+                            viewState.selectableProviders
+                        ) { id in
+                            viewState.send(.selectProvider(id))
+                        }
+                    case .quality:
+                        listsSettings(
+                            viewState.state.selectedSource,
+                            viewState.state.selectableQualities
+                        ) { id in
+                            viewState.send(.selectSource(id))
+                        }
+                    case .audio:
+                        listsSettings(
+                            viewState.state.selectedProvider,
+                            viewState.state.selectableAudio
+                        ) { id in
+                            viewState.send(.selectAudio(id))
+                        }
                     }
-                    .frame(
-                        maxWidth: .infinity,
-                        maxHeight: .infinity
-                    )
                 } else {
-                    ScrollView(
-                        .vertical,
-                        showsIndicators: false
-                    ) {
-                        if let item = viewState.selectedSetting {
-                            switch item {
-                            case .provider:
-                                listsSettings(
-                                    viewState.state.selectedProvider,
-                                    viewState.selectableProviders
-                                ) { id in
-                                    viewState.send(.selectProvider(id))
-                                }
-                            case .quality:
-                                listsSettings(
-                                    viewState.state.selectedSource,
-                                    viewState.state.selectableQualities
-                                ) { id in
-                                    viewState.send(.selectSource(id))
-                                }
-                            case .audio:
-                                listsSettings(
-                                    viewState.state.selectedProvider,
-                                    viewState.state.selectableAudio
-                                ) { id in
-                                    viewState.send(.selectAudio(id))
-                                }
-                            }
-                        } else {
-                            VStack(alignment: .leading) {
-                                createSettingsRow(
-                                    "Provider",
-                                    viewState.provider?.description ?? "Loading",
-                                    viewState.selectableProviders.count
-                                ) {
-                                    viewState.send(.selectSidebarSettings(.provider))
-                                }
+                    VStack(alignment: .leading) {
+                        createSettingsRow(
+                            "Provider",
+                            viewState.provider?.description ?? "Loading",
+                            viewState.selectableProviders.count
+                        ) {
+                            viewState.send(.selectSidebarSettings(.provider))
+                        }
 
-                                createSettingsRow(
-                                    "Quality",
-                                    viewState.quality?.description ?? "Loading",
-                                    viewState.selectableQualities?.count ?? 0
-                                ) {
-                                    viewState.send(.selectSidebarSettings(.quality))
-                                }
+                        createSettingsRow(
+                            "Quality",
+                            viewState.quality?.description ?? "Loading",
+                            viewState.selectableQualities?.count ?? 0
+                        ) {
+                            viewState.send(.selectSidebarSettings(.quality))
+                        }
 
-                                createSettingsRow(
-                                    "Audio",
-                                    viewState.audio?.description ?? "Loading",
-                                    viewState.selectableAudio?.count ?? 0
-                                ) {
-                                    viewState.send(.selectSidebarSettings(.audio))
-                                }
-                            }
+                        createSettingsRow(
+                            "Audio",
+                            viewState.audio?.description ?? "Loading",
+                            viewState.selectableAudio?.count ?? 0
+                        ) {
+                            viewState.send(.selectSidebarSettings(.audio))
                         }
                     }
                 }
             }
+            .disabled(viewState.isLoading)
         }
         .foregroundColor(Color.white)
         .frame(
@@ -707,10 +711,10 @@ extension AnimePlayerView {
                         .cornerRadius(12)
                 }
             }
-//            .transition(
-//                .move(edge: .trailing)
-//                .combined(with: .opacity)
-//            )
+            .transition(
+                .move(edge: .trailing)
+                .combined(with: .opacity)
+            )
             .frame(
                 maxWidth: .infinity,
                 maxHeight: .infinity

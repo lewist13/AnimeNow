@@ -11,7 +11,7 @@ import ComposableArchitecture
 extension View {
     func popoverStore<State, Action, Content: View>(
         store: Store<State?, Action>,
-        onDismiss: @escaping () -> Void,
+        onDismiss: @escaping () -> Void = { },
         destination: @escaping (Store<State, Action>) -> Content
     ) -> some View {
         WithViewStore(

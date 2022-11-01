@@ -32,10 +32,21 @@ struct AnimePlayerReducer: ReducerProtocol {
         }
 
         struct SettingsState: Hashable {
-            enum Section: Hashable {
+            enum Section: Hashable, CustomStringConvertible {
                 case provider
                 case quality
                 case audio
+
+                var description: String {
+                    switch self {
+                    case .provider:
+                        return " Provider"
+                    case .quality:
+                        return "Quality"
+                    case .audio:
+                        return "Audio"
+                    }
+                }
             }
 
             var selectedSection: Section?
@@ -70,6 +81,7 @@ struct AnimePlayerReducer: ReducerProtocol {
         var playerDuration = Double.zero
         var playerStatus = VideoPlayer.Status.idle
         var playerPiPStatus = VideoPlayer.PIPStatus.restoreUI
+        var playerIsFullScreen = false
 
         // MacOS Properties
 
@@ -154,6 +166,7 @@ struct AnimePlayerReducer: ReducerProtocol {
         case playerPiPStatus(VideoPlayer.PIPStatus)
         case playerPlayedToEnd
         case playerVolume(Double)
+        case playerIsFullScreen(Bool)
 
         // Internal Video Player Actions
 
@@ -311,6 +324,7 @@ extension AnimePlayerReducer {
     struct CancelAnimeStoreObservable: Hashable {}
     struct FetchSkipTimesCancellable: Hashable {}
     struct CancelAnimeFetchId: Hashable {}
+    struct ObserveFullScreenNotificationId: Hashable {}
 
     @ReducerBuilder<State, Action>
     var body: Reduce<State, Action> {
@@ -345,6 +359,28 @@ extension AnimePlayerReducer {
                     }
                     .cancellable(id: CancelAnimeStoreObservable())
                 )
+
+                #if os(macOS)
+                effects.append(
+                    .merge(
+                        .run { send in
+                            for await _ in await NotificationCenter.default.observeNotifications(
+                                from: NSWindow.willEnterFullScreenNotification
+                            ) {
+                                await send(.playerIsFullScreen(true))
+                            }
+                        },
+                        .run { send in
+                            for await _ in await NotificationCenter.default.observeNotifications(
+                                from: NSWindow.willExitFullScreenNotification
+                            ) {
+                                await send(.playerIsFullScreen(false))
+                            }
+                        }
+                    )
+                    .cancellable(id: ObserveFullScreenNotificationId())
+                )
+                #endif
 
                 if !state.episodes.hasInitialized {
                     state.episodes = .loading
@@ -487,6 +523,7 @@ extension AnimePlayerReducer {
             let selectedEpisodeId = state.selectedEpisode
             return .concatenate(
                 .action(.saveEpisodeProgress(selectedEpisodeId)),
+                .cancel(id: ObserveFullScreenNotificationId()),
                 .cancel(id: HidePlayerOverlayDelayCancellable()),
                 .cancel(id: CancelAnimeStoreObservable()),
                 .cancel(id: CancelAnimeFetchId()),
@@ -827,6 +864,9 @@ extension AnimePlayerReducer {
 
         case .playerVolume(let volume):
             state.playerVolume = volume
+
+        case .playerIsFullScreen(let fullscreen):
+            state.playerIsFullScreen = fullscreen
 
         case .binding:
             break

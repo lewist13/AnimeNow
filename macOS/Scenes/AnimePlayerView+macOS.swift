@@ -323,9 +323,9 @@ extension AnimePlayerView {
     var fullscreenButton: some View {
         WithViewStore(
             store,
-            observe: { _ in false }
+            observe: { $0.playerIsFullScreen }
         ) { viewState in
-            Image(systemName: viewState.state ? "pause.fill" : "arrow.up.backward.and.arrow.down.forward")
+            Image(systemName: viewState.state ? "arrow.down.right.and.arrow.up.left" : "arrow.up.backward.and.arrow.down.forward")
                 .font(.title2.bold())
                 .foregroundColor(Color.white)
                 .contentShape(Rectangle())

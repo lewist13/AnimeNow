@@ -22,5 +22,23 @@ struct AnimeNowApp: App {
         }
         .windowStyle(.hiddenTitleBar)
         .windowToolbarStyle(.expanded)
+        .commands {
+            CommandGroup(replacing: .newItem) { }
+            CommandGroup(after: .appInfo) {
+                Button {
+                    
+                } label: {
+                    Text("Check for Updates...")
+                }
+            }
+
+            CommandGroup(before: .systemServices) {
+                Button {
+                    
+                } label: {
+                    Text("Preferences")
+                }
+            }
+        }
     }
 }

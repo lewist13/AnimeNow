@@ -62,7 +62,6 @@ extension AnimePlayerView {
                             }
                         }
                 )
-
         )
         .overlay(episodesOverlay)
     }
@@ -370,6 +369,26 @@ extension AnimePlayerView {
                 .font(.footnote.bold().monospacedDigit())
             }
             .disabled(!viewState.isLoaded)
+        }
+    }
+}
+
+struct VideoPlayerViewiOS_Previews: PreviewProvider {
+    static var previews: some View {
+        if #available(iOS 15.0, macOS 12.0, *) {
+            AnimePlayerView(
+                store: .init(
+                    initialState: .init(
+                        anime: .init(Anime.narutoShippuden),
+                        episodes: .init(Episode.demoEpisodes.map({ $0.asRepresentable() })),
+                        selectedEpisode: Episode.demoEpisodes.first!.id
+                    ),
+                    reducer: AnimePlayerReducer()
+                )
+            )
+            .previewInterfaceOrientation(.landscapeLeft)
+        } else {
+            // Fallback on earlier versions
         }
     }
 }
