@@ -42,6 +42,7 @@
 		13386AEE28CC2892005E8352 /* ShimmerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13386AED28CC2892005E8352 /* ShimmerView.swift */; };
 		13386AEF28CC2892005E8352 /* ShimmerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13386AED28CC2892005E8352 /* ShimmerView.swift */; };
 		13386AF128CC3239005E8352 /* BlurView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13386AF028CC3239005E8352 /* BlurView.swift */; };
+		1339179C2910B28600E9E5F7 /* Popover+ViewStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1339179B2910B28600E9E5F7 /* Popover+ViewStore.swift */; };
 		133E55F829011DE200CD59DA /* AnimeNow.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 133E55F529011DE200CD59DA /* AnimeNow.xcdatamodeld */; };
 		133E55F929011DE200CD59DA /* AnimeNow.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 133E55F529011DE200CD59DA /* AnimeNow.xcdatamodeld */; };
 		13446E8128CA4AB100F815C6 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13446E7F28CA4AB100F815C6 /* SettingsView.swift */; };
@@ -217,6 +218,7 @@
 		13386AE628CBFD7A005E8352 /* Loadable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Loadable.swift; sourceTree = "<group>"; };
 		13386AED28CC2892005E8352 /* ShimmerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShimmerView.swift; sourceTree = "<group>"; };
 		13386AF028CC3239005E8352 /* BlurView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlurView.swift; sourceTree = "<group>"; };
+		1339179B2910B28600E9E5F7 /* Popover+ViewStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Popover+ViewStore.swift"; sourceTree = "<group>"; };
 		133E55F629011DE200CD59DA /* Model 2.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "Model 2.xcdatamodel"; sourceTree = "<group>"; };
 		133E55F729011DE200CD59DA /* Model.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Model.xcdatamodel; sourceTree = "<group>"; };
 		13446E7F28CA4AB100F815C6 /* SettingsView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
@@ -457,6 +459,7 @@
 				13944BAE2908D47800B947B5 /* FillAspectImage.swift */,
 				13A155B4290A3DDF006EB845 /* TestVideoPlayer.swift */,
 				134E5AB6290E61CE00E41664 /* SubtitleTextView.swift */,
+				1384FF7828CB93FA003B011E /* Navigation+Extension.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -635,6 +638,7 @@
 			children = (
 				13F52BDE2906285B00AC9315 /* View+Hovered.swift */,
 				13262858290DDB59003A9AFB /* View+Keyboard.swift */,
+				1339179B2910B28600E9E5F7 /* Popover+ViewStore.swift */,
 			);
 			path = Extensions;
 			sourceTree = "<group>";
@@ -717,7 +721,6 @@
 		13FC21DD28C3A3D4000F0F79 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
-				1384FF7828CB93FA003B011E /* Navigation+Extension.swift */,
 				13386AE628CBFD7A005E8352 /* Loadable.swift */,
 				13386AED28CC2892005E8352 /* ShimmerView.swift */,
 				134FAA1B28D6FAFC00B081FE /* String+Time.swift */,
@@ -1014,6 +1017,7 @@
 				1326285A290DDB61003A9AFB /* View+Keyboard.swift in Sources */,
 				13D83B8828FCAAA40044F04A /* AnimePlayerView+macOS.swift in Sources */,
 				1325FD6D2904F9BC00EA37D5 /* AppDelegate.swift in Sources */,
+				1339179C2910B28600E9E5F7 /* Popover+ViewStore.swift in Sources */,
 				13B2771428F7922900B4B4A3 /* VideoPlayer+View.swift in Sources */,
 				13F52BDF2906285B00AC9315 /* View+Hovered.swift in Sources */,
 				13A155B6290A3DDF006EB845 /* TestVideoPlayer.swift in Sources */,

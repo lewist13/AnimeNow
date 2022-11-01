@@ -73,7 +73,7 @@ struct AnimePlayerReducer: ReducerProtocol {
 
         // MacOS Properties
 
-        var playerVolume = 0.0
+        var playerVolume = 1.0
 
         init(
             anime: AnyAnimeRepresentable,
@@ -98,9 +98,9 @@ struct AnimePlayerReducer: ReducerProtocol {
         case playerTapped
         case closeButtonTapped
 
-        case showEpisodesSidebar
-        case showSettingsSidebar
-        case showSubtitlesSidebar
+        case toggleEpisodes
+        case toggleSettings
+        case toggleSubtitles
         case selectSidebarSettings(Sidebar.SettingsState.Section?)
         case closeSidebar
 
@@ -443,23 +443,44 @@ extension AnimePlayerReducer {
 
             return .merge(effects)
 
-        case .showEpisodesSidebar:
-            return .action(
-                .internalSetSidebar(.episodes),
-                animation: .easeInOut(duration: 0.35)
-            )
+        case .toggleEpisodes:
+            if case .episodes = state.selectedSidebar {
+                return .action(
+                    .internalSetSidebar(nil),
+                    animation: .easeInOut(duration: 0.35)
+                )
+            } else {
+                return .action(
+                    .internalSetSidebar(.episodes),
+                    animation: .easeInOut(duration: 0.35)
+                )
+            }
 
-        case .showSettingsSidebar:
-            return .action(
-                .internalSetSidebar(.settings(.init())),
-                animation: .easeInOut(duration: 0.35)
-            )
+        case .toggleSettings:
+            if case .settings = state.selectedSidebar {
+                return .action(
+                    .internalSetSidebar(nil),
+                    animation: .easeInOut(duration: 0.35)
+                )
+            } else {
+                return .action(
+                    .internalSetSidebar(.settings(.init())),
+                    animation: .easeInOut(duration: 0.35)
+                )
+            }
 
-        case .showSubtitlesSidebar:
-            return .action(
-                .internalSetSidebar(.subtitles),
-                animation: .easeInOut(duration: 0.35)
-            )
+        case .toggleSubtitles:
+            if case .subtitles = state.selectedSidebar {
+                return .action(
+                    .internalSetSidebar(nil),
+                    animation: .easeInOut(duration: 0.35)
+                )
+            } else {
+                return .action(
+                    .internalSetSidebar(.subtitles),
+                    animation: .easeInOut(duration: 0.35)
+                )
+            }
 
         case .closeButtonTapped:
             state.playerAction = .destroy
@@ -744,9 +765,15 @@ extension AnimePlayerReducer {
         case .volume(to: let volume):
             struct PlayerVolumeDebounceId: Hashable {}
 
-            state.playerVolume = volume
-            return .action(.playerAction(.volume(state.playerVolume)))
-                .debounce(id: PlayerVolumeDebounceId(), for: 0.5, scheduler: mainQueue)
+            let clamped = min(1.0, max(0.0, volume))
+            state.playerVolume = clamped
+
+            return .run { send in
+                await withTaskCancellation(id: PlayerVolumeDebounceId(), cancelInFlight: true) {
+                    try? await mainQueue.sleep(for: 0.5)
+                    await send(.playerAction(.volume(clamped)))
+                }
+            }
 
         // Player Actions Observer
 
@@ -818,10 +845,8 @@ extension AnimePlayerReducer {
     // Internal Effects
 
     private func hideOverlayAnimationDelay() -> EffectTask<Action> {
-        struct HideOverlayAnimationDebounceID: Hashable {}
-
         return .run { send in
-            try await withTaskCancellation(id: HideOverlayAnimationDebounceID(), cancelInFlight: true) {
+            try await withTaskCancellation(id: HidePlayerOverlayDelayCancellable(), cancelInFlight: true) {
                 try await self.mainQueue.sleep(for: .seconds(2.5))
                 await send(
                     .showPlayerOverlay(false),

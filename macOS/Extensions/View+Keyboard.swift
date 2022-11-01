@@ -19,6 +19,8 @@ struct KeyCommandsHandlerModifier: ViewModifier {
         case spaceBar = 49
         case leftArrow = 123
         case rightArrow = 124
+        case downArrow = 125
+        case upArrow = 126
     }
 
     var onKeyDown: (KeyCommands) -> Void

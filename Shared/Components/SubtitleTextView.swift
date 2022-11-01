@@ -17,8 +17,7 @@ struct SubtitleTextView: View {
 
     var body: some View {
         Group {
-            if let vtt = viewModel.vtt.value,
-               let text = vtt.bounds(for: duration * progress)?.text {
+            if let text = viewModel.vtt.value?.bounds(for: duration * progress)?.text {
                 VStack(alignment: .center) {
                     Spacer()
                     Text(text)
@@ -129,6 +128,7 @@ struct SubtitleTextView_Previews: PreviewProvider {
 
 extension WebVTT {
     func bounds(for timeStamp: TimeInterval) -> Cue? {
+        // TODO: parse for positions later
         cues.first(where: { $0.timeStart <= timeStamp && timeStamp <= $0.timeEnd })
     }
 }

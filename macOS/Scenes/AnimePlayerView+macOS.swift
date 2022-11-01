@@ -41,7 +41,6 @@ extension AnimePlayerView {
             }
         }
         .overlay(statusOverlay)
-        .overlay(sidebarOverlay)
         .mouseEvents(
             options: [.activeAlways, .mouseEnteredAndExited, .mouseMoved]
         ) { event in
@@ -59,7 +58,7 @@ extension AnimePlayerView {
             showOverlay ? NSCursor.unhide() : NSCursor.setHiddenUntilMouseMoves(true)
         }
         .onKeyDown { key in
-            let viewStore = ViewStore(store.stateless)
+            let viewStore = ViewStore(store)
             switch key {
             case .spaceBar:
                 viewStore.send(.togglePlayback)
@@ -67,6 +66,10 @@ extension AnimePlayerView {
                 viewStore.send(.backwardsTapped)
             case .rightArrow:
                 viewStore.send(.forwardsTapped)
+            case .downArrow:
+                viewStore.send(.volume(to: viewStore.playerVolume - 0.10))
+            case .upArrow:
+                viewStore.send(.volume(to: viewStore.playerVolume + 0.10))
             }
         }
         .onAppear {
@@ -113,15 +116,6 @@ extension AnimePlayerView {
     }
 }
 
-// MARK: Sidebar Items
-
-extension AnimePlayerView {
-    @ViewBuilder
-    var sidebarOverlay: some View {
-        EmptyView()
-    }
-}
-
 // MARK: Top Player Items
 
 extension AnimePlayerView {
@@ -151,7 +145,6 @@ extension AnimePlayerView {
             .contentShape(Rectangle())
             .onTapGesture {
                 viewStore.send(.togglePictureInPicture)
-//                viewState.send(.togglePlayback)
             }
             .foregroundColor(Color.white)
         }
@@ -165,14 +158,37 @@ extension AnimePlayerView {
     var bottomPlayerItems: some View {
         VStack {
             progressView
-            HStack(spacing: 22) {
+            HStack(spacing: 20) {
                 playStateView
                 volumeButton
                 nextEpisodeButton
                 durationView
                 Spacer()
+                subtitlesButton
+                    .popoverStore(
+                        store: store.scope(
+                            state: { $0.showSubtitlesOverlay }
+                        ),
+                        onDismiss: { ViewStore(store).send(.closeSidebar) }
+                    ) { _ in
+                        sidebarOverlay
+                            .frame(
+                                height: 300
+                            )
+                    }
                 episodesButton
                 settingsButton
+                    .popoverStore(
+                        store: store.scope(
+                            state: { $0.showSettingsOverlay }
+                        ),
+                        onDismiss: { ViewStore(store).send(.closeSidebar) }
+                    ) { _ in
+                        sidebarOverlay
+                            .frame(
+                                height: 300
+                            )
+                    }
                 fullscreenButton
             }
         }
@@ -344,5 +360,19 @@ extension NSWindow.ButtonType: CaseIterable {
 extension AnimePlayerReducer.State {
     var canShowPlayerOverlay: Bool {
         showPlayerOverlay || playerStatus == .paused || selectedSidebar != nil
+    }
+
+    var showSettingsOverlay: Bool? {
+        if case .settings = selectedSidebar {
+            return true
+        }
+        return nil
+    }
+
+    var showSubtitlesOverlay: Bool? {
+        if case .subtitles = selectedSidebar {
+            return true
+        }
+        return nil
     }
 }
