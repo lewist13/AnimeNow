@@ -9,7 +9,7 @@ import SwiftUI
 import Kingfisher
 
 struct AnimeItemView: View {
-    let anime: Anime
+    let anime: AnimeRepresentable
 
     var body: some View {
         GeometryReader { reader in
@@ -54,7 +54,7 @@ struct TrendingAnimeItemView_Previews: PreviewProvider {
 
     static var previews: some View {
         AnimeItemView(
-            anime: .narutoShippuden
+            anime: Anime.narutoShippuden
         )
         .frame(height: 250)
         .preferredColorScheme(.dark)

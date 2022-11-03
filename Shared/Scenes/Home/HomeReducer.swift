@@ -20,7 +20,7 @@ struct HomeReducer: ReducerProtocol {
         var highestRatedAnime: LoadableAnime = .idle
         var mostPopularAnime: LoadableAnime = .idle
         var resumeWatching: LoadableEpisodes = .idle
-        var lastWatchedAnime: LoadableAnime = .idle
+        var lastWatchedAnime: Loadable<[AnyAnimeRepresentable]> = .idle
     }
 
     enum Action: Equatable, BindableAction {
@@ -31,8 +31,7 @@ struct HomeReducer: ReducerProtocol {
         case fetchedAnime(keyPath: WritableKeyPath<State, LoadableAnime>, result: TaskResult<[Anime]>)
         case observingAnimesInDB([AnimeStore])
         case setResumeWatchingEpisodes(LoadableEpisodes)
-        case fetchLastWatchedAnimes([Anime.ID])
-        case fetchedLastWatchedAnimes([Anime])
+        case setLastWatchedAnimes([AnyAnimeRepresentable])
         case binding(BindingAction<HomeReducer.State>)
     }
 
@@ -63,9 +62,6 @@ extension HomeReducer.State {
 }
 
 extension HomeReducer {
-    private struct LastWatchAnimesFetchCancellable: Hashable {}
-    private struct ResumeWatchingFetchAnimeCancellable: Hashable {}
-
     var body: Reduce<State, Action> {
         Reduce(self.core)
     }
@@ -107,7 +103,11 @@ extension HomeReducer {
                     )
                 },
                 .run { send in
-                    let animeStoresStream: AsyncStream<[AnimeStore]> = repositoryClient.observe(.init(format: "episodeStores.@count > 0"), [], true)
+                    let animeStoresStream: AsyncStream<[AnimeStore]> = repositoryClient.observe(
+                        .init(format: "episodeStores.@count > 0"),
+                        [],
+                        true
+                    )
 
                     for await animeStores in animeStoresStream {
                         await send(.observingAnimesInDB(animeStores))
@@ -139,49 +139,24 @@ extension HomeReducer {
                     lastWatched.append(animeStore.id)
 
                     guard let recentEpisodeStore = animeStore.lastModifiedEpisode, !recentEpisodeStore.almostFinished else { continue }
-                    resumeWatchingEpisodes.append(.init(anime: animeStore, title: animeStore.title, episodeStore: recentEpisodeStore))
+                    resumeWatchingEpisodes.append(.init(animeStore: animeStore, title: animeStore.title, episodeStore: recentEpisodeStore))
                 }
 
                 await send(.setResumeWatchingEpisodes(.success(resumeWatchingEpisodes)), animation: .easeInOut(duration: 0.25))
-                await send(.fetchLastWatchedAnimes(sortedAnimeStores.map(\.id)))
+                await send(.setLastWatchedAnimes(sortedAnimeStores.map { $0.asRepresentable() }))
             }
 
         case .setResumeWatchingEpisodes(let episodes):
             state.resumeWatching = episodes
 
-        case .fetchLastWatchedAnimes(let animeIds):
-            guard !animeIds.isEmpty else {
-                state.lastWatchedAnime = .success([])
-                break
-            }
-
-            return .run { send in
-                let animes = (try? await animeClient.getAnimes(animeIds)) ?? []
-
-                let sorted = animes.sorted {
-                    guard let first = animeIds.firstIndex(of: $0.id) else {
-                        return false
-                    }
-
-                    guard let second = animeIds.firstIndex(of: $1.id) else {
-                        return true
-                    }
-
-                    return first < second
-                }
-
-                 await send(.fetchedLastWatchedAnimes(sorted))
-            }
-            .cancellable(id: LastWatchAnimesFetchCancellable(), cancelInFlight: true)
-
-        case .fetchedLastWatchedAnimes(let animes):
+        case .setLastWatchedAnimes(let animes):
             state.lastWatchedAnime = .success(animes)
 
         case .markAsWatched(let resumeWatching):
             var episodeStore = resumeWatching.episodeStore
             episodeStore.progress = 1.0
 
-            return .fireAndForget { [episodeStore] in
+            return .run { [episodeStore] in
                 _ = try await self.repositoryClient.update(episodeStore)
             }
 
@@ -200,8 +175,8 @@ extension HomeReducer {
 
 extension HomeReducer {
     struct ResumeWatchingEpisode: Equatable, Identifiable {
-        var id: AnimeStore.ID { anime.id }
-        let anime: AnimeStore
+        var id: AnimeStore.ID { animeStore.id }
+        let animeStore: AnimeStore
         let title: String
         let episodeStore: EpisodeStore
     }

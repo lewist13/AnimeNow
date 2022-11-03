@@ -39,6 +39,7 @@ struct ThumbnailItemBigView: View {
     }
 
     let type: InputType
+    var isFiller = false
     var nowPlaying = false
     var progressSize: CGFloat = 10
 
@@ -64,8 +65,6 @@ struct ThumbnailItemBigView: View {
                             Text("Now Playing")
                         } else if let progress = type.progress, progress >= 0.9 {
                             Text("Watched")
-                        } else {
-                            EmptyView()
                         }
                     }
                     .font(.footnote.weight(.heavy))
@@ -88,6 +87,13 @@ struct ThumbnailItemBigView: View {
                                 if let animeName = animeName {
                                     Text("\u{2022}")
                                     Text(animeName)
+                                } else if isFiller {
+                                    Text("\u{2022}")
+                                    Text("Filler")
+                                        .padding(.horizontal, 6)
+                                        .padding(.vertical, 3)
+                                        .background(Color(white: 0.2))
+                                        .clipShape(Capsule())
                                 }
                             }
                             .font(.footnote.weight(.bold))
@@ -138,10 +144,11 @@ struct EpisodeItemBigView_Previews: PreviewProvider {
             type: .episode(
                 image: episode.thumbnail?.link,
                 name: episode.title,
-                animeName: "Naruto Shippuden",
+                animeName: nil,
                 number: episode.number,
                 progress: 0.5
-            )
+            ),
+            isFiller: true
         )
         .frame(height: 150)
     }

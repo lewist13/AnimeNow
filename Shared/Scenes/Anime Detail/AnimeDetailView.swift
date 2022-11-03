@@ -82,8 +82,8 @@ extension AnimeDetailView {
                     FillAspectImage(
                         url: (DeviceUtil.isPhone ? animeViewStore.posterImage.largest : animeViewStore.coverImage.largest ?? animeViewStore.posterImage.largest)?.link
                     )
-                    .transaction { $0.animation = nil }
                     .frame(
+                        width: reader.size.width,
                         height: reader.size.height + (reader.frame(in: .global).minY > 0 ? reader.frame(in: .global).minY : 0),
                         alignment: .center
                     )
@@ -145,12 +145,34 @@ extension AnimeDetailView {
                                     }
                                 }
                             }
-                            .buttonStyle(PlayButtonStyle(isEnabled: playButtonState.isAvailable))
+                            .buttonStyle(PlayButtonStyle(
+                                isEnabled: playButtonState.isAvailable)
+                            )
+                            .clipShape(Capsule())
                             .disabled(!playButtonState.isAvailable)
                         }
 
+                        WithViewStore(
+                            store.scope(
+                                state: \.animeStore.value?.isFavorite
+                            )
+                        ) { isFavoriteViewStore in
+                            Button {
+                                isFavoriteViewStore.send(.tappedFavorite)
+                            } label: {
+                                Image(
+                                    systemName: "heart.fill"
+                                )
+                                .foregroundColor(.white)
+                            }
+                            .buttonStyle(.plain)
+                            .padding()
+                            .background(isFavoriteViewStore.state == true ? Color.red : Color(white: 0.15))
+                            .clipShape(Circle())
+                        }
+
                         Spacer()
-                        
+
                         WithViewStore(
                             store,
                             observe: { $0.animeStore.value?.inWatchlist }
@@ -159,15 +181,12 @@ extension AnimeDetailView {
                                 inWatchlistViewStore.send(.tappedInWatchlist)
                             } label: {
                                 Image(systemName: inWatchlistViewStore.state ?? false ? "bookmark.fill" : "bookmark")
-                                    .foregroundColor(
-                                        inWatchlistViewStore.state ?? false ? .white : .init(white: 0.75)
-                                    )
+                                    .foregroundColor(.white)
                             }
                             .buttonStyle(.plain)
                             .padding()
-                            .background(Color(white: 0.18))
+                            .background(inWatchlistViewStore.state == true ? Color.blue : Color(white: 0.15))
                             .clipShape(Circle())
-                            .contentShape(Rectangle())
                         }
                     }
                 }
@@ -196,7 +215,7 @@ extension AnimeDetailView {
                 )
             }
         }
-        .aspectRatio(DeviceUtil.isPhone ? 2/3 : DeviceUtil.isPad ? 7/3 : 9/3, contentMode: .fill)
+        .aspectRatio(DeviceUtil.isPhone ? 2/3 : DeviceUtil.isPad ? 7/3 : 9/3, contentMode: .fit)
         .frame(maxWidth: .infinity)
     }
 }
@@ -364,6 +383,7 @@ extension AnimeDetailView {
                         number: episode.number,
                         progress: viewStore.state?.progress
                     ),
+                    isFiller: episode.isFiller,
                     progressSize: 10
                 )
             }
@@ -426,7 +446,7 @@ struct AnimeView_Previews: PreviewProvider {
                         )
                     )
                 ),
-                reducer: AnimeDetailReducer()
+                reducer: EmptyReducer()
             )
         )
         .frame(width: 800, height: 600)

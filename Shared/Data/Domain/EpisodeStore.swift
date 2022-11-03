@@ -12,6 +12,7 @@ struct EpisodeStore: EpisodeRepresentable, Hashable, Codable, Identifiable {
     var number: Int
     var title: String
     var thumbnail: ImageSize?
+    var isFiller: Bool { false }
 
     // Database Only
 

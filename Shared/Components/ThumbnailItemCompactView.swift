@@ -48,10 +48,21 @@ struct ThumbnailItemCompactView: View {
                         .bold()
                         .lineLimit(1)
 
-                    Text("E\(episode.number)")
-                        .font(.footnote)
-                        .bold()
-                        .foregroundColor(Color.white.opacity(0.85))
+                    HStack(spacing: 2) {
+                        Text("E\(episode.number)")
+
+                        if episode.isFiller {
+                            Text("\u{2022}")
+                            Text("Filler")
+                                .font(.caption2.weight(.bold))
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 3)
+                                .background(Color(white: 0.2))
+                                .clipShape(Capsule())
+                        }
+                    }
+                    .font(.footnote.bold())
+                    .foregroundColor(Color.white.opacity(0.85))
 
                     if let progress = progress, progress < 0.9 {
                         SeekbarView(
@@ -76,7 +87,7 @@ struct ThumbnailItemCompactView: View {
 struct EpisodeItemCompactView_Previews: PreviewProvider {
     static var previews: some View {
         ThumbnailItemCompactView(
-            episode: Episode.demoEpisodes.first!.asRepresentable(),
+            episode: Episode.demoEpisodes[1].asRepresentable(),
             progress: 0.9
         )
         .preferredColorScheme(.dark)

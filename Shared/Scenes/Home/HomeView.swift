@@ -37,7 +37,7 @@ struct HomeView: View {
                         )
                     )
 
-                    animeItems(
+                    animeItemsRepresentable(
                         title: "Last Watched",
                         isLoading: viewStore.state,
                         store: store.scope(
@@ -213,6 +213,40 @@ extension HomeView {
                                 .onTapGesture {
                                     viewStore.send(.animeTapped(anime))
                                 }
+                                .disabled(isLoading)
+                            }
+                        }
+                        .padding(.horizontal)
+                    }
+                    .frame(height: DeviceUtil.isPhone ? 200 : 275)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    func animeItemsRepresentable(
+        title: String,
+        isLoading: Bool,
+        store: Store<Loadable<[AnyAnimeRepresentable]>, HomeReducer.Action>
+    ) -> some View {
+        WithViewStore(
+            store,
+            observe: { $0 }
+        ) { viewStore in
+            if let items = isLoading ? Anime.placeholders(5).map { $0.asRepresentable() } : viewStore.value, items.count > 0 {
+                VStack(alignment: .leading) {
+                    headerText(title)
+
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        LazyHStack(alignment: .center, spacing: 12) {
+                            ForEach(items) { anime in
+                                AnimeItemView(
+                                    anime: anime
+                                )
+//                                .onTapGesture {
+//                                    viewStore.send(.animeTapped(anime))
+//                                }
                                 .disabled(isLoading)
                             }
                         }

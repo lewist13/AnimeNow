@@ -190,7 +190,14 @@ extension AnimeClient {
 
             async let gogoSub = try? API.request(
                 consumetApi,
-                .anilist(.episodes(animeId: animeId, options: .init())),
+                .anilist(
+                    .episodes(
+                        animeId: animeId,
+                        options: .init(
+                            fetchFiller: true
+                        )
+                    )
+                ),
                 [ConsumetAPI.Episode].self
             )
 
@@ -200,7 +207,8 @@ extension AnimeClient {
                     .episodes(
                         animeId: animeId,
                         options: .init(
-                            dub: true
+                            dub: true,
+                            fetchFiller: true
                         )
                     )
                 ),
@@ -214,7 +222,8 @@ extension AnimeClient {
                         animeId: animeId,
                         options: .init(
                             dub: false,
-                            provider: .zoro
+                            provider: .zoro,
+                            fetchFiller: true
                         )
                     )
                 ),
@@ -228,7 +237,8 @@ extension AnimeClient {
                         animeId: animeId,
                         options: .init(
                             dub: true,
-                            provider: .zoro
+                            provider: .zoro,
+                            fetchFiller: true
                         )
                     )
                 ),

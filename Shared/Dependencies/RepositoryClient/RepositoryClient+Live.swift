@@ -135,12 +135,14 @@ class RepositoryClientLive: RepositoryClient {
 
                 continuation.yield(firstItems)
 
-                let cancellables = NotificationCenter.default.publisher(for: NSManagedObjectContext.didChangeObjectsNotification)
-                    .compactMap({ $0.object as? NSManagedObjectContext })
-                    .map { (try? $0.fetch(fetchRequest).map(\.asDomain)) ?? [] }
-                    .sink {
-                        continuation.yield($0)
-                    }
+                let cancellables = NotificationCenter.default.publisher(
+                    for: NSManagedObjectContext.didChangeObjectsNotification
+                )
+                .compactMap({ $0.object as? NSManagedObjectContext })
+                .compactMap { (try? $0.fetch(fetchRequest).map(\.asDomain)) }
+                .sink {
+                    continuation.yield($0)
+                }
 
                 continuation.onTermination = { [cancellables] _ in
                     cancellables.cancel()

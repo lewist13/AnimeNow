@@ -241,6 +241,7 @@ extension AnimePlayerView {
                                                     number: episode.number,
                                                     progress: viewState.episodesStore.first(where: { $0.number == episode.number })?.progress
                                                 ),
+                                                isFiller: episode.isFiller,
                                                 nowPlaying: episode.id == viewState.selectedEpisode,
                                                 progressSize: 8
                                             )

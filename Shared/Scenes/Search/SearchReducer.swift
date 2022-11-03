@@ -50,15 +50,18 @@ extension SearchReducer {
             }
             state.loadable = .loading
 
-            return .run {
-                await .searchResult(.init { try await animeClient.searchAnimes(query) })
+            return .run { send in
+                try await withTaskCancellation(id: SearchAnimesDebounceID.self, cancelInFlight: true) {
+                    try await mainQueue.sleep(for: .seconds(0.5))
+                    await send(.searchResult(.init { try await animeClient.searchAnimes(query) }))
+                }
             }
-            .debounce(id: SearchAnimesDebounceID.self, for: 0.3, scheduler: mainQueue)
 
         case .searchResult(.success(let anime)):
             state.loadable = .success(anime)
 
-        case .searchResult(.failure):
+        case .searchResult(.failure(let error)):
+            print(error)
             state.loadable = .failed
 
         case .searchQueryChangeDebounce:

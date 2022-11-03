@@ -103,6 +103,7 @@
 		138066EC28C5699F0012DAFB /* AnimeItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 138066EB28C5699F0012DAFB /* AnimeItemView.swift */; };
 		138066F228C572B50012DAFB /* SearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 138066F028C572B50012DAFB /* SearchView.swift */; };
 		138066F328C572B50012DAFB /* SearchReducer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 138066F128C572B50012DAFB /* SearchReducer.swift */; };
+		13820F16291429BA00CE431F /* UIApplication+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13820F15291429BA00CE431F /* UIApplication+Extension.swift */; };
 		1384FF7728CB8D07003B011E /* SwiftUINavigation in Frameworks */ = {isa = PBXBuildFile; productRef = 1384FF7628CB8D07003B011E /* SwiftUINavigation */; };
 		1384FF7928CB93FA003B011E /* Navigation+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1384FF7828CB93FA003B011E /* Navigation+Extension.swift */; };
 		1384FF7A28CB93FA003B011E /* Navigation+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1384FF7828CB93FA003B011E /* Navigation+Extension.swift */; };
@@ -260,6 +261,7 @@
 		138066EB28C5699F0012DAFB /* AnimeItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimeItemView.swift; sourceTree = "<group>"; };
 		138066F028C572B50012DAFB /* SearchView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SearchView.swift; sourceTree = "<group>"; };
 		138066F128C572B50012DAFB /* SearchReducer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SearchReducer.swift; sourceTree = "<group>"; };
+		13820F15291429BA00CE431F /* UIApplication+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIApplication+Extension.swift"; sourceTree = "<group>"; };
 		1384FF7828CB93FA003B011E /* Navigation+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Navigation+Extension.swift"; sourceTree = "<group>"; };
 		13938BAB28E0CADD001C8784 /* MainConfig.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = MainConfig.xcconfig; sourceTree = "<group>"; };
 		13944BAE2908D47800B947B5 /* FillAspectImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FillAspectImage.swift; sourceTree = "<group>"; };
@@ -394,6 +396,13 @@
 			path = Migrations;
 			sourceTree = "<group>";
 		};
+		13447CB429138E6E00C41E80 /* DownloaderClient */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = DownloaderClient;
+			sourceTree = "<group>";
+		};
 		134E0E9028D1259F00A5F5E5 /* UserDefaultsClient */ = {
 			isa = PBXGroup;
 			children = (
@@ -453,6 +462,14 @@
 				13D83B8428FCA8290044F04A /* AnimePlayerView+iOS.swift */,
 			);
 			path = Scenes;
+			sourceTree = "<group>";
+		};
+		13820F14291429A800CE431F /* Extensions */ = {
+			isa = PBXGroup;
+			children = (
+				13820F15291429BA00CE431F /* UIApplication+Extension.swift */,
+			);
+			path = Extensions;
 			sourceTree = "<group>";
 		};
 		13B2770928F76A8000B4B4A3 /* Components */ = {
@@ -673,6 +690,7 @@
 		13FC21C128C3960E000F0F79 /* iOS */ = {
 			isa = PBXGroup;
 			children = (
+				13820F14291429A800CE431F /* Extensions */,
 				13BAE88628F3A09A00662C0C /* Main */,
 				134FAA2128D7628400B081FE /* Dependencies */,
 				137A818428C5342F00B69503 /* Scenes */,
@@ -706,6 +724,7 @@
 		13FC21C528C396F3000F0F79 /* Dependencies */ = {
 			isa = PBXGroup;
 			children = (
+				13447CB429138E6E00C41E80 /* DownloaderClient */,
 				13650F3428CFE9A6002E20DD /* AnimeClient */,
 				13FC21C628C39749000F0F79 /* RepositoryClient */,
 				134E0E9028D1259F00A5F5E5 /* UserDefaultsClient */,
@@ -909,6 +928,7 @@
 				13E4BCF128C829A80039D880 /* AnimeDetailReducer.swift in Sources */,
 				134E5AB7290E61CE00E41664 /* SubtitleTextView.swift in Sources */,
 				1380561C28E9223500B9B45B /* AnimePlayerReducer.swift in Sources */,
+				13820F16291429BA00CE431F /* UIApplication+Extension.swift in Sources */,
 				1327550928D2A7C400A6C525 /* UserDefaultsClient+Mock.swift in Sources */,
 				134E0E9228D125C000A5F5E5 /* UserDefaultsClient.swift in Sources */,
 				13FC21DF28C3A3FD000F0F79 /* Persistence.swift in Sources */,

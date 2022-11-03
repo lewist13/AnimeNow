@@ -158,6 +158,7 @@ extension AnimeDetailReducer {
         Reduce(self.core)
     }
 
+    struct CancelAnimeFetchingId: Hashable {}
     struct CancelFetchingEpisodesId: Hashable {}
     struct CancelObservingAnimeDB: Hashable {}
 
@@ -175,7 +176,7 @@ extension AnimeDetailReducer {
                 .run {
                     await .fetchedEpisodes(.init { try await animeClient.getEpisodes(animeId) })
                 }
-                    .cancellable(id: CancelFetchingEpisodesId()),
+                    .cancellable(id: CancelFetchingEpisodesId.self),
                 .run { [state] send in
                     let animeStoresStream: AsyncStream<[AnimeStore]> = repositoryClient.observe(.init(format: "id == %d", state.anime.id))
 
@@ -183,7 +184,7 @@ extension AnimeDetailReducer {
                         await send(.fetchedAnimeFromDB(animeStores))
                     }
                 }
-                    .cancellable(id: CancelObservingAnimeDB())
+                    .cancellable(id: CancelObservingAnimeDB.self)
             )
 
         case .tappedFavorite:
@@ -240,8 +241,9 @@ extension AnimeDetailReducer {
 
         case .closeButtonPressed:
             return .concatenate(
-                .cancel(id: CancelFetchingEpisodesId()),
-                .cancel(id: CancelObservingAnimeDB()),
+                .cancel(id: CancelAnimeFetchingId.self),
+                .cancel(id: CancelFetchingEpisodesId.self),
+                .cancel(id: CancelObservingAnimeDB.self),
                 .action(.close)
             )
 

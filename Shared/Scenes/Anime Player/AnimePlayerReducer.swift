@@ -357,7 +357,7 @@ extension AnimePlayerReducer {
                             await send(.fetchedAnimeInfoStore(animeStore))
                         }
                     }
-                    .cancellable(id: CancelAnimeStoreObservable())
+                        .cancellable(id: CancelAnimeStoreObservable.self)
                 )
 
                 #if os(macOS)
@@ -378,7 +378,7 @@ extension AnimePlayerReducer {
                             }
                         }
                     )
-                    .cancellable(id: ObserveFullScreenNotificationId())
+                    .cancellable(id: ObserveFullScreenNotificationId.self)
                 )
                 #endif
 
@@ -394,7 +394,7 @@ extension AnimePlayerReducer {
                                 )
                             )
                         }
-                        .cancellable(id: FetchEpisodesCancellable())
+                            .cancellable(id: FetchEpisodesCancellable.self)
                     )
                 } else if state.episode != nil {
                     effects.append(
@@ -521,13 +521,13 @@ extension AnimePlayerReducer {
             state.playerAction = .destroy
             return .concatenate(
                 self.saveEpisodeState(state: state),
-                .cancel(id: ObserveFullScreenNotificationId()),
-                .cancel(id: HidePlayerOverlayDelayCancellable()),
-                .cancel(id: CancelAnimeStoreObservable()),
-                .cancel(id: CancelAnimeFetchId()),
-                .cancel(id: FetchSourcesCancellable()),
-                .cancel(id: FetchEpisodesCancellable()),
-                .cancel(id: FetchSkipTimesCancellable()),
+                .cancel(id: ObserveFullScreenNotificationId.self),
+                .cancel(id: HidePlayerOverlayDelayCancellable.self),
+                .cancel(id: CancelAnimeStoreObservable.self),
+                .cancel(id: CancelAnimeFetchId.self),
+                .cancel(id: FetchSourcesCancellable.self),
+                .cancel(id: FetchEpisodesCancellable.self),
+                .cancel(id: FetchSkipTimesCancellable.self),
                 .action(.close)
             )
 
@@ -676,7 +676,7 @@ extension AnimePlayerReducer {
                     .init { try await animeClient.getSources(provider) }
                 )
             }
-            .cancellable(id: FetchSourcesCancellable(), cancelInFlight: true)
+            .cancellable(id: FetchSourcesCancellable.self, cancelInFlight: true)
 
         case .fetchedSourcesOptions(.success(let sources)):
             state.sourcesOptions = .success(sources)
@@ -709,7 +709,7 @@ extension AnimePlayerReducer {
                     .init { try await animeClient.getSkipTimes(malId, episodeNumber) }
                 )
             }
-            .cancellable(id: FetchSkipTimesCancellable(), cancelInFlight: true)
+            .cancellable(id: FetchSkipTimesCancellable.self, cancelInFlight: true)
 
         case .fetchedSkipTimes(.success(let skipTimes)):
             state.skipTimes = .success(skipTimes)
@@ -780,7 +780,7 @@ extension AnimePlayerReducer {
             state.playerVolume = clamped
 
             return .run { send in
-                await withTaskCancellation(id: PlayerVolumeDebounceId(), cancelInFlight: true) {
+                await withTaskCancellation(id: PlayerVolumeDebounceId.self, cancelInFlight: true) {
                     try? await mainQueue.sleep(for: 0.5)
                     await send(.playerAction(.volume(clamped)))
                 }
@@ -868,7 +868,7 @@ extension AnimePlayerReducer {
 
     private func hideOverlayAnimationDelay() -> EffectTask<Action> {
         return .run { send in
-            try await withTaskCancellation(id: HidePlayerOverlayDelayCancellable(), cancelInFlight: true) {
+            try await withTaskCancellation(id: HidePlayerOverlayDelayCancellable.self, cancelInFlight: true) {
                 try await self.mainQueue.sleep(for: .seconds(2.5))
                 await send(
                     .showPlayerOverlay(false),
@@ -879,7 +879,7 @@ extension AnimePlayerReducer {
     }
 
     private func cancelHideOverlayAnimationDelay() -> EffectTask<Action> {
-        .cancel(id: HidePlayerOverlayDelayCancellable())
+        .cancel(id: HidePlayerOverlayDelayCancellable.self)
     }
 
     private func internalSetProvider(_ providerId: Provider.ID?, state: inout State) -> EffectTask<Action> {

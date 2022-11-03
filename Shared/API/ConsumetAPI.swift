@@ -22,9 +22,15 @@ final class ConsumetAPI: APIRoutable {
         enum AnilistEndpoint: Equatable {
             case animeInfo(animeId: Int, options: EpisodeInfo)
             case episodes(animeId: Int, options: EpisodeInfo)
-            case watch(episodeId: String, options: EpisodeInfo)
+            case watch(episodeId: String, options: WatchInfo)
 
             struct EpisodeInfo: Equatable {
+                var dub: Bool = false
+                var provider: Provider = .gogoanime
+                var fetchFiller = false
+            }
+
+            struct WatchInfo: Equatable {
                 var dub: Bool = false
                 var provider: Provider = .gogoanime
             }
@@ -69,25 +75,27 @@ final class ConsumetAPI: APIRoutable {
                 OneOf {
                     Route(.case(Endpoint.AnilistEndpoint.animeInfo(animeId:options:))) {
                         Path { "info"; Int.parser() }
-                        Parse(.memberwise(Endpoint.AnilistEndpoint.EpisodeInfo.init(dub:provider:))) {
+                        Parse(.memberwise(Endpoint.AnilistEndpoint.EpisodeInfo.init(dub:provider:fetchFiller:))) {
                             Query {
                                 Field("dub") { Bool.parser() }
                                 Field("provider") { Endpoint.AnilistEndpoint.Provider.parser() }
+                                Field("fetchFiller") { Bool.parser() }
                             }
                         }
                     }
                     Route(.case(Endpoint.AnilistEndpoint.episodes(animeId:options:))) {
                         Path { "episodes"; Int.parser() }
-                        Parse(.memberwise(Endpoint.AnilistEndpoint.EpisodeInfo.init(dub:provider:))) {
+                        Parse(.memberwise(Endpoint.AnilistEndpoint.EpisodeInfo.init(dub:provider:fetchFiller:))) {
                             Query {
                                 Field("dub") { Bool.parser() }
                                 Field("provider") { Endpoint.AnilistEndpoint.Provider.parser() }
+                                Field("fetchFiller") { Bool.parser() }
                             }
                         }
                     }
                     Route(.case(Endpoint.AnilistEndpoint.watch(episodeId:options:))) {
                         Path { "watch"; Parse(.string) }
-                        Parse(.memberwise(Endpoint.AnilistEndpoint.EpisodeInfo.init(dub:provider:))) {
+                        Parse(.memberwise(Endpoint.AnilistEndpoint.WatchInfo.init(dub:provider:))) {
                             Query {
                                 Field("dub") { Bool.parser() }
                                 Field("provider") { Endpoint.AnilistEndpoint.Provider.parser() }
@@ -120,6 +128,7 @@ extension ConsumetAPI {
         let title: String?
         let image: String?
         let description: String?
+        let isFiller: Bool?
     }
 
     struct StreamingLinksPayload: Decodable {
@@ -209,7 +218,8 @@ extension ConsumetAPI {
             title: episode.title ?? "Untitled",
             number: episode.number,
             description: episode.description ?? "No description available for this episode.",
-            thumbnail: thumbnail
+            thumbnail: thumbnail,
+            isFiller: episode.isFiller ?? false
         )
     }
 }

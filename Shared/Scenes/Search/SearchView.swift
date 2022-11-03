@@ -21,14 +21,29 @@ struct SearchView: View {
                 store,
                 observe: { $0 }
             ) { viewStore in
-                TextField(
-                    "Search",
-                    text: viewStore.binding(
-                        get: \.query,
-                        send: SearchReducer.Action.searchQueryChanged
+                HStack {
+                    TextField(
+                        "Search",
+                        text: viewStore.binding(
+                            get: \.query,
+                            send: SearchReducer.Action.searchQueryChanged
+                        )
                     )
-                )
-                .textFieldStyle(.plain)
+                    .textFieldStyle(.plain)
+                    .frame(maxHeight: .infinity)
+
+                    if viewStore.query.count > 0 {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 20))
+                            .frame(maxHeight: .infinity)
+                            .onTapGesture {
+                                viewStore.send(
+                                    .searchQueryChanged("")
+                                )
+                            }
+                    }
+                }
+                .fixedSize(horizontal: false, vertical: true)
                 .padding()
                 .background(Color.gray.opacity(0.15))
                 .clipShape(Capsule())
@@ -85,27 +100,46 @@ extension SearchView {
     func presentAnimes(_ animes: [Anime]) -> some View {
         if animes.count > 0 {
             ScrollView {
-                LazyVGrid(
-                    columns: .init(
-                        repeating: .init(
-                            .flexible(),
-                            spacing: 16
-                        ),
-                        count: DeviceUtil.isPhone ? 2 : 6
-                    )
-                ) {
-                    ForEach(animes, id: \.id) { anime in
-                        AnimeItemView(anime: anime)
-                            .onTapGesture {
-                                ViewStore(store.stateless).send(.onAnimeTapped(anime))
+                ZStack {
+                    VStack {
+                        LazyVGrid(
+                            columns: .init(
+                                repeating: .init(
+                                    .flexible(),
+                                    spacing: 16
+                                ),
+                                count: DeviceUtil.isPhone ? 2 : 6
+                            )
+                        ) {
+                            ForEach(animes, id: \.id) { anime in
+                                AnimeItemView(anime: anime)
+                                    .onTapGesture {
+                                        ViewStore(store.stateless).send(.onAnimeTapped(anime))
+                                        #if os(iOS)
+                                        UIApplication.shared.endEditing(true)
+                                        #endif
+                                    }
+                            }
+                        }
+                        .padding([.top, .horizontal])
+
+                        ExtraBottomSafeAreaInset()
+                        Spacer(minLength: 32)
+                    }
+
+                    #if os(iOS)
+                    GeometryReader { reader in
+                        Color.clear
+                            .onChange(
+                                of: reader.frame(in: .named("scroll")).minY
+                            ) { newValue in
+                                UIApplication.shared.endEditing(true)
                             }
                     }
+                    #endif
                 }
-                .padding([.top, .horizontal])
-
-                ExtraBottomSafeAreaInset()
-                Spacer(minLength: 32)
             }
+            .coordinateSpace(name: "scroll")
         } else {
             noResultsFound
         }
@@ -144,7 +178,8 @@ struct SearchView_Previews: PreviewProvider {
         SearchView(
             store: .init(
                 initialState: .init(
-                    loadable: .failed
+                    loadable: .success([]),
+                    query: "Test"
                 ),
                 reducer: SearchReducer()
             )

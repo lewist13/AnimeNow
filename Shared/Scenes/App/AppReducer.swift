@@ -149,7 +149,7 @@ extension AppReducer {
             return .action(
                 .setVideoPlayer(
                     .init(
-                        anime: resumeWatching.anime.asRepresentable(),
+                        anime: resumeWatching.animeStore.asRepresentable(),
                         selectedEpisode: Episode.ID(resumeWatching.episodeStore.number)
                     )
                 )
