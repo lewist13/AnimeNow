@@ -98,7 +98,7 @@ extension AnimePlayerView {
     var errorOverlay: some View {
         WithViewStore(
             store,
-            observe: { $0.status }
+            observe: \.status
         ) { status in
             switch status.state {
             case .some(.error(let description)):
@@ -335,9 +335,9 @@ extension AnimePlayerView {
     var subtitlesButton: some View {
         WithViewStore(
             store,
-            observe: { $0.sourcesOptions.value?.subtitles.count ?? 0 }
+            observe: { ($0.sourcesOptions.value?.subtitles.count ?? 0) > 0}
         ) { viewStore in
-            if viewStore.state > 0 {
+            if viewStore.state {
                 Image(systemName: "captions.bubble.fill")
                     .foregroundColor(Color.white)
                     .font(.title2)
@@ -360,7 +360,7 @@ extension AnimePlayerView {
     var nextEpisodeButton: some View {
         WithViewStore(
             store,
-            observe: { $0.nextEpisode }
+            observe: \.nextEpisode
         ) { viewState in
             Image(systemName: "forward.end.fill")
                 .foregroundColor(viewState.state != nil ? Color.white : Color.gray)
@@ -380,9 +380,9 @@ extension AnimePlayerView {
     var episodesButton: some View {
         WithViewStore(
             store,
-            observe: { $0.episodes }
+            observe: { ($0.episodes.value?.count ?? 0) > 1 }
         ) { viewState in
-            if let episodes = viewState.state.value, episodes.count > 1 {
+            if viewState.state {
                 Image("play.rectangle.on.rectangle.fill")
                     .foregroundColor(.white)
                     .font(.title2)
@@ -461,7 +461,7 @@ extension AnimePlayerView {
                                 .padding(2)
                                 .contentShape(Rectangle())
                                 .onTapGesture {
-                                    selectedSidebar                                        .send(.selectSidebarSettings(nil))
+                                    selectedSidebar.send(.selectSidebarSettings(nil))
                                 }
 
                             Text("\(section.description)")

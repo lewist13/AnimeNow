@@ -54,6 +54,8 @@ struct AppReducer: ReducerProtocol {
     struct State: Equatable {
         @BindableState var route = Route.home
 
+        var appDelegate = AppDelegateReducer.State()
+
         var home = HomeReducer.State()
         var collection = CollectionsReducer.State()
         var search = SearchReducer.State()
@@ -68,6 +70,7 @@ struct AppReducer: ReducerProtocol {
         case onAppear
         case setVideoPlayer(AnimePlayerReducer.State?)
         case setAnimeDetail(AnimeDetailReducer.State?)
+        case appDelegate(AppDelegateReducer.Action)
         case home(HomeReducer.Action)
         case collection(CollectionsReducer.Action)
         case search(SearchReducer.Action)
@@ -77,11 +80,23 @@ struct AppReducer: ReducerProtocol {
         case animeDetail(AnimeDetailReducer.Action)
         case binding(BindingAction<State>)
     }
+
+    @Dependency(\.mainQueue) var mainQueue
+}
+
+extension AppReducer.State {
+    var hasPendingChanges: Bool {
+        videoPlayer != nil
+    }
 }
 
 extension AppReducer {
     @ReducerBuilder<State, Action>
     var body: Reduce<State, Action> {
+        Scope(state: \.appDelegate, action: /Action.appDelegate) {
+            AppDelegateReducer()
+        }
+
         Scope(state: \.home, action: /Action.home) {
             HomeReducer()
         }
@@ -103,7 +118,6 @@ extension AppReducer {
         Reduce(self.core)
             .ifLet(\.videoPlayer, action: /Action.videoPlayer) {
                 AnimePlayerReducer()
-//                    ._printChanges()
             }
             .ifLet(\.animeDetail, action: /Action.animeDetail) {
                 AnimeDetailReducer()
@@ -138,8 +152,7 @@ extension AppReducer {
                         anime: resumeWatching.anime.asRepresentable(),
                         selectedEpisode: Episode.ID(resumeWatching.episodeStore.number)
                     )
-                ),
-                animation: .easeInOut
+                )
             )
 
         case let .animeDetail(.play(anime, episodes, selected)):
@@ -150,15 +163,36 @@ extension AppReducer {
                         episodes: episodes.map({ $0.asRepresentable() }),
                         selectedEpisode: selected
                     )
-                ),
-                animation: .easeInOut
+                )
             )
 
         case .animeDetail(.close):
-            return .action(.setAnimeDetail(nil), animation: .easeInOut(duration: 0.25))
+            return .action(
+                .setAnimeDetail(nil),
+                animation: .easeInOut(duration: 0.25)
+            )
 
         case .videoPlayer(.close):
-            return .action(.setVideoPlayer(nil), animation: .easeInOut)
+            return .action(
+                .setVideoPlayer(nil)
+            )
+        case .appDelegate(.appDidEnterBackground):
+            let videoStoreUp = state.videoPlayer != nil
+            return .run { send in
+                if videoStoreUp {
+                    await send(.videoPlayer(.storeState))
+                }
+            }
+
+        case .appDelegate(.appWillTerminate):
+            return .run { send in
+                await send(.appDelegate(.appDidEnterBackground))
+                #if os(macOS)
+                // for macOS, save everything before fully closing app.
+                try? await mainQueue.sleep(for: 0.5)
+                await NSApp.reply(toApplicationShouldTerminate: true)
+                #endif
+            }
 
         default:
             break

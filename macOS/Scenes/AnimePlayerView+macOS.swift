@@ -72,6 +72,14 @@ extension AnimePlayerView {
                 viewStore.send(.volume(to: viewStore.playerVolume + 0.10))
             }
         }
+        .onReceive(ViewStore(store).publisher.playerIsFullScreen) { isFullScreen in
+            NSWindow.ButtonType.allCases
+                .forEach {
+                    NSApp.mainWindow?
+                        .standardWindowButton($0)?
+                        .isHidden = !isFullScreen
+                }
+        }
         .onAppear {
             NSWindow.ButtonType.allCases
                 .forEach {

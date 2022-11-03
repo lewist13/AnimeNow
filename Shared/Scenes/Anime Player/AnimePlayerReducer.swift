@@ -115,8 +115,9 @@ struct AnimePlayerReducer: ReducerProtocol {
         case toggleSubtitles
         case selectSidebarSettings(Sidebar.SettingsState.Section?)
         case closeSidebar
+        case storeState
 
-        case selectEpisode(AnyEpisodeRepresentable.ID, saveProgress: Bool = true)
+        case selectEpisode(AnyEpisodeRepresentable.ID)
         case selectProvider(Provider.ID)
         case selectSource(Source.ID?)
         case selectSubtitle(Source.Subtitle.ID?)
@@ -130,7 +131,6 @@ struct AnimePlayerReducer: ReducerProtocol {
         case showPlayerOverlay(Bool)
         case internalSetSidebar(Sidebar?)
         case internalSetSource(Source.ID?)
-        case saveEpisodeProgress(AnyEpisodeRepresentable.ID?)
         case closeSidebarAndShowControls
         case close
 
@@ -236,7 +236,7 @@ extension AnimePlayerReducer.State {
         return nil
     }
 
-    fileprivate var provider: Provider? {
+    var provider: Provider? {
         if let episode = episode, let selectedProvider = selectedProvider {
             return episode.providers.first(where: { $0.id == selectedProvider })
         }
@@ -384,7 +384,6 @@ extension AnimePlayerReducer {
 
                 if !state.episodes.hasInitialized {
                     state.episodes = .loading
-
                     effects.append(
                         .run { send in
                             await send(
@@ -399,7 +398,7 @@ extension AnimePlayerReducer {
                     )
                 } else if state.episode != nil {
                     effects.append(
-                        .action(.selectEpisode(state.selectedEpisode, saveProgress: false))
+                        .action(.selectEpisode(state.selectedEpisode))
                     )
                 }
             }
@@ -520,9 +519,8 @@ extension AnimePlayerReducer {
 
         case .closeButtonTapped:
             state.playerAction = .destroy
-            let selectedEpisodeId = state.selectedEpisode
             return .concatenate(
-                .action(.saveEpisodeProgress(selectedEpisodeId)),
+                self.saveEpisodeState(state: state),
                 .cancel(id: ObserveFullScreenNotificationId()),
                 .cancel(id: HidePlayerOverlayDelayCancellable()),
                 .cancel(id: CancelAnimeStoreObservable()),
@@ -530,10 +528,7 @@ extension AnimePlayerReducer {
                 .cancel(id: FetchSourcesCancellable()),
                 .cancel(id: FetchEpisodesCancellable()),
                 .cancel(id: FetchSkipTimesCancellable()),
-                .run {
-                    try await mainQueue.sleep(for: 0.25)
-                    await $0(.close)
-                }
+                .action(.close)
             )
 
         case .closeSidebar:
@@ -542,15 +537,12 @@ extension AnimePlayerReducer {
                 animation: .easeInOut(duration: 0.25)
             )
 
-        case .selectEpisode(let episodeId, let saveProgress):
+        case .selectEpisode(let episodeId):
             var effects = [Effect<Action, Never>]()
 
             // Before selecting episode, save progress
 
-            if saveProgress {
-                let episodeId = state.selectedEpisode
-                effects.append(.action(.saveEpisodeProgress(episodeId)))
-            }
+            effects.append(self.saveEpisodeState(state: state))
 
             state.selectedEpisode = episodeId
 
@@ -588,14 +580,13 @@ extension AnimePlayerReducer {
             guard let providerId = providerId else { break }
 
             return .concatenate(
-                .action(.saveEpisodeProgress(state.selectedEpisode)),
+                self.saveEpisodeState(state: state),
                 self.internalSetProvider(providerId, state: &state)
             )
 
         case .selectSource(let sourceId):
-            let selectedEpisode = state.selectedEpisode
             return .concatenate(
-                .action(.saveEpisodeProgress(selectedEpisode)),
+                self.saveEpisodeState(state: state),
                 .action(.internalSetSource(sourceId))
             )
 
@@ -619,7 +610,7 @@ extension AnimePlayerReducer {
                 .run {
                     await userDefaultsClient.setBool(.videoPlayerAudioIsDub, provider.dub ?? false)
                 },
-                .action(.saveEpisodeProgress(state.selectedEpisode)),
+                self.saveEpisodeState(state: state),
                 self.internalSetProvider(providerId, state: &state)
             )
 
@@ -627,23 +618,6 @@ extension AnimePlayerReducer {
             state.showPlayerOverlay = show
 
         // Internal Actions
-
-        case .saveEpisodeProgress(let episodeId):
-            guard let episodeId = episodeId, let episode = state.episodes.value?[id: episodeId] else { break }
-            guard state.playerDuration > 0 else { break }
-            guard var animeStore = state.animeStore.value else { break }
-
-            let progress = state.playerProgress
-
-            animeStore.updateProgress(
-                for: episode,
-                anime: state.anime,
-                progress: progress
-            )
-
-            return .fireAndForget { [animeStore] in
-                _ = try await repositoryClient.insertOrUpdate(animeStore)
-            }
 
         case .closeSidebarAndShowControls:
             state.selectedSidebar = nil
@@ -685,7 +659,7 @@ extension AnimePlayerReducer {
         case .fetchedEpisodes(.success(let episodes)):
             state.episodes = .success(episodes.map({ $0.asRepresentable() }))
             let selectedEpisodeId = state.selectedEpisode
-            return .action(.selectEpisode(selectedEpisodeId, saveProgress: false))
+            return .action(.selectEpisode(selectedEpisodeId))
 
         case .fetchedEpisodes(.failure):
             state.episodes = .failed
@@ -858,15 +832,23 @@ extension AnimePlayerReducer {
         case .playerPiPStatus(let status):
             state.playerPiPStatus = status
 
+            if status == .willStop {
+                // TODO: Save Progress on didStop
+                return self.saveEpisodeState(state: state)
+            }
+
         case .playerPlayedToEnd:
             // TODO: Check if autoplay is set
-            return .action(.saveEpisodeProgress(state.selectedEpisode))
+            return self.saveEpisodeState(state: state)
 
         case .playerVolume(let volume):
             state.playerVolume = volume
 
         case .playerIsFullScreen(let fullscreen):
             state.playerIsFullScreen = fullscreen
+
+        case .storeState:
+            return self.saveEpisodeState(state: state)
 
         case .binding:
             break
@@ -904,6 +886,7 @@ extension AnimePlayerReducer {
         // Before selecting provider, save progress
 
         state.selectedProvider = providerId
+        state.sourcesOptions = .idle
 
         let providerData = state.provider?.description.toData()
 
@@ -916,5 +899,24 @@ extension AnimePlayerReducer {
                 await send(.fetchSourcesOptions)
             }
         )
+    }
+
+    private func saveEpisodeState(state: State) -> EffectTask<Action> {
+        let episodeId = state.selectedEpisode
+        guard let episode = state.episodes.value?[id: episodeId] else { return .none }
+        guard state.playerDuration > 0 else { return .none }
+        guard var animeStore = state.animeStore.value else { return .none }
+
+        let progress = state.playerProgress
+
+        animeStore.updateProgress(
+            for: episode,
+            anime: state.anime,
+            progress: progress
+        )
+
+        return .fireAndForget { [animeStore] in
+            _ = try await repositoryClient.insertOrUpdate(animeStore)
+        }
     }
 }

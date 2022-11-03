@@ -77,11 +77,14 @@ struct HomeView: View {
                     .easeInOut(duration: 0.5),
                     value: viewStore.state
                 )
-
                 ExtraBottomSafeAreaInset()
 
                 Spacer(minLength: 32)
             }
+            .animation(
+                .easeInOut(duration: 0.5),
+                value: viewStore.state
+            )
             .disabled(viewStore.state)
             .onAppear {
                 viewStore.send(.onAppear)

@@ -139,8 +139,9 @@ extension VideoPlayer: PlatformAgnosticViewRepresentable {
                 context.coordinator.clearObservers()
             }
         } else {
-            context.coordinator.clearObservers()
             view.stopAndRemoveItem()
+            context.coordinator.clearObservers()
+            context.coordinator.manualFetch(view: view)
         }
 
         if let action = action {
@@ -209,14 +210,18 @@ extension VideoPlayer: PlatformAgnosticViewRepresentable {
             view.periodicTimeChanged = nil
         }
 
+        func manualFetch(view: PlayerView) {
+            updateProgress(view: view)
+            updateBuffer(view: view)
+            updateDuration(view: view)
+            updateVolume(view: view)
+        }
+
         func startObserver(view: PlayerView) {
             guard view.periodicTimeChanged == nil else { return }
 
             view.periodicTimeChanged = { [unowned self] _ in
-                self.updateProgress(view: view)
-                self.updateBuffer(view: view)
-                self.updateDuration(view: view)
-                self.updateVolume(view: view)
+                self.manualFetch(view: view)
             }
         }
 

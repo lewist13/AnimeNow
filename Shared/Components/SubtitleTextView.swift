@@ -39,8 +39,8 @@ struct SubtitleTextView: View {
                 )
             }
         }
-        .onChange(of: url, perform: { newValue in
-            viewModel.updateURL(newValue)
+        .onChange(of: url, perform: {
+            viewModel.updateURL($0)
         })
     }
 }
@@ -128,7 +128,7 @@ struct SubtitleTextView_Previews: PreviewProvider {
 
 extension WebVTT {
     func bounds(for timeStamp: TimeInterval) -> Cue? {
-        // TODO: parse for positions later
+        // TODO: parse for positions later if available
         cues.first(where: { $0.timeStart <= timeStamp && timeStamp <= $0.timeEnd })
     }
 }

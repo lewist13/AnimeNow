@@ -37,11 +37,13 @@
 		1327551228D2AAD300A6C525 /* GraphQLModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13E512C628C79E5E00B298BA /* GraphQLModels.swift */; };
 		1327552128D2ABAE00A6C525 /* AppView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13FC21F028C41648000F0F79 /* AppView.swift */; };
 		1327553428D2C16C00A6C525 /* VideoPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1327553228D2C16C00A6C525 /* VideoPlayer.swift */; };
+		1331D2CE291209F000551597 /* AppDelegateReducer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1331D2CD291209F000551597 /* AppDelegateReducer.swift */; };
 		13386AE728CBFD7A005E8352 /* Loadable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13386AE628CBFD7A005E8352 /* Loadable.swift */; };
 		13386AE828CBFD7A005E8352 /* Loadable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13386AE628CBFD7A005E8352 /* Loadable.swift */; };
 		13386AEE28CC2892005E8352 /* ShimmerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13386AED28CC2892005E8352 /* ShimmerView.swift */; };
 		13386AEF28CC2892005E8352 /* ShimmerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13386AED28CC2892005E8352 /* ShimmerView.swift */; };
 		13386AF128CC3239005E8352 /* BlurView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13386AF028CC3239005E8352 /* BlurView.swift */; };
+		13387F9629132B1B00E0117D /* AppDelegateReducer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1331D2CD291209F000551597 /* AppDelegateReducer.swift */; };
 		1339179C2910B28600E9E5F7 /* Popover+ViewStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1339179B2910B28600E9E5F7 /* Popover+ViewStore.swift */; };
 		133E55F829011DE200CD59DA /* AnimeNow.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 133E55F529011DE200CD59DA /* AnimeNow.xcdatamodeld */; };
 		133E55F929011DE200CD59DA /* AnimeNow.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 133E55F529011DE200CD59DA /* AnimeNow.xcdatamodeld */; };
@@ -217,6 +219,7 @@
 		1327550528D2A11A00A6C525 /* UserDefaultsClient+Live.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UserDefaultsClient+Live.swift"; sourceTree = "<group>"; };
 		1327550828D2A7C400A6C525 /* UserDefaultsClient+Mock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UserDefaultsClient+Mock.swift"; sourceTree = "<group>"; };
 		1327553228D2C16C00A6C525 /* VideoPlayer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VideoPlayer.swift; sourceTree = "<group>"; };
+		1331D2CD291209F000551597 /* AppDelegateReducer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegateReducer.swift; sourceTree = "<group>"; };
 		13386AE628CBFD7A005E8352 /* Loadable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Loadable.swift; sourceTree = "<group>"; };
 		13386AED28CC2892005E8352 /* ShimmerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShimmerView.swift; sourceTree = "<group>"; };
 		13386AF028CC3239005E8352 /* BlurView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlurView.swift; sourceTree = "<group>"; };
@@ -355,6 +358,14 @@
 			path = Main;
 			sourceTree = "<group>";
 		};
+		1331D2CC2912097800551597 /* Main */ = {
+			isa = PBXGroup;
+			children = (
+				1331D2CD291209F000551597 /* AppDelegateReducer.swift */,
+			);
+			path = Main;
+			sourceTree = "<group>";
+		};
 		133E55F02901138600CD59DA /* Database */ = {
 			isa = PBXGroup;
 			children = (
@@ -463,6 +474,8 @@
 				13A155B4290A3DDF006EB845 /* TestVideoPlayer.swift */,
 				134E5AB6290E61CE00E41664 /* SubtitleTextView.swift */,
 				1384FF7828CB93FA003B011E /* Navigation+Extension.swift */,
+				13386AED28CC2892005E8352 /* ShimmerView.swift */,
+				13B2771528F79EA300B4B4A3 /* PlatformViewRepresentable.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -559,6 +572,7 @@
 		13C1551328FB75000064885D /* Scenes */ = {
 			isa = PBXGroup;
 			children = (
+				1331D2CC2912097800551597 /* Main */,
 				13BD66EA2901AFF900D565F4 /* App */,
 				13BD66E52901AF8900D565F4 /* Anime Player */,
 				13BD66E42901AF6400D565F4 /* Anime Detail */,
@@ -692,9 +706,9 @@
 		13FC21C528C396F3000F0F79 /* Dependencies */ = {
 			isa = PBXGroup;
 			children = (
-				134E0E9028D1259F00A5F5E5 /* UserDefaultsClient */,
 				13650F3428CFE9A6002E20DD /* AnimeClient */,
 				13FC21C628C39749000F0F79 /* RepositoryClient */,
+				134E0E9028D1259F00A5F5E5 /* UserDefaultsClient */,
 			);
 			path = Dependencies;
 			sourceTree = "<group>";
@@ -725,7 +739,6 @@
 			isa = PBXGroup;
 			children = (
 				13386AE628CBFD7A005E8352 /* Loadable.swift */,
-				13386AED28CC2892005E8352 /* ShimmerView.swift */,
 				134FAA1B28D6FAFC00B081FE /* String+Time.swift */,
 				134FAA1E28D6FBC200B081FE /* CMTime+String.swift */,
 				13D235C528E16F32004E51BB /* ComposableArchitecture+Binding.swift */,
@@ -734,7 +747,6 @@
 				1380560828E8AD1800B9B45B /* Data+Extensions.swift */,
 				1380560B28E8B69E00B9B45B /* Array+Extension.swift */,
 				1380562028E9341A00B9B45B /* Cache.swift */,
-				13B2771528F79EA300B4B4A3 /* PlatformViewRepresentable.swift */,
 				13E95CEF2904A4B100E85F28 /* Effect+Send.swift */,
 				13CB97F02911B20A00E074B8 /* NotificationCenter+Async.swift */,
 			);
@@ -939,6 +951,7 @@
 				1364BA9D28E13F6E005BAEBA /* DownloadsReducer.swift in Sources */,
 				1398F35C28FFCAD600C93CFA /* BottomSafeAreaInset+View.swift in Sources */,
 				13E465F428E6231A001FF309 /* ConsumetAPI.swift in Sources */,
+				1331D2CE291209F000551597 /* AppDelegateReducer.swift in Sources */,
 				13944BAF2908D47800B947B5 /* FillAspectImage.swift in Sources */,
 				1359668828E56ACF00EB2AFC /* KitsuAPI.swift in Sources */,
 				1359668E28E6100B00EB2AFC /* HapticClient.swift in Sources */,
@@ -970,6 +983,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				13387F9629132B1B00E0117D /* AppDelegateReducer.swift in Sources */,
 				13DF206128FBBDF100EE804D /* CollectionsReducer.swift in Sources */,
 				13B2771B28F79FF200B4B4A3 /* ConsumetAPI.swift in Sources */,
 				13C1550A28FB672F0064885D /* HomeReducer.swift in Sources */,

@@ -14,10 +14,7 @@ struct AnimeNowApp: App {
     var body: some Scene {
         WindowGroup {
             AppView(
-                store: .init(
-                    initialState: .init(),
-                    reducer: AppReducer()
-                )
+                store: appDelegate.store
             )
         }
         .windowStyle(.hiddenTitleBar)

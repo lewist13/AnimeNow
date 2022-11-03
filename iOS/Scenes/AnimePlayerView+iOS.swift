@@ -16,16 +16,16 @@ extension AnimePlayerView {
     var playerControlsOverlay: some View {
         WithViewStore(
             store,
-            observe: { $0.showPlayerOverlay }
-        ) { showPlayerOverlay in
+            observe: \.showPlayerOverlay
+        ) { viewState in
             GeometryReader { proxy in
                 VStack(spacing: 0) {
-                    if showPlayerOverlay.state {
+                    if viewState.state {
                         topPlayerItems
                     }
                     Spacer()
                     skipButton
-                    if showPlayerOverlay.state {
+                    if viewState.state {
                         bottomPlayerItems
                     }
                 }
@@ -39,7 +39,7 @@ extension AnimePlayerView {
                     Color.black.opacity(0.5)
                         .ignoresSafeArea()
                         .allowsHitTesting(false)
-                        .opacity(showPlayerOverlay.state ? 1 : 0)
+                        .opacity(viewState.state ? 1 : 0)
                 )
             }
         }
@@ -62,6 +62,7 @@ extension AnimePlayerView {
                             }
                         }
                 )
+                .transaction { $0.animation = nil }
         )
         .overlay(episodesOverlay)
     }
@@ -91,7 +92,7 @@ extension AnimePlayerView {
             self.loaded = state.playerDuration != 0
         }
 
-        var canShowSkipSeek: Bool {
+        var canShowSeek: Bool {
             switch status {
             case .error:
                 return false
@@ -104,10 +105,11 @@ extension AnimePlayerView {
     @ViewBuilder
     var statusOverlay: some View {
         WithViewStore(
-            store.scope(state: VideoStatusViewState.init)
+            store,
+            observe: VideoStatusViewState.init
         ) { viewState in
             HStack(spacing: 24) {
-                if viewState.canShowSkipSeek {
+                if viewState.canShowSeek {
                     Image(systemName: "gobackward.15")
                         .frame(width: 48, height: 48)
                         .foregroundColor(viewState.state.loaded ? .white : .gray)
@@ -144,7 +146,7 @@ extension AnimePlayerView {
                     EmptyView()
                 }
 
-                if viewState.canShowSkipSeek {
+                if viewState.canShowSeek {
                     Image(systemName: "goforward.15")
                         .frame(width: 48, height: 48)
                         .contentShape(Rectangle())

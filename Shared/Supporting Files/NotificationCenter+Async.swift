@@ -10,14 +10,14 @@ import Foundation
 extension NotificationCenter {
     func observeNotifications(
         from notification: Notification.Name
-    ) -> AsyncStream<Any?> {
+    ) -> AsyncStream<Void> {
         AsyncStream { continuation in
             let reference = NotificationCenter.default.addObserver(
                 forName: notification,
                 object: nil,
                 queue: nil
-            ) {
-                continuation.yield($0.object)
+            ) { _ in
+                continuation.yield(())
             }
             
             continuation.onTermination = { @Sendable _ in
