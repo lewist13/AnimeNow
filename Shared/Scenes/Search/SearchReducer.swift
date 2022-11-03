@@ -27,14 +27,13 @@ struct SearchReducer: ReducerProtocol {
 
     @Dependency(\.mainQueue) var mainQueue
     @Dependency(\.animeClient) var animeClient
+
+    var body: some ReducerProtocol<State, Action> {
+        Reduce(self.core)
+    }
 }
 
 extension SearchReducer {
-    @ReducerBuilder<State, Action>
-    var body: Reduce<State, Action> {
-        Reduce(self.core)
-    }
-
     struct SearchAnimesDebounceID: Hashable {}
 
     func core(state: inout State, action: Action) -> EffectTask<Action> {

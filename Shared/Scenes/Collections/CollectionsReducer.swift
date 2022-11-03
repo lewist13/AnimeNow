@@ -22,14 +22,13 @@ struct CollectionsReducer: ReducerProtocol {
     }
 
     @Dependency(\.repositoryClient) var repositoryClient
+
+    var body: some ReducerProtocol<State, Action> {
+        Reduce(self.core)
+    }
 }
 
 extension CollectionsReducer {
-    @ReducerBuilder<State, Action>
-    var body: Reduce<State, Action> {
-        Reduce(self.core)
-    }
-
     func core(into state: inout State, action: Action) -> EffectTask<Action> {
         switch action {
         case .onAppear:

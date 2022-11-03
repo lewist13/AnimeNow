@@ -28,6 +28,7 @@ struct SearchView: View {
                             get: \.query,
                             send: SearchReducer.Action.searchQueryChanged
                         )
+                        .removeDuplicates()
                     )
                     .textFieldStyle(.plain)
                     .frame(maxHeight: .infinity)

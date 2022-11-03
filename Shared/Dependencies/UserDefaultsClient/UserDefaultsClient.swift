@@ -9,15 +9,15 @@ import Foundation
 import ComposableArchitecture
 
 struct UserDefaultsClient {
-    let dataForKey: (Keys) -> Data?
-    let boolForKey: (Keys) -> Bool
-    let doubleForKey: (Keys) -> Double
-    let intForKey: (Keys) -> Int
-    let setBool: (Keys, Bool) async -> Void
-    let setInt: (Keys, Int) async -> Void
-    let setDouble: (Keys, Double) async -> Void
-    let setData: (Keys, Data) async -> Void
-    let remove: (Keys) async -> Void
+    let dataForKey: @Sendable (Keys) -> Data?
+    let boolForKey: @Sendable (Keys) -> Bool
+    let doubleForKey: @Sendable (Keys) -> Double
+    let intForKey: @Sendable (Keys) -> Int
+    let setBool: @Sendable (Keys, Bool) async -> Void
+    let setInt: @Sendable (Keys, Int) async -> Void
+    let setDouble: @Sendable (Keys, Double) async -> Void
+    let setData: @Sendable (Keys, Data) async -> Void
+    let remove: @Sendable (Keys) async -> Void
 }
 
 extension UserDefaultsClient {

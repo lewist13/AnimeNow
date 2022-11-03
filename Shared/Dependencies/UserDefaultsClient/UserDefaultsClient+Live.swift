@@ -44,3 +44,5 @@ extension UserDefaultsClient {
             })
     }()
 }
+
+extension UserDefaults: @unchecked Sendable { }

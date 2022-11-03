@@ -15,8 +15,7 @@ struct AppDelegateReducer: ReducerProtocol {
         case appWillTerminate
     }
 
-    @ReducerBuilder<State, Action>
-    var body: Reduce<State, Action> {
+    var body: some ReducerProtocol<State, Action> {
         Reduce(self.core)
     }
 }

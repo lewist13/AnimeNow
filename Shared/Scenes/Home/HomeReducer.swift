@@ -39,6 +39,10 @@ struct HomeReducer: ReducerProtocol {
     @Dependency(\.mainRunLoop) var mainRunLoop
     @Dependency(\.animeClient) var animeClient
     @Dependency(\.repositoryClient) var repositoryClient
+
+    var body: some ReducerProtocol<State, Action> {
+        Reduce(self.core)
+    }
 }
 
 extension HomeReducer.State {
@@ -62,10 +66,6 @@ extension HomeReducer.State {
 }
 
 extension HomeReducer {
-    var body: Reduce<State, Action> {
-        Reduce(self.core)
-    }
-
     func core(state: inout State, action: Action) -> EffectTask<Action> {
         switch (action) {
         case .onAppear:

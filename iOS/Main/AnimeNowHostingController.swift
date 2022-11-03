@@ -22,8 +22,9 @@ class AnimeNowHostingController: UIHostingController<AnyView> {
     private var interfaceOrientations = UIInterfaceOrientationMask.portrait {
         didSet {
             if #available(iOS 16, *) {
-                // TODO: Uncomment for iOS 16 and higher
-//                setNeedsUpdateOfSupportedInterfaceOrientations()
+                UIView.performWithoutAnimation {
+                    setNeedsUpdateOfSupportedInterfaceOrientations()
+                }
             } else {
                 UIView.performWithoutAnimation {
                     if interfaceOrientations.contains(.portrait) {

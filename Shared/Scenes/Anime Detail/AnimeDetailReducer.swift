@@ -40,6 +40,10 @@ struct AnimeDetailReducer: ReducerProtocol {
     @Dependency(\.mainQueue) var mainQueue
     @Dependency(\.repositoryClient) var repositoryClient
     @Dependency(\.userDefaultsClient) var userDefaultsClient
+
+    var body: some ReducerProtocol<State, Action> {
+        Reduce(self.core)
+    }
 }
 
 extension AnimeDetailReducer {
@@ -153,11 +157,6 @@ extension AnimeDetailReducer.State {
 }
 
 extension AnimeDetailReducer {
-    @ReducerBuilder<State, Action>
-    var body: Reduce<State, Action> {
-        Reduce(self.core)
-    }
-
     struct CancelAnimeFetchingId: Hashable {}
     struct CancelFetchingEpisodesId: Hashable {}
     struct CancelObservingAnimeDB: Hashable {}

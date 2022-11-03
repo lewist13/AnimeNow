@@ -102,7 +102,7 @@ struct AnimePlayerReducer: ReducerProtocol {
         }
     }
 
-    enum Action: Equatable, BindableAction {
+    enum Action: BindableAction {
 
         // View Actions
 
@@ -178,6 +178,11 @@ struct AnimePlayerReducer: ReducerProtocol {
     @Dependency(\.mainRunLoop) var mainRunLoop
     @Dependency(\.repositoryClient) var repositoryClient
     @Dependency(\.userDefaultsClient) var userDefaultsClient
+
+    var body: some ReducerProtocol<State, Action> {
+        BindingReducer()
+        Reduce(self.core)
+    }
 }
 
 // MARK: Status State
@@ -325,12 +330,6 @@ extension AnimePlayerReducer {
     struct FetchSkipTimesCancellable: Hashable {}
     struct CancelAnimeFetchId: Hashable {}
     struct ObserveFullScreenNotificationId: Hashable {}
-
-    @ReducerBuilder<State, Action>
-    var body: Reduce<State, Action> {
-        BindingReducer()
-        Reduce(self.core)
-    }
 
     func core(state: inout State, action: Action) -> EffectTask<Action> {
         switch action {

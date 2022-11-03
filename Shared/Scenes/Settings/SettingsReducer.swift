@@ -11,18 +11,17 @@ import ComposableArchitecture
 struct SettingsReducer: ReducerProtocol {
     struct State: Equatable {
     }
-
+    
     enum Action: Equatable {
         case onAppear
+    }
+
+    var body: some ReducerProtocol<State, Action> {
+        Reduce(self.core)
     }
 }
 
 extension SettingsReducer {
-    @ReducerBuilder<State, Action>
-    var body: Reduce<State, Action> {
-        Reduce(self.core)
-    }
-
     func core(state: inout State, action: Action) -> EffectTask<Action> {
         return .none
     }

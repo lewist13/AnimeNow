@@ -82,17 +82,8 @@ struct AppReducer: ReducerProtocol {
     }
 
     @Dependency(\.mainQueue) var mainQueue
-}
 
-extension AppReducer.State {
-    var hasPendingChanges: Bool {
-        videoPlayer != nil
-    }
-}
-
-extension AppReducer {
-    @ReducerBuilder<State, Action>
-    var body: Reduce<State, Action> {
+    var body: some ReducerProtocol<State, Action> {
         Scope(state: \.appDelegate, action: /Action.appDelegate) {
             AppDelegateReducer()
         }
@@ -124,6 +115,15 @@ extension AppReducer {
             }
     }
 
+}
+
+extension AppReducer.State {
+    var hasPendingChanges: Bool {
+        videoPlayer != nil
+    }
+}
+
+extension AppReducer {
     func core(state: inout State, action: Action) -> EffectTask<Action> {
         switch action {
 
