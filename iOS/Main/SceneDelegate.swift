@@ -9,10 +9,7 @@ import UIKit
 import ComposableArchitecture
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
-    let store = Store(
-      initialState: AppReducer.State(),
-      reducer: AppReducer()
-    )
+    lazy var viewStore = ViewStore(store.stateless)
 
     var window: UIWindow?
 
@@ -32,19 +29,16 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     func sceneWillResignActive(_ scene: UIScene) {
-        let viewStore = ViewStore(store)
         viewStore.send(.appDelegate(.appDidEnterBackground))
         print("Scene will resign active")
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {
-        let viewStore = ViewStore(store)
         viewStore.send(.appDelegate(.appWillTerminate))
         print("Scene Did Disconnect")
     }
 
     func sceneDidEnterBackground(_ scene: UIScene) {
-        let viewStore = ViewStore(store)
         viewStore.send(.appDelegate(.appDidEnterBackground))
         print("Scene did Enter background")
     }

@@ -349,7 +349,7 @@ struct VideoPlayerViewMacOS_Previews: PreviewProvider {
         AnimePlayerView(
             store: .init(
                 initialState: .init(
-                    anime: .init(Anime.narutoShippuden),
+                    anime: Anime.narutoShippuden,
                     episodes: .init(Episode.demoEpisodes.map({ $0.asRepresentable() })),
                     selectedEpisode: Episode.demoEpisodes.first!.id
                 ),

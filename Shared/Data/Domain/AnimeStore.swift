@@ -17,7 +17,6 @@ struct AnimeStore: AnimeRepresentable, Codable, Equatable, Identifiable {
     var posterImage: [ImageSize]
 
     var isFavorite: Bool
-    var inWatchlist: Bool
     var episodeStores: [EpisodeStore]
 
     var objectURL: URL?
@@ -31,7 +30,7 @@ extension AnimeStore {
 
 extension AnimeStore {
     static func findOrCreate(
-        _ anime: AnimeRepresentable,
+        _ anime: any AnimeRepresentable,
         _ animeStores: [AnimeStore] = []
     ) -> AnimeStore {
         if var animeStoreItem = animeStores.first(where: { $0.id == anime.id }) {
@@ -46,7 +45,6 @@ extension AnimeStore {
                 format: anime.format,
                 posterImage: anime.posterImage,
                 isFavorite: false,
-                inWatchlist: false,
                 episodeStores: .init()
             )
         }
@@ -55,8 +53,8 @@ extension AnimeStore {
 
 extension AnimeStore {
     mutating func updateProgress(
-        for episode: EpisodeRepresentable,
-        anime: AnimeRepresentable,
+        for episode: some EpisodeRepresentable,
+        anime: any AnimeRepresentable,
         progress: Double
     ) {
         guard anime.id == id else { return }

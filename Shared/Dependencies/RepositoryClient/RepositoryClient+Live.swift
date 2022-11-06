@@ -130,26 +130,6 @@ class RepositoryClientLive: RepositoryClient {
             let context = persistenceContainer.newBackgroundContext()
             context.automaticallyMergesChangesFromParent = true
 
-            guard !notifyChildChanges else {
-                let firstItems = (try? context.fetch(fetchRequest).map(\.asDomain)) ?? []
-
-                continuation.yield(firstItems)
-
-                let cancellables = NotificationCenter.default.publisher(
-                    for: NSManagedObjectContext.didChangeObjectsNotification
-                )
-                .compactMap({ $0.object as? NSManagedObjectContext })
-                .compactMap { (try? $0.fetch(fetchRequest).map(\.asDomain)) }
-                .sink {
-                    continuation.yield($0)
-                }
-
-                continuation.onTermination = { [cancellables] _ in
-                    cancellables.cancel()
-                }
-                return
-            }
-
             let frc = NSFetchedResultsController(
                 fetchRequest: fetchRequest,
                 managedObjectContext: context,
@@ -165,7 +145,23 @@ class RepositoryClientLive: RepositoryClient {
                 delegate.controllerDidChangeContent(fetchRequest)
             }
 
+            let observingChildNotifications: AnyCancellable?
+
+            if notifyChildChanges {
+                observingChildNotifications = NotificationCenter.default.publisher(
+                    for: NSManagedObjectContext.didChangeObjectsNotification
+                )
+                .compactMap({ $0.object as? NSManagedObjectContext })
+                .compactMap { (try? $0.fetch(fetchRequest).map(\.asDomain)) }
+                .sink {
+                    continuation.yield($0)
+                }
+            } else {
+                observingChildNotifications = nil
+            }
+
             continuation.onTermination = { _ in
+                observingChildNotifications?.cancel()
                 frc.delegate = nil
                 _ = delegate
             }

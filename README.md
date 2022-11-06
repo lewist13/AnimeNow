@@ -20,6 +20,9 @@
 
 The app provides a way to view your favorite anime shows built with SwiftUI and TCA (The Composable Architecture).
 
+## DISCLAIMER
+This app is still in its beta stages so expect random crashes, missing content, and features.
+
 ## Features
 
 - [x] Ads Free w/o logins
@@ -86,6 +89,24 @@ The app provides a way to view your favorite anime shows built with SwiftUI and 
     </tr>
   </tbody>
 </table> -->
+
+<table>
+  <thead>
+    <tr>
+      <th colspan="5">macOS</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+        <td>
+            <img src="./Misc/Media/macos_home_screenshot.png"/>
+        </td>
+        <td>
+            <img src="./Misc/Media/macos_videoplayer_screenshot.png"/>
+        </td>
+    </tr>
+  </tbody>
+</table>
 
 ## Downloads 
 

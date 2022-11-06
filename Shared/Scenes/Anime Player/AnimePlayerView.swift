@@ -265,8 +265,9 @@ extension AnimePlayerView {
             .padding(12)
             .background(background)
             .cornerRadius(12)
+            .clipShape(Capsule())
             .shadow(color: Color.gray.opacity(0.25), radius: 6)
-            .contentShape(Capsule())
+            .contentShape(Rectangle())
     }
 }
 
@@ -832,7 +833,7 @@ struct VideoPlayerView_Previews: PreviewProvider {
             AnimePlayerView(
                 store: .init(
                     initialState: .init(
-                        anime: .init(Anime.narutoShippuden),
+                        anime: Anime.narutoShippuden,
                         episodes: .init(Episode.demoEpisodes.map({ $0.asRepresentable() })),
                         selectedEpisode: Episode.demoEpisodes.first!.id
                     ),

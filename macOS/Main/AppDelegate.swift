@@ -15,6 +15,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
       reducer: AppReducer()
     )
 
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        ViewStore(store).send(.appDelegate(.appDidFinishLaunching))
+    }
+
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         let viewStore = ViewStore(store)
 

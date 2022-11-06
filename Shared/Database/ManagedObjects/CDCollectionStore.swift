@@ -16,9 +16,10 @@ extension CDCollectionStore: ManagedObjectConvertible {
     var asDomain: CollectionStore {
         return .init(
             id: id ?? .init(),
-            animes: (animes as? Set<CDAnimeStore>)?.map(\.asDomain) ?? [],
-            name: name ?? "",
+            title: title ?? "Unknown",
             lastUpdated: lastUpdated ?? .init(),
+            userRemovable: userRemovable,
+            animes: (animes as? Set<CDAnimeStore>)?.map(\.asDomain) ?? [],
             objectURL: objectID.uriRepresentation()
         )
     }
@@ -33,8 +34,9 @@ extension CDCollectionStore: ManagedObjectConvertible {
         from domain: CollectionStore
     ) {
         id = domain.id
-        name = domain.name
+        title = domain.title
         lastUpdated = domain.lastUpdated
+        userRemovable = domain.userRemovable
 
         // TODO: Improve updating items in episode stores
         if let managedObjectContext = managedObjectContext {
@@ -51,8 +53,9 @@ extension CollectionStore: DomainModelConvertible {
     ) -> CDCollectionStore {
         let object = CDCollectionStore(context: context)
         object.id = id
-        object.name = name
+        object.title = title
         object.lastUpdated = lastUpdated
+        object.userRemovable = userRemovable
         object.animes = .init(array: animes.map { $0.asManagedObject(in: context) })
         return object
     }

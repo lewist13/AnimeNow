@@ -8,9 +8,15 @@
 import UIKit
 import ComposableArchitecture
 
+let store = Store(
+  initialState: AppReducer.State(),
+  reducer: AppReducer()
+)
+
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
+        ViewStore(store).send(.appDelegate(.appDidFinishLaunching))
         return true
     }
 

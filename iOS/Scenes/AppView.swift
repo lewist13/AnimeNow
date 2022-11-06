@@ -66,9 +66,15 @@ struct AppView: View {
                         AppReducer.Route.allCases,
                         id: \.self
                     ) { item in
-                        Image(
-                            systemName: "\(item == viewStore.state ? item.selectedIcon : item.icon)"
-                        )
+                        Group {
+                            if item.isIconSystemImage {
+                                Image(
+                                    systemName: "\(item == viewStore.state ? item.selectedIcon : item.icon)"
+                                )
+                            } else {
+                                Image("\(item == viewStore.state ? item.selectedIcon : item.icon)")
+                            }
+                        }
                         .foregroundColor(
                             item == viewStore.state ? Color.white : Color.gray
                         )

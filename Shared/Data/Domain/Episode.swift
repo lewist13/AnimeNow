@@ -7,19 +7,19 @@
 
 import Foundation
 
-protocol EpisodeRepresentable  {
+protocol EpisodeRepresentable: Equatable, Identifiable {
     var number: Int { get }
     var title: String { get }
     var thumbnail: ImageSize? { get }
     var providers: [Provider] { get }
     var isFiller: Bool { get }
 
-    func isEqualTo(_ item: EpisodeRepresentable) -> Bool
+    func isEqualTo(_ item: some EpisodeRepresentable) -> Bool
     func asRepresentable() -> AnyEpisodeRepresentable
 }
 
 extension EpisodeRepresentable where Self: Equatable {
-    func isEqualTo(_ item: EpisodeRepresentable) -> Bool {
+    func isEqualTo(_ item: some EpisodeRepresentable) -> Bool {
         guard let item = item as? Self else { return false }
         return self == item
     }
@@ -32,7 +32,7 @@ extension EpisodeRepresentable {
 }
 
 struct AnyEpisodeRepresentable: EpisodeRepresentable, Identifiable {
-    private let episode: EpisodeRepresentable
+    private let episode: any EpisodeRepresentable
 
     var id: Int {
         episode.number
@@ -58,7 +58,7 @@ struct AnyEpisodeRepresentable: EpisodeRepresentable, Identifiable {
         episode.isFiller
     }
 
-    init(_ episode: EpisodeRepresentable) {
+    init(_ episode: some EpisodeRepresentable) {
         self.episode = episode
     }
 }
@@ -152,14 +152,6 @@ extension Episode {
         isFiller: false
     )
 
-    static let placeholder = Episode(
-        title: "Placeholder",
-        number: 0,
-        description: "Placeholder",
-        thumbnail: nil,
-        isFiller: false
-    )
-
     static let demoEpisodes: [Episode] = [
         .init(
             title: "Homecoming",
@@ -177,4 +169,20 @@ extension Episode {
             isFiller: true
         )
     ]
+
+    static let placeholder = createPlaceholder(0)
+
+    private static func createPlaceholder(_ id: Int) -> Episode {
+        .init(
+            title: "Placeholder",
+            number: id,
+            description: "Placeholder",
+            thumbnail: nil,
+            isFiller: false
+        )
+    }
+
+    static func placeholders(_ count: Int) -> [Episode] {
+        (0..<count).map(createPlaceholder(_:))
+    }
 }

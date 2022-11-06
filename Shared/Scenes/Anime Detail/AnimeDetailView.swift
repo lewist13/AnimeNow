@@ -16,7 +16,7 @@ struct AnimeDetailView: View {
     var body: some View {
         WithViewStore(
             store,
-            observe: { $0.isLoading }
+            observe: \.isLoading
         ) { viewStore in
             ScrollView(.vertical, showsIndicators: false) {
                 VStack(spacing: 16) {
@@ -75,7 +75,7 @@ extension AnimeDetailView {
     var topContainer: some View {
         WithViewStore(
             store,
-            observe: { $0.anime }
+            observe: { $0.isLoading ? .placeholder : $0.anime.value ?? .placeholder }
         ) { animeViewStore in
             ZStack {
                 GeometryReader { reader in
@@ -114,12 +114,7 @@ extension AnimeDetailView {
                                     .font(.footnote)
                                     .bold()
                                     .foregroundColor(.white.opacity(0.8))
-                                if animeViewStore.categories.last != category {
-                                    Text("\u{2022}")
-                                        .font(.footnote)
-                                        .fontWeight(.black)
-                                        .foregroundColor(.white.opacity(0.8))
-                                }
+                                createDot(animeViewStore.categories, category)
                             }
                             Spacer()
                         }
@@ -152,10 +147,11 @@ extension AnimeDetailView {
                             .disabled(!playButtonState.isAvailable)
                         }
 
+                        Spacer()
+
                         WithViewStore(
-                            store.scope(
-                                state: \.animeStore.value?.isFavorite
-                            )
+                            store,
+                            observe: { $0.isLoading ? nil : $0.animeStore.value?.isFavorite }
                         ) { isFavoriteViewStore in
                             Button {
                                 isFavoriteViewStore.send(.tappedFavorite)
@@ -164,29 +160,29 @@ extension AnimeDetailView {
                                     systemName: "heart.fill"
                                 )
                                 .foregroundColor(.white)
+                                .padding()
+                                .background(isFavoriteViewStore.state == true ? Color.red : Color(white: 0.15))
                             }
                             .buttonStyle(.plain)
-                            .padding()
-                            .background(isFavoriteViewStore.state == true ? Color.red : Color(white: 0.15))
                             .clipShape(Circle())
+                            .contentShape(Rectangle())
                         }
-
-                        Spacer()
 
                         WithViewStore(
                             store,
-                            observe: { $0.animeStore.value?.inWatchlist }
+                            observe: { $0.isLoading ? nil : false }
                         ) { inWatchlistViewStore in
                             Button {
                                 inWatchlistViewStore.send(.tappedInWatchlist)
                             } label: {
-                                Image(systemName: inWatchlistViewStore.state ?? false ? "bookmark.fill" : "bookmark")
+                                Image(systemName: "bookmark.fill")
                                     .foregroundColor(.white)
+                                    .padding()
+                                    .background(inWatchlistViewStore.state == true ? Color.blue : Color(white: 0.15))
                             }
                             .buttonStyle(.plain)
-                            .padding()
-                            .background(inWatchlistViewStore.state == true ? Color.blue : Color(white: 0.15))
                             .clipShape(Circle())
+                            .contentShape(Rectangle())
                         }
                     }
                 }
@@ -218,6 +214,18 @@ extension AnimeDetailView {
         .aspectRatio(DeviceUtil.isPhone ? 2/3 : DeviceUtil.isPad ? 7/3 : 9/3, contentMode: .fit)
         .frame(maxWidth: .infinity)
     }
+
+    @ViewBuilder
+    private func createDot(_ items: [String], _ current: String) -> some View {
+        if items.last != current {
+            Text("\u{2022}")
+                .font(.footnote)
+                .fontWeight(.black)
+                .foregroundColor(.white.opacity(0.8))
+        } else {
+            EmptyView()
+        }
+    }
 }
 
 // MARK: - Info Container
@@ -228,7 +236,7 @@ extension AnimeDetailView {
     var infoContainer: some View {
         WithViewStore(
             store,
-            observe: { $0.anime }
+            observe: { $0.isLoading ? .placeholder : $0.anime.value ?? .placeholder }
         ) { anime in
             VStack(alignment: .leading, spacing: 12) {
 
@@ -272,28 +280,26 @@ extension AnimeDetailView {
 extension AnimeDetailView {
 
     private struct EpisodesViewState: Equatable {
-        let episodes: AnimeDetailReducer.LoadableEpisodes
+        let episodes: [Episode]?
         let compact: Bool
 
-        init?(_ state: AnimeDetailReducer.State) {
-            guard state.episodes.hasInitialized else { return nil }
-            self.episodes = state.episodes
+        init(_ state: AnimeDetailReducer.State) {
+            if state.isLoading {
+                self.episodes = Episode.placeholders(8)
+            } else {
+                self.episodes = state.episodes.value
+            }
             self.compact = state.compactEpisodes
         }
     }
 
     @ViewBuilder
     var episodesContainer: some View {
-        IfLetStore(
-            store.scope(
-                state: EpisodesViewState.init
-            )
-        ) { store in
             WithViewStore(
                 store,
-                observe: { $0 }
+                observe: EpisodesViewState.init
             ) { viewState in
-                if let episodes = viewState.episodes.value ?? (viewState.episodes.isLoading ? [.placeholder] : nil) {
+                if let episodes = viewState.episodes {
                     HStack(alignment: .center) {
                         buildSubHeading(title: "Episodes")
 
@@ -353,8 +359,7 @@ extension AnimeDetailView {
                     }
                 }
             }
-        }
-        .frame(maxWidth: .infinity)
+            .frame(maxWidth: .infinity)
     }
 
     @ViewBuilder
@@ -432,7 +437,7 @@ struct AnimeView_Previews: PreviewProvider {
         AnimeDetailView(
             store: .init(
                 initialState: .init(
-                    anime: .narutoShippuden,
+                    anime: Anime.narutoShippuden,
                     episodes: .success(Episode.demoEpisodes),
                     animeStore: .success(
                         .init(
@@ -441,7 +446,6 @@ struct AnimeView_Previews: PreviewProvider {
                             format: .tv,
                             posterImage: [],
                             isFavorite: false,
-                            inWatchlist: false,
                             episodeStores: .init()
                         )
                     )

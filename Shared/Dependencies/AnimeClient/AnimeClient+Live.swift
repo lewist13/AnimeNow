@@ -165,7 +165,7 @@ extension AnimeClient {
         } searchAnimes: { query in
             let query = AniListAPI.MediaPage.createQuery(
                 AniListAPI.MediaPage.ArgumentOptions.defaults,
-                AniListAPI.Media.ArgumentOptions.defaults + [.search(query)]
+                AniListAPI.Media.ArgumentOptions.defaults + [.search(query), .sort([.POPULARITY_DESC])]
             )
                 .format()
             let endpoint = AniListAPI.Endpoint.graphql(

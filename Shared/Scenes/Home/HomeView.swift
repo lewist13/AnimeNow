@@ -14,78 +14,112 @@ import Kingfisher
 struct HomeView: View {
     let store: StoreOf<HomeReducer>
 
+    private struct ViewState: Equatable {
+        let isLoading: Bool
+        let error: HomeReducer.State.Error?
+
+        init(_ state: HomeReducer.State) {
+            self.isLoading = state.isLoading
+            self.error = state.error
+        }
+    }
+
     var body: some View {
         WithViewStore(
             store,
-            observe: { $0.isLoading }
+            observe: ViewState.init
         ) { viewStore in
-            ScrollView(.vertical, showsIndicators: false) {
-                ExtraTopSafeAreaInset()
+            Group {
+                if let error = viewStore.error {
+                    VStack(spacing: 14) {
+                        Text(error.title)
+                            .font(.body.bold())
+                            .foregroundColor(.gray)
 
-                VStack(spacing: 24) {
-                    animeHeroItems(
-                        isLoading: viewStore.state,
-                        store: store.scope(
-                            state: \.topTrendingAnime
-                        )
-                    )
+                        if let action = error.action {
+                            Button {
+                                viewStore.send(action.1)
+                            } label: {
+                                Text(action.0)
+                                    .font(.body.weight(.bold))
+                            }
+                            .buttonStyle(.plain)
+                            .foregroundColor(.black)
+                            .padding(12)
+                            .background(Color.white)
+                            .clipShape(Capsule())
+                        }
+                    }
+                } else {
+                    ScrollView(.vertical, showsIndicators: false) {
+                        ExtraTopSafeAreaInset()
 
-                    resumeWatchingEpisodes(
-                        isLoading: viewStore.state,
-                        store: store.scope(
-                            state: \.resumeWatching
-                        )
-                    )
+                        VStack(spacing: 24) {
+                            animeHeroItems(
+                                isLoading: viewStore.isLoading,
+                                store: store.scope(
+                                    state: \.topTrendingAnime
+                                )
+                            )
 
-                    animeItemsRepresentable(
-                        title: "Last Watched",
-                        isLoading: viewStore.state,
-                        store: store.scope(
-                            state: \.lastWatchedAnime
-                        )
-                    )
+                            resumeWatchingEpisodes(
+                                isLoading: viewStore.isLoading,
+                                store: store.scope(
+                                    state: \.resumeWatching
+                                )
+                            )
 
-                    animeItems(
-                        title: "Upcoming",
-                        isLoading: viewStore.state,
-                        store: store.scope(
-                            state: \.topUpcomingAnime
-                        )
-                    )
+                            animeItemsRepresentable(
+                                title: "Last Watched",
+                                isLoading: viewStore.isLoading,
+                                store: store.scope(
+                                    state: \.lastWatchedAnime
+                                )
+                            )
 
-                    animeItems(
-                        title: "Highest Rated",
-                        isLoading: viewStore.state,
-                        store: store.scope(
-                            state: \.highestRatedAnime
-                        )
-                    )
+                            animeItems(
+                                title: "Upcoming",
+                                isLoading: viewStore.isLoading,
+                                store: store.scope(
+                                    state: \.topUpcomingAnime
+                                )
+                            )
 
-                    animeItems(
-                        title: "Most Popular",
-                        isLoading: viewStore.state,
-                        store: store.scope(
-                            state: \.mostPopularAnime
+                            animeItems(
+                                title: "Highest Rated",
+                                isLoading: viewStore.isLoading,
+                                store: store.scope(
+                                    state: \.highestRatedAnime
+                                )
+                            )
+
+                            animeItems(
+                                title: "Most Popular",
+                                isLoading: viewStore.isLoading,
+                                store: store.scope(
+                                    state: \.mostPopularAnime
+                                )
+                            )
+                        }
+                        .placeholder(
+                            active: viewStore.isLoading,
+                            duration:  2.0
                         )
-                    )
+                        .animation(
+                            .easeInOut(duration: 0.5),
+                            value: viewStore.state
+                        )
+                        ExtraBottomSafeAreaInset()
+
+                        Spacer(minLength: 32)
+                    }
                 }
-                .placeholder(
-                    active: viewStore.state,
-                    duration:  2.0
-                )
-                .animation(
-                    .easeInOut(duration: 0.5),
-                    value: viewStore.state
-                )
-                ExtraBottomSafeAreaInset()
-
-                Spacer(minLength: 32)
             }
             .animation(
                 .easeInOut(duration: 0.5),
                 value: viewStore.state
             )
-            .disabled(viewStore.state)
+            .disabled(viewStore.isLoading)
             .onAppear {
                 viewStore.send(.onAppear)
             }
@@ -234,7 +268,7 @@ extension HomeView {
             store,
             observe: { $0 }
         ) { viewStore in
-            if let items = isLoading ? Anime.placeholders(5).map { $0.asRepresentable() } : viewStore.value, items.count > 0 {
+            if let items = isLoading ? Anime.placeholders(5).map { $0.eraseAsRepresentable() } : viewStore.value, items.count > 0 {
                 VStack(alignment: .leading) {
                     headerText(title)
 
@@ -244,9 +278,9 @@ extension HomeView {
                                 AnimeItemView(
                                     anime: anime
                                 )
-//                                .onTapGesture {
-//                                    viewStore.send(.animeTapped(anime))
-//                                }
+                                .onTapGesture {
+                                    viewStore.send(.anyAnimeTapped(anime))
+                                }
                                 .disabled(isLoading)
                             }
                         }
@@ -317,8 +351,16 @@ extension HomeView {
                                             viewStore.send(.markAsWatched(item))
                                         } label: {
                                             Label(
-                                                "Mark as watched",
+                                                "Mark as Watched",
                                                 systemImage: "eye.fill"
+                                            )
+                                        }
+
+                                        Button {
+                                            viewStore.send(.anyAnimeTapped(item.animeStore.eraseAsRepresentable()))
+                                        } label: {
+                                            Text(
+                                                "More Details"
                                             )
                                         }
                                     }
@@ -331,7 +373,6 @@ extension HomeView {
                     EmptyView()
                 }
             }
-//            .animation(.linear, value: viewStore.state.value?.count)
         }
     }
 }
@@ -353,7 +394,14 @@ struct HomeView_Previews: PreviewProvider {
     static var previews: some View {
         HomeView(
             store: .init(
-                initialState: .init(),
+                initialState: .init(
+                    topTrendingAnime: .failed,
+                    topUpcomingAnime: .failed,
+                    highestRatedAnime: .failed,
+                    mostPopularAnime: .failed,
+                    resumeWatching: .failed,
+                    lastWatchedAnime: .failed
+                ),
                 reducer: HomeReducer()
             )
         )

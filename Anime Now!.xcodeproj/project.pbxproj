@@ -12,6 +12,10 @@
 		1306E77528E76D4D004FC3E9 /* CDAnimeStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1306E77428E76D4D004FC3E9 /* CDAnimeStore.swift */; };
 		1306E77628E76D4D004FC3E9 /* CDAnimeStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1306E77428E76D4D004FC3E9 /* CDAnimeStore.swift */; };
 		1309D6C328E22BB500CC9036 /* View+Redacted.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1309D6C228E22BB500CC9036 /* View+Redacted.swift */; };
+		130B898B29172771008CBD68 /* CollectionDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 130B898A29172771008CBD68 /* CollectionDetailView.swift */; };
+		130B898D29172786008CBD68 /* CollectionDetailReducer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 130B898C29172786008CBD68 /* CollectionDetailReducer.swift */; };
+		130B898F291728CA008CBD68 /* ScaledOnHoverModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 130B898E291728CA008CBD68 /* ScaledOnHoverModifier.swift */; };
+		130B8990291728CA008CBD68 /* ScaledOnHoverModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 130B898E291728CA008CBD68 /* ScaledOnHoverModifier.swift */; };
 		130ED93A28E3EF73000811A6 /* ChipView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 130ED93928E3EF72000811A6 /* ChipView.swift */; };
 		130ED93C28E3FD38000811A6 /* Date+Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 130ED93B28E3FD38000811A6 /* Date+Utils.swift */; };
 		1312FD5A28DD4B52004A415F /* ThumbnailItemCompactView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1312FD5928DD4B52004A415F /* ThumbnailItemCompactView.swift */; };
@@ -205,6 +209,9 @@
 		1304124C28FEF4C20011CE3C /* SideArrowsList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SideArrowsList.swift; sourceTree = "<group>"; };
 		1306E77428E76D4D004FC3E9 /* CDAnimeStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CDAnimeStore.swift; sourceTree = "<group>"; };
 		1309D6C228E22BB500CC9036 /* View+Redacted.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+Redacted.swift"; sourceTree = "<group>"; };
+		130B898A29172771008CBD68 /* CollectionDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionDetailView.swift; sourceTree = "<group>"; };
+		130B898C29172786008CBD68 /* CollectionDetailReducer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionDetailReducer.swift; sourceTree = "<group>"; };
+		130B898E291728CA008CBD68 /* ScaledOnHoverModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScaledOnHoverModifier.swift; sourceTree = "<group>"; };
 		130ED93928E3EF72000811A6 /* ChipView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChipView.swift; sourceTree = "<group>"; };
 		130ED93B28E3FD38000811A6 /* Date+Utils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Date+Utils.swift"; sourceTree = "<group>"; };
 		1312FD5928DD4B52004A415F /* ThumbnailItemCompactView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThumbnailItemCompactView.swift; sourceTree = "<group>"; };
@@ -351,6 +358,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		130B89892917274E008CBD68 /* CollectionDetail */ = {
+			isa = PBXGroup;
+			children = (
+				130B898A29172771008CBD68 /* CollectionDetailView.swift */,
+				130B898C29172786008CBD68 /* CollectionDetailReducer.swift */,
+			);
+			path = CollectionDetail;
+			sourceTree = "<group>";
+		};
 		1325FD6B2904F99100EA37D5 /* Main */ = {
 			isa = PBXGroup;
 			children = (
@@ -493,6 +509,7 @@
 				1384FF7828CB93FA003B011E /* Navigation+Extension.swift */,
 				13386AED28CC2892005E8352 /* ShimmerView.swift */,
 				13B2771528F79EA300B4B4A3 /* PlatformViewRepresentable.swift */,
+				130B898E291728CA008CBD68 /* ScaledOnHoverModifier.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -598,6 +615,7 @@
 				13BD66E72901AFAB00D565F4 /* Downloads */,
 				13BD66E92901AFE300D565F4 /* Settings */,
 				13BD66E62901AF9B00D565F4 /* Collections */,
+				130B89892917274E008CBD68 /* CollectionDetail */,
 			);
 			path = Scenes;
 			sourceTree = "<group>";
@@ -919,11 +937,13 @@
 				130ED93C28E3FD38000811A6 /* Date+Utils.swift in Sources */,
 				1312FD5C28DD4BEA004A415F /* ThumbnailItemBigView.swift in Sources */,
 				13650F3328CFE0BF002E20DD /* AnimeClient.swift in Sources */,
+				130B898D29172786008CBD68 /* CollectionDetailReducer.swift in Sources */,
 				13D235C628E16F32004E51BB /* ComposableArchitecture+Binding.swift in Sources */,
 				13CB97F12911B20A00E074B8 /* NotificationCenter+Async.swift in Sources */,
 				13650F3628D014B1002E20DD /* AnimeClient+Live.swift in Sources */,
 				1312FD6228DD7CB0004A415F /* AirplayView.swift in Sources */,
 				13E465F628E62508001FF309 /* EnimeAPI.swift in Sources */,
+				130B898F291728CA008CBD68 /* ScaledOnHoverModifier.swift in Sources */,
 				138066F328C572B50012DAFB /* SearchReducer.swift in Sources */,
 				13E4BCF128C829A80039D880 /* AnimeDetailReducer.swift in Sources */,
 				134E5AB7290E61CE00E41664 /* SubtitleTextView.swift in Sources */,
@@ -941,6 +961,7 @@
 				1380562128E9341A00B9B45B /* Cache.swift in Sources */,
 				13FC21CA28C3976D000F0F79 /* RepositoryClient+Live.swift in Sources */,
 				13B2771328F7922900B4B4A3 /* VideoPlayer+View.swift in Sources */,
+				130B898B29172771008CBD68 /* CollectionDetailView.swift in Sources */,
 				13DF205F28FBB0A900EE804D /* CollectionsView.swift in Sources */,
 				1384FF7928CB93FA003B011E /* Navigation+Extension.swift in Sources */,
 				137F8FA428F633CC00ECDB30 /* AniSkipAPI.swift in Sources */,
@@ -1081,6 +1102,7 @@
 				13C1552628FB9CAA0064885D /* HomeView+macOS.swift in Sources */,
 				13C1551128FB721F0064885D /* AnimePlayerReducer.swift in Sources */,
 				13FC21D428C39928000F0F79 /* RepositoryClient+Live.swift in Sources */,
+				130B8990291728CA008CBD68 /* ScaledOnHoverModifier.swift in Sources */,
 				134FAA1D28D6FAFC00B081FE /* String+Time.swift in Sources */,
 				13C1551528FB75780064885D /* ThumbnailItemCompactView.swift in Sources */,
 				134E5AB8290E61CE00E41664 /* SubtitleTextView.swift in Sources */,

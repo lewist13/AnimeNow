@@ -25,7 +25,9 @@ struct HomeReducer: ReducerProtocol {
 
     enum Action: Equatable, BindableAction {
         case onAppear
+        case retryFetchingContent
         case animeTapped(Anime)
+        case anyAnimeTapped(AnyAnimeRepresentable)
         case resumeWatchingTapped(ResumeWatchingEpisode)
         case markAsWatched(ResumeWatchingEpisode)
         case fetchedAnime(keyPath: WritableKeyPath<State, LoadableAnime>, result: TaskResult<[Anime]>)
@@ -63,45 +65,74 @@ extension HomeReducer.State {
         resumeWatching.hasInitialized &&
         lastWatchedAnime.hasInitialized
     }
+
+    enum Error: Equatable {
+        case failedToLoad
+        case notConnectedToInternet
+
+        var title: String {
+            switch self {
+            case .failedToLoad:
+               return "Failed to Load Content."
+            case .notConnectedToInternet:
+                return "No Internet Connectioin"
+            }
+        }
+
+        var description: String? {
+            return nil
+        }
+
+        var image: Image? {
+            switch self {
+            case .notConnectedToInternet:
+                return .init(systemName: "wifi.slash")
+            default:
+                return .init(systemName: "exclamationmark.triangle.fill")
+            }
+        }
+
+        var action: (String, HomeReducer.Action)? {
+            switch self {
+            case .notConnectedToInternet,
+                    .failedToLoad:
+                return ("Retry", .retryFetchingContent)
+            default:
+                return nil
+            }
+        }
+    }
+
+    var error: Error? {
+        guard !isLoading else { return nil }
+
+        if topTrendingAnime == .failed ||
+            topUpcomingAnime == .failed ||
+            highestRatedAnime == .failed ||
+            mostPopularAnime == .failed ||
+            resumeWatching == .failed ||
+            lastWatchedAnime == .failed {
+            return .failedToLoad
+        }
+        return nil
+    }
 }
 
 extension HomeReducer {
+    struct FetchTopTrendingCancellable: Hashable {}
+    struct FetchTopUpcomingCancellable: Hashable {}
+    struct FetchHighestRatedCancellable: Hashable {}
+    struct FetchMostPopularCancellable: Hashable {}
+
     func core(state: inout State, action: Action) -> EffectTask<Action> {
         switch (action) {
         case .onAppear:
             guard !state.hasInitialized else { break }
-            state.topTrendingAnime = .loading
-            state.topUpcomingAnime = .loading
-            state.highestRatedAnime = .loading
-            state.mostPopularAnime = .loading
             state.resumeWatching = .loading
             state.lastWatchedAnime = .loading
 
             return .merge(
-                .run {
-                    await .fetchedAnime(
-                        keyPath: \.topTrendingAnime,
-                        result: .init { try await animeClient.getTopTrendingAnime() }
-                    )
-                },
-                .run {
-                    await .fetchedAnime(
-                        keyPath: \.topUpcomingAnime,
-                        result: .init { try await animeClient.getTopUpcomingAnime() }
-                    )
-                },
-                .run {
-                    await .fetchedAnime(
-                        keyPath: \.highestRatedAnime,
-                        result: .init { try await animeClient.getHighestRatedAnime() }
-                    )
-                },
-                .run {
-                    await .fetchedAnime(
-                        keyPath: \.mostPopularAnime,
-                        result: .init { try await animeClient.getMostPopularAnime() }
-                    )
-                },
+                self.fetchForContent(state: &state),
                 .run { send in
                     let animeStoresStream: AsyncStream<[AnimeStore]> = repositoryClient.observe(
                         .init(format: "episodeStores.@count > 0"),
@@ -114,6 +145,9 @@ extension HomeReducer {
                     }
                 }
             )
+
+        case .retryFetchingContent:
+            return self.fetchForContent(state: &state)
 
         case .fetchedAnime(let keyPath, .success(let anime)):
             state[keyPath: keyPath] = .success(anime)
@@ -143,7 +177,7 @@ extension HomeReducer {
                 }
 
                 await send(.setResumeWatchingEpisodes(.success(resumeWatchingEpisodes)), animation: .easeInOut(duration: 0.25))
-                await send(.setLastWatchedAnimes(sortedAnimeStores.map { $0.asRepresentable() }))
+                await send(.setLastWatchedAnimes(sortedAnimeStores.map { $0.eraseAsRepresentable() }))
             }
 
         case .setResumeWatchingEpisodes(let episodes):
@@ -166,10 +200,53 @@ extension HomeReducer {
         case .binding:
             break
 
-        case .animeTapped:
+        case .animeTapped, .anyAnimeTapped:
             break
         }
+
         return .none
+    }
+
+    func fetchForContent(state: inout State) -> EffectTask<Action> {
+        state.topTrendingAnime = .loading
+        state.topUpcomingAnime = .loading
+        state.highestRatedAnime = .loading
+        state.mostPopularAnime = .loading
+
+        return .merge(
+            .run {
+                await withTaskCancellation(id: FetchTopTrendingCancellable.self, cancelInFlight: true) {
+                    await .fetchedAnime(
+                        keyPath: \.topTrendingAnime,
+                        result: .init { try await animeClient.getTopTrendingAnime() }
+                    )
+                }
+            },
+            .run {
+                await withTaskCancellation(id: FetchTopUpcomingCancellable.self, cancelInFlight: true) {
+                    await .fetchedAnime(
+                        keyPath: \.topUpcomingAnime,
+                        result: .init { try await animeClient.getTopUpcomingAnime() }
+                    )
+                }
+            },
+            .run {
+                await withTaskCancellation(id: FetchHighestRatedCancellable.self, cancelInFlight: true) {
+                    await .fetchedAnime(
+                        keyPath: \.highestRatedAnime,
+                        result: .init { try await animeClient.getHighestRatedAnime() }
+                    )
+                }
+            },
+            .run {
+                await withTaskCancellation(id: FetchMostPopularCancellable.self, cancelInFlight: true) {
+                    await .fetchedAnime(
+                        keyPath: \.mostPopularAnime,
+                        result: .init { try await animeClient.getMostPopularAnime() }
+                    )
+                }
+            }
+        )
     }
 }
 

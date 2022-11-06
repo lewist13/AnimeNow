@@ -20,7 +20,6 @@ extension CDAnimeStore: ManagedObjectConvertible {
             format: format?.toObject() ?? .tv,
             posterImage: posterImage?.toObject() ?? [],
             isFavorite: isFavorite,
-            inWatchlist: inWatchlist,
             episodeStores: (episodeStores as? Set<CDEpisodeStore>)?.map(\.asDomain) ?? [],
             objectURL: objectID.uriRepresentation()
         )
@@ -36,7 +35,6 @@ extension CDAnimeStore: ManagedObjectConvertible {
         format = domain.format.toData()
         posterImage = domain.posterImage.toData()
         isFavorite = domain.isFavorite
-        inWatchlist = domain.inWatchlist
 
         // TODO: Improve updating items in episode stores
         if let managedObjectContext = managedObjectContext {
@@ -56,7 +54,6 @@ extension AnimeStore: DomainModelConvertible {
         object.posterImage = posterImage.toData()
 
         object.isFavorite = isFavorite
-        object.inWatchlist = inWatchlist
         object.episodeStores = .init(array: episodeStores.map { $0.asManagedObject(in: context) })
         return object
     }

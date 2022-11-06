@@ -7,32 +7,32 @@
 
 import Foundation
 
-protocol AnimeRepresentable {
+protocol AnimeRepresentable: Equatable, Identifiable {
     var id: Int { get }
     var malId: Int? { get }
     var title: String { get }
     var format: Anime.Format { get }
     var posterImage: [ImageSize] { get }
 
-    func isEqualTo(_ item: AnimeRepresentable) -> Bool
-    func asRepresentable() -> AnyAnimeRepresentable
+    func isEqualTo(_ item: some AnimeRepresentable) -> Bool
+    func eraseAsRepresentable() -> AnyAnimeRepresentable
 }
 
 extension AnimeRepresentable where Self: Equatable {
-    func isEqualTo(_ item: AnimeRepresentable) -> Bool {
+    func isEqualTo(_ item: some AnimeRepresentable) -> Bool {
         guard let item = item as? Self else { return false }
         return self == item
     }
 }
 
 extension AnimeRepresentable {
-    func asRepresentable() -> AnyAnimeRepresentable {
+    func eraseAsRepresentable() -> AnyAnimeRepresentable {
         .init(self)
     }
 }
 
-struct AnyAnimeRepresentable: AnimeRepresentable, Identifiable {
-    private let anime: AnimeRepresentable
+struct AnyAnimeRepresentable: AnimeRepresentable {
+    private let anime: any AnimeRepresentable
 
     var id: Int {
         anime.id
@@ -54,7 +54,7 @@ struct AnyAnimeRepresentable: AnimeRepresentable, Identifiable {
         anime.posterImage
     }
 
-    init(_ anime: AnimeRepresentable) {
+    init(_ anime: some AnimeRepresentable) {
         self.anime = anime
     }
 }
@@ -65,7 +65,7 @@ extension AnyAnimeRepresentable: Equatable {
     }
 }
 
-struct Anime: AnimeRepresentable, Equatable, Identifiable {
+struct Anime: AnimeRepresentable {
     let id: Int
     let malId: Int?
     let title: String
@@ -154,14 +154,14 @@ extension Anime {
             id: id,
             malId: 0,
             title: "Placeholder",
-            description: "Placeholder",
+            description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
             posterImage: [],
             coverImage: [],
-            categories: [],
+            categories: ["One", "Two", "Three"],
             status: .tba,
             format: .tv,
-            releaseYear: nil,
-            avgRating: nil
+            releaseYear: 2020,
+            avgRating: 0.5
         )
     }
 

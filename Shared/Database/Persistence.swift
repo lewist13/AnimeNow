@@ -55,11 +55,15 @@ protocol DomainModelConvertible: Equatable, Identifiable {
 protocol ManagedObjectConvertible: NSManagedObject {
     associatedtype DomainModel: DomainModelConvertible where DomainModel.ManagedObject == Self
 
-    static func getFetchRequest() -> NSFetchRequest<DomainModel.ManagedObject>
-
     var asDomain: DomainModel { get }
 
     func create(from domain: DomainModel)
 
     func update(from domain: DomainModel)
+}
+
+extension ManagedObjectConvertible {
+    static func getFetchRequest() -> NSFetchRequest<Self> {
+        self.fetchRequest() as! NSFetchRequest<Self>
+    }
 }

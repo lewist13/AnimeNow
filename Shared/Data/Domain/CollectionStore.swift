@@ -8,9 +8,11 @@
 import Foundation
 
 struct CollectionStore: Equatable, Identifiable {
-    let id: UUID
-    var animes: [AnimeStore]
-    var name: String
-    var lastUpdated: Date
+    var id = UUID()
+    var title: String
+    var lastUpdated = Date()
+    var userRemovable = true
+    var animes: [AnimeStore] = []
+
     var objectURL: URL?
 }

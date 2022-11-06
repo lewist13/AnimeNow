@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="20086" systemVersion="21A559" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="21512" systemVersion="21G217" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
     <entity name="CDAnimeStore" representedClassName="CDAnimeStore" syncable="YES" codeGenerationType="class">
         <attribute name="format" optional="YES" attributeType="Binary"/>
         <attribute name="id" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
-        <attribute name="inWatchlist" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
         <attribute name="isFavorite" attributeType="Boolean" usesScalarValueType="YES"/>
         <attribute name="posterImage" optional="YES" attributeType="Binary"/>
         <attribute name="title" optional="YES" attributeType="String"/>
@@ -13,7 +12,8 @@
     <entity name="CDCollectionStore" representedClassName="CDCollectionStore" syncable="YES" codeGenerationType="class">
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="lastUpdated" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
-        <attribute name="name" optional="YES" attributeType="String"/>
+        <attribute name="title" optional="YES" attributeType="String"/>
+        <attribute name="userRemovable" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
         <relationship name="animes" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="CDAnimeStore" inverseName="collectionStores" inverseEntity="CDAnimeStore"/>
     </entity>
     <entity name="CDEpisodeStore" representedClassName="CDEpisodeStore" syncable="YES" codeGenerationType="class">
@@ -27,9 +27,4 @@
         <attribute name="title" attributeType="String"/>
         <relationship name="anime" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="CDAnimeStore" inverseName="episodeStores" inverseEntity="CDAnimeStore"/>
     </entity>
-    <elements>
-        <element name="CDAnimeStore" positionX="-194.68701171875" positionY="14.234375" width="128" height="149"/>
-        <element name="CDEpisodeStore" positionX="-180" positionY="54" width="128" height="164"/>
-        <element name="CDCollectionStore" positionX="-180" positionY="117" width="128" height="89"/>
-    </elements>
 </model>

@@ -9,7 +9,7 @@ import SwiftUI
 import Kingfisher
 
 struct AnimeItemView: View {
-    let anime: AnimeRepresentable
+    let anime: any AnimeRepresentable
 
     var body: some View {
         GeometryReader { reader in

@@ -10,14 +10,15 @@ import Foundation
 import ComposableArchitecture
 
 struct CollectionsReducer: ReducerProtocol {
-    typealias LoadableCollection = Loadable<[CollectionStore]>
-
     struct State: Equatable {
-        var collections = LoadableCollection.idle
+        var favorites = [AnimeStore]()
+        var collections = [CollectionStore]()
+        var hasInitialized = false
     }
 
     enum Action: Equatable {
         case onAppear
+        case updatedFavorites([AnimeStore])
         case updatedCollections([CollectionStore])
     }
 
@@ -32,19 +33,35 @@ extension CollectionsReducer {
     func core(into state: inout State, action: Action) -> EffectTask<Action> {
         switch action {
         case .onAppear:
-            guard !state.collections.hasInitialized else { break }
-            state.collections = .loading
+            guard !state.hasInitialized else { break }
+            state.hasInitialized = true
 
-            return .run { send in
-                let observing: AsyncStream<[CollectionStore]> = repositoryClient.observe(nil, [], true)
+            return .merge(
+                .run { send in
+                    let observing: AsyncStream<[AnimeStore]> = repositoryClient.observe(
+                        .init(
+                            format: "isFavorite = %d", 1
+                        )
+                    )
 
-                for await collections in observing {
-                    await send(.updatedCollections(collections))
+                    for await items in observing {
+                        await send(.updatedFavorites(items))
+                    }
+                },
+                .run { send in
+                    let observing: AsyncStream<[CollectionStore]> = repositoryClient.observe()
+
+                    for await collections in observing {
+                        await send(.updatedCollections(collections))
+                    }
                 }
-            }
+            )
+
+        case .updatedFavorites(let favorites):
+            state.favorites = favorites
 
         case .updatedCollections(let collections):
-            state.collections = .success(collections)
+            state.collections = collections
         }
         return .none
     }

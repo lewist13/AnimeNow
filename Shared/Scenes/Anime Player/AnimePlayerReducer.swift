@@ -88,13 +88,13 @@ struct AnimePlayerReducer: ReducerProtocol {
         var playerVolume = 1.0
 
         init(
-            anime: AnyAnimeRepresentable,
-            episodes: [AnyEpisodeRepresentable]? = nil,
+            anime: some AnimeRepresentable,
+            episodes: [any EpisodeRepresentable]? = nil,
             selectedEpisode: Episode.ID
         ) {
-            self.anime = anime
+            self.anime = anime.eraseAsRepresentable()
             if let episodes = episodes {
-                self.episodes = .success(episodes)
+                self.episodes = .success(episodes.map { $0.asRepresentable() })
             } else {
                 self.episodes = .idle
             }
@@ -115,7 +115,7 @@ struct AnimePlayerReducer: ReducerProtocol {
         case toggleSubtitles
         case selectSidebarSettings(Sidebar.SettingsState.Section?)
         case closeSidebar
-        case storeState
+        case saveState
 
         case selectEpisode(AnyEpisodeRepresentable.ID)
         case selectProvider(Provider.ID)
@@ -250,14 +250,14 @@ extension AnimePlayerReducer.State {
     }
 
     var source: Source? {
-        if let sourceId = selectedSource, let sources = sourcesOptions.value?.sources {
-            return sources[id: sourceId]
+        if let selectedSource, let sources = sourcesOptions.value?.sources {
+            return sources[id: selectedSource]
         }
         return nil
     }
 
     var nextEpisode: AnyEpisodeRepresentable? {
-        if let episode = episode,
+        if let episode,
            let episodes = episodes.value,
            let index = episodes.index(id: episode.id),
            (index + 1) < episodes.count {
@@ -267,8 +267,8 @@ extension AnimePlayerReducer.State {
     }
 
     var subtitle: Source.Subtitle? {
-        if let subtitleId = selectedSubtitle, let subtitles = sourcesOptions.value?.subtitles {
-            return subtitles[id: subtitleId]
+        if let selectedSubtitle, let subtitles = sourcesOptions.value?.subtitles {
+            return subtitles[id: selectedSubtitle]
         }
         return nil
     }
@@ -846,7 +846,7 @@ extension AnimePlayerReducer {
         case .playerIsFullScreen(let fullscreen):
             state.playerIsFullScreen = fullscreen
 
-        case .storeState:
+        case .saveState:
             return self.saveEpisodeState(state: state)
 
         case .binding:

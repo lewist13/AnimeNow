@@ -16,6 +16,15 @@ struct AppReducer: ReducerProtocol {
         case collection
         case downloads
 
+        var isIconSystemImage: Bool {
+            switch self {
+            case .collection:
+                return false
+            default:
+                return true
+            }
+        }
+
         var icon: String {
             switch self {
             case .home:
@@ -25,7 +34,7 @@ struct AppReducer: ReducerProtocol {
             case .downloads:
                 return "arrow.down"
             case .collection:
-                return "folder"
+                return "rectangle.stack.badge.play"
             }
         }
 
@@ -38,7 +47,7 @@ struct AppReducer: ReducerProtocol {
             case .downloads:
                 return self.icon
             case .collection:
-                return "folder.fill"
+                return "rectangle.stack.badge.play.fill"
             }
         }
 
@@ -96,6 +105,10 @@ struct AppReducer: ReducerProtocol {
             SearchReducer()
         }
 
+        Scope(state: \.collection, action: /Action.collection) {
+            CollectionsReducer()
+        }
+
         Scope(state: \.downloads, action: /Action.downloads) {
             DownloadsReducer()
         }
@@ -114,7 +127,6 @@ struct AppReducer: ReducerProtocol {
                 AnimeDetailReducer()
             }
     }
-
 }
 
 extension AppReducer.State {
@@ -141,6 +153,16 @@ extension AppReducer {
         case let .home(.animeTapped(anime)),
              let .search(.onAnimeTapped(anime)):
             return .action(
+                .setAnimeDetail(
+                    .init(
+                        anime: anime
+                    )
+                ),
+                animation: .interactiveSpring(response: 0.35, dampingFraction: 1.0)
+            )
+
+        case let .home(.anyAnimeTapped(anime)):
+            return .action(
                 .setAnimeDetail(.init(anime: anime)),
                 animation: .interactiveSpring(response: 0.35, dampingFraction: 1.0)
             )
@@ -149,7 +171,7 @@ extension AppReducer {
             return .action(
                 .setVideoPlayer(
                     .init(
-                        anime: resumeWatching.animeStore.asRepresentable(),
+                        anime: resumeWatching.animeStore,
                         selectedEpisode: Episode.ID(resumeWatching.episodeStore.number)
                     )
                 )
@@ -159,8 +181,8 @@ extension AppReducer {
             return .action(
                 .setVideoPlayer(
                     .init(
-                        anime: anime.asRepresentable(),
-                        episodes: episodes.map({ $0.asRepresentable() }),
+                        anime: anime,
+                        episodes: episodes,
                         selectedEpisode: selected
                     )
                 )
@@ -176,11 +198,12 @@ extension AppReducer {
             return .action(
                 .setVideoPlayer(nil)
             )
+
         case .appDelegate(.appDidEnterBackground):
             let videoStoreUp = state.videoPlayer != nil
             return .run { send in
                 if videoStoreUp {
-                    await send(.videoPlayer(.storeState))
+                    await send(.videoPlayer(.saveState))
                 }
             }
 

@@ -11,6 +11,7 @@ struct AppDelegateReducer: ReducerProtocol {
     struct State: Equatable {}
 
     enum Action: Equatable {
+        case appDidFinishLaunching
         case appDidEnterBackground
         case appWillTerminate
     }
@@ -18,10 +19,32 @@ struct AppDelegateReducer: ReducerProtocol {
     var body: some ReducerProtocol<State, Action> {
         Reduce(self.core)
     }
+
+    @Dependency(\.userDefaultsClient) var userDefaultsClient
+    @Dependency(\.repositoryClient) var repositoryClient
 }
 
 extension AppDelegateReducer {
     func core(state: inout State, action: Action) -> EffectTask<Action> {
-        .none
+        switch action {
+        case .appDidFinishLaunching:
+            guard !userDefaultsClient.boolForKey(.firstLaunched) else {
+                break
+            }
+
+            return .run { _ in
+                let inWatchlist = CollectionStore(
+                    title: "Watchlist",
+                    userRemovable: false
+                )
+
+                _ = try await repositoryClient.insert(inWatchlist)
+                await userDefaultsClient.setBool(.firstLaunched, true)
+            }
+        default:
+            break
+        }
+
+        return .none
     }
 }

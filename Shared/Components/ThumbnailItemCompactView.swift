@@ -9,7 +9,7 @@ import SwiftUI
 import Kingfisher
 
 struct ThumbnailItemCompactView: View {
-    let episode: EpisodeRepresentable
+    let episode: any EpisodeRepresentable
     var progress: Double? = nil
 
     var body: some View {
