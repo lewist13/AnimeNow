@@ -1,37 +1,36 @@
 <div align="center">
-    <br>
-<!--    <a href="">-->
-<!--        <img src="Stuff/AppIcon-readme.png" width="200" height="200">-->
-<!--    </a>-->
-    <h1>Anime Now!</h1>
-    <p>
-        <b>Watch your favorite anime shows anywhere, anytime.</b>
-    </p>
-    <br>
-    <br>
-    <br>
-</div>
-
-
-<p align="center">
+  <br>
+  <a href="">
+    <img src="Misc/Media/applogo_readme.png" width="200" height="200">
+  </a>
+  <h1>Anime Now!</h1>
+  <p>
+    <b>Watch your favorite anime shows anytime, anywhere.</b>
+  </p>
+  <br>
+  <p align="center">
     <img src="https://img.shields.io/github/downloads/errorerrorerror/anime-now/total?color=green&style=for-the-badge"/>
     <img src="https://img.shields.io/badge/platforms-iOS%2C%20iPadOS%2C%20macOS-green?style=for-the-badge"/>
-</p>
+    <a href="https://discord.gg/CtVur4sQ2N">
+      <img src="https://dcbadge.vercel.app/api/server/CtVur4sQ2N"/>
+    </a>
+  </p>
+  <br>
+</div>
 
-The app provides a way to view your favorite anime shows built with SwiftUI and TCA (The Composable Architecture).
+Anime Now! provides a way to view your favorite anime shows built with SwiftUI and TCA (The Composable Architecture).
 
 ## DISCLAIMER
 This app is still in its beta stages so expect random crashes, missing content, and features.
 
 ## Features
 
-- [x] Ads Free w/o logins
+- [x] Ads Free
+- [x] No logins
 - [x] Custom video playback
-- [x] Auto resume
 - [x] Airplay 2 Support
 - [x] Picture in Picture playback support
 - [ ] Download & play episodes offline
-- [ ] Syncing data via other Apple devices
 - [ ] Third party anime tracking
 
 ## Screenshot
@@ -62,7 +61,7 @@ This app is still in its beta stages so expect random crashes, missing content, 
   </tbody>
 </table>
 
-<!-- TODO: add iPadOS and macOS screenshots -->
+<!-- TODO: add iPadOS screenshots -->
 
 <!-- <table>
   <thead>
@@ -155,4 +154,4 @@ _TBA_
 
 ## License
 
-[![Licence](https://img.shields.io/github/license/Ileriayo/markdown-badges?style=for-the-badge)](./LICENSE)
+[![Licence](https://img.shields.io/github/license/errorerrorerror/anime-now?style=for-the-badge)](./LICENSE)
