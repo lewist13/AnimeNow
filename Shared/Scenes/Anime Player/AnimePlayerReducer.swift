@@ -10,6 +10,7 @@ import Foundation
 import ComposableArchitecture
 import AVFoundation
 import SwiftUI
+import Sworm
 
 struct AnimePlayerReducer: ReducerProtocol {
     typealias LoadableEpisodes = Loadable<[AnyEpisodeRepresentable]>
@@ -346,10 +347,9 @@ extension AnimePlayerReducer {
                 effects.append(
                     .run { send in
                         let animeStores: AsyncStream<[AnimeStore]> = repositoryClient.observe(
-                            .init(
-                                format: "id == %d",
-                                animeId
-                            )
+                            AnimeStore.all
+                                .where(\AnimeStore.id == animeId)
+                                .limit(1)
                         )
 
                         for await animeStore in animeStores {
@@ -813,7 +813,7 @@ extension AnimePlayerReducer {
             if duration != .zero {
                 if let animeInfo = state.animeStore.value,
                    let episode = state.episode,
-                   let savedEpisodeProgress = animeInfo.episodeStores.first(where: { $0.number ==  episode.number }),
+                   let savedEpisodeProgress = animeInfo.episodes.first(where: { $0.number ==  episode.number }),
                    !savedEpisodeProgress.almostFinished {
                     state.playerProgress = savedEpisodeProgress.progress
                     state.playerAction = .seekTo(savedEpisodeProgress.progress)
@@ -915,7 +915,7 @@ extension AnimePlayerReducer {
         )
 
         return .fireAndForget { [animeStore] in
-            _ = try await repositoryClient.insertOrUpdate(animeStore)
+            _ = try await repositoryClient.insert(animeStore)
         }
     }
 }

@@ -48,22 +48,24 @@ struct AnimeDetailView: View {
 
 extension AnimeDetailView {
     @ViewBuilder var closeButton: some View {
-        Image(systemName: DeviceUtil.isMac ? "chevron.backward" : "xmark")
-            .font(.system(size: 14, weight: .black))
-            .foregroundColor(Color.white.opacity(0.9))
-            .padding(12)
-            .background(Color(white: 0.2))
-            .clipShape(Circle())
-            .padding()
-            .onTapGesture {
-                ViewStore(store.stateless)
-                    .send(.closeButtonPressed)
-            }
-            .frame(
-                maxWidth: .infinity,
-                maxHeight: .infinity,
-                alignment: DeviceUtil.isMac ? .topLeading : .topTrailing
-            )
+        Button {
+            ViewStore(store.stateless)
+                .send(.closeButtonPressed)
+        } label: {
+            Image(systemName: DeviceUtil.isMac ? "chevron.backward" : "xmark")
+                .font(.system(size: 14, weight: .black))
+                .foregroundColor(Color.white.opacity(0.9))
+                .padding(12)
+                .background(Color(white: 0.2))
+                .clipShape(Circle())
+                .padding()
+        }
+        .buttonStyle(.plain)
+        .frame(
+            maxWidth: .infinity,
+            maxHeight: .infinity,
+            alignment: DeviceUtil.isMac ? .topLeading : .topTrailing
+        )
     }
 }
 
@@ -156,33 +158,35 @@ extension AnimeDetailView {
                             Button {
                                 isFavoriteViewStore.send(.tappedFavorite)
                             } label: {
-                                Image(
-                                    systemName: "heart.fill"
-                                )
-                                .foregroundColor(.white)
-                                .padding()
-                                .background(isFavoriteViewStore.state == true ? Color.red : Color(white: 0.15))
+                                Image(systemName: "heart.fill")
+                                    .font(.body.bold())
+                                    .foregroundColor(.white)
+                                    .padding()
+                                    .background(isFavoriteViewStore.state == true ? Color.red : Color(white: 0.15))
+                                    .clipShape(Circle())
                             }
                             .buttonStyle(.plain)
-                            .clipShape(Circle())
                             .contentShape(Rectangle())
+//                            .animation(isFavoriteViewStore != nil)
                         }
 
                         WithViewStore(
                             store,
-                            observe: { $0.isLoading ? nil : false }
-                        ) { inWatchlistViewStore in
+                            observe: { $0.isLoading ? nil : $0.isInACollection }
+                        ) { inCollectionViewStore in
                             Button {
-                                inWatchlistViewStore.send(.tappedInWatchlist)
+                                inCollectionViewStore.send(.addToCollectionToggle)
                             } label: {
-                                Image(systemName: "bookmark.fill")
+                                Image(systemName: "plus")
+                                    .font(.body.bold())
                                     .foregroundColor(.white)
                                     .padding()
-                                    .background(inWatchlistViewStore.state == true ? Color.blue : Color(white: 0.15))
+                                    .background(inCollectionViewStore.state == true ? Color.blue : Color(white: 0.15))
+                                    .clipShape(Circle())
                             }
                             .buttonStyle(.plain)
-                            .clipShape(Circle())
                             .contentShape(Rectangle())
+//                            .animation(inCollectionViewStore != nil)
                         }
                     }
                 }
@@ -370,7 +374,7 @@ extension AnimeDetailView {
         WithViewStore(
             store,
             observe: { state in
-                state.animeStore.value?.episodeStores.first(where: { $0.number == episode.number })
+                state.animeStore.value?.episodes.first(where: { $0.number == episode.number })
             }
         ) { viewStore in
             if compact {
@@ -440,14 +444,7 @@ struct AnimeView_Previews: PreviewProvider {
                     anime: Anime.narutoShippuden,
                     episodes: .success(Episode.demoEpisodes),
                     animeStore: .success(
-                        .init(
-                            id: 0,
-                            title: "",
-                            format: .tv,
-                            posterImage: [],
-                            isFavorite: false,
-                            episodeStores: .init()
-                        )
+                        .init()
                     )
                 ),
                 reducer: EmptyReducer()

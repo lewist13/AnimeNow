@@ -196,7 +196,7 @@ extension AnimePlayerView {
             self.isVisible = state.selectedSidebar == .episodes
             self.episodes = state.episodes
             self.selectedEpisode = state.selectedEpisode
-            self.episodesStore = state.animeStore.value?.episodeStores ?? .init()
+            self.episodesStore = .init()
         }
     }
 
@@ -210,16 +210,16 @@ extension AnimePlayerView {
                 GeometryReader { reader in
                     VStack {
                         HStack {
-                            Image(
-                                systemName: "xmark"
-                            )
-                            .font(.body.bold())
-                            .padding(12)
-                            .background(Color(white: 0.12))
-                            .clipShape(Circle())
-                            .onTapGesture {
+                            Button {
                                 viewState.send(.closeSidebar)
+                            } label: {
+                                Image(systemName: "xmark")
+                                    .font(.body.bold())
+                                    .padding(12)
+                                    .background(Color(white: 0.12))
+                                    .clipShape(Circle())
                             }
+                            .buttonStyle(.plain)
                             .padding(.horizontal, safeAreaInsetPadding(reader))
 
                             Spacer()

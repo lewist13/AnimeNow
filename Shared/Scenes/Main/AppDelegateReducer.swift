@@ -34,8 +34,7 @@ extension AppDelegateReducer {
 
             return .run { _ in
                 let inWatchlist = CollectionStore(
-                    title: "Watchlist",
-                    userRemovable: false
+                    title: .planning
                 )
 
                 _ = try await repositoryClient.insert(inWatchlist)

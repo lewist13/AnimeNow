@@ -5,56 +5,65 @@
 //  Created by ErrorErrorError on 9/30/22.
 //
 
-import Foundation
+import Sworm
 import CoreData
 
-extension CDAnimeStore: ManagedObjectConvertible {
-    static func getFetchRequest() -> NSFetchRequest<CDAnimeStore> {
-        Self.fetchRequest()
+extension AnimeStore: ManagedObjectConvertible {
+    static let entityName = "CDAnimeStore"
+
+    static var idKeyPath: KeyPath = \Self.id
+
+    static let attributes: Set<Attribute<AnimeStore>> = [
+        .init(\.id, "id"),
+        .init(\.title, "title"),
+        .init(\.posterImage, "posterImage"),
+        .init(\.isFavorite, "isFavorite"),
+        .init(\.format, "format")
+    ]
+
+    struct Relations {
+        let episodes = ToManyRelation<EpisodeStore>(\AnimeStore.episodes, "episodeStores")
+        let collections = ToManyRelation<CollectionStore>("collectionStore")
     }
 
-    var asDomain: AnimeStore {
-        .init(
-            id: Anime.ID(id),
-            title: title ?? "",
-            format: format?.toObject() ?? .tv,
-            posterImage: posterImage?.toObject() ?? [],
-            isFavorite: isFavorite,
-            episodeStores: (episodeStores as? Set<CDEpisodeStore>)?.map(\.asDomain) ?? [],
-            objectURL: objectID.uriRepresentation()
-        )
+    static let relations = Relations()
+}
+
+extension ImageSize: SupportedAttributeType {
+    public func encodePrimitiveValue() -> Data {
+        self.toData() ?? .empty
     }
 
-    func create(from domain: AnimeStore) {
-        update(from: domain)
-    }
-
-    func update(from domain: AnimeStore) {
-        id = Int64(domain.id)
-        title = domain.title
-        format = domain.format.toData()
-        posterImage = domain.posterImage.toData()
-        isFavorite = domain.isFavorite
-
-        // TODO: Improve updating items in episode stores
-        if let managedObjectContext = managedObjectContext {
-            episodeStores = .init(
-                array: domain.episodeStores.map { $0.asManagedObject(in: managedObjectContext) }
-            )
+    public static func decode(primitiveValue: Data) throws -> Self {
+        guard let format: Self = primitiveValue.toObject() else {
+            throw AttributeError.badInput(primitiveValue)
         }
+        return format
     }
 }
 
-extension AnimeStore: DomainModelConvertible {
-    func asManagedObject(in context: NSManagedObjectContext) -> CDAnimeStore {
-        let object = CDAnimeStore(context: context)
-        object.id = Int64(id)
-        object.title = title
-        object.format = format.toData()
-        object.posterImage = posterImage.toData()
+extension Array: SupportedAttributeType where Element == ImageSize {
+    public func encodePrimitiveValue() -> Data {
+        self.toData() ?? .empty
+    }
 
-        object.isFavorite = isFavorite
-        object.episodeStores = .init(array: episodeStores.map { $0.asManagedObject(in: context) })
-        return object
+    public static func decode(primitiveValue: Data) throws -> Self {
+        guard let format: Self = primitiveValue.toObject() else {
+            throw AttributeError.badInput(primitiveValue)
+        }
+        return format
+    }
+}
+
+extension Anime.Format: SupportedAttributeType {
+    public func encodePrimitiveValue() -> Data {
+        self.toData() ?? .empty
+    }
+
+    static func decode(primitiveValue: Data) throws -> Self {
+        guard let format: Self = primitiveValue.toObject() else {
+            throw AttributeError.badInput(primitiveValue)
+        }
+        return format
     }
 }

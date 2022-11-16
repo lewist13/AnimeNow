@@ -9,19 +9,17 @@ import Foundation
 
 struct EpisodeStore: EpisodeRepresentable, Hashable, Codable, Identifiable {
     var id = UUID()
-    var number: Int
-    var title: String
-    var thumbnail: ImageSize?
+    var number: Int = 0
+    var title: String = ""
+    var thumbnail: ImageSize? = nil
     var isFiller: Bool { false }
 
     // Database Only
 
-    var isMovie: Bool
-    var progress: Double
-    var lastUpdatedProgress: Date
-    var downloadURL: URL?
-
-    var objectURL: URL?
+    var isMovie: Bool = false
+    var progress: Double = 0
+    var lastUpdatedProgress: Date = .init()
+    var downloadURL: URL? = nil
 }
 
 extension EpisodeStore {

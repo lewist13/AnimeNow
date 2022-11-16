@@ -112,13 +112,15 @@ extension AnimePlayerView {
             if viewState.state == .loading {
                 loadingView
             } else if viewState.state == .paused || viewState.state == .replay {
-                Image(systemName: viewState.state == .paused ? "play.fill" : "arrow.counterclockwise")
-                    .font(.title.bold())
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        viewState.send(viewState.state == .paused ? .togglePlayback : .replayTapped)
-                    }
-                    .foregroundColor(Color.white)
+                Button {
+                    viewState.send(viewState.state == .paused ? .togglePlayback : .replayTapped)
+                } label: {
+                    Image(systemName: viewState.state == .paused ? "play.fill" : "arrow.counterclockwise")
+                        .font(.title.bold())
+                        .foregroundColor(Color.white)
+                }
+                .buttonStyle(.plain)
+                .contentShape(Rectangle())
             }
         }
     }
@@ -146,15 +148,17 @@ extension AnimePlayerView {
             store,
             observe: { $0.playerPiPStatus == .didStart }
         ) { viewStore in
-            Image(
-                systemName: viewStore.state ? "rectangle.center.inset.filled" : "rectangle.inset.bottomright.filled"
-            )
-            .font(.title2.bold())
-            .contentShape(Rectangle())
-            .onTapGesture {
+            Button {
                 viewStore.send(.togglePictureInPicture)
+            } label: {
+                Image(
+                    systemName: viewStore.state ? "rectangle.center.inset.filled" : "rectangle.inset.bottomright.filled"
+                )
+                .font(.title2.bold())
+                .contentShape(Rectangle())
+                .foregroundColor(Color.white)
             }
-            .foregroundColor(Color.white)
+            .buttonStyle(.plain)
         }
     }
 }
@@ -208,13 +212,16 @@ extension AnimePlayerView {
             store,
             observe: { $0.playerStatus == .playing }
         ) { viewState in
-            Image(systemName: viewState.state ? "pause.fill" : "play.fill")
-                .font(.title2.bold())
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    viewState.send(.togglePlayback)
-                }
-                .foregroundColor(Color.white)
+            Button {
+                viewState.send(.togglePlayback)
+            } label: {
+                Image(systemName: viewState.state ? "pause.fill" : "play.fill")
+                    .font(.title2.bold())
+                    .contentShape(Rectangle())
+                    .foregroundColor(Color.white)
+            }
+            .buttonStyle(.plain)
+            .contentShape(Rectangle())
         }
     }
 
@@ -333,13 +340,15 @@ extension AnimePlayerView {
             store,
             observe: { $0.playerIsFullScreen }
         ) { viewState in
-            Image(systemName: viewState.state ? "arrow.down.right.and.arrow.up.left" : "arrow.up.backward.and.arrow.down.forward")
-                .font(.title2.bold())
-                .foregroundColor(Color.white)
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    NSApp.mainWindow?.toggleFullScreen(nil)
-                }
+            Button {
+                NSApp.mainWindow?.toggleFullScreen(nil)
+            } label: {
+                Image(systemName: viewState.state ? "arrow.down.right.and.arrow.up.left" : "arrow.up.backward.and.arrow.down.forward")
+                    .font(.title2.bold())
+                    .foregroundColor(Color.white)
+            }
+            .buttonStyle(.plain)
+            .contentShape(Rectangle())
         }
     }
 }

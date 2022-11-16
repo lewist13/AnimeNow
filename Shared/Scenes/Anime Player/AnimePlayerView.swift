@@ -208,29 +208,28 @@ extension AnimePlayerView {
                     case .some(.skipRecap(to: let end)),
                             .some(.skipOpening(to: let end)),
                             .some(.skipEnding(to: let end)):
-
+                        
                         actionButtonBase(
                             "forward.fill",
                             viewState.state.action?.title ?? "",
                             .white,
                             .init(white: 0.25)
-                        )
-                        .onTapGesture {
+                        ) {
                             viewState.send(.startSeeking)
                             viewState.send(.seeking(to: end))
                             viewState.send(.stopSeeking)
                         }
-
+                        
                     case .some(.nextEpisode(let id)):
                         actionButtonBase(
                             "play.fill",
                             viewState.state.action?.title ?? "",
                             .black,
                             .white
-                        )
-                        .onTapGesture {
+                        ) {
                             viewState.send(.selectEpisode(id))
                         }
+
                     case .none:
                         EmptyView()
                     }
@@ -254,20 +253,26 @@ extension AnimePlayerView {
         _ image: String,
         _ title: String,
         _ textColor: Color,
-        _ background: Color
+        _ background: Color,
+        _ action: (() -> Void)? = nil
     ) -> some View {
-        HStack {
-            Image(systemName: image)
-            Text(title)
-        }
+        Button {
+            action?()
+        } label: {
+            HStack {
+                Image(systemName: image)
+                Text(title)
+            }
             .font(.system(size: 13).weight(.heavy))
             .foregroundColor(textColor)
             .padding(12)
             .background(background)
             .cornerRadius(12)
             .clipShape(Capsule())
-            .shadow(color: Color.gray.opacity(0.25), radius: 6)
-            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .shadow(color: Color.gray.opacity(0.25), radius: 6)
+        .contentShape(Rectangle())
     }
 }
 
@@ -276,16 +281,18 @@ extension AnimePlayerView {
 extension AnimePlayerView {
     @ViewBuilder
     var dismissButton: some View {
-        Image(
-            systemName: "chevron.backward"
-        )
-        .foregroundColor(Color.white)
-        .font(.title3.weight(.heavy))
-        .frame(width: 42, height: 42, alignment: .center)
-        .contentShape(Rectangle())
-        .onTapGesture {
+        Button {
             ViewStore(store.stateless).send(.closeButtonTapped)
+        } label: {
+            Image(
+                systemName: "chevron.backward"
+            )
+            .foregroundColor(Color.white)
+            .font(.title3.weight(.heavy))
+            .frame(width: 42, height: 42, alignment: .center)
+            .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
     }
 }
 

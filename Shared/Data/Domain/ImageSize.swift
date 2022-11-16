@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum ImageSize: Codable, Hashable, Comparable {
+public enum ImageSize: Codable, Hashable, Comparable {
     case tiny(URL)
     case small(URL)
     case medium(URL)
@@ -29,7 +29,7 @@ enum ImageSize: Codable, Hashable, Comparable {
         }
     }
 
-    static func < (lhs: ImageSize, rhs: ImageSize) -> Bool {
+    public static func < (lhs: ImageSize, rhs: ImageSize) -> Bool {
         if case .tiny = lhs {
             return true
         } else if case .small = lhs {

@@ -7,11 +7,13 @@
 //
 
 import Foundation
+import Sworm
 import ComposableArchitecture
 
 struct AnimeDetailReducer: ReducerProtocol {
     typealias LoadableEpisodes = Loadable<[Episode]>
     typealias LoadableAnimeStore = Loadable<AnimeStore>
+    typealias LoadableCollectionStores = Loadable<[CollectionStore]>
 
     struct State: Equatable {
         let animeId: Anime.ID
@@ -19,6 +21,7 @@ struct AnimeDetailReducer: ReducerProtocol {
         var anime: Loadable<Anime> = .idle
         var episodes = LoadableEpisodes.idle
         var animeStore = LoadableAnimeStore.idle
+        var collectionStores = LoadableCollectionStores.idle
 
         var compactEpisodes = false
 
@@ -42,7 +45,7 @@ struct AnimeDetailReducer: ReducerProtocol {
     enum Action: Equatable {
         case onAppear
         case tappedFavorite
-        case tappedInWatchlist
+        case addToCollectionToggle
         case closeButtonPressed
         case close
         case playResumeButtonClicked
@@ -52,6 +55,7 @@ struct AnimeDetailReducer: ReducerProtocol {
         case selectedEpisode(episode: Episode)
         case play(anime: Anime, episodes: [Episode], selected: Episode.ID)
         case fetchedAnimeFromDB([AnimeStore])
+        case fetchedCollectionStores([CollectionStore])
     }
 
     @Dependency(\.animeClient) var animeClient
@@ -132,7 +136,7 @@ extension AnimeDetailReducer.State {
             return .unavailable
         }
 
-        let episodesProgress = animeStore.value?.episodeStores
+        let episodesProgress = animeStore.value?.episodes
         let lastUpdatedProgress = episodesProgress?.sorted(by: \.lastUpdatedProgress).last
 
         if let lastUpdatedProgress = lastUpdatedProgress,
@@ -169,7 +173,12 @@ extension AnimeDetailReducer.State {
 
     var isLoading: Bool {
         guard let anime = anime.value else { return !anime.finished }
-        return anime.status != .upcoming && (!episodes.finished || !animeStore.finished)
+        return anime.status != .upcoming && (!episodes.finished || !animeStore.finished || !collectionStores.finished)
+    }
+
+    var isInACollection: Bool {
+        guard let collections = collectionStores.value else { return false }
+        return collections.contains(where: { $0.animes.contains(where: { animeStore in animeStore.id == animeId }) } )
     }
 }
 
@@ -177,6 +186,9 @@ extension AnimeDetailReducer {
     struct CancelAnimeFetchingId: Hashable {}
     struct CancelFetchingEpisodesId: Hashable {}
     struct CancelObservingAnimeDB: Hashable {}
+    struct CancelObservingCollections: Hashable {}
+    struct AddToCollectionDebounce: Hashable {}
+    struct FavoritesDebouce: Hashable {}
 
     func core(state: inout State, action: Action) -> EffectTask<Action> {
         switch action {
@@ -193,24 +205,36 @@ extension AnimeDetailReducer {
             return self.fetchEpisodesAndStore(&state)
 
         case .tappedFavorite:
-            if var animeStore = state.animeStore.value {
-                animeStore.isFavorite.toggle()
+            guard var animeStore = state.animeStore.value else { break }
+            animeStore.isFavorite.toggle()
 
-                return .fireAndForget { [animeStore] in
-                    _ = try await repositoryClient.insertOrUpdate(animeStore)
+            return .run { [animeStore] in
+                try await withTaskCancellation(id: FavoritesDebouce.self, cancelInFlight: true) {
+                    _ = try await repositoryClient.insert(animeStore)
                 }
             }
 
-        case .tappedInWatchlist:
-            // TODO: add option to either show menu to add to collections or something else
-            break
-//            if var animeStore = state.animeStore.value {
-//                animeStore.inWatchlist.toggle()
-//
-//                return .fireAndForget { [animeStore] in
-//                    _ = try await repositoryClient.insertOrUpdate(animeStore)
-//                }
-//            }
+        case .addToCollectionToggle:
+            guard let animeStore = state.animeStore.value else { break }
+            guard let collectionStores = state.collectionStores.value else { break }
+
+            return .run { _ in
+                try await withTaskCancellation(
+                    id: AddToCollectionDebounce.self,
+                    cancelInFlight: true
+                ) {
+                    if var plannedCollections = collectionStores.first(where: { $0.title == .planning }) {
+                        if !plannedCollections.animes.contains(where: { $0.id == animeStore.id }) {
+                            plannedCollections.animes.append(animeStore)
+                        } else {
+                            plannedCollections.animes.removeAll { anime in
+                                anime.id == animeStore.id
+                            }
+                        }
+                        _ = try await repositoryClient.insert(plannedCollections)
+                    }
+                }
+            }
 
         case .playResumeButtonClicked:
             if let episodeId = state.playButtonState.episodeId, let episode = state.episodes.value?[id: episodeId] {
@@ -244,6 +268,9 @@ extension AnimeDetailReducer {
             guard let anime = state.anime.value else { break }
             state.animeStore = .success(.findOrCreate(anime, animesMatched))
 
+        case .fetchedCollectionStores(let collectionStores):
+            state.collectionStores = .success(collectionStores)
+
         case .toggleCompactEpisodes:
             state.compactEpisodes.toggle()
 
@@ -259,6 +286,7 @@ extension AnimeDetailReducer {
                 .cancel(id: CancelAnimeFetchingId.self),
                 .cancel(id: CancelFetchingEpisodesId.self),
                 .cancel(id: CancelObservingAnimeDB.self),
+                .cancel(id: CancelObservingCollections.self),
                 .action(.close)
             )
 
@@ -300,13 +328,32 @@ extension AnimeDetailReducer {
 
             effects.append(
                 .run { send in
-                    let animeStoresStream: AsyncStream<[AnimeStore]> = repositoryClient.observe(.init(format: "id == %d", animeId))
+                    let animeStoresStream: AsyncStream<[AnimeStore]> = repositoryClient.observe(
+                        AnimeStore.all.where(\AnimeStore.id == animeId)
+                    )
 
                     for try await animeStores in animeStoresStream {
                         await send(.fetchedAnimeFromDB(animeStores))
                     }
                 }
                     .cancellable(id: CancelObservingAnimeDB.self)
+            )
+        }
+
+        if !state.collectionStores.hasInitialized {
+            state.collectionStores = .loading
+
+            effects.append(
+                .run { send in
+                    let collectionStores: AsyncStream<[CollectionStore]> = repositoryClient.observe(
+                        CollectionStore.all
+                    )
+
+                    for try await collection in collectionStores {
+                        await send(.fetchedCollectionStores(collection))
+                    }
+                }
+                    .cancellable(id: CancelObservingCollections.self)
             )
         }
 

@@ -13,52 +13,88 @@ struct CollectionsView: View {
     let store: StoreOf<CollectionsReducer>
 
     var body: some View {
-        VStack {
-            if !DeviceUtil.isMac {
-                HStack {
-                    Text("Your Collections")
-                        .font(.largeTitle.bold())
-                    Spacer()
-//                    Image(systemName: "plus")
-//                        .font(.title)
-                }
-                .padding()
-            }
+        WithViewStore(
+            store,
+            observe: \.selection
+        ) { selectedViewState in
+                ScrollView {
+                    if !DeviceUtil.isMac {
+                        HStack {
+                            Spacer()
 
-            ExtraTopSafeAreaInset()
+                            Text("My Collections")
+                            Spacer()
 
-            ScrollView {
-                LazyVGrid(
-                    columns: !DeviceUtil.isPhone ? [
-                        .init(
-                            .adaptive(minimum: 140),
-                            spacing: 12
-                        )
-                    ] : .init(
-                        repeating: .init(
-                            .flexible(
-                                maximum: 160
+                            Button {
+                                
+                            } label: {
+                                Image(systemName: "plus")
+                                    .foregroundColor(.white)
+                            }
+                        }
+                        .font(.title3.bold())
+                        .padding()
+                    }
+
+                    LazyVGrid(
+                        columns: !DeviceUtil.isPhone ? [
+                            .init(
+                                .adaptive(minimum: 140),
+                                spacing: 12
+                            )
+                        ] : .init(
+                            repeating: .init(
+                                .flexible(
+                                    maximum: 160
+                                ),
+                                spacing: 24
                             ),
-                            spacing: 24
+                            count: 2
                         ),
-                        count: 2
-                    ),
-                    spacing: 24
-                ) {
-                    favorites
-                    collections
-                }
-                .padding()
+                        spacing: 24
+                    ) {
+                        favorites
+                        collections
+                    }
+                    .padding()
 
-                ExtraBottomSafeAreaInset()
-            }
-            .frame(
-                maxWidth: .infinity,
-                maxHeight: .infinity
-            )
+                    ExtraBottomSafeAreaInset()
+                }
+                .overlay(
+                    Group {
+                        switch selectedViewState.state {
+                        case .some(.favorites):
+                            EmptyView()
+                        case let .some(.collection(id)):
+                            IfLetStore(
+                                store.scope(
+                                    state: \.collections[id: id],
+                                    action: { CollectionsReducer.Action.collectionDetail(id: id, action: $0) }
+                                )
+                            ) { collectionStore in
+                                CollectionDetailView(
+                                    store: collectionStore
+                                )
+                            }
+                            .frame(
+                                maxWidth: .infinity,
+                                maxHeight: .infinity
+                            )
+                            .background(Color.black)
+                            .transition(
+                                DeviceUtil.isPhone ?
+                                .move(edge: .trailing)
+                                .combined(with: .opacity)
+                                : .opacity
+                            )
+                        default:
+                            EmptyView()
+                        }
+                    }
+                )
         }
         .onAppear {
-            ViewStore(store.stateless).send(.onAppear)
+            ViewStore(store).send(.onAppear)
         }
         .frame(
             maxWidth: .infinity,
@@ -81,6 +117,14 @@ extension CollectionsView {
                     .compactMap(\.posterImage.largest?.link),
                 viewState.state.count
             )
+            .onTapGesture {
+                viewState.send(
+                    .setSelection(
+                        selection: .favorites
+                    ),
+                    animation: .easeInOut
+                )
+            }
         }
     }
 }
@@ -94,12 +138,22 @@ extension CollectionsView {
         ) { viewState in
             ForEach(viewState.state) { collection in
                 folderView(
-                    collection.title,
+                    collection.title.value,
                     collection.animes
                         .prefix(3)
                         .compactMap(\.posterImage.largest?.link),
                     collection.animes.count
                 )
+                .onTapGesture {
+                    viewState.send(
+                        .setSelection(
+                            selection: .collection(
+                                selected: collection.id
+                            )
+                        ),
+                        animation: .easeInOut
+                    )
+                }
             }
         }
     }
@@ -163,9 +217,16 @@ extension CollectionsView {
             maxWidth: .infinity,
             maxHeight: .infinity
         )
-        #if os(macOS)
-        .scaleOnHover()
-        #endif
+    }
+}
+
+extension CollectionsView {
+    @ViewBuilder
+    func collectionView(
+        _ title: String,
+        _ animes: [AnimeStore]
+    ) -> some View {
+        EmptyView()
     }
 }
 

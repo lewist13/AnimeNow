@@ -9,22 +9,20 @@ import Foundation
 import CoreData
 import IdentifiedCollections
 
-struct AnimeStore: AnimeRepresentable, Codable, Equatable, Identifiable {
-    let id: Anime.ID
-    var title: String
+struct AnimeStore: AnimeRepresentable, Codable, Hashable, Identifiable {
+    var id: Anime.ID = .init()
+    var title: String = ""
     var malId: Int? { nil }
-    var format: Anime.Format
-    var posterImage: [ImageSize]
+    var format = Anime.Format.tv
+    var posterImage: [ImageSize] = []
+    var isFavorite = false
 
-    var isFavorite: Bool
-    var episodeStores: [EpisodeStore]
-
-    var objectURL: URL?
+    var episodes = Set<EpisodeStore>()
 }
 
 extension AnimeStore {
     var lastModifiedEpisode: EpisodeStore? {
-        episodeStores.sorted(by: \.lastUpdatedProgress).last
+        episodes.sorted(by: \.lastUpdatedProgress).last
     }
 }
 
@@ -44,8 +42,7 @@ extension AnimeStore {
                 title: anime.title,
                 format: anime.format,
                 posterImage: anime.posterImage,
-                isFavorite: false,
-                episodeStores: .init()
+                isFavorite: false
             )
         }
     }
@@ -59,7 +56,7 @@ extension AnimeStore {
     ) {
         guard anime.id == id else { return }
 
-        var episodeStoredInfo: EpisodeStore = episodeStores.first(where: { $0.number == episode.number }) ?? .init(
+        var episodeInfo = episodes.first(where: { $0.number == episode.number }) ?? .init(
             number: episode.number,
             title: anime.format == .movie ? anime.title : episode.title,
             thumbnail: anime.format == .movie ? anime.posterImage.largest : episode.thumbnail,
@@ -68,13 +65,13 @@ extension AnimeStore {
             lastUpdatedProgress: .init()
         )
 
-        episodeStoredInfo.number = episode.number
-        episodeStoredInfo.title = anime.format == .movie ? anime.title : episode.title
-        episodeStoredInfo.thumbnail = anime.format == .movie ? anime.posterImage.largest :  episode.thumbnail
-        episodeStoredInfo.isMovie = anime.format == .movie
-        episodeStoredInfo.progress = progress
-        episodeStoredInfo.lastUpdatedProgress = .init()
+        episodeInfo.number = episode.number
+        episodeInfo.title = anime.format == .movie ? anime.title : episode.title
+        episodeInfo.thumbnail = anime.format == .movie ? anime.posterImage.largest :  episode.thumbnail
+        episodeInfo.isMovie = anime.format == .movie
+        episodeInfo.progress = progress
+        episodeInfo.lastUpdatedProgress = .init()
 
-        episodeStores.insertOrUpdate(episodeStoredInfo)
+        episodes.update(episodeInfo)
     }
 }

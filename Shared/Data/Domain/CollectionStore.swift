@@ -6,13 +6,36 @@
 //
 
 import Foundation
+import OrderedCollections
 
-struct CollectionStore: Equatable, Identifiable {
-    var id = UUID()
-    var title: String
+struct CollectionStore: Hashable, Identifiable, Codable {
+    var id: Title {
+        self.title
+    }
+
+    var title: Title = .custom("")
     var lastUpdated = Date()
-    var userRemovable = true
-    var animes: [AnimeStore] = []
+    var animes = OrderedSet<AnimeStore>()
+}
 
-    var objectURL: URL?
+extension CollectionStore {
+    enum Title: Hashable, Codable {
+        case planning
+        case watching
+        case completed
+        case custom(String)
+
+        var value: String {
+            switch self {
+            case .planning:
+                return "Planning"
+            case .watching:
+                return "Watching"
+            case .completed:
+                return "Completed"
+            case .custom(let name):
+                return name
+            }
+        }
+    }
 }

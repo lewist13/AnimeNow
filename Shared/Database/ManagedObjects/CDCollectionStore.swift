@@ -2,61 +2,38 @@
 //  Anime Now!
 //
 //  Created by ErrorErrorError on 10/28/22.
-//  
+//
 //
 
-import Foundation
+import Sworm
 import CoreData
 
-extension CDCollectionStore: ManagedObjectConvertible {
-    static func getFetchRequest() -> NSFetchRequest<CDCollectionStore> {
-        self.fetchRequest()
+extension CollectionStore: ManagedObjectConvertible {
+    static let entityName = "CDCollectionStore"
+
+    static var idKeyPath: KeyPath = \Self.title
+
+    static let attributes: Set<Attribute<CollectionStore>> = [
+        .init(\.title, "title"),
+        .init(\.lastUpdated, "lastUpdated")
+    ]
+
+    struct Relations {
+        let animes = ToManyOrderedRelation<AnimeStore>(\CollectionStore.animes, "animes")
     }
 
-    var asDomain: CollectionStore {
-        return .init(
-            id: id ?? .init(),
-            title: title ?? "Unknown",
-            lastUpdated: lastUpdated ?? .init(),
-            userRemovable: userRemovable,
-            animes: (animes as? Set<CDAnimeStore>)?.map(\.asDomain) ?? [],
-            objectURL: objectID.uriRepresentation()
-        )
-    }
-
-    func create(
-        from domain: CollectionStore
-    ) {
-        update(from: domain)
-    }
-
-    func update(
-        from domain: CollectionStore
-    ) {
-        id = domain.id
-        title = domain.title
-        lastUpdated = domain.lastUpdated
-        userRemovable = domain.userRemovable
-
-        // TODO: Improve updating items in episode stores
-        if let managedObjectContext = managedObjectContext {
-            animes = .init(
-                array: domain.animes.map { $0.asManagedObject(in: managedObjectContext) }
-            )
-        }
-    }
+    static let relations = Relations()
 }
 
-extension CollectionStore: DomainModelConvertible {
-    func asManagedObject(
-        in context: NSManagedObjectContext
-    ) -> CDCollectionStore {
-        let object = CDCollectionStore(context: context)
-        object.id = id
-        object.title = title
-        object.lastUpdated = lastUpdated
-        object.userRemovable = userRemovable
-        object.animes = .init(array: animes.map { $0.asManagedObject(in: context) })
-        return object
+extension CollectionStore.Title: SupportedAttributeType {
+    public func encodePrimitiveValue() -> Data {
+        self.toData() ?? .empty
+    }
+
+    static func decode(primitiveValue: Data) throws -> Self {
+        guard let format: Self = primitiveValue.toObject() else {
+            throw AttributeError.badInput(primitiveValue)
+        }
+        return format
     }
 }

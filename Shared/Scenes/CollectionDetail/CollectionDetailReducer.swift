@@ -10,11 +10,12 @@ import Foundation
 import ComposableArchitecture
 
 struct CollectionDetailReducer: ReducerProtocol {
-    struct State: Equatable {
-    }
+    typealias State = CollectionStore
 
     enum Action: Equatable {
         case onAppear
+        case close
+        case onAnimeTapped(AnimeStore)
     }
 
     @Dependency(\.repositoryClient) var repositoryClient
@@ -28,6 +29,10 @@ extension CollectionDetailReducer {
     func core(into state: inout State, action: Action) -> EffectTask<Action> {
         switch action {
         case .onAppear:
+            break
+        case .onAnimeTapped:
+            break
+        case .close:
             break
         }
         return .none

@@ -13,19 +13,16 @@ import ComposableArchitecture
 //
 //    private init() {}
 //
-//    func insert<T>(_ item: T) async throws -> T where T : DomainModelConvertible {
-//        <#code#>
+//    func insert<T>(_ item: T) async throws -> T {
+//        
 //    }
 //    
-//    func update<T>(_ item: T) async throws -> T where T : DomainModelConvertible {
-//        <#code#>
+//    func update<T>(_ item: T) async throws -> T {
 //    }
 //    
-//    func insertOrUpdate<T>(_ item: T) async throws -> T where T : DomainModelConvertible {
-//        <#code#>
+//    func insertOrUpdate<T>(_ item: T) async throws -> T {
 //    }
 //    
-//    func delete<T>(_ item: T) async throws where T : DomainModelConvertible {
-//        <#code#>
+//    func delete<T>(_ item: T) async throws {
 //    }
 //}

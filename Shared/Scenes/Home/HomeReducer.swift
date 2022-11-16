@@ -135,9 +135,7 @@ extension HomeReducer {
                 self.fetchForContent(state: &state),
                 .run { send in
                     let animeStoresStream: AsyncStream<[AnimeStore]> = repositoryClient.observe(
-                        .init(format: "episodeStores.@count > 0"),
-                        [],
-                        true
+                        AnimeStore.all
                     )
 
                     for await animeStores in animeStoresStream {
@@ -191,7 +189,7 @@ extension HomeReducer {
             episodeStore.progress = 1.0
 
             return .run { [episodeStore] in
-                _ = try await self.repositoryClient.update(episodeStore)
+                _ = try await self.repositoryClient.insert(episodeStore)
             }
 
         case .resumeWatchingTapped:

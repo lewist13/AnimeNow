@@ -8,18 +8,19 @@
 import Foundation
 
 extension NotificationCenter {
+    @discardableResult
     func observeNotifications(
         from notification: Notification.Name
-    ) -> AsyncStream<Void> {
+    ) -> AsyncStream<Any?> {
         AsyncStream { continuation in
             let reference = NotificationCenter.default.addObserver(
                 forName: notification,
                 object: nil,
                 queue: nil
-            ) { _ in
-                continuation.yield(())
+            ) { notif in
+                continuation.yield(notif.object)
             }
-            
+
             continuation.onTermination = { @Sendable _ in
                 NotificationCenter.default.removeObserver(reference)
             }
