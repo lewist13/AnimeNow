@@ -84,7 +84,7 @@ jobs:
           popd
 
       - name: Build macOS Archive
-        run: xcodebuild archive -scheme '${{ env.MACOS_SCHEME }}' -archivePath '${{ env.MACOS_ARCHIVE_PATH }}' -xcconfig '${{ env.BUILD_CONFIG }}' CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO CODE_SIGN_IDENTITY= CODE_SIGN_ENTITLEMENTS= GCC_OPTIMIZATION_LEVEL=s SWIFT_OPTIMIZATION_LEVEL=-O
+        run: xcodebuild archive -scheme '${{ env.MACOS_SCHEME }}' -archivePath '${{ env.MACOS_ARCHIVE_PATH }}' -xcconfig '${{ env.BUILD_CONFIG }}' CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO CODE_SIGN_IDENTITY= CODE_SIGN_ENTITLEMENTS= GCC_OPTIMIZATION_LEVEL=s SWIFT_OPTIMIZATION_LEVEL=-Onone
 
       - name: Build DMG
         run: |
