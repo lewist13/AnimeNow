@@ -55,6 +55,10 @@ struct AppView: View {
                 }
             }
         }
+        .frame(
+            maxWidth: .infinity,
+            maxHeight: .infinity
+        )
         #if os(iOS)
         .bottomSafeAreaInset(tabBar)
         .ignoresSafeArea(.keyboard, edges: .bottom)
@@ -65,10 +69,6 @@ struct AppView: View {
             minHeight: 650
         )
         #endif
-        .frame(
-            maxWidth: .infinity,
-            maxHeight: .infinity
-        )
         .background(Color.black.ignoresSafeArea())
         .preferredColorScheme(.dark)
         .overlay(
@@ -98,6 +98,7 @@ struct AppView: View {
                 then: AnimePlayerView.init
             )
         )
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 

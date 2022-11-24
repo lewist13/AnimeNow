@@ -10,8 +10,8 @@ import Foundation
 
 public struct Request<PlainObject: ManagedObjectConvertible> {
     var fetchLimit: Int? = nil
-    var predicate: (any PredicateProtocol<PlainObject>)? = nil
-    var sortDescriptors: [SortDescriptor<PlainObject>] = []
+    var predicate: NSPredicate? = nil
+    var sortDescriptors: [SortDescriptor] = []
 
     fileprivate init() { }
 }
@@ -62,7 +62,9 @@ extension Request {
             fetchRequest.fetchLimit = $0
         }
 
-        fetchRequest.predicate = predicate
+        if let predicate {
+            fetchRequest.predicate = predicate
+        }
 
         if !self.sortDescriptors.isEmpty {
             fetchRequest.sortDescriptors = self.sortDescriptors.map(\.object)
