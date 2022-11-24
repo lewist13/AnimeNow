@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct SortDescriptor<Root: ManagedObjectConvertible> {
+struct SortDescriptor: Equatable {
     let keyPathString: String
     var ascending: Bool = true
 }
@@ -22,7 +22,7 @@ extension SortDescriptor {
 }
 
 extension SortDescriptor {
-    init<Value>(
+    init<Root, Value>(
         keyPath: KeyPath<Root, Value>,
         ascending: Bool
     ) {
