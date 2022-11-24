@@ -34,6 +34,8 @@
 		1312FD6228DD7CB0004A415F /* AirplayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1312FD6128DD7CB0004A415F /* AirplayView.swift */; };
 		1318EEE628D5374C00EB85FA /* AVKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1318EEE528D5374B00EB85FA /* AVKit.framework */; };
 		1318EEE828D5375100EB85FA /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1318EEE728D5375100EB85FA /* AVFoundation.framework */; };
+		131AB5E4292F286A0065B1E2 /* CollectionStore+CoreData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 131AB5E3292F286A0065B1E2 /* CollectionStore+CoreData.swift */; };
+		131AB5E5292F286A0065B1E2 /* CollectionStore+CoreData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 131AB5E3292F286A0065B1E2 /* CollectionStore+CoreData.swift */; };
 		1324366728E7B40300F282EE /* Sequence+Keypath.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1324366628E7B40300F282EE /* Sequence+Keypath.swift */; };
 		1324366828E7B40300F282EE /* Sequence+Keypath.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1324366628E7B40300F282EE /* Sequence+Keypath.swift */; };
 		1324366A28E7D4BE00F282EE /* AnimeStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1324366928E7D4BE00F282EE /* AnimeStore.swift */; };
@@ -132,8 +134,6 @@
 		1384FF7A28CB93FA003B011E /* Navigation+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1384FF7828CB93FA003B011E /* Navigation+Extension.swift */; };
 		138DC1632924C50B0093F806 /* AnimeStore+CoreData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 138DC1622924C50B0093F806 /* AnimeStore+CoreData.swift */; };
 		138DC1642924C50B0093F806 /* AnimeStore+CoreData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 138DC1622924C50B0093F806 /* AnimeStore+CoreData.swift */; };
-		138DC1662924C5160093F806 /* CollectionStore+CoreData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 138DC1652924C5160093F806 /* CollectionStore+CoreData.swift */; };
-		138DC1672924C5160093F806 /* CollectionStore+CoreData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 138DC1652924C5160093F806 /* CollectionStore+CoreData.swift */; };
 		138DC1692924C5220093F806 /* EpisodeStore+CoreData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 138DC1682924C5220093F806 /* EpisodeStore+CoreData.swift */; };
 		138DC16A2924C5220093F806 /* EpisodeStore+CoreData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 138DC1682924C5220093F806 /* EpisodeStore+CoreData.swift */; };
 		13938BAA28E0AF20001C8784 /* ImageSize.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1352A05428DBC89600A5B20D /* ImageSize.swift */; };
@@ -250,6 +250,7 @@
 		1312FD6128DD7CB0004A415F /* AirplayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AirplayView.swift; sourceTree = "<group>"; };
 		1318EEE528D5374B00EB85FA /* AVKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.5.sdk/System/Library/Frameworks/AVKit.framework; sourceTree = DEVELOPER_DIR; };
 		1318EEE728D5375100EB85FA /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.5.sdk/System/Library/Frameworks/AVFoundation.framework; sourceTree = DEVELOPER_DIR; };
+		131AB5E3292F286A0065B1E2 /* CollectionStore+CoreData.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CollectionStore+CoreData.swift"; sourceTree = "<group>"; };
 		1324366628E7B40300F282EE /* Sequence+Keypath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sequence+Keypath.swift"; sourceTree = "<group>"; };
 		1324366928E7D4BE00F282EE /* AnimeStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimeStore.swift; sourceTree = "<group>"; };
 		1325FD6C2904F9BC00EA37D5 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -310,7 +311,6 @@
 		13820F15291429BA00CE431F /* UIApplication+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIApplication+Extension.swift"; sourceTree = "<group>"; };
 		1384FF7828CB93FA003B011E /* Navigation+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Navigation+Extension.swift"; sourceTree = "<group>"; };
 		138DC1622924C50B0093F806 /* AnimeStore+CoreData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AnimeStore+CoreData.swift"; sourceTree = "<group>"; };
-		138DC1652924C5160093F806 /* CollectionStore+CoreData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "CollectionStore+CoreData.swift"; path = "../../../../../../../CollectionStore+CoreData.swift"; sourceTree = "<group>"; };
 		138DC1682924C5220093F806 /* EpisodeStore+CoreData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EpisodeStore+CoreData.swift"; sourceTree = "<group>"; };
 		13938BAB28E0CADD001C8784 /* MainConfig.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = MainConfig.xcconfig; sourceTree = "<group>"; };
 		13944BAE2908D47800B947B5 /* FillAspectImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FillAspectImage.swift; sourceTree = "<group>"; };
@@ -563,8 +563,8 @@
 		138DC1612924C4EE0093F806 /* Domain+CoreData */ = {
 			isa = PBXGroup;
 			children = (
+				131AB5E3292F286A0065B1E2 /* CollectionStore+CoreData.swift */,
 				138DC1622924C50B0093F806 /* AnimeStore+CoreData.swift */,
-				138DC1652924C5160093F806 /* CollectionStore+CoreData.swift */,
 				138DC1682924C5220093F806 /* EpisodeStore+CoreData.swift */,
 			);
 			path = "Domain+CoreData";
@@ -1073,6 +1073,7 @@
 				13F1BC9A29294BB600404EDB /* AddNewCollectionView.swift in Sources */,
 				13DF205F28FBB0A900EE804D /* CollectionsView.swift in Sources */,
 				1384FF7928CB93FA003B011E /* Navigation+Extension.swift in Sources */,
+				131AB5E4292F286A0065B1E2 /* CollectionStore+CoreData.swift in Sources */,
 				137F8FA428F633CC00ECDB30 /* AniSkipAPI.swift in Sources */,
 				1359668F28E6100B00EB2AFC /* HapticClient+Mock.swift in Sources */,
 				134FAA1F28D6FBC200B081FE /* CMTime+String.swift in Sources */,
@@ -1082,7 +1083,6 @@
 				13F1BC9C29294BC100404EDB /* AddNewCollectionReducer.swift in Sources */,
 				13386AEE28CC2892005E8352 /* ShimmerView.swift in Sources */,
 				132A7ED329271E090039E0CC /* CollectionListReducer.swift in Sources */,
-				138DC1662924C5160093F806 /* CollectionStore+CoreData.swift in Sources */,
 				1312FD5A28DD4B52004A415F /* ThumbnailItemCompactView.swift in Sources */,
 				13E512C728C79E5E00B298BA /* GraphQLModels.swift in Sources */,
 				1380561E28E9223500B9B45B /* AnimePlayerView.swift in Sources */,
@@ -1205,9 +1205,9 @@
 				1325FD6D2904F9BC00EA37D5 /* AppDelegate.swift in Sources */,
 				1339179C2910B28600E9E5F7 /* Popover+ViewStore.swift in Sources */,
 				1310E065292BF0EF003F47A0 /* Color+Extension.swift in Sources */,
-				138DC1672924C5160093F806 /* CollectionStore+CoreData.swift in Sources */,
 				13B2771428F7922900B4B4A3 /* VideoPlayer+View.swift in Sources */,
 				13F52BDF2906285B00AC9315 /* View+Hovered.swift in Sources */,
+				131AB5E5292F286A0065B1E2 /* CollectionStore+CoreData.swift in Sources */,
 				13A155B6290A3DDF006EB845 /* TestVideoPlayer.swift in Sources */,
 				13CB97F22911B20A00E074B8 /* NotificationCenter+Async.swift in Sources */,
 				13C3536E28C308A000A54E7E /* AnimeNowApp.swift in Sources */,
