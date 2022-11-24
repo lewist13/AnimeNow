@@ -215,6 +215,12 @@
 		13E95CF12904A4B100E85F28 /* Effect+Send.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13E95CEF2904A4B100E85F28 /* Effect+Send.swift */; };
 		13F1BC9A29294BB600404EDB /* AddNewCollectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13F1BC9929294BB600404EDB /* AddNewCollectionView.swift */; };
 		13F1BC9C29294BC100404EDB /* AddNewCollectionReducer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13F1BC9B29294BC100404EDB /* AddNewCollectionReducer.swift */; };
+		13F2F526292FF73C003122AA /* DownloaderClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13F2F525292FF73C003122AA /* DownloaderClient.swift */; };
+		13F2F5282930004F003122AA /* DownloaderClient+Live.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13F2F5272930004F003122AA /* DownloaderClient+Live.swift */; };
+		13F2F529293000B0003122AA /* DownloaderClient+Live.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13F2F5272930004F003122AA /* DownloaderClient+Live.swift */; };
+		13F2F52A293000B3003122AA /* DownloaderClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13F2F525292FF73C003122AA /* DownloaderClient.swift */; };
+		13F2F52D29300583003122AA /* DownloadOptionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13F2F52C29300583003122AA /* DownloadOptionsView.swift */; };
+		13F2F52F2930058E003122AA /* DownloadOptionsReducer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13F2F52E2930058E003122AA /* DownloadOptionsReducer.swift */; };
 		13F52BDF2906285B00AC9315 /* View+Hovered.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13F52BDE2906285B00AC9315 /* View+Hovered.swift */; };
 		13F76D4F292B5F0B0092723E /* AppView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13F76D4E292B5F0B0092723E /* AppView.swift */; };
 		13F76D50292B5F0B0092723E /* AppView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13F76D4E292B5F0B0092723E /* AppView.swift */; };
@@ -353,6 +359,10 @@
 		13E95CEF2904A4B100E85F28 /* Effect+Send.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Effect+Send.swift"; sourceTree = "<group>"; };
 		13F1BC9929294BB600404EDB /* AddNewCollectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddNewCollectionView.swift; sourceTree = "<group>"; };
 		13F1BC9B29294BC100404EDB /* AddNewCollectionReducer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddNewCollectionReducer.swift; sourceTree = "<group>"; };
+		13F2F525292FF73C003122AA /* DownloaderClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloaderClient.swift; sourceTree = "<group>"; };
+		13F2F5272930004F003122AA /* DownloaderClient+Live.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DownloaderClient+Live.swift"; sourceTree = "<group>"; };
+		13F2F52C29300583003122AA /* DownloadOptionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadOptionsView.swift; sourceTree = "<group>"; };
+		13F2F52E2930058E003122AA /* DownloadOptionsReducer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadOptionsReducer.swift; sourceTree = "<group>"; };
 		13F52BDE2906285B00AC9315 /* View+Hovered.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+Hovered.swift"; sourceTree = "<group>"; };
 		13F76D4E292B5F0B0092723E /* AppView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppView.swift; sourceTree = "<group>"; };
 		13FAE2E5292426F400052231 /* Set+Identifiable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Set+Identifiable.swift"; sourceTree = "<group>"; };
@@ -469,6 +479,8 @@
 		13447CB429138E6E00C41E80 /* DownloaderClient */ = {
 			isa = PBXGroup;
 			children = (
+				13F2F525292FF73C003122AA /* DownloaderClient.swift */,
+				13F2F5272930004F003122AA /* DownloaderClient+Live.swift */,
 			);
 			path = DownloaderClient;
 			sourceTree = "<group>";
@@ -703,6 +715,7 @@
 				13BD66E62901AF9B00D565F4 /* Collections */,
 				132A7ECF29271CD90039E0CC /* CollectionList */,
 				13F1BC9629294B8800404EDB /* AddNewCollection */,
+				13F2F52B2930056D003122AA /* DownloadOptions */,
 			);
 			path = Scenes;
 			sourceTree = "<group>";
@@ -780,6 +793,15 @@
 				13F1BC9B29294BC100404EDB /* AddNewCollectionReducer.swift */,
 			);
 			path = AddNewCollection;
+			sourceTree = "<group>";
+		};
+		13F2F52B2930056D003122AA /* DownloadOptions */ = {
+			isa = PBXGroup;
+			children = (
+				13F2F52C29300583003122AA /* DownloadOptionsView.swift */,
+				13F2F52E2930058E003122AA /* DownloadOptionsReducer.swift */,
+			);
+			path = DownloadOptions;
 			sourceTree = "<group>";
 		};
 		13F52BDB29061D8200AC9315 /* Extensions */ = {
@@ -1044,6 +1066,7 @@
 				130ED93C28E3FD38000811A6 /* Date+Utils.swift in Sources */,
 				1312FD5C28DD4BEA004A415F /* ThumbnailItemBigView.swift in Sources */,
 				13650F3328CFE0BF002E20DD /* AnimeClient.swift in Sources */,
+				13F2F52D29300583003122AA /* DownloadOptionsView.swift in Sources */,
 				13D235C628E16F32004E51BB /* ComposableArchitecture+Binding.swift in Sources */,
 				13CB97F12911B20A00E074B8 /* NotificationCenter+Async.swift in Sources */,
 				13650F3628D014B1002E20DD /* AnimeClient+Live.swift in Sources */,
@@ -1051,6 +1074,7 @@
 				13E465F628E62508001FF309 /* EnimeAPI.swift in Sources */,
 				130B898F291728CA008CBD68 /* ScaledOnHoverModifier.swift in Sources */,
 				138DC1692924C5220093F806 /* EpisodeStore+CoreData.swift in Sources */,
+				13F2F52F2930058E003122AA /* DownloadOptionsReducer.swift in Sources */,
 				138066F328C572B50012DAFB /* SearchReducer.swift in Sources */,
 				13E4BCF128C829A80039D880 /* AnimeDetailReducer.swift in Sources */,
 				134E5AB7290E61CE00E41664 /* SubtitleTextView.swift in Sources */,
@@ -1088,6 +1112,7 @@
 				1380561E28E9223500B9B45B /* AnimePlayerView.swift in Sources */,
 				13650F3828D04424002E20DD /* AnimeClient+Mock.swift in Sources */,
 				1324366728E7B40300F282EE /* Sequence+Keypath.swift in Sources */,
+				13F2F526292FF73C003122AA /* DownloaderClient.swift in Sources */,
 				13D83B8528FCA8290044F04A /* AnimePlayerView+iOS.swift in Sources */,
 				13BAE88828F3A0AC00662C0C /* SceneDelegate.swift in Sources */,
 				1372DEC728E5337D00E35980 /* AniListAPI.swift in Sources */,
@@ -1133,6 +1158,7 @@
 				13F76D4F292B5F0B0092723E /* AppView.swift in Sources */,
 				13C3536F28C308A000A54E7E /* AppView+iOS.swift in Sources */,
 				132A7ED529275A0C0039E0CC /* ModalCardView.swift in Sources */,
+				13F2F5282930004F003122AA /* DownloaderClient+Live.swift in Sources */,
 				13446E8128CA4AB100F815C6 /* SettingsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1167,6 +1193,8 @@
 				13DF206628FBDB6100EE804D /* AnimeDetailView.swift in Sources */,
 				1324366B28E7D4BE00F282EE /* AnimeStore.swift in Sources */,
 				1398F35D28FFCAD600C93CFA /* BottomSafeAreaInset+View.swift in Sources */,
+				13F2F529293000B0003122AA /* DownloaderClient+Live.swift in Sources */,
+				13F2F52A293000B3003122AA /* DownloaderClient.swift in Sources */,
 				1327550728D2A11A00A6C525 /* UserDefaultsClient+Live.swift in Sources */,
 				1384FF7A28CB93FA003B011E /* Navigation+Extension.swift in Sources */,
 				1380560D28E8B69E00B9B45B /* Array+Extension.swift in Sources */,

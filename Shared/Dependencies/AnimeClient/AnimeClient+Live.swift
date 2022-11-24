@@ -12,7 +12,7 @@ import ComposableArchitecture
 import Combine
 
 extension AnimeClient {
-    static let live: AnimeClient = {
+    static let liveValue: AnimeClient = {
         let episodesCache = Cache<Anime.ID, [Episode]>()
 
         let aniListApi = AniListAPI()
