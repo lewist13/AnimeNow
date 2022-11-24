@@ -6,11 +6,11 @@
 //  Copyright © 2022. All rights reserved.
 //
 
-import Foundation
-import ComposableArchitecture
-import AVFoundation
 import SwiftUI
-import Sworm
+import SwiftORM
+import Foundation
+import AVFoundation
+import ComposableArchitecture
 
 struct AnimePlayerReducer: ReducerProtocol {
     typealias LoadableEpisodes = Loadable<[AnyEpisodeRepresentable]>
@@ -545,7 +545,7 @@ extension AnimePlayerReducer {
 
             state.selectedEpisode = episodeId
 
-            let lastSelectedProvider: String? = userDefaultsClient.dataForKey(.videoPlayerProvider)?.toObject()
+            let lastSelectedProvider: String? = try? userDefaultsClient.dataForKey(.videoPlayerProvider)?.toObject()
             let lastSelectedIsDub: Bool? = userDefaultsClient.boolForKey(.videoPlayerAudioIsDub)
 
             var providerId = state.episode?.providers.first(
@@ -592,7 +592,7 @@ extension AnimePlayerReducer {
         case .selectSubtitle(let subtitleId):
             state.selectedSubtitle = subtitleId
 
-            let subtitleData = state.subtitle?.lang.toData()
+            let subtitleData = try? state.subtitle?.lang.toData()
             return .run {
                 await userDefaultsClient.setData(.videoPlayerSubtitle, subtitleData ?? .empty)
             }
@@ -624,7 +624,7 @@ extension AnimePlayerReducer {
 
         case .internalSetSource(let source):
             state.selectedSource = source
-            if let qualityData = state.source?.quality.toData() {
+            if let qualityData = try? state.source?.quality.toData() {
                 return .run {
                     await userDefaultsClient.setData(.videoPlayerQuality, qualityData)
                 }
@@ -680,8 +680,8 @@ extension AnimePlayerReducer {
         case .fetchedSourcesOptions(.success(let sources)):
             state.sourcesOptions = .success(sources)
 
-            let lastSelectedQuality: Source.Quality? = userDefaultsClient.dataForKey(.videoPlayerQuality)?.toObject()
-            let lastSelectedSubtitles: String? = userDefaultsClient.dataForKey(.videoPlayerSubtitle)?.toObject()
+            let lastSelectedQuality: Source.Quality? = try? userDefaultsClient.dataForKey(.videoPlayerQuality)?.toObject()
+            let lastSelectedSubtitles: String? = try? userDefaultsClient.dataForKey(.videoPlayerSubtitle)?.toObject()
 
             let sourceId = sources.sources.first(where: { $0.quality == lastSelectedQuality })?.id ?? sources.sources.first?.id
             let subtitleId = sources.subtitles.first(where: { $0.lang == lastSelectedSubtitles })?.id ?? nil
@@ -887,7 +887,7 @@ extension AnimePlayerReducer {
         state.selectedProvider = providerId
         state.sourcesOptions = .idle
 
-        let providerData = state.provider?.description.toData()
+        let providerData = try? state.provider?.description.toData()
 
         return .concatenate(
             .run { send in
@@ -910,12 +910,11 @@ extension AnimePlayerReducer {
 
         animeStore.updateProgress(
             for: episode,
-            anime: state.anime,
             progress: progress
         )
 
         return .fireAndForget { [animeStore] in
-            _ = try await repositoryClient.insert(animeStore)
+            try await repositoryClient.insert(animeStore)
         }
     }
 }

@@ -28,6 +28,7 @@ extension UserDefaultsClient {
         case videoPlayerAudioIsDub
         case videoPlayerSubtitle
         case videoPlayerQuality
+        case searchedItems
 
         var description: String {
             self.rawValue

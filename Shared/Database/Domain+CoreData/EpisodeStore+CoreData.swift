@@ -1,12 +1,11 @@
-//
-//  CDEpisodeStore.swift
+//  EpisodeStore+CoreData.swift
 //  Anime Now!
 //
-//  Created by ErrorErrorError on 10/6/22.
-//
+//  Created by ErrorErrorError on 11/16/22.
+//  
 
-import Sworm
-import CoreData
+import SwiftORM
+import Foundation
 
 extension EpisodeStore: ManagedObjectConvertible {
     static let entityName = "CDEpisodeStore"
@@ -23,10 +22,14 @@ extension EpisodeStore: ManagedObjectConvertible {
         .init(\.lastUpdatedProgress, "lastUpdatedProgress"),
         .init(\.downloadURL, "downloadURL")
     ]
+}
 
-    struct Relations {
-        let anime = ToOneRelation<AnimeStore>("animeStore")
+extension ImageSize: ConvertableValue {
+    public static func decode(value primitiveValue: Data) throws -> ImageSize {
+        try primitiveValue.toObject()
     }
 
-    static let relations = Relations()
+    public func encode() -> Data {
+        (try? self.toData()) ?? .empty
+    }
 }

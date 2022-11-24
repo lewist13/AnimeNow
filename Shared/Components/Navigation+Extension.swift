@@ -30,7 +30,7 @@ extension View {
                         destination(store)
                     }
                 }
-            #elseif os(macOS)
+            #else
                 self.overlay(
                     IfLetStore(
                         store
@@ -61,7 +61,7 @@ extension View {
                         destination(store)
                     }
                 }
-            #elseif os(macOS)
+            #else
                 self.overlay(
                     IfLetStore(
                         store

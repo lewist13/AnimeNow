@@ -6,92 +6,51 @@
 //  Copyright © 2022. All rights reserved.
 //
 
-import ComposableArchitecture
 import SwiftUI
+import ComposableArchitecture
 
 struct CollectionsView: View {
     let store: StoreOf<CollectionsReducer>
 
     var body: some View {
-        WithViewStore(
-            store,
-            observe: \.selection
-        ) { selectedViewState in
-                ScrollView {
-                    if !DeviceUtil.isMac {
-                        HStack {
-                            Spacer()
+        StackNavigation(title: "My Collections") {
+            ScrollView {
+                Spacer(minLength: 8)
 
-                            Text("My Collections")
-                            Spacer()
-
-                            Button {
-                                
-                            } label: {
-                                Image(systemName: "plus")
-                                    .foregroundColor(.white)
-                            }
-                        }
-                        .font(.title3.bold())
-                        .padding()
-                    }
-
-                    LazyVGrid(
-                        columns: !DeviceUtil.isPhone ? [
-                            .init(
-                                .adaptive(minimum: 140),
-                                spacing: 12
-                            )
-                        ] : .init(
-                            repeating: .init(
-                                .flexible(
-                                    maximum: 160
-                                ),
-                                spacing: 24
+                LazyVGrid(
+                    columns: !DeviceUtil.isPhone ? [
+                        .init(
+                            .adaptive(minimum: 140),
+                            spacing: 12
+                        )
+                    ] : .init(
+                        repeating: .init(
+                            .flexible(
+                                maximum: 160
                             ),
-                            count: 2
+                            spacing: 24
                         ),
-                        spacing: 24
-                    ) {
-                        favorites
-                        collections
-                    }
-                    .padding()
-
-                    ExtraBottomSafeAreaInset()
+                        count: 2
+                    ),
+                    spacing: 24
+                ) {
+                    favorites
+                    collections
                 }
-                .overlay(
-                    Group {
-                        switch selectedViewState.state {
-                        case .some(.favorites):
-                            EmptyView()
-                        case let .some(.collection(id)):
-                            IfLetStore(
-                                store.scope(
-                                    state: \.collections[id: id],
-                                    action: { CollectionsReducer.Action.collectionDetail(id: id, action: $0) }
-                                )
-                            ) { collectionStore in
-                                CollectionDetailView(
-                                    store: collectionStore
-                                )
-                            }
-                            .frame(
-                                maxWidth: .infinity,
-                                maxHeight: .infinity
-                            )
-                            .background(Color.black)
-                            .transition(
-                                DeviceUtil.isPhone ?
-                                .move(edge: .trailing)
-                                .combined(with: .opacity)
-                                : .opacity
-                            )
-                        default:
-                            EmptyView()
-                        }
-                    }
-                )
+                .padding()
+
+                ExtraBottomSafeAreaInset()
+            }
+        } buttons: {
+            Button {
+                ViewStore(store).send(.onAddNewCollectionTapped)
+            } label: {
+                Image(systemName: "plus")
+                    .foregroundColor(.white)
+                    .font(.title2.bold())
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
         }
         .onAppear {
             ViewStore(store).send(.onAppear)
@@ -110,22 +69,73 @@ extension CollectionsView {
             store,
             observe: \.favorites
         ) { viewState in
-            folderView(
-                "Favorites",
-                viewState.state
-                    .prefix(3)
-                    .compactMap(\.posterImage.largest?.link),
-                viewState.state.count
-            )
-            .onTapGesture {
-                viewState.send(
-                    .setSelection(
-                        selection: .favorites
-                    ),
-                    animation: .easeInOut
+            StackNavigationLink(
+                id: "favorites-id",
+                title: "Favorites"
+            ) {
+                AnyView(
+                    folderView(
+                        "Favorites",
+                        viewState.state
+                            .prefix(3)
+                            .compactMap(\.posterImage.largest?.link),
+                        viewState.state.count
+                    )
+                )
+            } destination: {
+                AnyView(
+                    collectionsPage(title: "Favorites", viewState.state)
                 )
             }
         }
+    }
+}
+
+extension CollectionsView {
+    @ViewBuilder
+    func collectionsPage(
+        title: String,
+        _ animes: [AnimeStore],
+        collectionId: CollectionStore.ID? = nil
+    ) -> some View {
+        ScrollView {
+            LazyVGrid(
+                columns: .init(
+                    repeating: .init(
+                        .flexible(),
+                        spacing: 16
+                    ),
+                    count: DeviceUtil.isPhone ? 2 : 6
+                )
+            ) {
+                ForEach(animes) { anime in
+                    AnimeItemView(
+                        anime: anime
+                    )
+                    .onTapGesture {
+                        ViewStore(store).send(.onAnimeTapped(anime))
+                    }
+                    .contextMenu {
+                        Button {
+                            if let collectionId {
+                                ViewStore(store).send(.removeAnimeFromCollection(collectionId, anime))
+                            } else {
+                                ViewStore(store).send(.removeAnimeFromFavorites(anime))
+                            }
+                        } label: {
+                            Text("Remove from \(collectionId != nil ? "Collections" : "Favorites")")
+                        }
+                    }
+                }
+            }
+            .padding([.top, .horizontal])
+            
+            ExtraBottomSafeAreaInset()
+            Spacer(minLength: 32)
+        }
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        #endif
     }
 }
 
@@ -135,24 +145,39 @@ extension CollectionsView {
         WithViewStore(
             store,
             observe: \.collections
-        ) { viewState in
-            ForEach(viewState.state) { collection in
-                folderView(
-                    collection.title.value,
-                    collection.animes
-                        .prefix(3)
-                        .compactMap(\.posterImage.largest?.link),
-                    collection.animes.count
-                )
-                .onTapGesture {
-                    viewState.send(
-                        .setSelection(
-                            selection: .collection(
-                                selected: collection.id
+        ) { collections in
+            ForEach(collections.state) { collection in
+                StackNavigationLink(
+                    id: collection.id,
+                    title: collection.title.value
+                ) {
+                        folderView(
+                            collection.title.value,
+                            collection.animes
+                                .prefix(3)
+                                .compactMap(\.posterImage.largest?.link),
+                            collection.animes.count
+                        )
+                } destination: {
+                        collectionsPage(
+                            title: collection.title.value,
+                            Array(collection.animes),
+                            collectionId: collection.id
+                        )
+                            .id(collection.title)
+                }
+                .contextMenu {
+                    if collection.title.canDelete {
+                        Button {
+                            ViewStore(store).send(.deleteCollection(id: collection.id))
+                        } label: {
+                            Label(
+                                "Delete Collection",
+                                systemImage: "trash.fill"
                             )
-                        ),
-                        animation: .easeInOut
-                    )
+                        }
+                        .foregroundColor(Color.red)
+                    }
                 }
             }
         }

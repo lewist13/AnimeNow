@@ -37,8 +37,26 @@ struct AnimeDetailView: View {
         .transition(.move(edge: .bottom).combined(with: .opacity))
         .frame(maxWidth: .infinity)
         .overlay(closeButton)
+        .overlay(
+            IfLetStore(
+                store.scope(
+                    state: \.collectionsList,
+                    action: AnimeDetailReducer.Action.collectionLists
+                )
+            ) { viewStore in
+                ModalCardView(
+                    onDismiss: {
+                        ViewStore(store)
+                            .send(.collectionLists(.onCloseTapped))
+                    }
+                ) {
+                    CollectionListView(store: viewStore)
+                }
+            }
+        )
         #if os(iOS)
         .ignoresSafeArea(edges: .top)
+        .statusBarHidden()
         #endif
         .background(Color.black.ignoresSafeArea())
     }
@@ -153,6 +171,24 @@ extension AnimeDetailView {
 
                         WithViewStore(
                             store,
+                            observe: \.isLoading
+                        ) { viewState in
+                            Button {
+                                viewState.send(.showCollectionList)
+                            } label: {
+                                Image(systemName: "plus")
+                                    .font(.body.bold())
+                                    .foregroundColor(.white)
+                                    .padding()
+                                    .background(Color(white: 0.15))
+                                    .clipShape(Circle())
+                            }
+                            .buttonStyle(.plain)
+                            .contentShape(Rectangle())
+                        }
+
+                        WithViewStore(
+                            store,
                             observe: { $0.isLoading ? nil : $0.animeStore.value?.isFavorite }
                         ) { isFavoriteViewStore in
                             Button {
@@ -167,26 +203,6 @@ extension AnimeDetailView {
                             }
                             .buttonStyle(.plain)
                             .contentShape(Rectangle())
-//                            .animation(isFavoriteViewStore != nil)
-                        }
-
-                        WithViewStore(
-                            store,
-                            observe: { $0.isLoading ? nil : $0.isInACollection }
-                        ) { inCollectionViewStore in
-                            Button {
-                                inCollectionViewStore.send(.addToCollectionToggle)
-                            } label: {
-                                Image(systemName: "plus")
-                                    .font(.body.bold())
-                                    .foregroundColor(.white)
-                                    .padding()
-                                    .background(inCollectionViewStore.state == true ? Color.blue : Color(white: 0.15))
-                                    .clipShape(Circle())
-                            }
-                            .buttonStyle(.plain)
-                            .contentShape(Rectangle())
-//                            .animation(inCollectionViewStore != nil)
                         }
                     }
                 }
@@ -330,13 +346,6 @@ extension AnimeDetailView {
                                     episode,
                                     compact: viewState.compact
                                 )
-                                .onTapGesture {
-                                    viewState.send(
-                                        .selectedEpisode(
-                                            episode: episode
-                                        )
-                                    )
-                                }
                             }
                         }
                         .padding(.horizontal)
@@ -348,13 +357,6 @@ extension AnimeDetailView {
                                         episode,
                                         compact: false
                                     )
-                                    .onTapGesture {
-                                        viewState.send(
-                                            .selectedEpisode(
-                                                episode: episode
-                                            )
-                                        )
-                                    }
                                 }
                             }
                             .padding(.horizontal)
@@ -376,25 +378,55 @@ extension AnimeDetailView {
             observe: { state in
                 state.animeStore.value?.episodes.first(where: { $0.number == episode.number })
             }
-        ) { viewStore in
-            if compact {
-                ThumbnailItemCompactView(
-                    episode: episode,
-                    progress: viewStore.state?.progress
+        ) { viewState in
+            Group {
+                if compact {
+                    ThumbnailItemCompactView(
+                        episode: episode,
+                        progress: viewState.state?.progress
+                    )
+                    .frame(height: 85)
+                } else {
+                    ThumbnailItemBigView(
+                        type: .episode(
+                            image: episode.thumbnail?.link,
+                            name: episode.title,
+                            animeName: nil,
+                            number: episode.number,
+                            progress: viewState.state?.progress
+                        ),
+                        isFiller: episode.isFiller,
+                        progressSize: 10
+                    )
+                }
+            }
+            .onTapGesture {
+                viewState.send(
+                    .selectedEpisode(
+                        episode.id
+                    )
                 )
-                .frame(height: 85)
-            } else {
-                ThumbnailItemBigView(
-                    type: .episode(
-                        image: episode.thumbnail?.link,
-                        name: episode.title,
-                        animeName: nil,
-                        number: episode.number,
-                        progress: viewStore.state?.progress
-                    ),
-                    isFiller: episode.isFiller,
-                    progressSize: 10
-                )
+            }
+            .contextMenu {
+                if (viewState.state?.almostFinished ?? false) {
+                    Button {
+                        viewState.send(
+                            .markEpisodeAsUnwatched(episode.id),
+                            animation: .easeInOut(duration: 0.15)
+                        )
+                    } label: {
+                        Text("Unwatch")
+                    }
+                } else {
+                    Button {
+                        viewState.send(
+                            .markEpisodeAsWatched(episode.id),
+                            animation: .easeInOut(duration: 0.15)
+                        )
+                    } label: {
+                        Text("Mark as Watched")
+                    }
+                }
             }
         }
     }

@@ -7,7 +7,7 @@
 
 import Foundation
 
-protocol AnimeRepresentable: Equatable, Identifiable {
+protocol AnimeRepresentable: Hashable, Identifiable {
     var id: Int { get }
     var malId: Int? { get }
     var title: String { get }
@@ -59,9 +59,13 @@ struct AnyAnimeRepresentable: AnimeRepresentable {
     }
 }
 
-extension AnyAnimeRepresentable: Equatable {
+extension AnyAnimeRepresentable: Hashable {
     static func == (lhs: AnyAnimeRepresentable, rhs: AnyAnimeRepresentable) -> Bool {
         lhs.anime.isEqualTo(rhs.anime)
+    }
+
+    func hash(into hasher: inout Hasher) {
+        self.anime.hash(into: &hasher)
     }
 }
 

@@ -73,12 +73,15 @@ struct AppReducer: ReducerProtocol {
 
         var videoPlayer: AnimePlayerReducer.State?
         var animeDetail: AnimeDetailReducer.State?
+
+        var modalOverlay: ModalOverlayReducer.State?
     }
 
     enum Action: BindableAction {
         case onAppear
         case setVideoPlayer(AnimePlayerReducer.State?)
         case setAnimeDetail(AnimeDetailReducer.State?)
+        case setModalOverlay(ModalOverlayReducer.State?)
         case appDelegate(AppDelegateReducer.Action)
         case home(HomeReducer.Action)
         case collection(CollectionsReducer.Action)
@@ -87,6 +90,7 @@ struct AppReducer: ReducerProtocol {
         case settings(SettingsReducer.Action)
         case videoPlayer(AnimePlayerReducer.Action)
         case animeDetail(AnimeDetailReducer.Action)
+        case modalOverlay(ModalOverlayReducer.Action)
         case binding(BindingAction<State>)
     }
 
@@ -126,6 +130,9 @@ struct AppReducer: ReducerProtocol {
             .ifLet(\.animeDetail, action: /Action.animeDetail) {
                 AnimeDetailReducer()
             }
+            .ifLet(\.modalOverlay, action: /Action.modalOverlay) {
+                ModalOverlayReducer()
+            }
     }
 }
 
@@ -152,6 +159,16 @@ extension AppReducer {
 
         case let .home(.animeTapped(anime)),
              let .search(.onAnimeTapped(anime)):
+            return .action(
+                .setAnimeDetail(
+                    .init(
+                        anime: anime
+                    )
+                ),
+                animation: .interactiveSpring(response: 0.35, dampingFraction: 1.0)
+            )
+        case let .collection(.onAnimeTapped(anime)):
+//        case let .collection(.collectionDetail(_, .onAnimeTapped(anime))):
             return .action(
                 .setAnimeDetail(
                     .init(
@@ -216,6 +233,18 @@ extension AppReducer {
                 await NSApp.reply(toApplicationShouldTerminate: true)
                 #endif
             }
+
+        case .setModalOverlay(let overlay):
+            state.modalOverlay = overlay
+
+        case .collection(.onAddNewCollectionTapped):
+            return .action(.setModalOverlay(.addNewCollection(.init())), animation: .spring(response: 0.35, dampingFraction: 1))
+
+        case .modalOverlay(.onClose):
+            return .action(.setModalOverlay(nil), animation: .spring(response: 0.35, dampingFraction: 1))
+
+        case .modalOverlay(.addNewCollection(.saveTitle)):
+            return .action(.modalOverlay(.onClose), animation: .spring(response: 0.35, dampingFraction: 1))
 
         default:
             break

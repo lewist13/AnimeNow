@@ -8,13 +8,13 @@
 import Foundation
 
 extension Encodable {
-    func toData() -> Data? {
-        try? JSONEncoder().encode(self)
+    func toData() throws -> Data {
+        try JSONEncoder().encode(self)
     }
 }
 
 extension Data {
-    func toObject<D: Decodable>() -> D? {
-        try? JSONDecoder().decode(D.self, from: self)
+    func toObject<D: Decodable>() throws -> D {
+        try JSONDecoder().decode(D.self, from: self)
     }
 }

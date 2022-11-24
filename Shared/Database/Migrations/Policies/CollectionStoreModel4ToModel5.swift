@@ -29,13 +29,13 @@ class CollectionStoreModel4ToModel5: NSEntityMigrationPolicy {
                 if !userRemovable {
                     if title == "Watchlist" {
                         newCollection.setValue(
-                            CollectionStore.Title.planning.toData(), forKey: "title"
+                           try  CollectionStore.Title.planning.toData(), forKey: "title"
                         )
                     } else {
-                        newCollection.setValue(CollectionStore.Title.custom(title).toData(), forKey: "title")
+                        newCollection.setValue(try CollectionStore.Title.custom(title).toData(), forKey: "title")
                     }
                 } else {
-                    newCollection.setValue(CollectionStore.Title.custom(title).toData(), forKey: "title")
+                    newCollection.setValue(try CollectionStore.Title.custom(title).toData(), forKey: "title")
                 }
             }
         }

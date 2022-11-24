@@ -4,14 +4,14 @@
 //  Created by ErrorErrorError on 9/3/22.
 //
 
-import Sworm
 import CoreData
+import SwiftORM
 import Foundation
 import OrderedCollections
 
-class RepositoryClientLive: RepositoryClient {
+final class RepositoryClientLive: RepositoryClient, @unchecked Sendable {
     static let shared = RepositoryClientLive()
-    private let db: PersistentContainer
+    private let pc: NSPersistentContainer
 
     private init() {
         let bundle = Bundle(for: RepositoryClientLive.self)
@@ -29,7 +29,8 @@ class RepositoryClientLive: RepositoryClient {
             fatalError("Failed to create model from file: \(databaseURL)")
         }
 
-        let pc = NSPersistentContainer(name: database, managedObjectModel: managedObjectModel)
+        pc = NSPersistentContainer(name: database, managedObjectModel: managedObjectModel)
+        pc.viewContext.mergePolicy = NSMergePolicy.mergeByPropertyObjectTrump
         pc.loadPersistentStores { description, error in
             if let error = error {
                 fatalError("Unable to load persistent stores: \(error)")
@@ -37,53 +38,42 @@ class RepositoryClientLive: RepositoryClient {
 
             description.shouldMigrateStoreAutomatically = false
             description.shouldInferMappingModelAutomatically = true
-            pc.viewContext.mergePolicy = NSMergePolicy.mergeByPropertyObjectTrump
         }
-        db = .init(
-            managedObjectContext: pc.newBackgroundContext,
-            logError: { error in
-                print(error)
-            }
-        )
     }
 
     func insert<T: ManagedObjectConvertible>(
         _ item: T
     ) async throws {
-        try await self.db.schedule { ctx in
-            let mainObject: ManagedObject<T>
+        try await self.pc.schedule { ctx in
+            let object: NSManagedObject?
 
-            if let object = try ctx.fetchOne(T.all.where(T.idKeyPath == item[keyPath: T.idKeyPath])) {
-                mainObject = object.encode(item)
+            if let objectFound = try ctx.fetchOne(T.all.where(T.idKeyPath == item[keyPath: T.idKeyPath])) {
+                object = objectFound
             } else {
-                mainObject = try ctx.insert(item)
+                object = ctx.insert(entity: T.entityName)
             }
 
-            try mainObject.syncRelations(ctx, with: item)
+            try object?.update(item)
         }
     }
 
     func delete<T: ManagedObjectConvertible>(
         _ item: T
     ) async throws {
-        try await self.db.schedule { ctx in
+        try await self.pc.schedule { ctx in
             try ctx.delete(T.all.where(T.idKeyPath == item[keyPath: T.idKeyPath]))
         }
     }
 
-    func fetch<
-        T: ManagedObjectConvertible
-    >(
+    func fetch<T: ManagedObjectConvertible>(
         _ request: Request<T>
     ) async throws -> [T] {
-        try await db.schedule { ctx in
+        try await pc.schedule { ctx in
             try ctx.fetch(request).map { try $0.decode() }
         }
     }
 
-    func observe<
-        T: ManagedObjectConvertible
-    >(
+    func observe<T: ManagedObjectConvertible>(
         _ request: Request<T>
     ) -> AsyncStream<[T]> {
         .init { continuation in

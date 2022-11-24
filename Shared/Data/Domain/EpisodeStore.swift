@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct EpisodeStore: EpisodeRepresentable, Hashable, Codable, Identifiable {
+struct EpisodeStore: EpisodeRepresentable, Hashable, Codable {
     var id = UUID()
     var number: Int = 0
     var title: String = ""

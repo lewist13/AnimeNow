@@ -7,7 +7,7 @@
 
 import Foundation
 
-protocol EpisodeRepresentable: Equatable, Identifiable {
+protocol EpisodeRepresentable: Hashable, Identifiable {
     var number: Int { get }
     var title: String { get }
     var thumbnail: ImageSize? { get }
@@ -31,7 +31,7 @@ extension EpisodeRepresentable {
     }
 }
 
-struct AnyEpisodeRepresentable: EpisodeRepresentable, Identifiable {
+struct AnyEpisodeRepresentable: EpisodeRepresentable {
     private let episode: any EpisodeRepresentable
 
     var id: Int {
@@ -63,13 +63,17 @@ struct AnyEpisodeRepresentable: EpisodeRepresentable, Identifiable {
     }
 }
 
-extension AnyEpisodeRepresentable: Equatable {
+extension AnyEpisodeRepresentable: Hashable {
     static func == (lhs: AnyEpisodeRepresentable, rhs: AnyEpisodeRepresentable) -> Bool {
         lhs.episode.isEqualTo(rhs.episode)
     }
+
+    func hash(into hasher: inout Hasher) {
+        self.episode.hash(into: &hasher)
+    }
 }
 
-struct Episode: EpisodeRepresentable, Hashable, Identifiable {
+struct Episode: EpisodeRepresentable {
     var id: Int { number }
     let title: String
     let number: Int
@@ -112,35 +116,6 @@ enum Provider: Hashable, Identifiable, CustomStringConvertible, Codable {
             return "Offline"
         }
     }
-}
-
-extension Episode {
-//    var lengthFormatted: String {
-//        guard let length = length else { return "" }
-//        let hours = length / 3600
-//        let minutes = (length % 3600) / 60
-//        let seconds = (length % 3600) % 60
-//
-//        var retVal: [String] = []
-//
-//        if hours > 0 {
-//            retVal += ["\(hours) h"]
-//        }
-//
-//        if minutes > 0 {
-//            retVal += ["\(minutes) m"]
-//        }
-//
-//        if seconds > 0 && minutes == 0 {
-//            retVal += ["\(seconds) s"]
-//        }
-//
-//        return retVal.joined(separator: " ")
-//    }
-
-//    var episodeNumberLengthFormat: String {
-//        "E\(number)" + (length != nil ? " \u{2022} \(lengthFormatted)" : "")
-//    }
 }
 
 extension Episode {

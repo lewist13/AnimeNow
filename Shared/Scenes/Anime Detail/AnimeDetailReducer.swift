@@ -6,14 +6,14 @@
 //  Copyright © 2022. All rights reserved.
 //
 
+import SwiftORM
 import Foundation
-import Sworm
 import ComposableArchitecture
 
 struct AnimeDetailReducer: ReducerProtocol {
     typealias LoadableEpisodes = Loadable<[Episode]>
     typealias LoadableAnimeStore = Loadable<AnimeStore>
-    typealias LoadableCollectionStores = Loadable<[CollectionStore]>
+    typealias LoadableCollectionStores = Loadable<Set<CollectionStore>>
 
     struct State: Equatable {
         let animeId: Anime.ID
@@ -22,6 +22,7 @@ struct AnimeDetailReducer: ReducerProtocol {
         var episodes = LoadableEpisodes.idle
         var animeStore = LoadableAnimeStore.idle
         var collectionStores = LoadableCollectionStores.idle
+        var collectionsList: CollectionListReducer.State?
 
         var compactEpisodes = false
 
@@ -50,12 +51,16 @@ struct AnimeDetailReducer: ReducerProtocol {
         case close
         case playResumeButtonClicked
         case toggleCompactEpisodes
+        case showCollectionList
+        case markEpisodeAsWatched(Episode.ID)
+        case markEpisodeAsUnwatched(Episode.ID)
         case fetchedEpisodes(TaskResult<[Episode]>)
         case fetchedAnime(TaskResult<Anime>)
-        case selectedEpisode(episode: Episode)
+        case selectedEpisode(Episode.ID)
         case play(anime: Anime, episodes: [Episode], selected: Episode.ID)
         case fetchedAnimeFromDB([AnimeStore])
         case fetchedCollectionStores([CollectionStore])
+        case collectionLists(CollectionListReducer.Action)
     }
 
     @Dependency(\.animeClient) var animeClient
@@ -65,6 +70,9 @@ struct AnimeDetailReducer: ReducerProtocol {
 
     var body: some ReducerProtocol<State, Action> {
         Reduce(self.core)
+            .ifLet(\.collectionsList, action: /Action.collectionLists) {
+                CollectionListReducer()
+            }
     }
 }
 
@@ -237,8 +245,8 @@ extension AnimeDetailReducer {
             }
 
         case .playResumeButtonClicked:
-            if let episodeId = state.playButtonState.episodeId, let episode = state.episodes.value?[id: episodeId] {
-                return .action(.selectedEpisode(episode: episode))
+            if let episodeId = state.playButtonState.episodeId {
+                return .action(.selectedEpisode(episodeId))
             }
 
         case .fetchedEpisodes(.success(let episodes)):
@@ -248,15 +256,41 @@ extension AnimeDetailReducer {
             print(error)
             state.episodes = .failed
 
-        case .selectedEpisode(episode: let episode):
+        case .selectedEpisode(let episodeId):
             guard let anime = state.anime.value else { break }
             return .init(
                 value: .play(
                     anime: anime,
                     episodes: state.episodes.value ?? [],
-                    selected: episode.id
+                    selected: episodeId
                 )
             )
+
+        case .markEpisodeAsWatched(let episodeNumber):
+            guard var animeStore = state.animeStore.value,
+                  let episode = state.episodes.value?[id: episodeNumber] else {
+                break
+            }
+
+            animeStore.updateProgress(for: episode, progress: 1.0)
+
+            return .run { [animeStore] in
+                try await repositoryClient.insert(animeStore)
+            }
+
+        case .markEpisodeAsUnwatched(let episodeNumber):
+            guard var animeStore = state.animeStore.value else {
+                break
+            }
+
+            if let episode = animeStore.episodes.first(where: { $0.number == episodeNumber }) {
+                animeStore.episodes.remove(episode)
+            }
+
+            return .run { [animeStore] in
+                try await repositoryClient.insert(animeStore)
+            }
+
         case .fetchedAnime(.success(let anime)):
             state.anime = .success(anime)
             return self.fetchEpisodesAndStore(&state)
@@ -269,7 +303,9 @@ extension AnimeDetailReducer {
             state.animeStore = .success(.findOrCreate(anime, animesMatched))
 
         case .fetchedCollectionStores(let collectionStores):
-            state.collectionStores = .success(collectionStores)
+            let set = Set(collectionStores)
+            state.collectionStores = .success(set)
+            state.collectionsList?.collections = set
 
         case .toggleCompactEpisodes:
             state.compactEpisodes.toggle()
@@ -290,7 +326,32 @@ extension AnimeDetailReducer {
                 .action(.close)
             )
 
+        case .showCollectionList:
+            state.collectionsList = .init(
+                animeId: state.animeId,
+                collections: state.collectionStores.value ?? []
+            )
+
         case .close:
+            break
+
+        case .collectionLists(.collectionSelectedToggle(let collectionId)):
+            if var collection = state.collectionStores.value?[id: collectionId], let anime = state.animeStore.value {
+                if collection.animes[id: anime.id] != nil {
+                    collection.animes[id: anime.id] = nil
+                } else {
+                    collection.animes[id: anime.id] = anime
+                }
+
+                return .run { [collection] in
+                    try await repositoryClient.insert(collection)
+                }
+            }
+
+        case .collectionLists(.onCloseTapped):
+            state.collectionsList = nil
+
+        case .collectionLists:
             break
         }
         return .none
@@ -329,7 +390,7 @@ extension AnimeDetailReducer {
             effects.append(
                 .run { send in
                     let animeStoresStream: AsyncStream<[AnimeStore]> = repositoryClient.observe(
-                        AnimeStore.all.where(\AnimeStore.id == animeId)
+                        AnimeStore.all.where(\AnimeStore.id == animeId).limit(1)
                     )
 
                     for try await animeStores in animeStoresStream {

@@ -71,6 +71,11 @@ struct AnimePlayerView: View {
         .overlay(playerControlsOverlay)
         .ignoresSafeArea(edges: .vertical)
         .background(Color.black.edgesIgnoringSafeArea(.all))
+        #if os(iOS)
+        .prefersHomeIndicatorAutoHidden(true)
+        .supportedOrientation(.landscape)
+        .statusBarHidden()
+        #endif
     }
 }
 

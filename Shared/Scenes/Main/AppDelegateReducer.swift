@@ -5,6 +5,7 @@
 //  
 //
 
+import SwiftORM
 import ComposableArchitecture
 
 struct AppDelegateReducer: ReducerProtocol {
@@ -28,18 +29,19 @@ extension AppDelegateReducer {
     func core(state: inout State, action: Action) -> EffectTask<Action> {
         switch action {
         case .appDidFinishLaunching:
-            guard !userDefaultsClient.boolForKey(.firstLaunched) else {
-                break
+            if !userDefaultsClient.boolForKey(.firstLaunched) {
+                // TODO: Do something that will trigger firstLaunched
             }
 
             return .run { _ in
-                let inWatchlist = CollectionStore(
-                    title: .planning
-                )
-
-                _ = try await repositoryClient.insert(inWatchlist)
-                await userDefaultsClient.setBool(.firstLaunched, true)
+                for title in CollectionStore.Title.allCases {
+                    if try await repositoryClient.fetch(CollectionStore.all.where(\CollectionStore.title == title)).first == nil {
+                        let collection = CollectionStore(title: title)
+                        try await repositoryClient.insert(collection)
+                    }
+                }
             }
+
         default:
             break
         }

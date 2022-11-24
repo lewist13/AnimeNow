@@ -13,20 +13,23 @@ struct SearchReducer: ReducerProtocol {
     typealias LoadableAnimes = Loadable<[Anime]>
 
     struct State: Equatable {
-        var loadable = LoadableAnimes.idle
         var query = ""
+        var loadable = LoadableAnimes.idle
+        var searched = [String]()
     }
 
     enum Action: Equatable {
         case onAppear
         case searchQueryChanged(String)
         case searchResult(TaskResult<[Anime]>)
-        case searchQueryChangeDebounce
+        case searchHistory([String])
+        case clearSearchHistory
         case onAnimeTapped(Anime)
     }
 
     @Dependency(\.mainQueue) var mainQueue
     @Dependency(\.animeClient) var animeClient
+    @Dependency(\.userDefaultsClient) var userDefaultsClient
 
     var body: some ReducerProtocol<State, Action> {
         Reduce(self.core)
@@ -39,7 +42,14 @@ extension SearchReducer {
     func core(state: inout State, action: Action) -> EffectTask<Action> {
         switch action {
         case .onAppear:
-            break
+            return .run { send in
+                let searchedItems: [String] = try userDefaultsClient.dataForKey(.searchedItems)?.toObject() ?? []
+                await send(.searchHistory(searchedItems))
+            }
+
+        case .searchHistory(let items):
+            state.searched = items
+
         case .searchQueryChanged(let query):
             state.query = query
 
@@ -63,11 +73,24 @@ extension SearchReducer {
             print(error)
             state.loadable = .failed
 
-        case .searchQueryChangeDebounce:
-            break
+        case .clearSearchHistory:
+            state.searched.removeAll()
+            return .fireAndForget { [state] in
+                await userDefaultsClient.setData(.searchedItems, try state.searched.toData())
+            }
 
         case .onAnimeTapped:
-            break
+            if state.searched.contains(state.query) {
+                state.searched.removeAll(where: { $0 == state.query })
+            }
+
+            if state.searched.count > 9 {
+                state.searched.removeLast()
+            }
+            state.searched.insert(state.query, at: 0)
+            return .fireAndForget { [state] in
+                await userDefaultsClient.setData(.searchedItems, try state.searched.toData())
+            }
         }
         return .none
     }

@@ -6,39 +6,39 @@
 //  Copyright © 2022. All rights reserved.
 //
 
-import Sworm
+import SwiftORM
 import Foundation
 import ComposableArchitecture
 
 struct CollectionsReducer: ReducerProtocol {
     struct State: Equatable {
         var favorites = [AnimeStore]()
-        var collections: IdentifiedArrayOf<CollectionDetailReducer.State> = []
-        var selection: Selection? = nil
+        var collections: [CollectionStore] = []
 
         fileprivate var hasInitialized = false
-
-        enum Selection: Equatable {
-            case favorites
-            case collection(selected: CollectionDetailReducer.State.ID)
-        }
     }
 
     enum Action: Equatable {
         case onAppear
-        case setSelection(selection: State.Selection?)
+        case onAddNewCollectionTapped
+        case onAnimeTapped(AnimeStore)
+        case removeAnimeFromFavorites(AnimeStore)
+        case removeAnimeFromCollection(CollectionStore.ID, AnimeStore)
         case updatedFavorites([AnimeStore])
         case updatedCollections([CollectionStore])
-        case collectionDetail(id: CollectionDetailReducer.State.ID, action: CollectionDetailReducer.Action)
+        case deleteCollection(id: CollectionStore.ID)
     }
 
     @Dependency(\.repositoryClient) var repositoryClient
 
     var body: some ReducerProtocol<State, Action> {
         Reduce(self.core)
-            .forEach(\.collections, action: /Action.collectionDetail(id:action:)) {
-                CollectionDetailReducer()
-            }
+    }
+}
+
+extension CollectionsReducer.State {
+    var sortedCollections: IdentifiedArrayOf<CollectionStore> {
+        .init(uniqueElements: collections.sorted(by: \.title.value))
     }
 }
 
@@ -68,19 +68,37 @@ extension CollectionsReducer {
                 }
             )
 
-        case .setSelection(selection: let selection):
-            state.selection = selection
+        case .deleteCollection(id: let collectionId):
+            guard let collection = state.collections[id: collectionId] else { break }
+            return .run {
+                try await repositoryClient.delete(collection)
+            }
 
         case .updatedFavorites(let favorites):
             state.favorites = favorites
 
         case .updatedCollections(let collections):
-            state.collections = .init(uniqueElements: collections)
+            state.collections = collections
 
-        case .collectionDetail(_, action: .close):
-            state.selection = nil
+        case .removeAnimeFromFavorites(var animeStore):
+            animeStore.isFavorite = false
 
-        case .collectionDetail:
+            return .run { [animeStore] in
+                try await repositoryClient.insert(animeStore)
+            }
+
+        case .removeAnimeFromCollection(let collectionId, let animeStore):
+            guard var collection = state.collections[id: collectionId] else { break }
+            collection.animes.removeAll(where: { $0.id == animeStore.id })
+
+            return .run { [collection] in
+                try await repositoryClient.insert(collection)
+            }
+
+        case .onAddNewCollectionTapped:
+            break
+
+        case .onAnimeTapped:
             break
         }
         return .none

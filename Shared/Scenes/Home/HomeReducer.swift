@@ -6,9 +6,9 @@
 //  Copyright © 2022. All rights reserved.
 //
 
+import SwiftUI
 import Foundation
 import ComposableArchitecture
-import SwiftUI
 
 struct HomeReducer: ReducerProtocol {
     typealias LoadableAnime = Loadable<[Anime]>
@@ -97,8 +97,6 @@ extension HomeReducer.State {
             case .notConnectedToInternet,
                     .failedToLoad:
                 return ("Retry", .retryFetchingContent)
-            default:
-                return nil
             }
         }
     }
@@ -175,7 +173,7 @@ extension HomeReducer {
                 }
 
                 await send(.setResumeWatchingEpisodes(.success(resumeWatchingEpisodes)), animation: .easeInOut(duration: 0.25))
-                await send(.setLastWatchedAnimes(sortedAnimeStores.map { $0.eraseAsRepresentable() }))
+                await send(.setLastWatchedAnimes(sortedAnimeStores.compactMap { $0.episodes.count > 0 ? $0.eraseAsRepresentable() : nil }))
             }
 
         case .setResumeWatchingEpisodes(let episodes):
@@ -250,7 +248,7 @@ extension HomeReducer {
 
 extension HomeReducer {
     struct ResumeWatchingEpisode: Equatable, Identifiable {
-        var id: AnimeStore.ID { animeStore.id }
+        var id: Anime.ID { animeStore.id }
         let animeStore: AnimeStore
         let title: String
         let episodeStore: EpisodeStore

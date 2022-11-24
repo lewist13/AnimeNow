@@ -33,16 +33,15 @@ struct SearchView: View {
                     .textFieldStyle(.plain)
                     .frame(maxHeight: .infinity)
 
-                    if viewStore.query.count > 0 {
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.system(size: 20))
-                            .frame(maxHeight: .infinity)
-                            .onTapGesture {
-                                viewStore.send(
-                                    .searchQueryChanged("")
-                                )
-                            }
-                    }
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 20))
+                        .frame(maxHeight: .infinity)
+                        .onTapGesture {
+                            viewStore.send(
+                                .searchQueryChanged("")
+                            )
+                        }
+                        .opacity(viewStore.query.count > 0 ? 1.0 : 0.0)
                 }
                 .fixedSize(horizontal: false, vertical: true)
                 .padding()
@@ -50,7 +49,7 @@ struct SearchView: View {
                 .clipShape(Capsule())
             }
             .frame(maxWidth: .infinity)
-            .padding()
+            .padding(.horizontal)
 
             WithViewStore(
                 store.scope(
@@ -75,14 +74,61 @@ struct SearchView: View {
 extension SearchView {
 
     @ViewBuilder
+    var searchHistory: some View {
+        WithViewStore(
+            store,
+            observe: \.searched
+        ) { viewStore in
+            if viewStore.state.count > 0 {
+                VStack(alignment: .leading) {
+                    HStack {
+                        Text("Search History")
+                            .bold()
+                            .foregroundColor(.gray)
+                        Spacer()
+                        Text("Clear")
+                            .foregroundColor(.red)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                viewStore.send(
+                                    .clearSearchHistory,
+                                    animation: .easeInOut(duration: 0.25)
+                                )
+                            }
+                    }
+                    .font(.body)
+
+                    ScrollView(.horizontal) {
+                        HStack {
+                            ForEach(
+                                Array(zip(viewStore.state.indices, viewStore.state)),
+                                id: \.0
+                            ) { index, search in
+                                ChipView(text: search)
+                                    .onTapGesture {
+                                        viewStore.send(.searchQueryChanged(search))
+                                    }
+                            }
+                        }
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+    }
+
+    @ViewBuilder
     var waitingForTyping: some View {
         VStack(spacing: 16) {
+            searchHistory
+            Spacer()
             Image(systemName: "magnifyingglass")
-                .font(.system(size: 100))
+                .font(.system(size: 70))
 
             Text("Start typing to search for animes.")
                 .font(.headline)
                 .multilineTextAlignment(.center)
+            Spacer()
         }
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -149,12 +195,15 @@ extension SearchView {
     @ViewBuilder
     var failedToRetrieve: some View {
         VStack(spacing: 8) {
+            searchHistory
+            Spacer()
             Image(systemName: "exclamationmark.triangle.fill")
                 .font(.system(size: 22))
 
             Text("There is an error fetching items.")
                 .font(.headline)
                 .multilineTextAlignment(.center)
+            Spacer()
         }
         .foregroundColor(.red)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
@@ -164,10 +213,13 @@ extension SearchView {
     @ViewBuilder
     var noResultsFound: some View {
         VStack(spacing: 16) {
+            searchHistory
+            Spacer()
             Text("No results found.")
                 .font(.title3)
                 .bold()
                 .multilineTextAlignment(.center)
+            Spacer()
         }
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
@@ -179,8 +231,9 @@ struct SearchView_Previews: PreviewProvider {
         SearchView(
             store: .init(
                 initialState: .init(
+                    query: "Test",
                     loadable: .success([]),
-                    query: "Test"
+                    searched: ["Testy", "Attack on Titans"]
                 ),
                 reducer: SearchReducer()
             )

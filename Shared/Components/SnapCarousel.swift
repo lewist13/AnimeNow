@@ -35,12 +35,24 @@ struct SnapCarousel<Content: View, T: Identifiable>: View {
     @State private var position: Int = 0
 
     var body: some View {
+        #if os(iOS)
+        TabView {
+            ForEach(list) { item in
+                GeometryReader { proxy in
+                    content(item)
+                        .frame(width: proxy.size.width)
+                }
+            }
+        }
+        .tabViewStyle(.page(indexDisplayMode: .automatic))
+        #else
         ZStack(
             alignment: .bottom
         ) {
             scrollItems
             indicator
         }
+        #endif
     }
 }
 
@@ -76,7 +88,7 @@ extension SnapCarousel {
                     })
             )
         }
-        .animation(.easeInOut, value: translation == 0)
+//        .animation(.easeInOut, value: translation == 0)
     }
 }
 

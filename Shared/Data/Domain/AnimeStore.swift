@@ -9,7 +9,7 @@ import Foundation
 import CoreData
 import IdentifiedCollections
 
-struct AnimeStore: AnimeRepresentable, Codable, Hashable, Identifiable {
+struct AnimeStore: AnimeRepresentable {
     var id: Anime.ID = .init()
     var title: String = ""
     var malId: Int? { nil }
@@ -31,7 +31,7 @@ extension AnimeStore {
         _ anime: any AnimeRepresentable,
         _ animeStores: [AnimeStore] = []
     ) -> AnimeStore {
-        if var animeStoreItem = animeStores.first(where: { $0.id == anime.id }) {
+        if var animeStoreItem = animeStores[id: anime.id] {
             animeStoreItem.title = anime.title
             animeStoreItem.format = anime.format
             animeStoreItem.posterImage = anime.posterImage
@@ -50,25 +50,23 @@ extension AnimeStore {
 
 extension AnimeStore {
     mutating func updateProgress(
-        for episode: some EpisodeRepresentable,
-        anime: any AnimeRepresentable,
+        for episode: any EpisodeRepresentable,
         progress: Double
     ) {
-        guard anime.id == id else { return }
 
         var episodeInfo = episodes.first(where: { $0.number == episode.number }) ?? .init(
             number: episode.number,
-            title: anime.format == .movie ? anime.title : episode.title,
-            thumbnail: anime.format == .movie ? anime.posterImage.largest : episode.thumbnail,
-            isMovie: anime.format == .movie,
+            title: format == .movie ? title : episode.title,
+            thumbnail: format == .movie ? posterImage.largest : episode.thumbnail,
+            isMovie: format == .movie,
             progress: progress,
             lastUpdatedProgress: .init()
         )
 
         episodeInfo.number = episode.number
-        episodeInfo.title = anime.format == .movie ? anime.title : episode.title
-        episodeInfo.thumbnail = anime.format == .movie ? anime.posterImage.largest :  episode.thumbnail
-        episodeInfo.isMovie = anime.format == .movie
+        episodeInfo.title = format == .movie ? title : episode.title
+        episodeInfo.thumbnail = format == .movie ? posterImage.largest :  episode.thumbnail
+        episodeInfo.isMovie = format == .movie
         episodeInfo.progress = progress
         episodeInfo.lastUpdatedProgress = .init()
 
