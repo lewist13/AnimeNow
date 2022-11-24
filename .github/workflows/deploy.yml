@@ -109,7 +109,7 @@ jobs:
       - name: Release to GitHub
         uses: softprops/action-gh-release@v1
         with:
-         fail_on_unmatched_files: true
+         fail_on_unmatched_files: false
          files: |
             ${{ env.IOS_OUTPUT_PATH }}
             ${{ env.MACOS_OUTPUT_PATH }}
