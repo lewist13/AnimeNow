@@ -21,12 +21,12 @@ env:
   IOS_ARCHIVE_PATH: '/tmp/action-builds/Anime Now! (iOS).xcarchive'
   IOS_PAYLOAD_PATH: '/tmp/action-builds/Payload'
   IOS_OUTPUT_PATH: '/tmp/action-builds/Anime Now! (iOS).ipa'
-  IOS_OUTPUT_DSYM_PATH:'/tmp/action-builds/Anime Now! (iOS).dSYM'
+  IOS_OUTPUT_DSYM_PATH: '/tmp/action-builds/Anime Now! (iOS).dSYM'
 
   MACOS_SCHEME: 'Anime Now! (macOS)'
   MACOS_ARCHIVE_PATH: '/tmp/action-builds/Anime Now! (macOS).xcarchive'
   MACOS_OUTPUT_PATH: '/tmp/action-builds/Anime Now! (macOS).dmg'
-  MACOS_OUTPUT_DSYM_PATH:'/tmp/action-builds/Anime Now! (macOS).dSYM'
+  MACOS_OUTPUT_DSYM_PATH: '/tmp/action-builds/Anime Now! (macOS).dSYM'
 
 jobs:
   build-and-deploy:
