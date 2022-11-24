@@ -711,7 +711,6 @@
 			isa = PBXGroup;
 			children = (
 				13ABABB02925EC5C00593C32 /* SwiftORM */,
-				13D235C328E16801004E51BB /* anime-now-ios-info.plist */,
 				13938BAB28E0CADD001C8784 /* MainConfig.xcconfig */,
 				13C3535728C3089E00A54E7E /* Shared */,
 				13FC21C128C3960E000F0F79 /* iOS */,
@@ -806,6 +805,7 @@
 		13FC21C128C3960E000F0F79 /* iOS */ = {
 			isa = PBXGroup;
 			children = (
+				13D235C328E16801004E51BB /* anime-now-ios-info.plist */,
 				13820F14291429A800CE431F /* Extensions */,
 				13BAE88628F3A09A00662C0C /* Main */,
 				134FAA2128D7628400B081FE /* Dependencies */,
@@ -1372,7 +1372,7 @@
 				DEVELOPMENT_TEAM = A6HC4Y86NJ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "anime-now-ios-info.plist";
+				INFOPLIST_FILE = "iOS/anime-now-ios-info.plist";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "";
@@ -1407,7 +1407,7 @@
 				DEVELOPMENT_TEAM = A6HC4Y86NJ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "anime-now-ios-info.plist";
+				INFOPLIST_FILE = "iOS/anime-now-ios-info.plist";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "";

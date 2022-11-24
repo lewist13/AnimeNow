@@ -78,7 +78,7 @@ extension CollectionListView {
         }
         .padding(.vertical, 8)
         .padding(.horizontal, 16)
-        .background(Color.gray.opacity(0.2))
+        .background(Color(white: 0.2))
         .cornerRadius(12)
         .contentShape(Rectangle())
         .onTapGesture {

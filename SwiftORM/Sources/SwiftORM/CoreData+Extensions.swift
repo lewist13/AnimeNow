@@ -46,6 +46,7 @@ public extension NSManagedObjectContext {
         return try self.fetch(fetchRequest)
     }
 
+    @_optimize(none)
     @discardableResult
     func fetchOne<T: ManagedObjectConvertible> (
         _ request: Request<T>

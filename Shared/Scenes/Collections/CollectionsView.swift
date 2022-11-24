@@ -14,7 +14,8 @@ struct CollectionsView: View {
 
     var body: some View {
         StackNavigation(title: "My Collections") {
-            ScrollView {
+            ScrollView(.vertical) {
+                ExtraTopSafeAreaInset()
                 Spacer(minLength: 8)
 
                 LazyVGrid(
@@ -38,8 +39,8 @@ struct CollectionsView: View {
                     collections
                 }
                 .padding()
-
                 ExtraBottomSafeAreaInset()
+                Spacer(minLength: 32)
             }
         } buttons: {
             Button {

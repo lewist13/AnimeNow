@@ -121,7 +121,7 @@ struct ExtraTopSafeAreaInset: View {
 
 struct ExtraBottomSafeAreaInset: View {
     @Environment(\.bottomSafeAreaInset) var bottomSafeAreaInset: CGFloat
-    
+
     var body: some View {
         Spacer(minLength: bottomSafeAreaInset)
     }

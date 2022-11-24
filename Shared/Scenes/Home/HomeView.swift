@@ -110,7 +110,6 @@ struct HomeView: View {
                             value: viewStore.state
                         )
                         ExtraBottomSafeAreaInset()
-
                         Spacer(minLength: 32)
                     }
                 }
