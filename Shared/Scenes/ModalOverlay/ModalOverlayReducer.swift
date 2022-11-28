@@ -11,10 +11,12 @@ import ComposableArchitecture
 struct ModalOverlayReducer: ReducerProtocol {
     enum State: Equatable {
         case addNewCollection(AddNewCollectionReducer.State)
+        case downloadOptions(DownloadOptionsReducer.State)
     }
 
     enum Action: Equatable {
         case addNewCollection(AddNewCollectionReducer.Action)
+        case downloadOptions(DownloadOptionsReducer.Action)
         case onClose
     }
 
@@ -22,6 +24,9 @@ struct ModalOverlayReducer: ReducerProtocol {
         Reduce(self.core)
             .ifCaseLet(/State.addNewCollection, action: /Action.addNewCollection) {
                 AddNewCollectionReducer()
+            }
+            .ifCaseLet(/State.downloadOptions, action: /Action.downloadOptions) {
+                DownloadOptionsReducer()
             }
     }
 

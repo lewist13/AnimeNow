@@ -12,32 +12,34 @@ struct ThumbnailItemCompactView: View {
     let episode: any EpisodeRepresentable
     var progress: Double? = nil
 
+    var downloadState: ThumbnailItemBigView.DownloadState?
+
     var body: some View {
         GeometryReader { reader in
             HStack(alignment: .center, spacing: 12) {
                 FillAspectImage(
                     url: episode.thumbnail?.link
                 )
-                    .cornerRadius(reader.size.height / 8)
-                    .aspectRatio(16/9, contentMode: .fit)
-                    .overlay(
-                        Group {
-                            if let progress = progress, progress >= 0.9 {
-                                Text("Watched")
-                                    .font(.caption.bold())
-                                    .foregroundColor(.white)
-                                    .padding(8)
-                                    .background(Color(white: 0.2))
-                                    .clipShape(Capsule())
-                                    .padding(8)
-                                    .frame(
-                                        maxWidth: .infinity,
-                                        maxHeight: .infinity,
-                                        alignment: .topLeading
-                                    )
-                            }
+                .cornerRadius(reader.size.height / 8)
+                .aspectRatio(16/9, contentMode: .fit)
+                .overlay(
+                    Group {
+                        if let progress = progress, progress >= 0.9 {
+                            Text("Watched")
+                                .font(.caption.bold())
+                                .foregroundColor(.white)
+                                .padding(8)
+                                .background(Color(white: 0.2))
+                                .clipShape(Capsule())
+                                .padding(8)
+                                .frame(
+                                    maxWidth: .infinity,
+                                    maxHeight: .infinity,
+                                    alignment: .topLeading
+                                )
                         }
-                    )
+                    }
+                )
 
                 VStack(alignment: .leading, spacing: 4) {
                     Spacer()
@@ -78,6 +80,40 @@ struct ThumbnailItemCompactView: View {
                 }
 
                 Spacer()
+
+                Group {
+                    if let downloadState {
+                        switch downloadState {
+                        case .empty(let callback):
+                            Button {
+                                callback()
+                            } label: {
+                                Image(systemName: "arrow.down.to.line")
+                                    .font(.body.bold())
+                                    .foregroundColor(.gray)
+                            }
+                            .buttonStyle(.plain)
+                        case .downloading(let percentage):
+                            CircularProgressView(progress: percentage)
+                            
+                        case .downloaded:
+                            Image(systemName: "checkmark")
+                                .font(.callout.weight(.bold))
+                                .foregroundColor(.white)
+                                .padding(4)
+                                .background(Color.green)
+                                .clipShape(Circle())
+                        case .error:
+                            Image(systemName: "exclamationmark")
+                                .font(.callout.weight(.bold))
+                                .foregroundColor(.white)
+                                .padding(4)
+                                .background(Color.red)
+                                .clipShape(Circle())
+                        }
+                    }
+                }
+                .frame(maxWidth: 24, maxHeight: 24)
             }
         }
         .frame(maxWidth: .infinity)

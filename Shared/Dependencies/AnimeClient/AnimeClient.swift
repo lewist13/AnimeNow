@@ -23,20 +23,17 @@ struct AnimeClient {
 }
 
 extension AnimeClient {
-    enum ClientError: Error {
+    enum Error: Swift.Error {
         case providerNotAvailable
         case providerInvalidId
     }
 }
 
-private enum AnimeClientKey: DependencyKey {
-    static let liveValue = AnimeClient.live
-    static var previewValue = AnimeClient.mock
-}
+extension AnimeClient: DependencyKey {}
 
 extension DependencyValues {
     var animeClient: AnimeClient {
-        get { self[AnimeClientKey.self] }
-        set { self[AnimeClientKey.self] = newValue }
+        get { self[AnimeClient.self] }
+        set { self[AnimeClient.self] = newValue }
     }
 }

@@ -5,10 +5,10 @@
 //  Created by ErrorErrorError on 9/12/22.
 //
 
-import Foundation
+import ComposableArchitecture
 
 extension AnimeClient {
-    static let mock = Self {
+    static let previewValue = Self {
         [.attackOnTitan, .narutoShippuden]
     } getTopUpcomingAnime: {
         [.attackOnTitan, .narutoShippuden]

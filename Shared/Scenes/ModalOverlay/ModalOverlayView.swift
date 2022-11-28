@@ -1,4 +1,4 @@
-////  ModalOverlayView.swift
+//  ModalOverlayView.swift
 //  Anime Now! (iOS)
 //
 //  Created by ErrorErrorError on 11/20/22.
@@ -12,18 +12,21 @@ struct ModalOverlayView: View {
     let store: StoreOf<ModalOverlayReducer>
 
     var body: some View {
-        WithViewStore(store.stateless) { viewStore in
-            ModalCardView(
-                onDismiss: { viewStore.send(.onClose) }
-            ) {
-                SwitchStore(store) {
-                    CaseLet(
-                        state: /ModalOverlayReducer.State.addNewCollection,
-                        action: ModalOverlayReducer.Action.addNewCollection
-                    ) {
-                        AddNewCollectionView(store: $0)
-                    }
-                }
+        ModalCardView(
+            onDismiss: { ViewStore(store).send(.onClose) }
+        ) {
+            SwitchStore(store) {
+                CaseLet(
+                    state: /ModalOverlayReducer.State.addNewCollection,
+                    action: ModalOverlayReducer.Action.addNewCollection,
+                    then: AddNewCollectionView.init
+                )
+
+                CaseLet(
+                    state: /ModalOverlayReducer.State.downloadOptions,
+                    action: ModalOverlayReducer.Action.downloadOptions,
+                    then: DownloadOptionsView.init
+                )
             }
         }
     }

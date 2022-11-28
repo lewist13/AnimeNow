@@ -24,6 +24,8 @@ struct AnimeDetailReducer: ReducerProtocol {
         var collectionStores = LoadableCollectionStores.idle
         var collectionsList: CollectionListReducer.State?
 
+        var downloadingEpisodes: [Int : DownloaderClient.Status] = [:]
+
         var compactEpisodes = false
 
         init(
@@ -57,14 +59,17 @@ struct AnimeDetailReducer: ReducerProtocol {
         case fetchedEpisodes(TaskResult<[Episode]>)
         case fetchedAnime(TaskResult<Anime>)
         case selectedEpisode(Episode.ID)
+        case downloadEpisode(Episode.ID)
+        case downloadingEpisodes([Int : DownloaderClient.Status])
         case play(anime: Anime, episodes: [Episode], selected: Episode.ID)
         case fetchedAnimeFromDB([AnimeStore])
         case fetchedCollectionStores([CollectionStore])
         case collectionLists(CollectionListReducer.Action)
     }
 
-    @Dependency(\.animeClient) var animeClient
     @Dependency(\.mainQueue) var mainQueue
+    @Dependency(\.animeClient) var animeClient
+    @Dependency(\.downloaderClient) var downloaderClient
     @Dependency(\.repositoryClient) var repositoryClient
     @Dependency(\.userDefaultsClient) var userDefaultsClient
 
@@ -348,6 +353,12 @@ extension AnimeDetailReducer {
                 }
             }
 
+        case .downloadEpisode:
+            break
+
+        case .downloadingEpisodes(let hm):
+            state.downloadingEpisodes = hm
+
         case .collectionLists(.onCloseTapped):
             state.collectionsList = nil
 
@@ -381,6 +392,16 @@ extension AnimeDetailReducer {
                     await .fetchedEpisodes(.init { try await animeClient.getEpisodes(animeId) })
                 }
                     .cancellable(id: CancelFetchingEpisodesId.self)
+            )
+
+            effects.append(
+                .run { send in
+                    let items = downloaderClient.observe(animeId)
+
+                    for await episodesDownloading in items {
+                        await send(.downloadingEpisodes(episodesDownloading))
+                    }
+                }
             )
         }
 
