@@ -1,4 +1,4 @@
-////  DownloaderClient.swift
+//  DownloaderClient.swift
 //  Anime Now! (iOS)
 //
 //  Created by ErrorErrorError on 11/24/22.
@@ -6,16 +6,28 @@
 //
 
 import Foundation
+import Combine
 import ComposableArchitecture
 
 struct DownloaderClient {
-    let download: (URL) -> AsyncThrowingStream<Status, Error>
+    let observe: (Anime.ID) -> AsyncStream<[Int:Status]>
+    let observeFinished: () -> AsyncStream<[Item : URL]>
+    let download: (Item) -> Void
+    let remove: (Item) -> Void
 }
 
 extension DownloaderClient {
     enum Status: Equatable {
-        case success(URL)
-        case downloading
+        case pending
+        case downloading(progress: Double)
+        case success(location: URL)
+        case failed
+    }
+
+    struct Item: Hashable {
+        let animeId: Anime.ID
+        let episodeNumber: Int
+        let source: Source
     }
 }
 

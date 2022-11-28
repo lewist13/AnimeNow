@@ -23,7 +23,7 @@ struct AnimeClient {
 }
 
 extension AnimeClient {
-    enum ClientError: Error {
+    enum Error: Swift.Error {
         case providerNotAvailable
         case providerInvalidId
     }

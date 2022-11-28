@@ -224,7 +224,7 @@ extension AnimePlayerView {
                             viewState.send(.seeking(to: end))
                             viewState.send(.stopSeeking)
                         }
-                        
+
                     case .some(.nextEpisode(let id)):
                         actionButtonBase(
                             "play.fill",
@@ -274,10 +274,10 @@ extension AnimePlayerView {
             .background(background)
             .cornerRadius(12)
             .clipShape(Capsule())
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .shadow(color: Color.gray.opacity(0.25), radius: 6)
-        .contentShape(Rectangle())
     }
 }
 
@@ -519,98 +519,9 @@ extension AnimePlayerView {
 // Settings Sidebar
 
 extension AnimePlayerView {
-    private struct SettingsSidebarViewState: Equatable {
+    private struct SettingsViewState: Equatable {
         let selectedSetting: AnimePlayerReducer.Sidebar.SettingsState.Section?
-        let selectedProvider: Provider.ID?
-        let selectedSource: Source.ID?
-        let isLoading: Bool
-
-        private let providers: [Provider]?
-        private let sources: [Source]?
-
-        var provider: Provider? {
-            if let selectedProvider = selectedProvider {
-                return providers?[id: selectedProvider]
-            }
-            return nil
-        }
-
-        var selectableProviders: [Provider] {
-            if let providers = providers {
-                var returnVal = [Provider]()
-
-                if let selectedProvider = self.provider {
-                    returnVal.append(selectedProvider)
-                }
-
-                for provider in providers {
-                    if !returnVal.contains(where: { $0.description == provider.description }) {
-                        returnVal.append(provider)
-                    }
-                }
-
-                return returnVal
-            }
-
-            return []
-        }
-
-        struct IdentifiedQuality: Equatable, Identifiable, CustomStringConvertible {
-            let id: Source.ID
-            let quality: Source.Quality
-
-            init(_ source: Source) {
-                self.id = source.id
-                self.quality = source.quality
-            }
-
-            var description: String {
-                quality.description
-            }
-        }
-
-        var selectableQualities: [IdentifiedQuality]? {
-            if let sources = sources {
-                return sources.map(IdentifiedQuality.init)
-            }
-            return nil
-        }
-
-        var quality: IdentifiedQuality? {
-            if let selectedSource = selectedSource {
-                return selectableQualities?[id: selectedSource]
-            }
-            return nil
-        }
-
-        struct IdentifiedAudio: Equatable, Identifiable, CustomStringConvertible {
-            let id: Provider.ID
-            let language: String
-
-            init(_ provider: Provider) {
-                self.id = provider.id
-                self.language = (provider.dub ?? false) ? "English" : "Japanese"
-            }
-
-            var description: String {
-                language
-            }
-        }
-
-        var selectableAudio: [IdentifiedAudio]? {
-            if let providers = providers, let provider = provider {
-                let filtered = providers.filter { $0.description == provider.description }
-                return filtered.map(IdentifiedAudio.init)
-            }
-            return nil
-        }
-
-        var audio: IdentifiedAudio? {
-            if let provider = provider, let languages = selectableAudio {
-                return languages[id: provider.id]
-            }
-            return nil
-        }
+        let videoPreferece: VideoOptionsViewState
 
         init(_ state: AnimePlayerReducer.State) {
             if case .settings(let item) = state.selectedSidebar {
@@ -618,11 +529,8 @@ extension AnimePlayerView {
             } else {
                 self.selectedSetting = nil
             }
-            self.isLoading = !state.episodes.finished || !state.sourcesOptions.finished
-            self.providers = state.episode?.providers
-            self.selectedProvider = state.selectedProvider
-            self.sources = state.sourcesOptions.value?.sources
-            self.selectedSource = state.selectedSource
+
+            videoPreferece = .init(state)
         }
     }
 }
@@ -634,9 +542,8 @@ extension AnimePlayerView {
     @ViewBuilder
     var settingsSidebar: some View {
         WithViewStore(
-            store.scope(
-                state: SettingsSidebarViewState.init
-            )
+            store,
+            observe: SettingsViewState.init
         ) { viewState in
             ScrollView(
                 .vertical,
@@ -645,138 +552,67 @@ extension AnimePlayerView {
                 if let item = viewState.selectedSetting {
                     switch item {
                     case .provider:
-                        listsSettings(
-                            viewState.state.selectedProvider,
-                            viewState.selectableProviders
+                        SettingsListView(
+                            items: viewState.videoPreferece.selectableProviders,
+                            selected: viewState.state.videoPreferece.selectedProvider
                         ) { id in
                             viewState.send(.selectProvider(id))
                         }
+
                     case .quality:
-                        listsSettings(
-                            viewState.state.selectedSource,
-                            viewState.state.selectableQualities
+                        SettingsListView(
+                            items: viewState.state.videoPreferece.selectableQualities,
+                            selected: viewState.state.videoPreferece.selectedSource
                         ) { id in
                             viewState.send(.selectSource(id))
                         }
+
                     case .audio:
-                        listsSettings(
-                            viewState.state.selectedProvider,
-                            viewState.state.selectableAudio
+                        SettingsListView(
+                            items: viewState.state.videoPreferece.selectableAudio,
+                            selected: viewState.state.videoPreferece.selectedProvider
                         ) { id in
                             viewState.send(.selectAudio(id))
                         }
                     }
                 } else {
                     VStack(alignment: .leading) {
-                        createSettingsRow(
-                            "Provider",
-                            viewState.provider?.description ?? "Loading",
-                            viewState.selectableProviders.count
+                        SettingsRowView(
+                            name: "Provider",
+                            selected: viewState.videoPreferece.provider?.description ?? "Loading",
+                            multiSelectionable: viewState.videoPreferece.selectableProviders.count > 1
                         ) {
                             viewState.send(.selectSidebarSettings(.provider))
                         }
+                        .disabled(viewState.videoPreferece.selectableProviders.count < 2)
 
-                        createSettingsRow(
-                            "Quality",
-                            viewState.quality?.description ?? "Loading",
-                            viewState.selectableQualities?.count ?? 0
+                        SettingsRowView(
+                            name: "Quality",
+                            selected: viewState.videoPreferece.quality?.description ?? "Loading",
+                            multiSelectionable: (viewState.videoPreferece.selectableQualities?.count ?? 0) > 1
                         ) {
                             viewState.send(.selectSidebarSettings(.quality))
                         }
+                        .disabled((viewState.videoPreferece.selectableQualities?.count ?? 0) < 2)
 
-                        createSettingsRow(
-                            "Audio",
-                            viewState.audio?.description ?? "Loading",
-                            viewState.selectableAudio?.count ?? 0
+                        SettingsRowView(
+                            name: "Audio",
+                            selected: viewState.videoPreferece.audio?.description ?? "Loading",
+                            multiSelectionable: (viewState.videoPreferece.selectableAudio?.count ?? 0) > 1
                         ) {
                             viewState.send(.selectSidebarSettings(.audio))
                         }
+                        .disabled((viewState.videoPreferece.selectableAudio?.count ?? 0) < 2)
                     }
                 }
             }
-            .disabled(viewState.isLoading)
+            .disabled(viewState.videoPreferece.isLoadingProviders)
         }
         .foregroundColor(Color.white)
         .frame(
             maxWidth: .infinity,
             maxHeight: .infinity
         )
-    }
-
-    @ViewBuilder
-    private func listsSettings<I: Identifiable>(
-        _ selected: I.ID? = nil,
-        _ items: [I]? = nil,
-        _ selectedItem: ((I.ID) -> Void)? = nil
-    ) -> some View where I: CustomStringConvertible {
-        if let items = items {
-            VStack {
-                ForEach(items) { item in
-                    Text(item.description)
-                        .font(.callout.bold())
-                        .padding(12)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            selectedItem?(item.id)
-                        }
-                        .background(item.id == selected ? Color.red : Color.clear)
-                        .cornerRadius(12)
-                }
-            }
-            .transition(
-                .move(edge: .trailing)
-                .combined(with: .opacity)
-            )
-            .frame(
-                maxWidth: .infinity,
-                maxHeight: .infinity
-            )
-            .highPriorityGesture(
-                DragGesture()
-                    .onEnded { value in
-                        // Drag right
-                        if value.startLocation.x < value.location.x {
-                            ViewStore(store.stateless)
-                                .send(.selectSidebarSettings(nil))
-                        }
-                    }
-            )
-        }
-    }
-
-    @ViewBuilder
-    private func createSettingsRow(
-        _ text: String,
-        _ selected: String? = nil,
-        _ count: Int = 0,
-        _ tapped: (() -> Void)? = nil
-    ) -> some View {
-        HStack {
-            Text(text)
-                .font(.callout.bold())
-
-            Spacer()
-
-            if let selected = selected {
-                Text(selected)
-                    .font(.footnote.bold())
-                    .foregroundColor(count > 1 ? Color.white : Color.gray)
-                if count > 1 {
-                    Image(systemName: "chevron.compact.right")
-                }
-            }
-        }
-        .foregroundColor(Color.white)
-        .frame(height: 38)
-        .padding(12)
-        .background(Color.gray.opacity(0.08))
-        .cornerRadius(38 / 4)
-        .contentShape(Rectangle())
-        .onTapGesture {
-            tapped?()
-        }
-        .disabled(count < 2)
     }
 }
 

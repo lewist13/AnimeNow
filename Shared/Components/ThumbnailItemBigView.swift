@@ -38,10 +38,18 @@ struct ThumbnailItemBigView: View {
         }
     }
 
+    enum DownloadState {
+        case empty(() -> Void)
+        case downloading(Double)
+        case downloaded
+        case error
+    }
+
     let type: InputType
     var isFiller = false
     var nowPlaying = false
     var progressSize: CGFloat = 10
+    var downloadState: DownloadState? = nil
 
     var body: some View {
         GeometryReader { reader in
@@ -60,23 +68,59 @@ struct ThumbnailItemBigView: View {
             )
             .overlay(
                 VStack(spacing: 0) {
-                    Group {
-                        if nowPlaying {
-                            Text("Now Playing")
-                        } else if let progress = type.progress, progress >= 0.9 {
-                            Text("Watched")
+                    HStack {
+                        Group {
+                            if nowPlaying {
+                                Text("Now Playing")
+                            } else if let progress = type.progress, progress >= 0.9 {
+                                Text("Watched")
+                            }
+                        }
+                        .font(.footnote.weight(.heavy))
+                        .foregroundColor(nowPlaying ? Color.black : Color.white)
+                        .padding(12)
+                        .background(nowPlaying ? Color(white: 0.9) :  Color(white: 0.15))
+                        .clipShape(Capsule())
+
+                        Spacer()
+                        
+                        Group {
+                            if let downloadState {
+                                switch downloadState {
+                                case .empty(let callback):
+                                    Button {
+                                        callback()
+                                    } label: {
+                                        Image(systemName: "arrow.down.to.line")
+                                            .font(.callout.weight(.bold))
+                                            .foregroundColor(.black)
+                                            .padding(12)
+                                            .background(Color.white)
+                                            .clipShape(Circle())
+                                    }
+                                    .buttonStyle(.plain)
+                                case .downloading(let percentage):
+                                    CircularProgressView(progress: percentage)
+                                    
+                                case .downloaded:
+                                    Image(systemName: "checkmark")
+                                        .font(.callout.weight(.bold))
+                                        .foregroundColor(.white)
+                                        .padding(12)
+                                        .background(Color.green)
+                                        .clipShape(Circle())
+                                    
+                                case .error:
+                                    Image(systemName: "exclamationmark")
+                                        .font(.callout.weight(.bold))
+                                        .foregroundColor(.white)
+                                        .padding(12)
+                                        .background(Color.red)
+                                        .clipShape(Circle())
+                                }
+                            }
                         }
                     }
-                    .font(.footnote.weight(.heavy))
-                    .foregroundColor(nowPlaying ? Color.black : Color.white)
-                    .padding(12)
-                    .background(nowPlaying ? Color(white: 0.9) :  Color(white: 0.15))
-                    .clipShape(Capsule())
-                    .frame(
-                        maxWidth: .infinity,
-                        maxHeight: .infinity,
-                        alignment: .topTrailing
-                    )
 
                     Spacer()
 

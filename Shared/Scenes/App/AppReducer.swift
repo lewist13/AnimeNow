@@ -7,6 +7,7 @@
 //
 
 import SwiftUI
+import SwiftORM
 import ComposableArchitecture
 
 struct AppReducer: ReducerProtocol {
@@ -56,7 +57,7 @@ struct AppReducer: ReducerProtocol {
         }
 
         static var allCases: [AppReducer.Route] {
-            return [.home, .search, .collection]
+            return [.home, .search, .collection, .downloads]
         }
     }
 
@@ -82,6 +83,7 @@ struct AppReducer: ReducerProtocol {
         case setVideoPlayer(AnimePlayerReducer.State?)
         case setAnimeDetail(AnimeDetailReducer.State?)
         case setModalOverlay(ModalOverlayReducer.State?)
+        case onDownloadFinished(DownloaderClient.Item, URL)
         case appDelegate(AppDelegateReducer.Action)
         case home(HomeReducer.Action)
         case collection(CollectionsReducer.Action)
@@ -94,6 +96,8 @@ struct AppReducer: ReducerProtocol {
         case binding(BindingAction<State>)
     }
 
+    @Dependency(\.repositoryClient) var repositoryClient
+    @Dependency(\.downloaderClient) var downloaderClient
     @Dependency(\.mainQueue) var mainQueue
 
     var body: some ReducerProtocol<State, Action> {
@@ -168,7 +172,6 @@ extension AppReducer {
                 animation: .interactiveSpring(response: 0.35, dampingFraction: 1.0)
             )
         case let .collection(.onAnimeTapped(anime)):
-//        case let .collection(.collectionDetail(_, .onAnimeTapped(anime))):
             return .action(
                 .setAnimeDetail(
                     .init(
@@ -233,6 +236,17 @@ extension AppReducer {
                 await NSApp.reply(toApplicationShouldTerminate: true)
                 #endif
             }
+        case .appDelegate(.appDidFinishLaunching):
+            return .run { send in
+                let items = downloaderClient.observeFinished()
+
+                for await item in items {
+                    for (key, value) in item {
+                        await send(.onDownloadFinished(key, value))
+                        downloaderClient.remove(key)
+                    }
+                }
+            }
 
         case .setModalOverlay(let overlay):
             state.modalOverlay = overlay
@@ -240,11 +254,47 @@ extension AppReducer {
         case .collection(.onAddNewCollectionTapped):
             return .action(.setModalOverlay(.addNewCollection(.init())), animation: .spring(response: 0.35, dampingFraction: 1))
 
-        case .modalOverlay(.onClose):
-            return .action(.setModalOverlay(nil), animation: .spring(response: 0.35, dampingFraction: 1))
+        case .animeDetail(.downloadEpisode(let episodeId)):
+            guard let animeId = state.animeDetail?.animeId else { break }
+            return .action(
+                .setModalOverlay(.downloadOptions(.init(animeId: animeId, episodeNumber: episodeId))),
+                animation: .spring(response: 0.35, dampingFraction: 1)
+            )
+
+        case .onDownloadFinished(let item, let location):
+            return .run { _ in
+                let animeStore = try await repositoryClient.fetch(AnimeStore.all.where(\AnimeStore.id == item.animeId)).first
+
+                if var episode = animeStore?.episodes.first(where: { $0.number == item.episodeNumber }) {
+                    episode.downloadURL = location
+                    try await repositoryClient.insert(episode)
+                }
+            }
+
+        case .modalOverlay(.downloadOptions(.downloadClicked)):
+            var effects = [EffectTask<Action>]()
+
+            if case let .downloadOptions(downloadState) = state.modalOverlay, let source = downloadState.source {
+                effects.append(
+                    .fireAndForget {
+                        let downloadItem = DownloaderClient.Item(
+                            animeId: downloadState.animeId,
+                            episodeNumber: downloadState.episodeNumber,
+                            source: source
+                        )
+                        _ = downloaderClient.download(downloadItem)
+                    }
+                )
+            }
+
+            effects.append(.action(.modalOverlay(.onClose)))
+            return .merge(effects)
 
         case .modalOverlay(.addNewCollection(.saveTitle)):
-            return .action(.modalOverlay(.onClose), animation: .spring(response: 0.35, dampingFraction: 1))
+            return .action(.modalOverlay(.onClose))
+
+        case .modalOverlay(.onClose):
+            return .action(.setModalOverlay(nil), animation: .spring(response: 0.35, dampingFraction: 1))
 
         default:
             break

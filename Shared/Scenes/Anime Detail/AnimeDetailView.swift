@@ -368,6 +368,35 @@ extension AnimeDetailView {
             .frame(maxWidth: .infinity)
     }
 
+    struct EpisodeDownloadingViewState: Equatable {
+        var episodeStore: EpisodeStore?
+        private var downloadState: DownloaderClient.Status?
+
+        var thumbnailDownloadState: ThumbnailItemBigView.DownloadState? {
+            if episodeStore?.downloadURL != nil {
+                return .downloaded
+            } else {
+                switch downloadState {
+                case .some(.success):
+                    return .downloaded
+                case .some(.failed):
+                    return .error
+                case .some(.pending):
+                    return .downloading(0)
+                case .some(.downloading(progress: let prog)):
+                    return .downloading(prog)
+                default:
+                    return nil
+                }
+            }
+        }
+
+        init(_ state: AnimeDetailReducer.State, _ episodeNumber: Int) {
+            self.episodeStore = state.animeStore.value?.episodes.first(where: { $0.number == episodeNumber })
+            self.downloadState = state.downloadingEpisodes[episodeNumber]
+        }
+    }
+
     @ViewBuilder
     private func generateEpisodeItem(
         _ episode: Episode,
@@ -376,14 +405,15 @@ extension AnimeDetailView {
         WithViewStore(
             store,
             observe: { state in
-                state.animeStore.value?.episodes.first(where: { $0.number == episode.number })
+                EpisodeDownloadingViewState(state, episode.number)
             }
         ) { viewState in
             Group {
                 if compact {
                     ThumbnailItemCompactView(
                         episode: episode,
-                        progress: viewState.state?.progress
+                        progress: viewState.episodeStore?.progress,
+                        downloadState: viewState.state.thumbnailDownloadState ?? .empty({ viewState.send(.downloadEpisode(episode.id)) })
                     )
                     .frame(height: 85)
                 } else {
@@ -393,10 +423,11 @@ extension AnimeDetailView {
                             name: episode.title,
                             animeName: nil,
                             number: episode.number,
-                            progress: viewState.state?.progress
+                            progress: viewState.episodeStore?.progress
                         ),
                         isFiller: episode.isFiller,
-                        progressSize: 10
+                        progressSize: 10,
+                        downloadState: viewState.state.thumbnailDownloadState ?? .empty({ viewState.send(.downloadEpisode(episode.id)) })
                     )
                 }
             }
@@ -408,7 +439,7 @@ extension AnimeDetailView {
                 )
             }
             .contextMenu {
-                if (viewState.state?.almostFinished ?? false) {
+                if (viewState.episodeStore?.almostFinished ?? false) {
                     Button {
                         viewState.send(
                             .markEpisodeAsUnwatched(episode.id),
@@ -427,6 +458,13 @@ extension AnimeDetailView {
                         Text("Mark as Watched")
                     }
                 }
+
+                if viewState.episodeStore?.downloadURL != nil {
+                    Button {
+                    } label: {
+                        Text("Remove Download")
+                    }
+                }
             }
         }
     }
@@ -439,15 +477,6 @@ extension AnimeDetailView {
             .font(.title2.bold())
             .foregroundColor(.white)
             .frame(maxWidth: .infinity, alignment: .leading)
-    }
-}
-
-extension View {
-    fileprivate func episodeFrame() -> some View {
-        self
-            .aspectRatio(16/9, contentMode: .fill)
-            .frame(maxWidth: .infinity, alignment: .center)
-            .cornerRadius(16)
     }
 }
 
@@ -468,7 +497,7 @@ extension AnimeDetailView {
     }
 }
 
-struct AnimeView_Previews: PreviewProvider {
+struct AnimeDetailView_Previews: PreviewProvider {
     static var previews: some View {
         AnimeDetailView(
             store: .init(
@@ -479,7 +508,7 @@ struct AnimeView_Previews: PreviewProvider {
                         .init()
                     )
                 ),
-                reducer: EmptyReducer()
+                reducer: AnimeDetailReducer()
             )
         )
         .frame(width: 800, height: 600)

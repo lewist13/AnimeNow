@@ -268,11 +268,11 @@ extension AnimeClient {
             } else if case .offline(let url) = provider {
                 return .init([.init(id: 0, url: url, quality: .auto)])
             } else {
-                throw ClientError.providerNotAvailable
+                throw Error.providerNotAvailable
             }
 
             guard let providerId = provider.id else {
-                throw ClientError.providerInvalidId
+                throw Error.providerInvalidId
             }
 
             let sourcesPublisher = ConsumetAPI.Endpoint.anilist(
