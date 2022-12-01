@@ -93,6 +93,20 @@ public extension NSManagedObject {
     ) throws {
         try item.encodeAttributes(to: self)
     }
+
+    func update<T: ManagedObjectConvertible, V: ConvertableValue>(
+        _ keyPath: WritableKeyPath<T, V>,
+        _ value: V
+    ) throws {
+        self[primitiveValue: T.attribute(keyPath).name] = value.encode()
+    }
+
+    func update<T: ManagedObjectConvertible, V: ConvertableValue>(
+        _ keyPath: WritableKeyPath<T, V?>,
+        _ value: V?
+    ) throws {
+        self[primitiveValue: T.attribute(keyPath).name] = value?.encode()
+    }
 }
 
 extension NSManagedObject {

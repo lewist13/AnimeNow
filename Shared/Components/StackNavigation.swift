@@ -1,3 +1,4 @@
+//
 //  StackNavigation.swift
 //  Anime Now! (iOS)
 //
@@ -66,19 +67,23 @@ struct StackNavigation<Buttons: View, Content: View>: View {
     }
 }
 
+extension StackNavigation where Buttons == EmptyView {
+    init(title: String, content: @escaping () -> Content) {
+        self.title = title
+        self.content = content
+    }
+}
+
 struct StackNavigationLink: View {
-    var id: AnyHashable
     var title: String
     var label: () -> AnyView
     var destination: () -> AnyView
 
     init<Label: View, Destination: View>(
-        id: AnyHashable,
         title: String,
         @ViewBuilder label: @escaping () -> Label,
         @ViewBuilder destination: @escaping () -> Destination
     ) {
-        self.id = id
         self.title = title
         self.label = { AnyView(label()) }
         self.destination = { AnyView(destination()) }
@@ -95,11 +100,12 @@ struct StackNavigationLink: View {
             },
             label: label
         )
+        .buttonStyle(.plain)
         #else
         label()
             .onTapGesture {
                 withAnimation {
-                    stack.push(id: id, self)
+                    stack.push(self)
                 }
             }
         #endif
@@ -107,10 +113,10 @@ struct StackNavigationLink: View {
 }
 
 class StackNavigationObservable: ObservableObject {
-    @Published var stack = OrderedDictionary<AnyHashable, StackNavigationLink>()
+    @Published var stack = Array<StackNavigationLink>()
 
-    func push(id: AnyHashable, _ view: StackNavigationLink) {
-        stack[id] = view
+    func push(_ view: StackNavigationLink) {
+        stack.append(view)
     }
 
     func pop() {
@@ -120,6 +126,6 @@ class StackNavigationObservable: ObservableObject {
     }
 
     func last() -> StackNavigationLink? {
-        stack.values.last
+        stack.last
     }
 }

@@ -100,6 +100,7 @@ extension VideoPlayer {
 extension VideoPlayer.PlayerView {
     private func configureInit() {
         player.automaticallyWaitsToMinimizeStalling = true
+        player.preventsDisplaySleepDuringVideoPlayback = true
 
         NotificationCenter.default.publisher(for: .AVPlayerItemDidPlayToEndTime)
             .compactMap { $0.object as? AVPlayerItem }

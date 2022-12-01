@@ -309,6 +309,7 @@
 		13650F3228CFE0BF002E20DD /* AnimeClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimeClient.swift; sourceTree = "<group>"; };
 		13650F3528D014B1002E20DD /* AnimeClient+Live.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AnimeClient+Live.swift"; sourceTree = "<group>"; };
 		13650F3728D04424002E20DD /* AnimeClient+Mock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AnimeClient+Mock.swift"; sourceTree = "<group>"; };
+		136540C2293540320058232F /* Model 7.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "Model 7.xcdatamodel"; sourceTree = "<group>"; };
 		136B2F5A2933E8D700FE73C6 /* SettingsSelectableListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsSelectableListView.swift; sourceTree = "<group>"; };
 		1372DEC628E5337D00E35980 /* AniListAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AniListAPI.swift; sourceTree = "<group>"; };
 		137A818928C535BE00B69503 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
@@ -1770,6 +1771,7 @@
 		133E55F529011DE200CD59DA /* AnimeNow.xcdatamodeld */ = {
 			isa = XCVersionGroup;
 			children = (
+				136540C2293540320058232F /* Model 7.xcdatamodel */,
 				135D56092926B90F0096774D /* Model 6.xcdatamodel */,
 				13643C8B291CAB650001E159 /* Model 5.xcdatamodel */,
 				13BA64C3290C9F58005C4A3F /* Model 4.xcdatamodel */,
@@ -1777,7 +1779,7 @@
 				133E55F629011DE200CD59DA /* Model 2.xcdatamodel */,
 				133E55F729011DE200CD59DA /* Model.xcdatamodel */,
 			);
-			currentVersion = 135D56092926B90F0096774D /* Model 6.xcdatamodel */;
+			currentVersion = 136540C2293540320058232F /* Model 7.xcdatamodel */;
 			path = AnimeNow.xcdatamodeld;
 			sourceTree = "<group>";
 			versionGroupType = wrapper.xcdatamodel;

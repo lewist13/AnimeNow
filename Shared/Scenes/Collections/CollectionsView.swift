@@ -71,7 +71,6 @@ extension CollectionsView {
             observe: \.favorites
         ) { viewState in
             StackNavigationLink(
-                id: "favorites-id",
                 title: "Favorites"
             ) {
                 AnyView(
@@ -149,7 +148,6 @@ extension CollectionsView {
         ) { collections in
             ForEach(collections.state) { collection in
                 StackNavigationLink(
-                    id: collection.id,
                     title: collection.title.value
                 ) {
                         folderView(

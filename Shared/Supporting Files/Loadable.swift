@@ -48,6 +48,19 @@ extension Loadable {
         }
         return nil
     }
+
+    func map<N>(_ mapped: @escaping (T) -> N) -> Loadable<N> {
+        switch self {
+        case .idle:
+            return .idle
+        case .loading:
+            return .loading
+        case .success(let item):
+            return .success(mapped(item))
+        case .failed:
+            return .failed
+        }
+    }
 }
 
 extension Loadable: Equatable where T: Equatable {}

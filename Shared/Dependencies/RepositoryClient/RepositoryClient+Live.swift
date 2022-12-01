@@ -1,3 +1,4 @@
+//
 //  RepositoryClient+Live.swift
 //  Anime Now!
 //
@@ -54,6 +55,36 @@ final class RepositoryClientLive: RepositoryClient, @unchecked Sendable {
             }
 
             try object?.update(item)
+        }
+    }
+
+    func update<T: ManagedObjectConvertible, V: ConvertableValue>(
+        _ id: T.ID,
+        _ keyPath: WritableKeyPath<T, V?>,
+        _ value: V?
+    ) async throws -> Bool {
+        try await self.pc.schedule { ctx in
+            if let managed = try ctx.fetchOne(T.all.where(T.idKeyPath == id)) {
+                try managed.update(keyPath, value)
+                return true
+            } else {
+                return false
+            }
+        }
+    }
+
+    func update<T: ManagedObjectConvertible, V: ConvertableValue>(
+        _ id: T.ID,
+        _ keyPath: WritableKeyPath<T, V>,
+        _ value: V
+    ) async throws -> Bool {
+        try await self.pc.schedule { ctx in
+            if let managed = try ctx.fetchOne(T.all.where(T.idKeyPath == id)) {
+                try managed.update(keyPath, value)
+                return true
+            } else {
+                return false
+            }
         }
     }
 

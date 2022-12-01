@@ -373,12 +373,12 @@ extension AnimeDetailView {
         private var downloadState: DownloaderClient.Status?
 
         var thumbnailDownloadState: ThumbnailItemBigView.DownloadState? {
-            if episodeStore?.downloadURL != nil {
-                return .downloaded
+            if let url = episodeStore?.downloadURL {
+                return .downloaded(url)
             } else {
                 switch downloadState {
                 case .some(.success):
-                    return .downloaded
+                    return .downloading(1.0)
                 case .some(.failed):
                     return .error
                 case .some(.pending):
@@ -413,7 +413,7 @@ extension AnimeDetailView {
                     ThumbnailItemCompactView(
                         episode: episode,
                         progress: viewState.episodeStore?.progress,
-                        downloadState: viewState.state.thumbnailDownloadState ?? .empty({ viewState.send(.downloadEpisode(episode.id)) })
+                        downloadState: viewState.state.thumbnailDownloadState ?? .empty({ viewState.send(.downloadEpisode(episode)) })
                     )
                     .frame(height: 85)
                 } else {
@@ -427,10 +427,11 @@ extension AnimeDetailView {
                         ),
                         isFiller: episode.isFiller,
                         progressSize: 10,
-                        downloadState: viewState.state.thumbnailDownloadState ?? .empty({ viewState.send(.downloadEpisode(episode.id)) })
+                        downloadState: viewState.state.thumbnailDownloadState ?? .empty({ viewState.send(.downloadEpisode(episode)) })
                     )
                 }
             }
+            .animation(.easeInOut(duration: 0.2), value: viewState.episodeStore?.progress)
             .onTapGesture {
                 viewState.send(
                     .selectedEpisode(
@@ -442,7 +443,7 @@ extension AnimeDetailView {
                 if (viewState.episodeStore?.almostFinished ?? false) {
                     Button {
                         viewState.send(
-                            .markEpisodeAsUnwatched(episode.id),
+                            .markEpisodeAsUnwatched(episode.number),
                             animation: .easeInOut(duration: 0.15)
                         )
                     } label: {
@@ -459,10 +460,17 @@ extension AnimeDetailView {
                     }
                 }
 
-                if viewState.episodeStore?.downloadURL != nil {
+                if let episodeStore = viewState.episodeStore, episodeStore.downloadURL != nil {
                     Button {
+                        viewState.send(.removeDownload(episodeStore))
                     } label: {
                         Text("Remove Download")
+                    }
+                } else if case .downloading = viewState.thumbnailDownloadState {
+                    Button {
+                        viewState.send(.cancelDownload(episode.number))
+                    } label: {
+                        Text("Cancel Download")
                     }
                 }
             }

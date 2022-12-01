@@ -815,8 +815,8 @@ extension AnimePlayerReducer {
                    let episode = state.episode,
                    let savedEpisodeProgress = animeInfo.episodes.first(where: { $0.number ==  episode.number }),
                    !savedEpisodeProgress.almostFinished {
-                    state.playerProgress = savedEpisodeProgress.progress
-                    state.playerAction = .seekTo(savedEpisodeProgress.progress)
+                    state.playerProgress = savedEpisodeProgress.progress ?? 0.0
+                    state.playerAction = .seekTo(savedEpisodeProgress.progress ?? 0.0)
                 } else {
                     state.playerProgress = 0
                     state.playerAction = .seekTo(.zero)

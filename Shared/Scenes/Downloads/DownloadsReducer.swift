@@ -16,6 +16,8 @@ struct DownloadsReducer: ReducerProtocol {
 
     enum Action: Equatable {
         case onAppear
+        case deleteEpisode(EpisodeStore)
+        case playEpisode(AnimeStore, [EpisodeStore], Int)
         case onAnimes([AnimeStore])
     }
 
@@ -47,6 +49,17 @@ extension DownloadsReducer {
 
         case .onAnimes(let animes):
             state.animes = animes
+
+        case .deleteEpisode(let episodeStore):
+            guard let url = episodeStore.downloadURL else { break }
+
+            return .run { [episodeStore] _ in
+                await downloaderClient.delete(url)
+                try await repositoryClient.update(episodeStore.id, \EpisodeStore.downloadURL, nil)
+            }
+
+        case .playEpisode:
+            break
         }
 
         return .none

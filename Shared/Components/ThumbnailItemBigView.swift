@@ -41,7 +41,7 @@ struct ThumbnailItemBigView: View {
     enum DownloadState {
         case empty(() -> Void)
         case downloading(Double)
-        case downloaded
+        case downloaded(URL)
         case error
     }
 
@@ -99,9 +99,14 @@ struct ThumbnailItemBigView: View {
                                             .clipShape(Circle())
                                     }
                                     .buttonStyle(.plain)
+
                                 case .downloading(let percentage):
                                     CircularProgressView(progress: percentage)
-                                    
+                                        .frame(width: 16, height: 16)
+                                        .padding(12)
+                                        .background(Color.white)
+                                        .clipShape(Circle())
+
                                 case .downloaded:
                                     Image(systemName: "checkmark")
                                         .font(.callout.weight(.bold))

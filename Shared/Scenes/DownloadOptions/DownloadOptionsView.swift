@@ -116,9 +116,9 @@ struct VideoOptionsViewState: Equatable {
 
     init(_ state: DownloadOptionsReducer.State) {
         self.isLoadingProviders = !state.providers.finished
-        self.isLoadingSources = !state.sourcesOptions.finished
+        self.isLoadingSources = !state.sources.finished
         self.providers = state.providers.value
-        self.sources = state.sourcesOptions.value?.sources
+        self.sources = state.sources.value
         self.selectedProvider = state.providerSelected
         self.selectedSource = state.sourceSelected
     }
@@ -216,8 +216,8 @@ struct DownloadOptionsView_Previews: PreviewProvider {
         DownloadOptionsView(
             store: .init(
                 initialState: .init(
-                    animeId: Anime.attackOnTitan.id,
-                    episodeNumber: 1
+                    anime: Anime.attackOnTitan,
+                    episode: Episode.placeholder
                 ),
                 reducer: EmptyReducer()
             )

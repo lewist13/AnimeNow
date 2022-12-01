@@ -16,8 +16,7 @@ struct EpisodeStore: EpisodeRepresentable, Hashable, Codable {
 
     // Database Only
 
-    var isMovie: Bool = false
-    var progress: Double = 0
+    var progress: Double? = nil
     var lastUpdatedProgress: Date = .init()
     var downloadURL: URL? = nil
 }
@@ -33,11 +32,29 @@ extension EpisodeStore {
 }
 
 extension EpisodeStore {
+    static func findOrCreate(
+        _ episode: any EpisodeRepresentable,
+        _ episodes: Set<EpisodeStore>
+    ) -> EpisodeStore {
+        if let episodeFound = episodes.first(where: { $0.number == episode.number }) {
+            return episodeFound
+        } else {
+            return .init(
+                number: episode.number,
+                title: episode.title,
+                thumbnail: episode.thumbnail,
+                lastUpdatedProgress: .init()
+            )
+        }
+    }
+}
+
+extension EpisodeStore {
     var almostFinished: Bool {
-        return progress >= 0.9
+        return (progress ?? 0) >= 0.9
     }
 
     var finishedWatching: Bool {
-        return progress >= 1.0
+        return (progress ?? 0) >= 1.0
     }
 }

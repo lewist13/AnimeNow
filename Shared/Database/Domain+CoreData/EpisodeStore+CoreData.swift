@@ -17,7 +17,6 @@ extension EpisodeStore: ManagedObjectConvertible {
         .init(\.number, "number"),
         .init(\.title, "title"),
         .init(\.thumbnail, "cover"),
-        .init(\.isMovie, "isMovie"),
         .init(\.progress, "progress"),
         .init(\.lastUpdatedProgress, "lastUpdatedProgress"),
         .init(\.downloadURL, "downloadURL")

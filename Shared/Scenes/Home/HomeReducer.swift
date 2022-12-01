@@ -183,11 +183,10 @@ extension HomeReducer {
             state.lastWatchedAnime = .success(animes)
 
         case .markAsWatched(let resumeWatching):
-            var episodeStore = resumeWatching.episodeStore
-            episodeStore.progress = 1.0
+            let episodeStore = resumeWatching.episodeStore
 
-            return .run { [episodeStore] in
-                _ = try await self.repositoryClient.insert(episodeStore)
+            return .run { _ in
+                try await self.repositoryClient.update(episodeStore.id, \EpisodeStore.progress, 1.0)
             }
 
         case .resumeWatchingTapped:

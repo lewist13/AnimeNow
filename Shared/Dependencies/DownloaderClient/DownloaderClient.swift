@@ -10,10 +10,12 @@ import Combine
 import ComposableArchitecture
 
 struct DownloaderClient {
-    let observe: (Anime.ID) -> AsyncStream<[Int:Status]>
-    let observeFinished: () -> AsyncStream<[Item : URL]>
-    let download: (Item) -> Void
-    let remove: (Item) -> Void
+    let onFinish: () -> AsyncStream<(Request, URL)>
+    let observe: (Anime.ID) -> AsyncStream<[Int : Status]>
+    let download: (Request) -> Void
+    let delete: (URL) async -> Void
+    let observeCount: () -> AsyncStream<Int>
+    let cancelDownload: (Anime.ID, Int) -> Void
 }
 
 extension DownloaderClient {
@@ -24,9 +26,9 @@ extension DownloaderClient {
         case failed
     }
 
-    struct Item: Hashable {
-        let animeId: Anime.ID
-        let episodeNumber: Int
+    struct Request {
+        let anime: any AnimeRepresentable
+        let episode: any EpisodeRepresentable
         let source: Source
     }
 }

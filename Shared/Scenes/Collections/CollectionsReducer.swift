@@ -80,11 +80,9 @@ extension CollectionsReducer {
         case .updatedCollections(let collections):
             state.collections = collections
 
-        case .removeAnimeFromFavorites(var animeStore):
-            animeStore.isFavorite = false
-
+        case .removeAnimeFromFavorites(let animeStore):
             return .run { [animeStore] in
-                try await repositoryClient.insert(animeStore)
+                try await repositoryClient.update(animeStore.id, \AnimeStore.isFavorite, false)
             }
 
         case .removeAnimeFromCollection(let collectionId, let animeStore):

@@ -31,20 +31,11 @@ extension AnimeStore {
         _ anime: any AnimeRepresentable,
         _ animeStores: [AnimeStore] = []
     ) -> AnimeStore {
-        if var animeStoreItem = animeStores[id: anime.id] {
-            animeStoreItem.title = anime.title
-            animeStoreItem.format = anime.format
-            animeStoreItem.posterImage = anime.posterImage
-            return animeStoreItem
-        } else {
-            return .init(
-                id: anime.id,
-                title: anime.title,
-                format: anime.format,
-                posterImage: anime.posterImage,
-                isFavorite: false
-            )
-        }
+        var animeStoreItem = animeStores[id: anime.id] ?? .init(id: anime.id)
+        animeStoreItem.title = anime.title
+        animeStoreItem.format = anime.format
+        animeStoreItem.posterImage = anime.posterImage
+        return animeStoreItem
     }
 }
 
@@ -54,19 +45,11 @@ extension AnimeStore {
         progress: Double
     ) {
 
-        var episodeInfo = episodes.first(where: { $0.number == episode.number }) ?? .init(
-            number: episode.number,
-            title: format == .movie ? title : episode.title,
-            thumbnail: format == .movie ? posterImage.largest : episode.thumbnail,
-            isMovie: format == .movie,
-            progress: progress,
-            lastUpdatedProgress: .init()
-        )
+        var episodeInfo = EpisodeStore.findOrCreate(episode, episodes)
 
         episodeInfo.number = episode.number
         episodeInfo.title = format == .movie ? title : episode.title
         episodeInfo.thumbnail = format == .movie ? posterImage.largest :  episode.thumbnail
-        episodeInfo.isMovie = format == .movie
         episodeInfo.progress = progress
         episodeInfo.lastUpdatedProgress = .init()
 

@@ -76,6 +76,8 @@ struct AppReducer: ReducerProtocol {
         var animeDetail: AnimeDetailReducer.State?
 
         var modalOverlay: ModalOverlayReducer.State?
+
+        var totalDownloadsCount = 0
     }
 
     enum Action: BindableAction {
@@ -83,7 +85,8 @@ struct AppReducer: ReducerProtocol {
         case setVideoPlayer(AnimePlayerReducer.State?)
         case setAnimeDetail(AnimeDetailReducer.State?)
         case setModalOverlay(ModalOverlayReducer.State?)
-        case onDownloadFinished(DownloaderClient.Item, URL)
+        case setDownloadingCount(Int)
+        case onDownloadFinished(DownloaderClient.Request, URL)
         case appDelegate(AppDelegateReducer.Action)
         case home(HomeReducer.Action)
         case collection(CollectionsReducer.Action)
@@ -208,6 +211,17 @@ extension AppReducer {
                 )
             )
 
+        case let .downloads(.playEpisode(anime, episodes, selected)):
+            return .action(
+                .setVideoPlayer(
+                    .init(
+                        anime: anime,
+                        episodes: episodes,
+                        selectedEpisode: selected
+                    )
+                )
+            )
+
         case .animeDetail(.close):
             return .action(
                 .setAnimeDetail(nil),
@@ -236,38 +250,61 @@ extension AppReducer {
                 await NSApp.reply(toApplicationShouldTerminate: true)
                 #endif
             }
-        case .appDelegate(.appDidFinishLaunching):
-            return .run { send in
-                let items = downloaderClient.observeFinished()
 
-                for await item in items {
-                    for (key, value) in item {
-                        await send(.onDownloadFinished(key, value))
-                        downloaderClient.remove(key)
+        case .appDelegate(.appDidFinishLaunching):
+//            struct OnEpisodeDownloadFinished: Hashable { }
+            return .merge(
+                .run { send in
+                    let items = downloaderClient.onFinish()
+
+                    for await item in items {
+                        await send(.onDownloadFinished(item.0, item.1))
+                    }
+                },
+                .run { send in
+                    let downloadCounts = downloaderClient.observeCount()
+
+                    for await count in downloadCounts {
+                        await send(.setDownloadingCount(count))
                     }
                 }
-            }
+            )
 
         case .setModalOverlay(let overlay):
             state.modalOverlay = overlay
 
+        case .setDownloadingCount(let count):
+            state.totalDownloadsCount = count
+
         case .collection(.onAddNewCollectionTapped):
             return .action(.setModalOverlay(.addNewCollection(.init())), animation: .spring(response: 0.35, dampingFraction: 1))
 
-        case .animeDetail(.downloadEpisode(let episodeId)):
-            guard let animeId = state.animeDetail?.animeId else { break }
+        case .animeDetail(.downloadEpisode(let episode)):
+            guard let anime = state.animeDetail?.anime.value else { break }
             return .action(
-                .setModalOverlay(.downloadOptions(.init(animeId: animeId, episodeNumber: episodeId))),
+                .setModalOverlay(.downloadOptions(.init(anime: anime, episode: episode))),
                 animation: .spring(response: 0.35, dampingFraction: 1)
             )
 
         case .onDownloadFinished(let item, let location):
-            return .run { _ in
-                let animeStore = try await repositoryClient.fetch(AnimeStore.all.where(\AnimeStore.id == item.animeId)).first
+            return .run { send in
+                let animeStores = try await repositoryClient.fetch(AnimeStore.all.where(\AnimeStore.id == item.anime.id))
 
-                if var episode = animeStore?.episodes.first(where: { $0.number == item.episodeNumber }) {
+                if var animeStore = animeStores[id: item.anime.id] {
+                    if let episode = animeStore.episodes.first(where: { $0.number == item.episode.number }) {
+                        try await repositoryClient.update(episode.id, \EpisodeStore.downloadURL, location)
+                    } else {
+                        var episode = EpisodeStore.findOrCreate(item.episode, animeStore.episodes)
+                        episode.downloadURL = location
+                        animeStore.episodes.insert(episode)
+                        try await repositoryClient.insert(animeStore)
+                    }
+                } else {
+                    var animeStore = AnimeStore.findOrCreate(item.anime, animeStores)
+                    var episode = EpisodeStore.findOrCreate(item.episode, animeStore.episodes)
                     episode.downloadURL = location
-                    try await repositoryClient.insert(episode)
+                    animeStore.episodes.insert(episode)
+                    try await repositoryClient.insert(animeStore)
                 }
             }
 
@@ -277,9 +314,9 @@ extension AppReducer {
             if case let .downloadOptions(downloadState) = state.modalOverlay, let source = downloadState.source {
                 effects.append(
                     .fireAndForget {
-                        let downloadItem = DownloaderClient.Item(
-                            animeId: downloadState.animeId,
-                            episodeNumber: downloadState.episodeNumber,
+                        let downloadItem = DownloaderClient.Request(
+                            anime: downloadState.anime,
+                            episode: downloadState.episode,
                             source: source
                         )
                         _ = downloaderClient.download(downloadItem)
@@ -299,6 +336,7 @@ extension AppReducer {
         default:
             break
         }
+
         return .none
     }
 }

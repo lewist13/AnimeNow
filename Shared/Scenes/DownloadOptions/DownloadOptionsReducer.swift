@@ -8,10 +8,11 @@ import ComposableArchitecture
 
 struct DownloadOptionsReducer: ReducerProtocol {
     struct State: Equatable {
-        let animeId: Anime.ID
-        let episodeNumber: Int
+        var anime: Anime
+        var episode: Episode
+
         var providers = Loadable<[Provider]>.idle
-        var sourcesOptions = Loadable<SourcesOptions>.idle
+        var sources = Loadable<[Source]>.idle
 
         var providerSelected: Provider.ID?
         var sourceSelected: Source.ID?
@@ -48,7 +49,7 @@ extension DownloadOptionsReducer.State {
 
     var source: Source? {
         if let sourceSelected {
-            return sourcesOptions.value?.sources[id: sourceSelected]
+            return sources.value?[id: sourceSelected]
         }
         return nil
     }
@@ -64,9 +65,9 @@ extension DownloadOptionsReducer {
             state.providers = .loading
             return .run { [state] send in
                 try await withTaskCancellation(id: EpisodeProviderCancellable.self) {
-                    let episodes = try await animeClient.getEpisodes(state.animeId)
+                    let episodes = try await animeClient.getEpisodes(state.anime.id)
 
-                    let episode = episodes.first(where: { $0.number == state.episodeNumber })
+                    let episode = episodes.first(where: { $0.number == state.episode.number })
 
                     if let episode {
                         await send(.fetchedProviders(.success(episode.providers)))
@@ -82,8 +83,9 @@ extension DownloadOptionsReducer {
             return fetchSource(&state)
 
         case .fetchedSources(let loadable):
-            state.sourcesOptions = loadable
-            state.sourceSelected = loadable.value?.sources.first?.id
+            let newLoadable = loadable.map { $0.sources.filter { source in source.quality != .autoalt && source.quality != .auto } }
+            state.sources = newLoadable
+            state.sourceSelected = newLoadable.value?.first?.id
 
         case .selectProvider(let providerId):
             if state.providerSelected != providerId {
@@ -102,10 +104,10 @@ extension DownloadOptionsReducer {
 
     func fetchSource(_ state: inout State) -> EffectTask<Action> {
         if let provider = state.provider {
-            state.sourcesOptions = .loading
+            state.sources = .loading
             state.sourceSelected = nil
             return .run { send in
-                await withTaskCancellation(id: SourceOptionsCancellable.self) {
+                await withTaskCancellation(id: SourceOptionsCancellable.self, cancelInFlight: true) {
                     do {
                         await send(.fetchedSources(.success(try await animeClient.getSources(provider))))
                     } catch {
@@ -114,7 +116,7 @@ extension DownloadOptionsReducer {
                 }
             }
         } else {
-            state.sourcesOptions = .idle
+            state.sources = .idle
             state.sourceSelected = nil
         }
 

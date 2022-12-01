@@ -34,10 +34,33 @@ extension AppView {
                     )
                     .font(.system(size: 20).weight(.semibold))
                     .frame(
-                        width: 56,
-                        height: 56,
+                        width: 48,
+                        height: 48,
                         alignment: .center
                     )
+                    .overlay(
+                            WithViewStore(
+                                store,
+                                observe: \.totalDownloadsCount
+                            ) {
+                                if item == .downloads, $0.state > 0 {
+                                    Text("\($0.state)")
+                                        .font(.footnote.bold())
+                                        .foregroundColor(.black)
+                                        .padding(4)
+                                        .background(Color.white)
+                                        .clipShape(Circle())
+                                        .frame(
+                                            maxWidth: .infinity,
+                                            maxHeight: .infinity,
+                                            alignment: .topTrailing
+                                        )
+                                        .padding(8)
+                                        .animation(.linear, value: $0.state)
+                                }
+                        }
+                    )
+                    .contentShape(Rectangle())
                     .onTapGesture {
                         viewStore.send(
                             .set(\.$route, item),

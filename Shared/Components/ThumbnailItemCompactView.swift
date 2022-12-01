@@ -95,7 +95,11 @@ struct ThumbnailItemCompactView: View {
                             .buttonStyle(.plain)
                         case .downloading(let percentage):
                             CircularProgressView(progress: percentage)
-                            
+                                .frame(width: 16, height: 16)
+                                .padding(4)
+                                .background(Color.white)
+                                .clipShape(Circle())
+
                         case .downloaded:
                             Image(systemName: "checkmark")
                                 .font(.callout.weight(.bold))
@@ -103,6 +107,7 @@ struct ThumbnailItemCompactView: View {
                                 .padding(4)
                                 .background(Color.green)
                                 .clipShape(Circle())
+
                         case .error:
                             Image(systemName: "exclamationmark")
                                 .font(.callout.weight(.bold))
@@ -115,6 +120,8 @@ struct ThumbnailItemCompactView: View {
                 }
                 .frame(maxWidth: 24, maxHeight: 24)
             }
+            .background(Color.black)
+            .cornerRadius(reader.size.height / 8)
         }
         .frame(maxWidth: .infinity)
     }

@@ -26,19 +26,40 @@ extension AppView {
                         AppReducer.Route.allCases,
                         id: \.self
                     ) { route in
-                        Text(route.title)
-                            .font(.headline)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 10)
-                            .foregroundColor(selected.state == route ? Color.white : Color.gray)
-                            .clipShape(Capsule())
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                selected.send(
-                                    .set(\.$route, route),
-                                    animation: .linear(duration: 0.15)
-                                )
+                        HStack {
+                            Text(route.title)
+                                .font(.headline)
+
+                            if route == .downloads {
+                                WithViewStore(
+                                    store,
+                                    observe: \.totalDownloadsCount
+                                ) { viewState in
+                                    if viewState.state > 0 {
+                                        Circle()
+                                            .foregroundColor(.secondaryAccent)
+                                            .frame(width: 20, height: 20)
+                                            .overlay(
+                                                Text("\(viewState.state)")
+                                                    .font(.callout.bold())
+                                                    .foregroundColor(.white)
+                                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                            )
+                                    }
+                                }
                             }
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 10)
+                        .foregroundColor(selected.state == route ? Color.white : Color.gray)
+                        .clipShape(Capsule())
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            selected.send(
+                                .set(\.$route, route),
+                                animation: .linear(duration: 0.15)
+                            )
+                        }
                     }
                 }
             }

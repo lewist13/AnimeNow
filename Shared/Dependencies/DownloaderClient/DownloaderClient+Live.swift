@@ -10,24 +10,37 @@ import Foundation
 import AVFoundation
 
 extension DownloaderClient {
+    private static let configuration = URLSessionConfiguration.background(
+        withIdentifier: (Bundle.main.bundleIdentifier ?? "unknown") + ".downloader-client"
+    )
+
+    private static var contentPool = CurrentValueSubject<[AVAssetDownloadTask: Request], Never>(.init())
+    private static let downloadStates = CurrentValueSubject<[AVAssetDownloadTask : Status], Never>(.init())
+    private static let downloadFinishedCallback = CurrentValueSubject<(Request, URL)?, Never>(nil)
+
     static let liveValue: DownloaderClient = {
-        let configuration = URLSessionConfiguration.background(withIdentifier: "downloader-client")
-        let downloadStates = CurrentValueSubject<[DownloaderClient.Item : DownloaderClient.Status], Never>(.init())
+        let delegate = DownloaderDelegate { task, status in
+            if case .success(let location) = status {
+                if let request = contentPool.value[task] {
+                    downloadFinishedCallback.send((request, location))
+                }
+                contentPool.value[task] = nil
+                downloadStates.value[task] = nil
+            } else {
+                downloadStates.value[task] = status
+            }
+        }
+
+        let downloadSession = AVAssetDownloadURLSession(
+            configuration: configuration,
+            assetDownloadDelegate: delegate,
+            delegateQueue: OperationQueue.main
+        )
 
         return .init(
-            observe: { animeId in
-                let mappablePublisher = downloadStates
-                    .map { items in
-                        Dictionary(
-                            uniqueKeysWithValues: items
-                                .filter({ $0.key.animeId == animeId })
-                                .map { ($0.episodeNumber, $1) }
-                        )
-                    }
-                    .eraseToAnyPublisher()
-                
+            onFinish: {
                 return .init { continuation in
-                    let cancellable = mappablePublisher.sink {
+                    let cancellable = downloadFinishedCallback.compactMap { $0 } .sink {
                         continuation.yield($0)
                     }
 
@@ -36,74 +49,102 @@ extension DownloaderClient {
                     }
                 }
             },
-            observeFinished: {
-                let mappablePublisher = downloadStates
-                    .map { items in
-                        items.compactMapValues {
-                            if case .success(let location) = $0 {
-                                return location
-                            } else {
-                                return nil
-                            }
-                        }
+            observe: { animeId in
+                let mappablePublisher = Publishers.CombineLatest(downloadStates, contentPool)
+                    .map { downloads, content in
+                        Dictionary(
+                            uniqueKeysWithValues: downloads.compactMap({ key, value -> (Int, Status)? in
+                                guard let item = content[key], item.anime.id == animeId else {
+                                    return nil
+                                }
+                                return (item.episode.number, value)
+                            })
+                        )
                     }
                     .eraseToAnyPublisher()
-                
+
                 return .init { continuation in
                     let cancellable = mappablePublisher.sink {
                         continuation.yield($0)
                     }
-                    
+
                     continuation.onTermination = { _ in
                         cancellable.cancel()
                     }
                 }
             },
             download: { item in
+                let asset = AVURLAsset(url: item.source.url)
+
+                let name = "\(item.anime.title) - Episode \(item.episode.number)"
+
+                guard let downloadTask = downloadSession.makeAssetDownloadTask(
+                    asset: asset,
+                    assetTitle: name,
+                    assetArtworkData: nil,
+                    options: nil
+                ) else {
+                    return
+                }
+
+                contentPool.value[downloadTask] = item
+                downloadStates.value[downloadTask] = .pending
+
+                downloadTask.resume()
+            },
+            delete: { url in
                 Task {
-                    let delegate = DownloaderDelegate({ status in
-                        downloadStates.value[item] = status
-                    })
-
-                    let downloadSession = AVAssetDownloadURLSession(
-                        configuration: configuration,
-                        assetDownloadDelegate: delegate,
-                        delegateQueue: OperationQueue.main
-                    )
-
-                    let asset = AVURLAsset(url: item.source.url)
-
-                    let name = "\(item.animeId)-\(item.episodeNumber)"
-
-                    let downloadTask = downloadSession.makeAssetDownloadTask(
-                        asset: asset,
-                        assetTitle: name,
-                        assetArtworkData: nil,
-                        options: nil
-                    )
-
-                    downloadTask?.resume()
-                    downloadStates.value[item] = .pending
+                    if FileManager.default.fileExists(atPath: url.absoluteString) {
+                        try FileManager.default.removeItem(at: url)
+                    }
                 }
             },
-            remove: {
-                downloadStates.value.removeValue(forKey: $0)
+            observeCount: {
+                return .init { continuation in
+                    let cancellable = downloadStates
+                        .map {
+                            $0.filter { element in
+                                switch element.value {
+                                case .pending, .downloading:
+                                    return true
+                                default:
+                                    return false
+                                }
+                            }
+                            .count
+                        }
+                        .sink {
+                        continuation.yield($0)
+                    }
+
+                    continuation.onTermination = { _ in
+                        cancellable.cancel()
+                    }
+                }
+            },
+            cancelDownload: { animeId, episodeNumber in
+                if let (task, _) = contentPool.value.first(
+                    where: { $0.value.anime.id == animeId && $0.value.episode.number == episodeNumber }
+                ) {
+                    task.cancel()
+                    contentPool.value[task] = nil
+                    downloadStates.value[task] = nil
+                }
             }
         )
     }()
 }
 
-final class DownloaderDelegate: NSObject, AVAssetDownloadDelegate {
-    let callback: (DownloaderClient.Status) -> Void
+fileprivate class DownloaderDelegate: NSObject, AVAssetDownloadDelegate {
+    let callback: (AVAssetDownloadTask, DownloaderClient.Status) -> Void
 
-    init(
-        _ callback: @escaping (DownloaderClient.Status) -> Void
-    ) {
+    init(_ callback: @escaping (AVAssetDownloadTask, DownloaderClient.Status) -> Void) {
         self.callback = callback
     }
 
     func urlSession(_ session: URLSession, assetDownloadTask: AVAssetDownloadTask, didLoad timeRange: CMTimeRange, totalTimeRangesLoaded loadedTimeRanges: [NSValue], timeRangeExpectedToLoad: CMTimeRange) {
         callback(
+            assetDownloadTask,
             .downloading(
                 progress: (loadedTimeRanges.reduce(0.0) { $0 + $1.timeRangeValue.duration.seconds }) / timeRangeExpectedToLoad.duration.seconds
             )
@@ -112,19 +153,17 @@ final class DownloaderDelegate: NSObject, AVAssetDownloadDelegate {
 
     func urlSession(_ session: URLSession, assetDownloadTask: AVAssetDownloadTask, didFinishDownloadingTo location: URL) {
         callback(
+            assetDownloadTask,
             .success(location: location)
         )
     }
 
-    func urlSession(_ session: URLSession, didBecomeInvalidWithError error: Error?) {
-        if error != nil {
-            callback(.failed)
-        }
-    }
-
     func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         if error != nil {
-            callback(.failed)
+            callback(
+                task as! AVAssetDownloadTask,
+                .failed
+            )
         }
     }
 }

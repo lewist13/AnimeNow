@@ -326,7 +326,7 @@ extension HomeView {
                                 ForEach(items, id: \.id) { item in
                                     ThumbnailItemBigView(
                                         type:
-                                            item.episodeStore.isMovie ?
+                                            item.animeStore.format == .movie ?
                                             .movie(
                                                 image: item.episodeStore.thumbnail?.link,
                                                 name: item.episodeStore.title,

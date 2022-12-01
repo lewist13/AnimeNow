@@ -55,12 +55,14 @@ struct AnimeDetailReducer: ReducerProtocol {
         case toggleCompactEpisodes
         case showCollectionList
         case markEpisodeAsWatched(Episode.ID)
-        case markEpisodeAsUnwatched(Episode.ID)
+        case markEpisodeAsUnwatched(Int)
         case fetchedEpisodes(TaskResult<[Episode]>)
         case fetchedAnime(TaskResult<Anime>)
         case selectedEpisode(Episode.ID)
-        case downloadEpisode(Episode.ID)
+        case downloadEpisode(Episode)
         case downloadingEpisodes([Int : DownloaderClient.Status])
+        case removeDownload(EpisodeStore)
+        case cancelDownload(Int)
         case play(anime: Anime, episodes: [Episode], selected: Episode.ID)
         case fetchedAnimeFromDB([AnimeStore])
         case fetchedCollectionStores([CollectionStore])
@@ -202,6 +204,7 @@ extension AnimeDetailReducer {
     struct CancelObservingCollections: Hashable {}
     struct AddToCollectionDebounce: Hashable {}
     struct FavoritesDebouce: Hashable {}
+    struct CancelObservingDownloadState: Hashable {}
 
     func core(state: inout State, action: Action) -> EffectTask<Action> {
         switch action {
@@ -221,9 +224,11 @@ extension AnimeDetailReducer {
             guard var animeStore = state.animeStore.value else { break }
             animeStore.isFavorite.toggle()
 
-            return .run { [animeStore] in
+            return .run { [animeStore] _ in
                 try await withTaskCancellation(id: FavoritesDebouce.self, cancelInFlight: true) {
-                    _ = try await repositoryClient.insert(animeStore)
+                    if !(try await repositoryClient.update(animeStore.id, \AnimeStore.isFavorite, animeStore.isFavorite)) {
+                        try await repositoryClient.insert(animeStore)
+                    }
                 }
             }
 
@@ -284,16 +289,10 @@ extension AnimeDetailReducer {
             }
 
         case .markEpisodeAsUnwatched(let episodeNumber):
-            guard var animeStore = state.animeStore.value else {
-                break
-            }
+            guard let episodeStore = state.animeStore.value?.episodes.first(where: { $0.number == episodeNumber }) else { break }
 
-            if let episode = animeStore.episodes.first(where: { $0.number == episodeNumber }) {
-                animeStore.episodes.remove(episode)
-            }
-
-            return .run { [animeStore] in
-                try await repositoryClient.insert(animeStore)
+            return .run { [episodeStore] in
+                try await repositoryClient.update(episodeStore.id, \EpisodeStore.progress, nil)
             }
 
         case .fetchedAnime(.success(let anime)):
@@ -328,6 +327,7 @@ extension AnimeDetailReducer {
                 .cancel(id: CancelFetchingEpisodesId.self),
                 .cancel(id: CancelObservingAnimeDB.self),
                 .cancel(id: CancelObservingCollections.self),
+                .cancel(id: CancelObservingDownloadState.self),
                 .action(.close)
             )
 
@@ -358,6 +358,20 @@ extension AnimeDetailReducer {
 
         case .downloadingEpisodes(let hm):
             state.downloadingEpisodes = hm
+
+        case .removeDownload(let episode):
+            guard let url = episode.downloadURL else { break }
+
+            return .run { [episode] _ in
+                await downloaderClient.delete(url)
+                try await repositoryClient.update(episode.id, \EpisodeStore.downloadURL, nil)
+            }
+
+        case .cancelDownload(let episodeNumber):
+            let animeId = state.animeId
+            return .run {
+                downloaderClient.cancelDownload(animeId, episodeNumber)
+            }
 
         case .collectionLists(.onCloseTapped):
             state.collectionsList = nil
@@ -396,10 +410,12 @@ extension AnimeDetailReducer {
 
             effects.append(
                 .run { send in
-                    let items = downloaderClient.observe(animeId)
+                    await withTaskCancellation(id: CancelObservingDownloadState.self) {
+                        let items = downloaderClient.observe(animeId)
 
-                    for await episodesDownloading in items {
-                        await send(.downloadingEpisodes(episodesDownloading))
+                        for await episodesDownloading in items {
+                            await send(.downloadingEpisodes(episodesDownloading))
+                        }
                     }
                 }
             )
