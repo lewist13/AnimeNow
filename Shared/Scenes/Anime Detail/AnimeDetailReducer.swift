@@ -13,7 +13,7 @@ import ComposableArchitecture
 struct AnimeDetailReducer: ReducerProtocol {
     typealias LoadableEpisodes = Loadable<[Episode]>
     typealias LoadableAnimeStore = Loadable<AnimeStore>
-    typealias LoadableCollectionStores = Loadable<Set<CollectionStore>>
+    typealias LoadableCollectionStores = Loadable<[CollectionStore]>
 
     struct State: Equatable {
         let animeId: Anime.ID
@@ -22,9 +22,8 @@ struct AnimeDetailReducer: ReducerProtocol {
         var episodes = LoadableEpisodes.idle
         var animeStore = LoadableAnimeStore.idle
         var collectionStores = LoadableCollectionStores.idle
-        var collectionsList: CollectionListReducer.State?
 
-        var downloadingEpisodes: [Int : DownloaderClient.Status] = [:]
+        var episodesStatus = Set<DownloaderClient.EpisodeStorage>([])
 
         var compactEpisodes = false
 
@@ -53,20 +52,21 @@ struct AnimeDetailReducer: ReducerProtocol {
         case close
         case playResumeButtonClicked
         case toggleCompactEpisodes
-        case showCollectionList
+        case tappedCollectionList
+        case showCollectionsList(Anime.ID, Set<CollectionStore>)
         case markEpisodeAsWatched(Episode.ID)
         case markEpisodeAsUnwatched(Int)
         case fetchedEpisodes(TaskResult<[Episode]>)
         case fetchedAnime(TaskResult<Anime>)
         case selectedEpisode(Episode.ID)
         case downloadEpisode(Episode)
-        case downloadingEpisodes([Int : DownloaderClient.Status])
-        case removeDownload(EpisodeStore)
+        case episodesStatus(Set<DownloaderClient.EpisodeStorage>)
+        case removeDownload(Episode.ID)
+        case retryDownload(Episode.ID)
         case cancelDownload(Int)
         case play(anime: Anime, episodes: [Episode], selected: Episode.ID)
         case fetchedAnimeFromDB([AnimeStore])
         case fetchedCollectionStores([CollectionStore])
-        case collectionLists(CollectionListReducer.Action)
     }
 
     @Dependency(\.mainQueue) var mainQueue
@@ -77,9 +77,6 @@ struct AnimeDetailReducer: ReducerProtocol {
 
     var body: some ReducerProtocol<State, Action> {
         Reduce(self.core)
-            .ifLet(\.collectionsList, action: /Action.collectionLists) {
-                CollectionListReducer()
-            }
     }
 }
 
@@ -209,7 +206,7 @@ extension AnimeDetailReducer {
     func core(state: inout State, action: Action) -> EffectTask<Action> {
         switch action {
         case .onAppear:
-            state.compactEpisodes = userDefaultsClient.boolForKey(.compactEpisodes)
+            state.compactEpisodes = userDefaultsClient.get(.compactEpisodes)
 
             guard state.anime.value != nil else {
                 if !state.anime.hasInitialized {
@@ -307,15 +304,13 @@ extension AnimeDetailReducer {
             state.animeStore = .success(.findOrCreate(anime, animesMatched))
 
         case .fetchedCollectionStores(let collectionStores):
-            let set = Set(collectionStores)
-            state.collectionStores = .success(set)
-            state.collectionsList?.collections = set
+            state.collectionStores = .success(collectionStores)
 
         case .toggleCompactEpisodes:
             state.compactEpisodes.toggle()
 
             return .run { [state] in
-                await userDefaultsClient.setBool(.compactEpisodes, state.compactEpisodes)
+                await userDefaultsClient.set(.compactEpisodes, value: state.compactEpisodes)
             }
 
         case .play:
@@ -331,53 +326,41 @@ extension AnimeDetailReducer {
                 .action(.close)
             )
 
-        case .showCollectionList:
-            state.collectionsList = .init(
-                animeId: state.animeId,
-                collections: state.collectionStores.value ?? []
+        case .tappedCollectionList:
+            return .action(
+                .showCollectionsList(
+                    state.animeId,
+                    Set(state.collectionStores.value ?? [])
+                )
             )
+
+        case .showCollectionsList:
+            break
 
         case .close:
             break
 
-        case .collectionLists(.collectionSelectedToggle(let collectionId)):
-            if var collection = state.collectionStores.value?[id: collectionId], let anime = state.animeStore.value {
-                if collection.animes[id: anime.id] != nil {
-                    collection.animes[id: anime.id] = nil
-                } else {
-                    collection.animes[id: anime.id] = anime
-                }
-
-                return .run { [collection] in
-                    try await repositoryClient.insert(collection)
-                }
-            }
-
         case .downloadEpisode:
             break
 
-        case .downloadingEpisodes(let hm):
-            state.downloadingEpisodes = hm
+        case .episodesStatus(let hm):
+            state.episodesStatus = hm
 
-        case .removeDownload(let episode):
-            guard let url = episode.downloadURL else { break }
+        case .removeDownload(let episodeNumber):
+            return .run { [state] in
+                await downloaderClient.delete(state.animeId, episodeNumber)
+            }
 
-            return .run { [episode] _ in
-                await downloaderClient.delete(url)
-                try await repositoryClient.update(episode.id, \EpisodeStore.downloadURL, nil)
+        case .retryDownload(let episodeNumber):
+            return .run { [state] in
+                await downloaderClient.retry(state.animeId, episodeNumber)
             }
 
         case .cancelDownload(let episodeNumber):
             let animeId = state.animeId
             return .run {
-                downloaderClient.cancelDownload(animeId, episodeNumber)
+                await downloaderClient.cancel(animeId, episodeNumber)
             }
-
-        case .collectionLists(.onCloseTapped):
-            state.collectionsList = nil
-
-        case .collectionLists:
-            break
         }
         return .none
     }
@@ -413,8 +396,12 @@ extension AnimeDetailReducer {
                     await withTaskCancellation(id: CancelObservingDownloadState.self) {
                         let items = downloaderClient.observe(animeId)
 
-                        for await episodesDownloading in items {
-                            await send(.downloadingEpisodes(episodesDownloading))
+                        for await animes in items {
+                            if let anime = animes.first {
+                                await send(.episodesStatus(anime.episodes))
+                            } else {
+                                await send(.episodesStatus([]))
+                            }
                         }
                     }
                 }

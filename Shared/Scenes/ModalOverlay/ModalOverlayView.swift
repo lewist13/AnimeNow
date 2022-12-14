@@ -27,6 +27,12 @@ struct ModalOverlayView: View {
                     action: ModalOverlayReducer.Action.downloadOptions,
                     then: DownloadOptionsView.init
                 )
+
+                CaseLet(
+                    state: /ModalOverlayReducer.State.collectionList,
+                    action: ModalOverlayReducer.Action.collectionList,
+                    then: CollectionListView.init
+                )
             }
         }
     }

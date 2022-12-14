@@ -16,6 +16,47 @@ protocol APIRoutable {
     func configureRequest(request: inout URLRequest)
 }
 
+extension APIRoutable {
+    func configureRequest(_ request: inout URLRequest) {
+        configureRequest(request: &request)
+        let userAgent = Self.userAgent()
+        request.setValue(userAgent, forHTTPHeaderField: "User-Agent")
+    }
+ }
+
+extension APIRoutable {
+    static func userAgent() -> String {
+        let info = Bundle.main.infoDictionary
+        let executable = info?[kCFBundleNameKey as String] ?? "Unknown"
+        let bundle = info?[kCFBundleIdentifierKey as String] ?? "Unknown"
+        let appVersion = info?["CFBundleShortVersionString"] ?? "Unknown"
+        let appCommit = info?["Commit Version"] ?? "Unknown"
+        let osVersion = {
+            let version = ProcessInfo.processInfo.operatingSystemVersion
+            return "\(version.majorVersion).\(version.minorVersion).\(version.patchVersion)"
+        }()
+        let osName = {
+            #if os(iOS)
+            #if targetEnvironment(macCatalyst)
+            return "macOS(Catalyst)"
+            #else
+            return "iOS"
+            #endif
+            #elseif os(watchOS)
+            return "watchOS"
+            #elseif os(tvOS)
+            return "tvOS"
+            #elseif os(macOS)
+            return "macOS"
+            #else
+            return "Unknown"
+            #endif
+        }()
+
+        return "\(executable)/\(appVersion) (\(bundle); commit:\(appCommit)) \(osName) \(osVersion)"
+    }
+}
+
 enum API {
     static func request<API: APIRoutable, Output>(
         _ api: API,
@@ -27,7 +68,7 @@ enum API {
             throw URLError(.badURL)
         }
 
-        api.configureRequest(request: &request)
+        api.configureRequest(&request)
 
         let (data, _) = try await URLSession.shared.data(for: request)
 
@@ -91,6 +132,5 @@ extension URLSession {
                 task.resume()
             }
         }
-
     }
 }

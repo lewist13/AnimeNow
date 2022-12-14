@@ -27,20 +27,23 @@ struct CollectionListView: View {
                         store,
                         observe: { $0 }
                     ) { viewStore in
-                        if viewStore.sortedCollections.count > 0 {
-                            Text("Collections")
-                                .font(.callout.bold())
-                                .foregroundColor(.gray.opacity(0.85))
-                                .frame(maxWidth: .infinity, alignment: .leading)
-
-                            ForEach(viewStore.sortedCollections) { collection in
-                                collectionItem(collection, animeId: viewStore.animeId)
+                        Group {
+                            if viewStore.sortedCollections.count > 0 {
+                                Text("Collections")
+                                    .font(.callout.bold())
+                                    .foregroundColor(.gray.opacity(0.85))
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                
+                                ForEach(viewStore.sortedCollections) { collection in
+                                    collectionItem(collection, animeId: viewStore.animeId)
+                                }
+                            } else {
+                                Text("No Collections Available")
+                                    .font(.title3.weight(.medium))
+                                    .frame(height: 80)
                             }
-                        } else {
-                            Text("No Collections Available")
-                                .font(.title3.weight(.medium))
-                                .frame(height: 80)
                         }
+                        .animation(.easeInOut, value: viewStore.state)
                     }
                 }
             }
@@ -69,12 +72,10 @@ extension CollectionListView {
                     .foregroundColor(.gray)
             }
             Spacer()
-            Image(
-                systemName: selected ? "checkmark.circle.fill" : "circle"
-            )
-            .font(.body.bold())
-            .foregroundColor(selected ? .secondaryAccent : .init(white: 0.6))
-            .imageScale(.large)
+            Image(systemName: selected ? "checkmark.circle.fill" : "circle")
+                .font(.body.bold())
+                .foregroundColor(selected ? .secondaryAccent : .init(white: 0.6))
+                .imageScale(.large)
         }
         .padding(.vertical, 8)
         .padding(.horizontal, 16)

@@ -19,7 +19,6 @@ extension EpisodeStore: ManagedObjectConvertible {
         .init(\.thumbnail, "cover"),
         .init(\.progress, "progress"),
         .init(\.lastUpdatedProgress, "lastUpdatedProgress"),
-        .init(\.downloadURL, "downloadURL")
     ]
 }
 

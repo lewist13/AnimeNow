@@ -18,6 +18,8 @@
 		130B4BC0292DEF72009E6176 /* StackNavigation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 130B4BBD292D9CA3009E6176 /* StackNavigation.swift */; };
 		130B898F291728CA008CBD68 /* ScaledOnHoverModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 130B898E291728CA008CBD68 /* ScaledOnHoverModifier.swift */; };
 		130B8990291728CA008CBD68 /* ScaledOnHoverModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 130B898E291728CA008CBD68 /* ScaledOnHoverModifier.swift */; };
+		130DFDC92943D95700C42486 /* DownloaderClient+Live.swift in Sources */ = {isa = PBXBuildFile; fileRef = 130DFDC82943D95700C42486 /* DownloaderClient+Live.swift */; };
+		130DFDCA2943D95700C42486 /* DownloaderClient+Live.swift in Sources */ = {isa = PBXBuildFile; fileRef = 130DFDC82943D95700C42486 /* DownloaderClient+Live.swift */; };
 		130ED93A28E3EF73000811A6 /* ChipView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 130ED93928E3EF72000811A6 /* ChipView.swift */; };
 		130ED93C28E3FD38000811A6 /* Date+Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 130ED93B28E3FD38000811A6 /* Date+Utils.swift */; };
 		1310E05E292BEFC4003F47A0 /* AddNewCollectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13F1BC9929294BB600404EDB /* AddNewCollectionView.swift */; };
@@ -84,6 +86,8 @@
 		1359668E28E6100B00EB2AFC /* HapticClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1359668B28E6100B00EB2AFC /* HapticClient.swift */; };
 		1359668F28E6100B00EB2AFC /* HapticClient+Mock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1359668C28E6100B00EB2AFC /* HapticClient+Mock.swift */; };
 		1359669028E6100B00EB2AFC /* HapticClient+Live.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1359668D28E6100B00EB2AFC /* HapticClient+Live.swift */; };
+		1359E405294078D700AA5288 /* AttributedText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1359E404294078D700AA5288 /* AttributedText.swift */; };
+		1359E406294078D700AA5288 /* AttributedText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1359E404294078D700AA5288 /* AttributedText.swift */; };
 		135D560B2926B96D0096774D /* Model5ToModel6Policy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 135D560A2926B96D0096774D /* Model5ToModel6Policy.swift */; };
 		135D560C2926B96D0096774D /* Model5ToModel6Policy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 135D560A2926B96D0096774D /* Model5ToModel6Policy.swift */; };
 		135D560E2926BA280096774D /* Model5ToModel6Mapping.xcmappingmodel in Sources */ = {isa = PBXBuildFile; fileRef = 135D560D2926BA280096774D /* Model5ToModel6Mapping.xcmappingmodel */; };
@@ -220,8 +224,6 @@
 		13F1BC9A29294BB600404EDB /* AddNewCollectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13F1BC9929294BB600404EDB /* AddNewCollectionView.swift */; };
 		13F1BC9C29294BC100404EDB /* AddNewCollectionReducer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13F1BC9B29294BC100404EDB /* AddNewCollectionReducer.swift */; };
 		13F2F526292FF73C003122AA /* DownloaderClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13F2F525292FF73C003122AA /* DownloaderClient.swift */; };
-		13F2F5282930004F003122AA /* DownloaderClient+Live.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13F2F5272930004F003122AA /* DownloaderClient+Live.swift */; };
-		13F2F529293000B0003122AA /* DownloaderClient+Live.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13F2F5272930004F003122AA /* DownloaderClient+Live.swift */; };
 		13F2F52A293000B3003122AA /* DownloaderClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13F2F525292FF73C003122AA /* DownloaderClient.swift */; };
 		13F2F52D29300583003122AA /* DownloadOptionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13F2F52C29300583003122AA /* DownloadOptionsView.swift */; };
 		13F2F52F2930058E003122AA /* DownloadOptionsReducer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13F2F52E2930058E003122AA /* DownloadOptionsReducer.swift */; };
@@ -260,6 +262,7 @@
 		1309D6C228E22BB500CC9036 /* View+Redacted.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+Redacted.swift"; sourceTree = "<group>"; };
 		130B4BBD292D9CA3009E6176 /* StackNavigation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StackNavigation.swift; sourceTree = "<group>"; };
 		130B898E291728CA008CBD68 /* ScaledOnHoverModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScaledOnHoverModifier.swift; sourceTree = "<group>"; };
+		130DFDC82943D95700C42486 /* DownloaderClient+Live.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DownloaderClient+Live.swift"; sourceTree = "<group>"; };
 		130ED93928E3EF72000811A6 /* ChipView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChipView.swift; sourceTree = "<group>"; };
 		130ED93B28E3FD38000811A6 /* Date+Utils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Date+Utils.swift"; sourceTree = "<group>"; };
 		1312FD5928DD4B52004A415F /* ThumbnailItemCompactView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThumbnailItemCompactView.swift; sourceTree = "<group>"; };
@@ -298,6 +301,7 @@
 		1359668B28E6100B00EB2AFC /* HapticClient.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HapticClient.swift; sourceTree = "<group>"; };
 		1359668C28E6100B00EB2AFC /* HapticClient+Mock.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "HapticClient+Mock.swift"; sourceTree = "<group>"; };
 		1359668D28E6100B00EB2AFC /* HapticClient+Live.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "HapticClient+Live.swift"; sourceTree = "<group>"; };
+		1359E404294078D700AA5288 /* AttributedText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AttributedText.swift; sourceTree = "<group>"; };
 		135D56092926B90F0096774D /* Model 6.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "Model 6.xcdatamodel"; sourceTree = "<group>"; };
 		135D560A2926B96D0096774D /* Model5ToModel6Policy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Model5ToModel6Policy.swift; sourceTree = "<group>"; };
 		135D560D2926BA280096774D /* Model5ToModel6Mapping.xcmappingmodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcmappingmodel; path = Model5ToModel6Mapping.xcmappingmodel; sourceTree = "<group>"; };
@@ -375,7 +379,6 @@
 		13F1BC9929294BB600404EDB /* AddNewCollectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddNewCollectionView.swift; sourceTree = "<group>"; };
 		13F1BC9B29294BC100404EDB /* AddNewCollectionReducer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddNewCollectionReducer.swift; sourceTree = "<group>"; };
 		13F2F525292FF73C003122AA /* DownloaderClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloaderClient.swift; sourceTree = "<group>"; };
-		13F2F5272930004F003122AA /* DownloaderClient+Live.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DownloaderClient+Live.swift"; sourceTree = "<group>"; };
 		13F2F52C29300583003122AA /* DownloadOptionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadOptionsView.swift; sourceTree = "<group>"; };
 		13F2F52E2930058E003122AA /* DownloadOptionsReducer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadOptionsReducer.swift; sourceTree = "<group>"; };
 		13F52BDE2906285B00AC9315 /* View+Hovered.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+Hovered.swift"; sourceTree = "<group>"; };
@@ -498,7 +501,7 @@
 			isa = PBXGroup;
 			children = (
 				13F2F525292FF73C003122AA /* DownloaderClient.swift */,
-				13F2F5272930004F003122AA /* DownloaderClient+Live.swift */,
+				130DFDC82943D95700C42486 /* DownloaderClient+Live.swift */,
 			);
 			path = DownloaderClient;
 			sourceTree = "<group>";
@@ -622,6 +625,7 @@
 				132A7ED429275A0C0039E0CC /* ModalCardView.swift */,
 				130B4BBD292D9CA3009E6176 /* StackNavigation.swift */,
 				13A4DFF72934A5C300CDCA41 /* CircularProgressView.swift */,
+				1359E404294078D700AA5288 /* AttributedText.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -1081,6 +1085,7 @@
 				138066F228C572B50012DAFB /* SearchView.swift in Sources */,
 				137A819A28C5455100B69503 /* Anime.swift in Sources */,
 				138066E928C55BE30012DAFB /* HomeReducer.swift in Sources */,
+				1359E405294078D700AA5288 /* AttributedText.swift in Sources */,
 				13083D1C292AB95C005AC657 /* ModalOverlayReducer.swift in Sources */,
 				13386AE728CBFD7A005E8352 /* Loadable.swift in Sources */,
 				132A7ED72927FDAE0039E0CC /* Color+Extension.swift in Sources */,
@@ -1114,6 +1119,7 @@
 				133E55F829011DE200CD59DA /* AnimeNow.xcdatamodeld in Sources */,
 				13F66A0C29306BDB0027BAB6 /* LifecycleReducer.swift in Sources */,
 				13FC21C828C39762000F0F79 /* RepositoryClient.swift in Sources */,
+				130DFDC92943D95700C42486 /* DownloaderClient+Live.swift in Sources */,
 				13DF205828FBA18B00EE804D /* DeviceUtil.swift in Sources */,
 				13C1552328FB9C1D0064885D /* HomeView+iOS.swift in Sources */,
 				1327550628D2A11A00A6C525 /* UserDefaultsClient+Live.swift in Sources */,
@@ -1186,7 +1192,6 @@
 				13F76D4F292B5F0B0092723E /* AppView.swift in Sources */,
 				13C3536F28C308A000A54E7E /* AppView+iOS.swift in Sources */,
 				132A7ED529275A0C0039E0CC /* ModalCardView.swift in Sources */,
-				13F2F5282930004F003122AA /* DownloaderClient+Live.swift in Sources */,
 				13446E8128CA4AB100F815C6 /* SettingsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1222,7 +1227,6 @@
 				1324366B28E7D4BE00F282EE /* AnimeStore.swift in Sources */,
 				1398F35D28FFCAD600C93CFA /* BottomSafeAreaInset+View.swift in Sources */,
 				13A4DFF92934A5C300CDCA41 /* CircularProgressView.swift in Sources */,
-				13F2F529293000B0003122AA /* DownloaderClient+Live.swift in Sources */,
 				13F2F52A293000B3003122AA /* DownloaderClient.swift in Sources */,
 				1327550728D2A11A00A6C525 /* UserDefaultsClient+Live.swift in Sources */,
 				1384FF7A28CB93FA003B011E /* Navigation+Extension.swift in Sources */,
@@ -1253,6 +1257,7 @@
 				13DF206528FBDB4500EE804D /* AnimePlayerView.swift in Sources */,
 				13B2770A28F7753100B4B4A3 /* VideoPlayer.swift in Sources */,
 				1380562228E9341A00B9B45B /* Cache.swift in Sources */,
+				130DFDCA2943D95700C42486 /* DownloaderClient+Live.swift in Sources */,
 				13FC747428CFA10A00A77818 /* Source.swift in Sources */,
 				13B2771828F79FF200B4B4A3 /* AniListAPI.swift in Sources */,
 				1324366828E7B40300F282EE /* Sequence+Keypath.swift in Sources */,
@@ -1279,6 +1284,7 @@
 				135D560C2926B96D0096774D /* Model5ToModel6Policy.swift in Sources */,
 				13FC21D528C39928000F0F79 /* RepositoryClient+Mock.swift in Sources */,
 				13DF206428FBD64C00EE804D /* DownloadsView.swift in Sources */,
+				1359E406294078D700AA5288 /* AttributedText.swift in Sources */,
 				1327551028D2AACB00A6C525 /* AnimeClient+Live.swift in Sources */,
 				130B4BBF292D9CA7009E6176 /* StackNavigation.swift in Sources */,
 				13C1551928FB75780064885D /* SeekbarView.swift in Sources */,

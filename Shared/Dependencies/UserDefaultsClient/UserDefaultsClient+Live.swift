@@ -13,33 +13,33 @@ extension UserDefaultsClient {
         let userDefaults = UserDefaults.standard
 
         return Self.init(
-            dataForKey: { userDefaults.data(forKey: $0.rawValue) } ,
-            boolForKey: { userDefaults.bool(forKey: $0.rawValue) },
-            doubleForKey: { userDefaults.double(forKey: $0.rawValue) },
-            intForKey: { userDefaults.integer(forKey: $0.rawValue) },
+            dataForKey: { userDefaults.data(forKey: $0) } ,
+            boolForKey: { userDefaults.bool(forKey: $0) },
+            doubleForKey: { userDefaults.double(forKey: $0) },
+            intForKey: { userDefaults.integer(forKey: $0) },
             setBool: { key, value in
                 Task(operation: {
-                    userDefaults.set(value, forKey: key.rawValue)
+                    userDefaults.set(value, forKey: key)
                 })
             },
             setInt: { key, value in
                 Task(operation: {
-                    userDefaults.set(value, forKey: key.rawValue)
+                    userDefaults.set(value, forKey: key)
                 })
             },
             setDouble: { key, value in
                 Task(operation: {
-                    userDefaults.set(value, forKey: key.rawValue)
+                    userDefaults.set(value, forKey: key)
                 })
             },
             setData: { key, value in
                 Task(operation: {
-                    userDefaults.set(value, forKey: key.rawValue)
+                    userDefaults.set(value, forKey: key)
                 })
             },
             remove: { key in
                 Task(operation: {
-                    userDefaults.removeObject(forKey: key.rawValue)
+                    userDefaults.removeObject(forKey: key)
                 })
             })
     }()

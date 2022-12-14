@@ -37,23 +37,6 @@ struct AnimeDetailView: View {
         .transition(.move(edge: .bottom).combined(with: .opacity))
         .frame(maxWidth: .infinity)
         .overlay(closeButton)
-        .overlay(
-            IfLetStore(
-                store.scope(
-                    state: \.collectionsList,
-                    action: AnimeDetailReducer.Action.collectionLists
-                )
-            ) { viewStore in
-                ModalCardView(
-                    onDismiss: {
-                        ViewStore(store)
-                            .send(.collectionLists(.onCloseTapped))
-                    }
-                ) {
-                    CollectionListView(store: viewStore)
-                }
-            }
-        )
         #if os(iOS)
         .ignoresSafeArea(edges: .top)
         .statusBarHidden()
@@ -174,7 +157,7 @@ extension AnimeDetailView {
                             observe: \.isLoading
                         ) { viewState in
                             Button {
-                                viewState.send(.showCollectionList)
+                                viewState.send(.tappedCollectionList)
                             } label: {
                                 Image(systemName: "plus")
                                     .font(.body.bold())
@@ -370,30 +353,11 @@ extension AnimeDetailView {
 
     struct EpisodeDownloadingViewState: Equatable {
         var episodeStore: EpisodeStore?
-        private var downloadState: DownloaderClient.Status?
-
-        var thumbnailDownloadState: ThumbnailItemBigView.DownloadState? {
-            if let url = episodeStore?.downloadURL {
-                return .downloaded(url)
-            } else {
-                switch downloadState {
-                case .some(.success):
-                    return .downloading(1.0)
-                case .some(.failed):
-                    return .error
-                case .some(.pending):
-                    return .downloading(0)
-                case .some(.downloading(progress: let prog)):
-                    return .downloading(prog)
-                default:
-                    return nil
-                }
-            }
-        }
+        var downloadStatus: DownloaderClient.Status?
 
         init(_ state: AnimeDetailReducer.State, _ episodeNumber: Int) {
             self.episodeStore = state.animeStore.value?.episodes.first(where: { $0.number == episodeNumber })
-            self.downloadState = state.downloadingEpisodes[episodeNumber]
+            self.downloadStatus = state.episodesStatus[id: episodeNumber]?.status
         }
     }
 
@@ -413,7 +377,19 @@ extension AnimeDetailView {
                     ThumbnailItemCompactView(
                         episode: episode,
                         progress: viewState.episodeStore?.progress,
-                        downloadState: viewState.state.thumbnailDownloadState ?? .empty({ viewState.send(.downloadEpisode(episode)) })
+                        downloadStatus: .init(
+                            state: viewState.downloadStatus,
+                            callback: { action in
+                                switch action {
+                                case .download:
+                                    viewState.send(.downloadEpisode(episode))
+                                case .cancel:
+                                    viewState.send(.cancelDownload(episode.number))
+                                case .retry:
+                                    viewState.send(.retryDownload(episode.number))
+                                }
+                            }
+                        )
                     )
                     .frame(height: 85)
                 } else {
@@ -427,7 +403,19 @@ extension AnimeDetailView {
                         ),
                         isFiller: episode.isFiller,
                         progressSize: 10,
-                        downloadState: viewState.state.thumbnailDownloadState ?? .empty({ viewState.send(.downloadEpisode(episode)) })
+                        downloadStatus: .init(
+                            state: viewState.downloadStatus,
+                            callback: { action in
+                                switch action {
+                                case .download:
+                                    viewState.send(.downloadEpisode(episode))
+                                case .cancel:
+                                    viewState.send(.cancelDownload(episode.number))
+                                case .retry:
+                                    viewState.send(.retryDownload(episode.number))
+                                }
+                            }
+                        )
                     )
                 }
             }
@@ -460,17 +448,23 @@ extension AnimeDetailView {
                     }
                 }
 
-                if let episodeStore = viewState.episodeStore, episodeStore.downloadURL != nil {
+                if case .downloaded = viewState.downloadStatus {
                     Button {
-                        viewState.send(.removeDownload(episodeStore))
+                        viewState.send(.removeDownload(episode.number))
                     } label: {
                         Text("Remove Download")
                     }
-                } else if case .downloading = viewState.thumbnailDownloadState {
+                } else if viewState.downloadStatus?.canCancelDownload == true {
                     Button {
                         viewState.send(.cancelDownload(episode.number))
                     } label: {
                         Text("Cancel Download")
+                    }
+                } else if case .failed = viewState.downloadStatus {
+                    Button {
+                        viewState.send(.retryDownload(episode.number))
+                    } label: {
+                        Text("Retry Download")
                     }
                 }
             }

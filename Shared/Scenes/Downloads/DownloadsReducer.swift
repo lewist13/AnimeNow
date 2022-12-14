@@ -11,14 +11,15 @@ import ComposableArchitecture
 
 struct DownloadsReducer: ReducerProtocol {
     struct State: Equatable {
-        var animes: [AnimeStore] = []
+        var animes: [DownloaderClient.AnimeStorage] = []
     }
 
     enum Action: Equatable {
         case onAppear
-        case deleteEpisode(EpisodeStore)
-        case playEpisode(AnimeStore, [EpisodeStore], Int)
-        case onAnimes([AnimeStore])
+        case deleteEpisode(Anime.ID, Int)
+        case cancelDownload(Anime.ID, Int)
+        case playEpisode(DownloaderClient.AnimeStorage, [DownloaderClient.EpisodeStorage], Int)
+        case onAnimes([DownloaderClient.AnimeStorage])
     }
 
     @Dependency(\.downloaderClient) var downloaderClient
@@ -34,28 +35,24 @@ extension DownloadsReducer {
         switch action {
         case .onAppear:
             return .run { send in
-                let animes = repositoryClient.observe(AnimeStore.all)
+                let list = downloaderClient.observe(nil)
 
-                for await list in animes {
-                    let animeLists = list.map { anime in
-                        var newAnime = anime
-                        newAnime.episodes = newAnime.episodes.filter({ $0.downloadURL != nil })
-                        return newAnime
-                    }
-                        .filter({ $0.episodes.count > 0 })
-                    await send(.onAnimes(animeLists))
+                for await animes in list {
+                    await send(.onAnimes(animes.sorted(by: \.title)))
                 }
             }
 
         case .onAnimes(let animes):
             state.animes = animes
 
-        case .deleteEpisode(let episodeStore):
-            guard let url = episodeStore.downloadURL else { break }
+        case .deleteEpisode(let animeId, let episodeNumber):
+            return .run {
+                await downloaderClient.delete(animeId, episodeNumber)
+            }
 
-            return .run { [episodeStore] _ in
-                await downloaderClient.delete(url)
-                try await repositoryClient.update(episodeStore.id, \EpisodeStore.downloadURL, nil)
+        case .cancelDownload(let animeId, let episodeNumber):
+            return .run {
+                await downloaderClient.cancel(animeId, episodeNumber)
             }
 
         case .playEpisode:

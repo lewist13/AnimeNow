@@ -13,22 +13,12 @@ struct EpisodeStore: EpisodeRepresentable, Hashable, Codable {
     var title: String = ""
     var thumbnail: ImageSize? = nil
     var isFiller: Bool { false }
+    var providers: [Provider] { [] }
 
     // Database Only
 
     var progress: Double? = nil
     var lastUpdatedProgress: Date = .init()
-    var downloadURL: URL? = nil
-}
-
-extension EpisodeStore {
-    var providers: [Provider] {
-        if let url = downloadURL {
-            return [.offline(url: url)]
-        } else {
-            return []
-        }
-    }
 }
 
 extension EpisodeStore {

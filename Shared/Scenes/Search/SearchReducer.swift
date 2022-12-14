@@ -43,7 +43,7 @@ extension SearchReducer {
         switch action {
         case .onAppear:
             return .run { send in
-                let searchedItems: [String] = try userDefaultsClient.dataForKey(.searchedItems)?.toObject() ?? []
+                let searchedItems: [String] = try userDefaultsClient.get(.searchedItems)?.toObject() ?? []
                 await send(.searchHistory(searchedItems))
             }
 
@@ -76,7 +76,7 @@ extension SearchReducer {
         case .clearSearchHistory:
             state.searched.removeAll()
             return .fireAndForget { [state] in
-                await userDefaultsClient.setData(.searchedItems, try state.searched.toData())
+                await userDefaultsClient.set(.searchedItems, value: try state.searched.toData())
             }
 
         case .onAnimeTapped:
@@ -89,7 +89,7 @@ extension SearchReducer {
             }
             state.searched.insert(state.query, at: 0)
             return .fireAndForget { [state] in
-                await userDefaultsClient.setData(.searchedItems, try state.searched.toData())
+                await userDefaultsClient.set(.searchedItems, value: try state.searched.toData())
             }
         }
         return .none

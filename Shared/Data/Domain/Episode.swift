@@ -15,7 +15,7 @@ protocol EpisodeRepresentable: Hashable, Identifiable {
     var isFiller: Bool { get }
 
     func isEqualTo(_ item: some EpisodeRepresentable) -> Bool
-    func asRepresentable() -> AnyEpisodeRepresentable
+    func eraseAsRepresentable() -> AnyEpisodeRepresentable
 }
 
 extension EpisodeRepresentable where Self: Equatable {
@@ -26,7 +26,7 @@ extension EpisodeRepresentable where Self: Equatable {
 }
 
 extension EpisodeRepresentable {
-    func asRepresentable() -> AnyEpisodeRepresentable {
+    func eraseAsRepresentable() -> AnyEpisodeRepresentable {
         .init(self)
     }
 }

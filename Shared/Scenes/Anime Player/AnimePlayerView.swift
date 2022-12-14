@@ -197,7 +197,7 @@ extension AnimePlayerView {
 
         init(_ state: AnimePlayerReducer.State) {
             self.action = state.skipAction
-            self.canShowButton = state.selectedSidebar == nil && self.action != nil
+            self.canShowButton = state.selectedSidebar == nil && self.action != nil && state.playerDuration > 0.0
         }
     }
 
@@ -247,7 +247,7 @@ extension AnimePlayerView {
             .transition(.move(edge: .trailing).combined(with: .opacity))
             .animation(
                 .easeInOut(duration: 0.5),
-                value: viewState.canShowButton || viewState.action != nil
+                value: viewState.canShowButton
             )
         }
         .padding(.vertical, 4)
@@ -482,7 +482,6 @@ extension AnimePlayerView {
                                 .font(.title2)
                                 .bold()
                         } else {
-
                             Text("\(selectedSidebar.description)")
                                 .foregroundColor(Color.white)
                                 .font(.title2)
@@ -509,9 +508,11 @@ extension AnimePlayerView {
                 .aspectRatio(8/9, contentMode: .fit)
                 .padding(24)
                 .background(
-                    Color(white: 0.05)
+                    Color(white: 0.12)
+                        .cornerRadius(16)
                 )
             }
+            .transition(DeviceUtil.isPhone ? .move(edge: .trailing).combined(with: .opacity) : .identity)
         }
     }
 }
@@ -682,7 +683,7 @@ struct VideoPlayerView_Previews: PreviewProvider {
                 store: .init(
                     initialState: .init(
                         anime: Anime.narutoShippuden,
-                        episodes: .init(Episode.demoEpisodes.map({ $0.asRepresentable() })),
+                        episodes: .init(Episode.demoEpisodes.map({ $0.eraseAsRepresentable() })),
                         selectedEpisode: Episode.demoEpisodes.first!.id
                     ),
                     reducer: AnimePlayerReducer()

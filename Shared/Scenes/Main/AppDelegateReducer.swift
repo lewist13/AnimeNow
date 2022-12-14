@@ -29,7 +29,7 @@ extension AppDelegateReducer {
     func core(state: inout State, action: Action) -> EffectTask<Action> {
         switch action {
         case .appDidFinishLaunching:
-            if !userDefaultsClient.boolForKey(.firstLaunched) {
+            if !userDefaultsClient.get(.firstLaunched) {
                 // TODO: Do something that will trigger firstLaunched
             }
 

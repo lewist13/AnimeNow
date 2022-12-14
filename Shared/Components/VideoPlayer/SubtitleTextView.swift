@@ -20,15 +20,11 @@ struct SubtitleTextView: View {
             if let text = viewModel.vtt.value?.bounds(for: duration * progress)?.text {
                 VStack(alignment: .center) {
                     Spacer()
-                    Text(text)
-                        .font(.system(size: 18).bold())
-                        .foregroundColor(Color.white)
-                        .multilineTextAlignment(.center)
-                        .padding(4)
-                        .background(
-                            Color.black.opacity(0.45)
-                                .clipShape(RoundedRectangle(cornerRadius: 8))
-                        )
+
+                    AttributedText(
+                        text: text,
+                        options: .defaultStroke
+                    )
 
                     Spacer(minLength: 24)
                         .fixedSize()

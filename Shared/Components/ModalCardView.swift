@@ -30,7 +30,7 @@ struct ModalCardView<Content: View, ShapeType: ShapeStyle>: View {
         self.style = style
         self.content = content()
     }
-    
+
     public var body: some View {
         ZStack {
             Color.black.opacity(0.5)
@@ -48,17 +48,18 @@ struct ModalCardView<Content: View, ShapeType: ShapeStyle>: View {
                         .edgesIgnoringSafeArea(.bottom)
                 }
             }
-            .transition(isiPad ? .opacity.combined(with: .offset(x: 0, y: 200)) : .move(edge: .bottom))
             .zIndex(2)
+            .transition(isiPad ? .opacity.combined(with: .offset(x: 0, y: 200)) : .move(edge: .bottom))
         }
-        .animation(.spring(response: 0.35, dampingFraction: 1))
+        .animation(.spring(response: 0.35, dampingFraction: 1), value: viewOffset)
     }
 
     private var container: some View {
         VStack {
             Spacer()
             if isiPad {
-                card.aspectRatio(1.0, contentMode: .fit)
+                card
+                    .aspectRatio(1.0, contentMode: .fit)
                     .fixedSize()
                 Spacer()
             } else {
@@ -66,14 +67,14 @@ struct ModalCardView<Content: View, ShapeType: ShapeStyle>: View {
             }
         }
     }
-    
+
     private var cardShape: some Shape {
         RoundedRectangle(
             cornerSize: style.cornerSize,
             style: .continuous
         )
     }
-    
+
     private var card: some View {
         VStack(alignment: .trailing, spacing: 0) {
             if !options.contains(.hideDismissButton) {
@@ -92,7 +93,7 @@ struct ModalCardView<Content: View, ShapeType: ShapeStyle>: View {
                 .buttonStyle(.plain)
                 .frame(width: 24, height: 24)
             }
-            
+
             HStack {
                 Spacer()
                 content
@@ -118,7 +119,7 @@ struct ModalCardView<Content: View, ShapeType: ShapeStyle>: View {
                 }
         )
     }
-    
+
     func dismiss() {
         if let onDismiss {
             onDismiss()

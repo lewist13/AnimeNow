@@ -86,7 +86,6 @@ struct AppReducer: ReducerProtocol {
         case setAnimeDetail(AnimeDetailReducer.State?)
         case setModalOverlay(ModalOverlayReducer.State?)
         case setDownloadingCount(Int)
-        case onDownloadFinished(DownloaderClient.Request, URL)
         case appDelegate(AppDelegateReducer.Action)
         case home(HomeReducer.Action)
         case collection(CollectionsReducer.Action)
@@ -252,23 +251,13 @@ extension AppReducer {
             }
 
         case .appDelegate(.appDidFinishLaunching):
-//            struct OnEpisodeDownloadFinished: Hashable { }
-            return .merge(
-                .run { send in
-                    let items = downloaderClient.onFinish()
+            return .run { send in
+                let downloadCounts = downloaderClient.count()
 
-                    for await item in items {
-                        await send(.onDownloadFinished(item.0, item.1))
-                    }
-                },
-                .run { send in
-                    let downloadCounts = downloaderClient.observeCount()
-
-                    for await count in downloadCounts {
-                        await send(.setDownloadingCount(count))
-                    }
+                for await count in downloadCounts {
+                    await send(.setDownloadingCount(count))
                 }
-            )
+            }
 
         case .setModalOverlay(let overlay):
             state.modalOverlay = overlay
@@ -277,58 +266,76 @@ extension AppReducer {
             state.totalDownloadsCount = count
 
         case .collection(.onAddNewCollectionTapped):
-            return .action(.setModalOverlay(.addNewCollection(.init())), animation: .spring(response: 0.35, dampingFraction: 1))
+            return .action(
+                .setModalOverlay(
+                    .addNewCollection(
+                        .init()
+                    )
+                ),
+                animation: .spring(response: 0.35, dampingFraction: 1)
+            )
 
         case .animeDetail(.downloadEpisode(let episode)):
             guard let anime = state.animeDetail?.anime.value else { break }
             return .action(
-                .setModalOverlay(.downloadOptions(.init(anime: anime, episode: episode))),
+                .setModalOverlay(
+                    .downloadOptions(
+                        .init(
+                            anime: anime,
+                            episode: episode
+                        )
+                    )
+                ),
                 animation: .spring(response: 0.35, dampingFraction: 1)
             )
 
-        case .onDownloadFinished(let item, let location):
-            return .run { send in
-                let animeStores = try await repositoryClient.fetch(AnimeStore.all.where(\AnimeStore.id == item.anime.id))
+        case .animeDetail(.showCollectionsList(let animeId, let collections)):
+            return .action(
+                .setModalOverlay(
+                    .collectionList(
+                        .init(
+                            animeId: animeId,
+                            collections: collections
+                        )
+                    )
+                ),
+                animation: .spring(response: 0.35, dampingFraction: 1)
+            )
 
-                if var animeStore = animeStores[id: item.anime.id] {
-                    if let episode = animeStore.episodes.first(where: { $0.number == item.episode.number }) {
-                        try await repositoryClient.update(episode.id, \EpisodeStore.downloadURL, location)
-                    } else {
-                        var episode = EpisodeStore.findOrCreate(item.episode, animeStore.episodes)
-                        episode.downloadURL = location
-                        animeStore.episodes.insert(episode)
-                        try await repositoryClient.insert(animeStore)
-                    }
-                } else {
-                    var animeStore = AnimeStore.findOrCreate(item.anime, animeStores)
-                    var episode = EpisodeStore.findOrCreate(item.episode, animeStore.episodes)
-                    episode.downloadURL = location
-                    animeStore.episodes.insert(episode)
-                    try await repositoryClient.insert(animeStore)
-                }
+        case .animeDetail(.fetchedCollectionStores(let collections)):
+            if case .some(.collectionList(var collectionState)) = state.modalOverlay {
+                collectionState.collections = .init(collections)
+                state.modalOverlay = .collectionList(collectionState)
             }
 
         case .modalOverlay(.downloadOptions(.downloadClicked)):
-            var effects = [EffectTask<Action>]()
-
             if case let .downloadOptions(downloadState) = state.modalOverlay, let source = downloadState.source {
-                effects.append(
-                    .fireAndForget {
-                        let downloadItem = DownloaderClient.Request(
-                            anime: downloadState.anime,
-                            episode: downloadState.episode,
-                            source: source
-                        )
-                        _ = downloaderClient.download(downloadItem)
-                    }
+                let downloadItem = DownloaderClient.Request(
+                    anime: downloadState.anime.eraseAsRepresentable(),
+                    episode: downloadState.episode.eraseAsRepresentable(),
+                    source: source
                 )
-            }
+                downloaderClient.download(downloadItem)
 
-            effects.append(.action(.modalOverlay(.onClose)))
-            return .merge(effects)
+                return .action(.modalOverlay(.onClose))
+            }
 
         case .modalOverlay(.addNewCollection(.saveTitle)):
             return .action(.modalOverlay(.onClose))
+
+        case .modalOverlay(.collectionList(.collectionSelectedToggle(let collectionStoreId))):
+            if var collection = state.animeDetail?.collectionStores.value?[id: collectionStoreId],
+                let anime = state.animeDetail?.animeStore.value {
+                if collection.animes[id: anime.id] != nil {
+                    collection.animes[id: anime.id] = nil
+                } else {
+                    collection.animes[id: anime.id] = anime
+                }
+
+                return .run { [collection] in
+                    try await repositoryClient.insert(collection)
+                }
+            }
 
         case .modalOverlay(.onClose):
             return .action(.setModalOverlay(nil), animation: .spring(response: 0.35, dampingFraction: 1))

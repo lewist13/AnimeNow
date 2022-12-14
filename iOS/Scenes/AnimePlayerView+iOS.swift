@@ -46,7 +46,6 @@ extension AnimePlayerView {
         .overlay(statusOverlay)
         .overlay(
             sidebarOverlay
-                .cornerRadius(16)
                 .padding()
                 .frame(
                     maxWidth: .infinity,
@@ -62,7 +61,6 @@ extension AnimePlayerView {
                             }
                         }
                 )
-                .transaction { $0.animation = nil }
         )
         .overlay(episodesOverlay)
     }
@@ -383,7 +381,7 @@ struct VideoPlayerViewiOS_Previews: PreviewProvider {
                 store: .init(
                     initialState: .init(
                         anime: Anime.narutoShippuden,
-                        episodes: .init(Episode.demoEpisodes.map({ $0.asRepresentable() })),
+                        episodes: .init(Episode.demoEpisodes.map({ $0.eraseAsRepresentable() })),
                         selectedEpisode: Episode.demoEpisodes.first!.id
                     ),
                     reducer: AnimePlayerReducer()

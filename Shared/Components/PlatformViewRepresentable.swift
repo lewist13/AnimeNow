@@ -22,7 +22,10 @@ public protocol PlatformAgnosticViewRepresentable: PlatformViewRepresentable {
 
     func makePlatformView(context: Context) -> PlatformViewType
     func updatePlatformView(_ platformView: PlatformViewType, context: Context)
-    static func dismantlePlatformView(_ platformView: PlatformViewType, coordinator: Coordinator)
+}
+
+extension PlatformAgnosticViewRepresentable {
+    static func dismantlePlatformView(_ platformView: PlatformViewType, coordinator: Coordinator) { }
 }
 
 #if os(iOS) || os(tvOS)
@@ -39,6 +42,7 @@ public extension PlatformAgnosticViewRepresentable where UIViewType == PlatformV
         dismantlePlatformView(uiView, coordinator: coordinator)
     }
 }
+
 #elseif os(macOS)
 public extension PlatformAgnosticViewRepresentable where NSViewType == PlatformViewType {
     func makeNSView(context: Context) -> NSViewType {

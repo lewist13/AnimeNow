@@ -42,8 +42,6 @@ struct BlurView: PlatformAgnosticViewRepresentable {
         view.state = .active
         #endif
     }
-
-    static func dismantlePlatformView(_ view: BlurEffectView, coordinator: ()) {}
 }
 
 

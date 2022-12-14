@@ -10,7 +10,7 @@ import SwiftUI
 import OrderedCollections
 
 struct StackNavigation<Buttons: View, Content: View>: View {
-    let title: String
+    var title: String = ""
     var content: () -> Content
     var buttons: (() -> Buttons)? = nil
 
@@ -68,7 +68,10 @@ struct StackNavigation<Buttons: View, Content: View>: View {
 }
 
 extension StackNavigation where Buttons == EmptyView {
-    init(title: String, content: @escaping () -> Content) {
+    init(
+        title: String,
+        @ViewBuilder content: @escaping () -> Content
+    ) {
         self.title = title
         self.content = content
     }

@@ -95,7 +95,7 @@ struct AnimePlayerReducer: ReducerProtocol {
         ) {
             self.anime = anime.eraseAsRepresentable()
             if let episodes = episodes {
-                self.episodes = .success(episodes.map { $0.asRepresentable() })
+                self.episodes = .success(episodes.map { $0.eraseAsRepresentable() })
             } else {
                 self.episodes = .idle
             }
@@ -545,8 +545,8 @@ extension AnimePlayerReducer {
 
             state.selectedEpisode = episodeId
 
-            let lastSelectedProvider: String? = try? userDefaultsClient.dataForKey(.videoPlayerProvider)?.toObject()
-            let lastSelectedIsDub: Bool? = userDefaultsClient.boolForKey(.videoPlayerAudioIsDub)
+            let lastSelectedProvider: String? = try? userDefaultsClient.get(.videoPlayerProvider)?.toObject()
+            let lastSelectedIsDub: Bool? = userDefaultsClient.get(.videoPlayerAudioIsDub)
 
             var providerId = state.episode?.providers.first(
                 where: { $0.description == lastSelectedProvider && $0.dub == lastSelectedIsDub }
@@ -571,7 +571,7 @@ extension AnimePlayerReducer {
             guard let providerName = state.episode?.providers[id: providerId]?.description else { break }
             guard providerName != state.provider?.description else { break }
 
-            let lastSelectedIsDub: Bool? = userDefaultsClient.boolForKey(.videoPlayerAudioIsDub)
+            let lastSelectedIsDub: Bool? = userDefaultsClient.get(.videoPlayerAudioIsDub)
 
             var providerId = state.episode?.providers.first(where: { $0.description == providerName && $0.dub == lastSelectedIsDub })?.id
             providerId = providerId ?? state.episode?.providers.first(where: { $0.description == providerName })?.id
@@ -594,7 +594,7 @@ extension AnimePlayerReducer {
 
             let subtitleData = try? state.subtitle?.lang.toData()
             return .run {
-                await userDefaultsClient.setData(.videoPlayerSubtitle, subtitleData ?? .empty)
+                await userDefaultsClient.set(.videoPlayerSubtitle, value: subtitleData ?? .empty)
             }
 
         case .selectSidebarSettings(let section):
@@ -607,7 +607,7 @@ extension AnimePlayerReducer {
 
             return .concatenate(
                 .run {
-                    await userDefaultsClient.setBool(.videoPlayerAudioIsDub, provider.dub ?? false)
+                    await userDefaultsClient.set(.videoPlayerAudioIsDub, value: provider.dub)
                 },
                 self.saveEpisodeState(state: state),
                 self.internalSetProvider(providerId, state: &state)
@@ -626,7 +626,7 @@ extension AnimePlayerReducer {
             state.selectedSource = source
             if let qualityData = try? state.source?.quality.toData() {
                 return .run {
-                    await userDefaultsClient.setData(.videoPlayerQuality, qualityData)
+                    await userDefaultsClient.set(.videoPlayerQuality, value: qualityData)
                 }
             }
 
@@ -656,7 +656,7 @@ extension AnimePlayerReducer {
             state.animeStore = .success(.findOrCreate(state.anime, animeStores))
 
         case .fetchedEpisodes(.success(let episodes)):
-            state.episodes = .success(episodes.map({ $0.asRepresentable() }))
+            state.episodes = .success(episodes.map({ $0.eraseAsRepresentable() }))
             let selectedEpisodeId = state.selectedEpisode
             return .action(.selectEpisode(selectedEpisodeId))
 
@@ -680,8 +680,8 @@ extension AnimePlayerReducer {
         case .fetchedSourcesOptions(.success(let sources)):
             state.sourcesOptions = .success(sources)
 
-            let lastSelectedQuality: Source.Quality? = try? userDefaultsClient.dataForKey(.videoPlayerQuality)?.toObject()
-            let lastSelectedSubtitles: String? = try? userDefaultsClient.dataForKey(.videoPlayerSubtitle)?.toObject()
+            let lastSelectedQuality: Source.Quality? = try? userDefaultsClient.get(.videoPlayerQuality)?.toObject()
+            let lastSelectedSubtitles: String? = try? userDefaultsClient.get(.videoPlayerSubtitle)?.toObject()
 
             let sourceId = sources.sources.first(where: { $0.quality == lastSelectedQuality })?.id ?? sources.sources.first?.id
             let subtitleId = sources.subtitles.first(where: { $0.lang == lastSelectedSubtitles })?.id ?? nil
@@ -892,7 +892,7 @@ extension AnimePlayerReducer {
         return .concatenate(
             .run { send in
                 if let providerData = providerData {
-                    await userDefaultsClient.setData(.videoPlayerProvider, providerData)
+                    await userDefaultsClient.set(.videoPlayerProvider, value: providerData)
                 }
 
                 await send(.fetchSourcesOptions)

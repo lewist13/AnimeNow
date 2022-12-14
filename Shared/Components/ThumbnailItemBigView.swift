@@ -38,18 +38,22 @@ struct ThumbnailItemBigView: View {
         }
     }
 
-    enum DownloadState {
-        case empty(() -> Void)
-        case downloading(Double)
-        case downloaded(URL)
-        case error
+    struct DownloadStatus {
+        var state: DownloaderClient.Status? = nil
+        var callback: ((Action) -> Void) = { _ in }
+
+        enum Action {
+            case download
+            case cancel
+            case retry
+        }
     }
 
     let type: InputType
     var isFiller = false
     var nowPlaying = false
     var progressSize: CGFloat = 10
-    var downloadState: DownloadState? = nil
+    var downloadStatus: DownloadStatus? = nil
 
     var body: some View {
         GeometryReader { reader in
@@ -69,6 +73,7 @@ struct ThumbnailItemBigView: View {
             .overlay(
                 VStack(spacing: 0) {
                     HStack {
+                        let size: CGFloat = 34
                         Group {
                             if nowPlaying {
                                 Text("Now Playing")
@@ -78,51 +83,67 @@ struct ThumbnailItemBigView: View {
                         }
                         .font(.footnote.weight(.heavy))
                         .foregroundColor(nowPlaying ? Color.black : Color.white)
-                        .padding(12)
+                        .padding(.horizontal, 12)
+                        .frame(height: size)
                         .background(nowPlaying ? Color(white: 0.9) :  Color(white: 0.15))
                         .clipShape(Capsule())
 
                         Spacer()
-                        
-                        Group {
-                            if let downloadState {
-                                switch downloadState {
-                                case .empty(let callback):
-                                    Button {
-                                        callback()
-                                    } label: {
-                                        Image(systemName: "arrow.down.to.line")
-                                            .font(.callout.weight(.bold))
-                                            .foregroundColor(.black)
-                                            .padding(12)
-                                            .background(Color.white)
-                                            .clipShape(Circle())
-                                    }
-                                    .buttonStyle(.plain)
 
-                                case .downloading(let percentage):
-                                    CircularProgressView(progress: percentage)
-                                        .frame(width: 16, height: 16)
-                                        .padding(12)
+                        if let downloadStatus {
+                            switch downloadStatus.state {
+                            case  .some(.pending), .some(.downloading):
+                                Circle()
+                                    .foregroundColor(.white)
+                                    .frame(width: size, height: size)
+                                    .overlay(
+                                        Group {
+                                            if case .downloading(let progress) = downloadStatus.state {
+                                                CircularProgressView(progress: progress)
+                                            } else {
+                                                CircularProgressView(progress: 0.0)
+                                            }
+                                        }
+                                            .frame(width: 20, height: 20)
+                                            .foregroundColor(.black)
+                                    )
+                                    .contentShape(Rectangle())
+                                    .onTapGesture {
+                                        downloadStatus.callback(.cancel)
+                                    }
+
+                            case .some(.downloaded):
+                                Image(systemName: "checkmark")
+                                    .font(.callout.weight(.black))
+                                    .foregroundColor(.white)
+                                    .frame(width: size, height: size)
+                                    .background(Color.green)
+                                    .clipShape(Circle())
+
+                            case .some(.failed):
+                                Image(systemName: "exclamationmark")
+                                    .font(.callout.weight(.black))
+                                    .foregroundColor(.white)
+                                    .frame(width: size, height: size)
+                                    .background(Color.red)
+                                    .clipShape(Circle())
+                                    .contentShape(Rectangle())
+                                    .onTapGesture {
+                                        downloadStatus.callback(.retry)
+                                    }
+
+                            case .none:
+                                Button {
+                                    downloadStatus.callback(.download)
+                                } label: {
+                                    Image(systemName: "arrow.down.to.line")
+                                        .font(.callout.weight(.bold))
+                                        .foregroundColor(.black)
+                                        .frame(width: size, height: size)
                                         .background(Color.white)
                                         .clipShape(Circle())
-
-                                case .downloaded:
-                                    Image(systemName: "checkmark")
-                                        .font(.callout.weight(.bold))
-                                        .foregroundColor(.white)
-                                        .padding(12)
-                                        .background(Color.green)
-                                        .clipShape(Circle())
-                                    
-                                case .error:
-                                    Image(systemName: "exclamationmark")
-                                        .font(.callout.weight(.bold))
-                                        .foregroundColor(.white)
-                                        .padding(12)
-                                        .background(Color.red)
-                                        .clipShape(Circle())
                                 }
+                                .buttonStyle(.plain)
                             }
                         }
                     }
@@ -197,8 +218,9 @@ struct EpisodeItemBigView_Previews: PreviewProvider {
                 number: episode.number,
                 progress: 0.5
             ),
-            isFiller: true
+            isFiller: true,
+            downloadStatus: .init()
         )
-        .frame(height: 150)
+        .frame(height: 200)
     }
 }

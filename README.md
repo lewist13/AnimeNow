@@ -30,8 +30,10 @@ This app is still in its beta stages so expect random crashes, missing content, 
 - [x] Custom video playback
 - [x] Airplay 2 Support
 - [x] Picture in Picture playback support
-- [ ] Download & play episodes offline
+- [x] Download & play episodes offline
+- [x] Custom Collections
 - [ ] Third party anime tracking
+- [ ] Manga support (Maybe after over 150 stars?)
 
 ## Screenshot
 
@@ -155,3 +157,9 @@ _TBA_
 ## License
 
 [![Licence](https://img.shields.io/github/license/errorerrorerror/anime-now?style=for-the-badge)](./LICENSE)
+
+<hr style="height: 3px">
+
+<a href="https://www.buymeacoffee.com/animenow">
+  <img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=animenow&button_colour=FF5F5F&font_colour=ffffff&font_family=Lato&outline_colour=000000&coffee_colour=FFDD00" />
+</a>

@@ -12,7 +12,7 @@ struct ThumbnailItemCompactView: View {
     let episode: any EpisodeRepresentable
     var progress: Double? = nil
 
-    var downloadState: ThumbnailItemBigView.DownloadState?
+    var downloadStatus: ThumbnailItemBigView.DownloadStatus? = nil
 
     var body: some View {
         GeometryReader { reader in
@@ -20,8 +20,8 @@ struct ThumbnailItemCompactView: View {
                 FillAspectImage(
                     url: episode.thumbnail?.link
                 )
-                .cornerRadius(reader.size.height / 8)
                 .aspectRatio(16/9, contentMode: .fit)
+                .cornerRadius(reader.size.height / 8)
                 .overlay(
                     Group {
                         if let progress = progress, progress >= 0.9 {
@@ -81,26 +81,24 @@ struct ThumbnailItemCompactView: View {
 
                 Spacer()
 
-                Group {
-                    if let downloadState {
-                        switch downloadState {
-                        case .empty(let callback):
-                            Button {
-                                callback()
-                            } label: {
-                                Image(systemName: "arrow.down.to.line")
-                                    .font(.body.bold())
-                                    .foregroundColor(.gray)
+                if let downloadStatus {
+                    Group {
+                        switch downloadStatus.state {
+                        case .some(.pending), .some(.downloading):
+                            Group {
+                                if case .downloading(let percentage) = downloadStatus.state {
+                                    CircularProgressView(progress: percentage)
+                                } else {
+                                    CircularProgressView(progress: 0.0)
+                                }
                             }
-                            .buttonStyle(.plain)
-                        case .downloading(let percentage):
-                            CircularProgressView(progress: percentage)
-                                .frame(width: 16, height: 16)
-                                .padding(4)
-                                .background(Color.white)
-                                .clipShape(Circle())
+                            .foregroundColor(.gray)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                downloadStatus.callback(.cancel)
+                            }
 
-                        case .downloaded:
+                        case .some(.downloaded):
                             Image(systemName: "checkmark")
                                 .font(.callout.weight(.bold))
                                 .foregroundColor(.white)
@@ -108,17 +106,27 @@ struct ThumbnailItemCompactView: View {
                                 .background(Color.green)
                                 .clipShape(Circle())
 
-                        case .error:
+                        case .some(.failed):
                             Image(systemName: "exclamationmark")
                                 .font(.callout.weight(.bold))
                                 .foregroundColor(.white)
                                 .padding(4)
                                 .background(Color.red)
                                 .clipShape(Circle())
+
+                        case .none:
+                            Button {
+                                downloadStatus.callback(.download)
+                            } label: {
+                                Image(systemName: "arrow.down.to.line")
+                                    .font(.body.bold())
+                                    .foregroundColor(.gray)
+                            }
+                            .buttonStyle(.plain)
                         }
                     }
+                    .frame(maxWidth: 24, maxHeight: 24)
                 }
-                .frame(maxWidth: 24, maxHeight: 24)
             }
             .background(Color.black)
             .cornerRadius(reader.size.height / 8)
@@ -130,8 +138,9 @@ struct ThumbnailItemCompactView: View {
 struct EpisodeItemCompactView_Previews: PreviewProvider {
     static var previews: some View {
         ThumbnailItemCompactView(
-            episode: Episode.demoEpisodes[1].asRepresentable(),
-            progress: 0.9
+            episode: Episode.demoEpisodes[1].eraseAsRepresentable(),
+            progress: 0.9,
+            downloadStatus: .init()
         )
         .preferredColorScheme(.dark)
         .frame(height: 100)

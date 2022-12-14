@@ -148,41 +148,44 @@ struct DownloadOptionsView: View {
                     store,
                     observe: VideoOptionsViewState.init
                 ) { viewState in
-                    SettingsSelectableListView(items: viewState.selectableProviders) {
-                        .init(
-                            name: "Provider",
-                            selected: viewState.isLoadingProviders ? nil : viewState.provider?.description,
-                            loading: viewState.isLoadingProviders
-                        )
-                    } itemView: { item in
-                        Text(item.description)
-                    } selectedItem: {
-                        viewState.send(.selectProvider($0))
+                    Group {
+                        SettingsSelectableListView(items: viewState.selectableProviders) {
+                            .init(
+                                name: "Provider",
+                                selected: viewState.isLoadingProviders ? nil : viewState.provider?.description,
+                                loading: viewState.isLoadingProviders
+                            )
+                        } itemView: { item in
+                            Text(item.description)
+                        } selectedItem: {
+                            viewState.send(.selectProvider($0))
+                        }
+                        
+                        SettingsSelectableListView(items: viewState.selectableAudio ?? []) {
+                            .init(
+                                name: "Audio",
+                                selected: viewState.isLoadingProviders ? nil : viewState.audio?.language,
+                                loading: viewState.isLoadingProviders
+                            )
+                        } itemView: { item in
+                            Text(item.description)
+                        } selectedItem: {
+                            viewState.send(.selectProvider($0))
+                        }
+                        
+                        SettingsSelectableListView(items: viewState.selectableQualities ?? []) {
+                            .init(
+                                name: "Quality",
+                                selected: viewState.isLoadingSources ? nil : viewState.quality?.description,
+                                loading: viewState.isLoadingSources
+                            )
+                        } itemView: { item in
+                            Text(item.description)
+                        } selectedItem: {
+                            viewState.send(.selectSource($0))
+                        }
                     }
-
-                    SettingsSelectableListView(items: viewState.selectableAudio ?? []) {
-                        .init(
-                            name: "Audio",
-                            selected: viewState.isLoadingProviders ? nil : viewState.audio?.language,
-                            loading: viewState.isLoadingProviders
-                        )
-                    } itemView: { item in
-                        Text(item.description)
-                    } selectedItem: {
-                        viewState.send(.selectProvider($0))
-                    }
-
-                    SettingsSelectableListView(items: viewState.selectableQualities ?? []) {
-                        .init(
-                            name: "Quality",
-                            selected: viewState.isLoadingSources ? nil : viewState.quality?.description,
-                            loading: viewState.isLoadingSources
-                        )
-                    } itemView: { item in
-                        Text(item.description)
-                    } selectedItem: {
-                        viewState.send(.selectSource($0))
-                    }
+                    .animation(.easeInOut, value: viewState.state)
                 }
             }
 
@@ -203,6 +206,7 @@ struct DownloadOptionsView: View {
                 }
                 .buttonStyle(.plain)
                 .disabled(!viewStore.state)
+                .animation(.easeInOut, value: viewStore.state)
             }
         }
         .onAppear {

@@ -7,23 +7,25 @@
 
 import SwiftUI
 
-struct SettingsSelectableListView<T: Equatable & Identifiable, ItemView: View>: View {
+struct SettingsSelectableListView<T: Equatable & Identifiable, I: View>: View {
     let items: [T]
-
     var rowView: () -> SettingsRowView
-    var itemView: (T) -> ItemView
-
+    var itemView: (T) -> I
     var selectedItem: ((T.ID) -> Void)? = nil
 
     @State private var expand = false
 
     var body: some View {
         LazyVStack(spacing: 0) {
+            Spacer()
+
             rowView()
                 .multiSelectable(true)
                 .cornerRadius(0)
                 .onTapped {
-                    expand.toggle()
+                    withAnimation {
+                        expand.toggle()
+                    }
                 }
 
             if expand {
@@ -36,10 +38,13 @@ struct SettingsSelectableListView<T: Equatable & Identifiable, ItemView: View>: 
                     itemView(item)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.horizontal)
-                        .padding(.vertical, 8)
+                        .padding(.vertical, 10)
+                        .contentShape(Rectangle())
                         .onTapGesture {
-                            selectedItem?(item.id)
-                            expand = false
+                            withAnimation {
+                                expand = false
+                                selectedItem?(item.id)
+                            }
                         }
                 }
             }
@@ -62,23 +67,18 @@ struct SettingsExpandableListView_Previews: PreviewProvider {
 }
 
 struct RectCorner: OptionSet {
-    
     let rawValue: Int
-        
     static let topLeft = RectCorner(rawValue: 1 << 0)
     static let topRight = RectCorner(rawValue: 1 << 1)
     static let bottomRight = RectCorner(rawValue: 1 << 2)
     static let bottomLeft = RectCorner(rawValue: 1 << 3)
-    
-    static let allCorners: RectCorner = [.topLeft, topRight, .bottomLeft, .bottomRight]
+    static let all: RectCorner = [.topLeft, topRight, .bottomLeft, .bottomRight]
 }
-
 
 // draws shape with specified rounded corners applying corner radius
 struct RoundedCornersShape: Shape {
-    
     var radius: CGFloat = .zero
-    var corners: RectCorner = .allCorners
+    var corners: RectCorner = .all
 
     func path(in rect: CGRect) -> Path {
         var path = Path()
@@ -97,31 +97,37 @@ struct RoundedCornersShape: Shape {
 
         
         path.move(to: p1)
-        path.addArc(tangent1End: CGPoint(x: rect.minX, y: rect.minY),
-                    tangent2End: p2,
-                    radius: radius)
+        path.addArc(
+            tangent1End: CGPoint(x: rect.minX, y: rect.minY),
+            tangent2End: p2,
+            radius: radius
+        )
         path.addLine(to: p3)
-        path.addArc(tangent1End: CGPoint(x: rect.maxX, y: rect.minY),
-                    tangent2End: p4,
-                    radius: radius)
+        path.addArc(
+            tangent1End: CGPoint(x: rect.maxX, y: rect.minY),
+            tangent2End: p4,
+            radius: radius
+        )
         path.addLine(to: p5)
-        path.addArc(tangent1End: CGPoint(x: rect.maxX, y: rect.maxY),
-                    tangent2End: p6,
-                    radius: radius)
+        path.addArc(
+            tangent1End: CGPoint(x: rect.maxX, y: rect.maxY),
+            tangent2End: p6,
+            radius: radius
+        )
         path.addLine(to: p7)
-        path.addArc(tangent1End: CGPoint(x: rect.minX, y: rect.maxY),
-                    tangent2End: p8,
-                    radius: radius)
+        path.addArc(
+            tangent1End: CGPoint(x: rect.minX, y: rect.maxY),
+            tangent2End: p8,
+            radius: radius
+        )
         path.closeSubpath()
 
         return path
     }
 }
 
-// View extension, to be used like modifier:
-// SomeView().roundedCorners(radius: 20, corners: [.topLeft, .bottomRight])
 extension View {
     func roundedCorners(radius: CGFloat, corners: RectCorner) -> some View {
-        clipShape( RoundedCornersShape(radius: radius, corners: corners) )
+        clipShape(RoundedCornersShape(radius: radius, corners: corners))
     }
 }
