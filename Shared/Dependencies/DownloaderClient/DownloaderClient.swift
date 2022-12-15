@@ -16,6 +16,7 @@ struct DownloaderClient {
     let count: () -> AsyncStream<Int>
     let cancel: (Anime.ID, Int) async -> Void
     let retry: (Anime.ID, Int) async -> Void
+    let reset: () async -> Void
 }
 
 extension DownloaderClient {

@@ -18,10 +18,21 @@ extension DownloaderClient {
         withIdentifier: (Bundle.main.bundleIdentifier ?? "unknown") + ".downloader-client"
     )
 
-    private static let storeURL: URL = {
-        let directories = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
-        return directories[0].appendingPathComponent("AnimeNowDownloads", conformingTo: .data)
+    private static let storeURL: URL? = {
+        let directories = FileManager.default.urls(
+            for: .cachesDirectory,
+            in: .userDomainMask
+        )
+        return directories.first?.appendingPathComponent("AnimeNowDownloads", conformingTo: .data)
     }()
+
+    private static var videoStorageDirectoryURL: URL? {
+        guard var cachesDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first else { return nil }
+        cachesDir = cachesDir.appendingPathComponent("com.apple.nsurlsessiond", conformingTo: .directory)
+        cachesDir = cachesDir.appendingPathComponent("Downloads", conformingTo: .directory)
+        cachesDir = cachesDir.appendingPathComponent(Bundle.main.bundleIdentifier ?? "", conformingTo: .directory)
+        return cachesDir
+    }
 
     private static let downloadedContent: CurrentValueSubject<Set<AnimeStorage>, Never> = .init([])
     private static let downloadsStatus = CurrentValueSubject<[URLSessionTask.ID : TaskData], Never>([:])
@@ -184,10 +195,30 @@ extension DownloaderClient {
                     task.resume()
                 }
             }
+        } reset: {
+            Task {
+                if let videoStorageDirectoryURL {
+                    let contents = try? FileManager.default.contentsOfDirectory(
+                        at: videoStorageDirectoryURL,
+                        includingPropertiesForKeys: nil
+                    )
+
+                    for content in contents ?? [] {
+                        try? FileManager.default.removeItem(at: content)
+                    }
+                }
+
+                downloadedContent.value.removeAll()
+
+                downloadedContentQueue.addOperation {
+                    syncToDisk()
+                }
+            }
         }
     }()
 
     private static func fetchFromDisk() {
+        guard let storeURL else { return }
         do {
             let savedData = try Data(contentsOf: storeURL)
             downloadedContent.value = try savedData.toObject() ?? .init()
@@ -226,6 +257,8 @@ extension DownloaderClient {
     }
 
     private static func syncToDisk() {
+        guard let storeURL else { return }
+
         do {
             let data = try downloadedContent.value.toData()
             try data.write(to: storeURL)

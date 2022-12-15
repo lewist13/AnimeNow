@@ -17,31 +17,12 @@ struct AnimeDetailReducer: ReducerProtocol {
 
     struct State: Equatable {
         let animeId: Anime.ID
-
         var anime: Loadable<Anime> = .idle
         var episodes = LoadableEpisodes.idle
         var animeStore = LoadableAnimeStore.idle
         var collectionStores = LoadableCollectionStores.idle
-
         var episodesStatus = Set<DownloaderClient.EpisodeStorage>([])
-
         var compactEpisodes = false
-
-        init(
-            anime: some AnimeRepresentable,
-            episodes: LoadableEpisodes = .idle,
-            animeStore: LoadableAnimeStore = .idle,
-            compactEpisodes: Bool = false
-        ) {
-            self.animeId = anime.id
-            if let anime = anime as? Anime {
-                self.anime = .success(anime)
-            } else {
-                self.anime = .idle
-            }
-            self.episodes = episodes
-            self.compactEpisodes = compactEpisodes
-        }
     }
 
     enum Action: Equatable {
@@ -77,6 +58,17 @@ struct AnimeDetailReducer: ReducerProtocol {
 
     var body: some ReducerProtocol<State, Action> {
         Reduce(self.core)
+    }
+}
+
+extension AnimeDetailReducer.State {
+    init(
+        anime: some AnimeRepresentable
+    ) {
+        self.animeId = anime.id
+        if let anime = anime as? Anime {
+            self.anime = .success(anime)
+        }
     }
 }
 

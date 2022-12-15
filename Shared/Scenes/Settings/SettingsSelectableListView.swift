@@ -20,7 +20,7 @@ struct SettingsSelectableListView<T: Equatable & Identifiable, I: View>: View {
             Spacer()
 
             rowView()
-                .multiSelectable(true)
+                .selectionType(.multi)
                 .cornerRadius(0)
                 .onTapped {
                     withAnimation {

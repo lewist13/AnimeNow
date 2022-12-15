@@ -8,9 +8,15 @@
 import SwiftUI
 
 struct SettingsRowView: View {
+
+    enum SelectionType {
+        case single
+        case multi
+    }
+
     let name: String
     var selected: String? = nil
-    var multiSelectionable = false
+    var selectionType = SelectionType.single
     var loading = false
     var cornerRadius = 12.0
     var tapped: (() -> Void)? = nil
@@ -25,15 +31,18 @@ struct SettingsRowView: View {
             if let selected = selected {
                 Text(selected)
                     .font(.footnote.bold())
-                    .foregroundColor(multiSelectionable ? Color.white : Color.gray)
+                    .foregroundColor(selectionType == .multi ? Color.white : Color.gray)
             }
 
             if loading {
                 ProgressView()
                     .progressViewStyle(.circular)
             } else {
-                if multiSelectionable {
+                if selectionType == .multi {
                     Image(systemName: "chevron.up.chevron.down")
+                        .foregroundColor(.gray)
+                } else {
+                    Image(systemName: "chevron.down")
                         .foregroundColor(.gray)
                 }
             }
@@ -64,9 +73,9 @@ extension SettingsRowView {
         return view
     }
 
-    func multiSelectable(_ multi: Bool) -> SettingsRowView {
+    func selectionType(_ type: SelectionType) -> SettingsRowView {
         var view = self
-        view.multiSelectionable = multi
+        view.selectionType = type
         return view
     }
 }

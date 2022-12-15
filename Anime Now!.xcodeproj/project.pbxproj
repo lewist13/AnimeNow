@@ -1619,7 +1619,7 @@
 			repositoryURL = "https://github.com/pointfreeco/swift-url-routing.git";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 0.3.1;
+				minimumVersion = 0.4.0;
 			};
 		};
 		137A81A128C5572200B69503 /* XCRemoteSwiftPackageReference "Kingfisher" */ = {

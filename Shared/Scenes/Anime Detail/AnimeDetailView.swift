@@ -391,17 +391,12 @@ extension AnimeDetailView {
                             }
                         )
                     )
-                    .frame(height: 85)
+                    .frame(height: 84)
+                    .frame(maxWidth: .infinity)
                 } else {
                     ThumbnailItemBigView(
-                        type: .episode(
-                            image: episode.thumbnail?.link,
-                            name: episode.title,
-                            animeName: nil,
-                            number: episode.number,
-                            progress: viewState.episodeStore?.progress
-                        ),
-                        isFiller: episode.isFiller,
+                        episode: episode,
+                        progress: viewState.episodeStore?.progress,
                         progressSize: 10,
                         downloadStatus: .init(
                             state: viewState.downloadStatus,
@@ -504,11 +499,7 @@ struct AnimeDetailView_Previews: PreviewProvider {
         AnimeDetailView(
             store: .init(
                 initialState: .init(
-                    anime: Anime.narutoShippuden,
-                    episodes: .success(Episode.demoEpisodes),
-                    animeStore: .success(
-                        .init()
-                    )
+                    animeId: 127230
                 ),
                 reducer: AnimeDetailReducer()
             )

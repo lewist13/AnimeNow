@@ -14,7 +14,8 @@ struct StackNavigation<Buttons: View, Content: View>: View {
     var content: () -> Content
     var buttons: (() -> Buttons)? = nil
 
-    @StateObject var stack = StackNavigationObservable()
+    @StateObject var stack =
+    StackNavigationObservable()
 
     var body: some View {
         #if os(iOS)

@@ -9,35 +9,6 @@ import SwiftUI
 import Kingfisher
 
 struct ThumbnailItemBigView: View {
-    enum InputType {
-        case episode(image: URL?, name: String, animeName: String?, number: Int, progress: Double?)
-        case movie(image: URL?, name: String, progress: Double?)
-
-        var name: String {
-            switch self {
-            case .episode(_, let name,_,_,_),
-                    .movie(_, let name, _):
-                return name
-            }
-        }
-
-        var image: URL? {
-            switch self {
-            case .episode(let image,_,_,_,_),
-                    .movie(let image,_,_):
-                return image
-            }
-        }
-
-        var progress: Double? {
-            switch self {
-            case .episode(_,_,_,_, let progress),
-                    .movie(_,_, let progress):
-                return progress
-            }
-        }
-    }
-
     struct DownloadStatus {
         var state: DownloaderClient.Status? = nil
         var callback: ((Action) -> Void) = { _ in }
@@ -49,8 +20,9 @@ struct ThumbnailItemBigView: View {
         }
     }
 
-    let type: InputType
-    var isFiller = false
+    let episode: any EpisodeRepresentable
+    var animeTitle: String? = nil
+    var progress: Double? = nil
     var nowPlaying = false
     var progressSize: CGFloat = 10
     var downloadStatus: DownloadStatus? = nil
@@ -58,7 +30,7 @@ struct ThumbnailItemBigView: View {
     var body: some View {
         GeometryReader { reader in
             FillAspectImage(
-                url: type.image
+                url: episode.thumbnail?.link
             )
             .overlay(
                 LinearGradient(
@@ -77,7 +49,7 @@ struct ThumbnailItemBigView: View {
                         Group {
                             if nowPlaying {
                                 Text("Now Playing")
-                            } else if let progress = type.progress, progress >= 0.9 {
+                            } else if let progress, progress >= 0.9 {
                                 Text("Watched")
                             }
                         }
@@ -87,96 +59,99 @@ struct ThumbnailItemBigView: View {
                         .frame(height: size)
                         .background(nowPlaying ? Color(white: 0.9) :  Color(white: 0.15))
                         .clipShape(Capsule())
+                        .animation(.linear, value: nowPlaying)
 
                         Spacer()
 
                         if let downloadStatus {
-                            switch downloadStatus.state {
-                            case  .some(.pending), .some(.downloading):
-                                Circle()
-                                    .foregroundColor(.white)
-                                    .frame(width: size, height: size)
-                                    .overlay(
-                                        Group {
-                                            if case .downloading(let progress) = downloadStatus.state {
-                                                CircularProgressView(progress: progress)
-                                            } else {
-                                                CircularProgressView(progress: 0.0)
-                                            }
-                                        }
-                                            .frame(width: 20, height: 20)
-                                            .foregroundColor(.black)
-                                    )
-                                    .contentShape(Rectangle())
-                                    .onTapGesture {
-                                        downloadStatus.callback(.cancel)
-                                    }
-
-                            case .some(.downloaded):
-                                Image(systemName: "checkmark")
-                                    .font(.callout.weight(.black))
-                                    .foregroundColor(.white)
-                                    .frame(width: size, height: size)
-                                    .background(Color.green)
-                                    .clipShape(Circle())
-
-                            case .some(.failed):
-                                Image(systemName: "exclamationmark")
-                                    .font(.callout.weight(.black))
-                                    .foregroundColor(.white)
-                                    .frame(width: size, height: size)
-                                    .background(Color.red)
-                                    .clipShape(Circle())
-                                    .contentShape(Rectangle())
-                                    .onTapGesture {
-                                        downloadStatus.callback(.retry)
-                                    }
-
-                            case .none:
-                                Button {
-                                    downloadStatus.callback(.download)
-                                } label: {
-                                    Image(systemName: "arrow.down.to.line")
-                                        .font(.callout.weight(.bold))
-                                        .foregroundColor(.black)
+                            Group {
+                                switch downloadStatus.state {
+                                case .some(.pending), .some(.downloading):
+                                    Circle()
+                                        .foregroundColor(.white)
                                         .frame(width: size, height: size)
-                                        .background(Color.white)
+                                        .overlay(
+                                            Group {
+                                                if case .downloading(let progress) = downloadStatus.state {
+                                                    CircularProgressView(progress: progress)
+                                                        .animation(.linear, value: progress)
+                                                } else {
+                                                    CircularProgressView(progress: 0.0)
+                                                }
+                                            }
+                                                .frame(width: 20, height: 20)
+                                                .foregroundColor(.black)
+                                        )
+                                        .contentShape(Rectangle())
+                                        .onTapGesture {
+                                            downloadStatus.callback(.cancel)
+                                        }
+
+                                case .some(.downloaded):
+                                    Image(systemName: "checkmark")
+                                        .font(.callout.weight(.black))
+                                        .foregroundColor(.white)
+                                        .frame(width: size, height: size)
+                                        .background(Color.green)
                                         .clipShape(Circle())
+
+                                case .some(.failed):
+                                    Image(systemName: "exclamationmark")
+                                        .font(.callout.weight(.black))
+                                        .foregroundColor(.white)
+                                        .frame(width: size, height: size)
+                                        .background(Color.red)
+                                        .clipShape(Circle())
+                                        .contentShape(Rectangle())
+                                        .onTapGesture {
+                                            downloadStatus.callback(.retry)
+                                        }
+
+                                case .none:
+                                    Button {
+                                        downloadStatus.callback(.download)
+                                    } label: {
+                                        Image(systemName: "arrow.down.to.line")
+                                            .font(.callout.weight(.bold))
+                                            .foregroundColor(.black)
+                                            .frame(width: size, height: size)
+                                            .background(Color.white)
+                                            .clipShape(Circle())
+                                    }
+                                    .buttonStyle(.plain)
                                 }
-                                .buttonStyle(.plain)
                             }
+                            .animation(.easeInOut, value: downloadStatus.state)
                         }
                     }
 
                     Spacer()
 
                     VStack(alignment: .leading, spacing: 0) {
-                        if case .episode(_,_, let animeName, let number, _) = type {
-                            HStack(spacing: 2) {
-                                Text("E\(number)")
-                                if let animeName = animeName {
-                                    Text("\u{2022}")
-                                    Text(animeName)
-                                } else if isFiller {
-                                    Text("\u{2022}")
-                                    Text("Filler")
-                                        .padding(.horizontal, 6)
-                                        .padding(.vertical, 3)
-                                        .background(Color(white: 0.2))
-                                        .clipShape(Capsule())
-                                }
+                        HStack(spacing: 2) {
+                            Text("E\(episode.number)")
+                            if let animeTitle {
+                                Text("\u{2022}")
+                                Text(animeTitle)
+                            } else if episode.isFiller {
+                                Text("\u{2022}")
+                                Text("Filler")
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 3)
+                                    .background(Color(white: 0.2))
+                                    .clipShape(Capsule())
                             }
-                            .font(.footnote.weight(.bold))
-                            .lineLimit(1)
-                            .foregroundColor(.init(white: 0.9))
                         }
+                        .font(.footnote.weight(.bold))
+                        .lineLimit(1)
+                        .foregroundColor(.init(white: 0.9))
 
-                        Text(type.name)
+                        Text(episode.title)
                             .multilineTextAlignment(.leading)
                             .lineLimit(1)
                             .font(.title3.weight(.bold))
 
-                        if !nowPlaying, let progress = type.progress, progress < 0.9 {
+                        if !nowPlaying, let progress, progress < 0.9 {
                             SeekbarView(
                                 progress: .constant(progress),
                                 padding: 0
@@ -211,14 +186,8 @@ struct EpisodeItemBigView_Previews: PreviewProvider {
     static var previews: some View {
         let episode = Episode.demoEpisodes.first!
         ThumbnailItemBigView(
-            type: .episode(
-                image: episode.thumbnail?.link,
-                name: episode.title,
-                animeName: nil,
-                number: episode.number,
-                progress: 0.5
-            ),
-            isFiller: true,
+            episode: episode,
+            progress: 0.5,
             downloadStatus: .init()
         )
         .frame(height: 200)

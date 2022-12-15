@@ -184,20 +184,6 @@ extension AnimePlayerView {
 // MARK: Episodes Overlay
 
 extension AnimePlayerView {
-    private struct EpisodesOverlayViewState: Equatable {
-        let isVisible: Bool
-        let episodes: AnimePlayerReducer.LoadableEpisodes
-        let selectedEpisode: Episode.ID
-        let episodesStore: [EpisodeStore]
-
-        init(_ state: AnimePlayerReducer.State) {
-            self.isVisible = state.selectedSidebar == .episodes
-            self.episodes = state.episodes
-            self.selectedEpisode = state.selectedEpisode
-            self.episodesStore = .init()
-        }
-    }
-
     @ViewBuilder
     var episodesOverlay: some View {
         WithViewStore(
@@ -232,14 +218,8 @@ extension AnimePlayerView {
                                     LazyHStack {
                                         ForEach(episodes) { episode in
                                             ThumbnailItemBigView(
-                                                type: .episode(
-                                                    image: episode.thumbnail?.link,
-                                                    name: episode.title,
-                                                    animeName: nil,
-                                                    number: episode.number,
-                                                    progress: viewState.episodesStore.first(where: { $0.number == episode.number })?.progress
-                                                ),
-                                                isFiller: episode.isFiller,
+                                                episode: episode,
+                                                progress: viewState.episodesStore.first(where: { $0.number == episode.number })?.progress,
                                                 nowPlaying: episode.id == viewState.selectedEpisode,
                                                 progressSize: 8
                                             )

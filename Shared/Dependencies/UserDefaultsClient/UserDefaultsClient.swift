@@ -25,9 +25,9 @@ extension UserDefaultsClient {
         let key: String
         let defaultValue: T
 
-        init(_ key: String, value: T) {
+        init(_ key: String, defaultValue: T) {
             self.key = key
-            self.defaultValue = value
+            self.defaultValue = defaultValue
         }
     }
 }
@@ -39,10 +39,6 @@ extension UserDefaultsClient.Key<Bool> {
         self.key = key
         self.defaultValue = false
     }
-
-    static let firstLaunched = UserDefaultsClient.Key<Bool>("firstLaunched")
-    static let compactEpisodes = UserDefaultsClient.Key<Bool>("compactEpisodes")
-    static let videoPlayerAudioIsDub = UserDefaultsClient.Key<Bool>("videoPlayerAudioIsDub")
 }
 
 // Data
@@ -52,20 +48,38 @@ extension UserDefaultsClient.Key<Data?> {
         self.key = key
         self.defaultValue = nil
     }
-
-    static let videoPlayerProvider = UserDefaultsClient.Key<Data?>("videoPlayerProvider")
-    static let videoPlayerSubtitle = UserDefaultsClient.Key<Data?>("videoPlayerSubtitle")
-    static let videoPlayerQuality = UserDefaultsClient.Key<Data?>("videoPlayerQuality")
-    static let searchedItems = UserDefaultsClient.Key<Data?>("searchedItems")
 }
 
 // Int
 
-extension UserDefaultsClient.Key<Int> {}
+extension UserDefaultsClient.Key<Int> {
+    init(_ key: String) {
+        self.key = key
+        self.defaultValue = 0
+    }
+}
 
 // Double
 
-extension UserDefaultsClient.Key<Double> {}
+extension UserDefaultsClient.Key<Double> {
+    init(_ key: String) {
+        self.key = key
+        self.defaultValue = 0
+    }
+}
+
+extension UserDefaultsClient.Key {
+    static var hasShownOnboarding: UserDefaultsClient.Key<Bool> { .init("hasShownOnboarding") }
+    static var compactEpisodes: UserDefaultsClient.Key<Bool> { .init("compactEpisodes") }
+    static var videoPlayerAudioIsDub: UserDefaultsClient.Key<Bool> { .init("videoPlayerAudioIsDub") }
+
+    static var videoPlayerProvider: UserDefaultsClient.Key<Data?> { .init("videoPlayerProvider") }
+    static var videoPlayerSubtitle: UserDefaultsClient.Key<Data?> { .init("videoPlayerSubtitle") }
+    static var videoPlayerQuality: UserDefaultsClient.Key<Data?> { .init("videoPlayerQuality") }
+    static var searchedItems: UserDefaultsClient.Key<Data?> { .init("searchedItems") }
+
+    static var hasClearedAllVideos: UserDefaultsClient.Key<Bool> { .init("hasClearedAllVideos") }
+}
 
 extension UserDefaultsClient {
     func `set`(_ key: Key<Bool>, value: Bool?) async {

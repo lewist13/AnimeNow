@@ -325,20 +325,9 @@ extension HomeView {
                             LazyHStack(alignment: .center) {
                                 ForEach(items, id: \.id) { item in
                                     ThumbnailItemBigView(
-                                        type:
-                                            item.animeStore.format == .movie ?
-                                            .movie(
-                                                image: item.episodeStore.thumbnail?.link,
-                                                name: item.episodeStore.title,
-                                                progress: item.episodeStore.progress
-                                            ) :
-                                            .episode(
-                                                image: item.episodeStore.thumbnail?.link,
-                                                name: item.episodeStore.title,
-                                                animeName: item.title,
-                                                number: Int(item.episodeStore.number),
-                                                progress: item.episodeStore.progress
-                                            ),
+                                        episode: item.episodeStore,
+                                        animeTitle: item.animeStore.title,
+                                        progress: item.episodeStore.progress,
                                         progressSize: 6
                                     )
                                     .frame(height: DeviceUtil.isPhone ? 150 : 225)

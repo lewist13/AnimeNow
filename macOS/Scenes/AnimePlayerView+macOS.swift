@@ -20,18 +20,22 @@ extension AnimePlayerView {
                 VStack(spacing: 0) {
                     if viewState.state {
                         topPlayerItems
+                            .padding(.horizontal, 24)
                     }
                     Spacer()
+                    episodesOverlay
                     skipButton
+                        .padding(.horizontal, 24)
                     if viewState.state {
                         bottomPlayerItems
+                            .padding(.horizontal, 24)
                     }
                 }
                 .frame(
                     maxWidth: .infinity,
                     maxHeight: .infinity
                 )
-                .padding(24)
+                .padding(.vertical, 24)
                 .background(
                     Color.black.opacity(0.5)
                         .ignoresSafeArea()
@@ -159,6 +163,64 @@ extension AnimePlayerView {
                 .foregroundColor(Color.white)
             }
             .buttonStyle(.plain)
+        }
+    }
+}
+
+// MARK: Episodes
+
+extension AnimePlayerView {
+    @ViewBuilder
+    var episodesOverlay: some View {
+        WithViewStore(
+            store,
+            observe: EpisodesOverlayViewState.init
+        ) { viewState in
+            if viewState.isVisible {
+                if let episodes = viewState.episodes.value, episodes.count > 0 {
+                    ScrollViewReader { proxy in
+                        ScrollView(
+                            .horizontal,
+                            showsIndicators: false
+                        ) {
+                            LazyHStack(alignment: .bottom) {
+                                ForEach(episodes) { episode in
+                                    ThumbnailItemBigView(
+                                        episode: episode,
+                                        progress: viewState.episodesStore.first(where: { $0.number == episode.number })?.progress,
+                                        nowPlaying: episode.id == viewState.selectedEpisode,
+                                        progressSize: 8
+                                    )
+                                    .frame(height: 200)
+                                    .onTapGesture {
+                                        if viewState.selectedEpisode != episode.id {
+                                            viewState.send(.selectEpisode(episode.id))
+                                        }
+                                    }
+                                    .id(episode.id)
+                                }
+                            }
+                            .onAppear {
+                                proxy.scrollTo(viewState.selectedEpisode, anchor: .center)
+                                viewState.send(.playerAction(.pause))
+                            }
+                            .onDisappear(perform: {
+                                viewState.send(.playerAction(.play))
+                            })
+                            .onChange(
+                                of: viewState.selectedEpisode
+                            ) { newValue in
+                                withAnimation {
+                                    proxy.scrollTo(newValue, anchor: .center)
+                                }
+                            }
+                            .padding(24)
+                        }
+                    }
+                } else if viewState.episodes.isLoading {
+                    loadingView
+                }
+            }
         }
     }
 }

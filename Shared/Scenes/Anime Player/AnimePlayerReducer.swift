@@ -37,6 +37,7 @@ struct AnimePlayerReducer: ReducerProtocol {
                 case provider
                 case quality
                 case audio
+                case subtitleOptions
 
                 var description: String {
                     switch self {
@@ -46,6 +47,8 @@ struct AnimePlayerReducer: ReducerProtocol {
                         return "Quality"
                     case .audio:
                         return "Audio"
+                    case .subtitleOptions:
+                        return "Subtitle Options"
                     }
                 }
             }
@@ -83,9 +86,6 @@ struct AnimePlayerReducer: ReducerProtocol {
         var playerStatus = VideoPlayer.Status.idle
         var playerPiPStatus = VideoPlayer.PIPStatus.restoreUI
         var playerIsFullScreen = false
-
-        // MacOS Properties
-
         var playerVolume = 1.0
 
         init(
@@ -546,7 +546,7 @@ extension AnimePlayerReducer {
             state.selectedEpisode = episodeId
 
             let lastSelectedProvider: String? = try? userDefaultsClient.get(.videoPlayerProvider)?.toObject()
-            let lastSelectedIsDub: Bool? = userDefaultsClient.get(.videoPlayerAudioIsDub)
+            let lastSelectedIsDub = userDefaultsClient.get(.videoPlayerAudioIsDub)
 
             var providerId = state.episode?.providers.first(
                 where: { $0.description == lastSelectedProvider && $0.dub == lastSelectedIsDub }
@@ -571,7 +571,7 @@ extension AnimePlayerReducer {
             guard let providerName = state.episode?.providers[id: providerId]?.description else { break }
             guard providerName != state.provider?.description else { break }
 
-            let lastSelectedIsDub: Bool? = userDefaultsClient.get(.videoPlayerAudioIsDub)
+            let lastSelectedIsDub = userDefaultsClient.get(.videoPlayerAudioIsDub)
 
             var providerId = state.episode?.providers.first(where: { $0.description == providerName && $0.dub == lastSelectedIsDub })?.id
             providerId = providerId ?? state.episode?.providers.first(where: { $0.description == providerName })?.id
@@ -713,8 +713,9 @@ extension AnimePlayerReducer {
         case .fetchedSkipTimes(.success(let skipTimes)):
             state.skipTimes = .success(skipTimes)
 
-        case .fetchedSkipTimes(.failure):
-            state.skipTimes = .success([])
+        case .fetchedSkipTimes(.failure(let error)):
+            print(error)
+            state.skipTimes = .failed
 
         // Video Player Actions
 
@@ -855,7 +856,6 @@ extension AnimePlayerReducer {
 
         return .none
     }
-
 }
 
 extension AnimePlayerReducer {
@@ -889,15 +889,13 @@ extension AnimePlayerReducer {
 
         let providerData = try? state.provider?.description.toData()
 
-        return .concatenate(
-            .run { send in
-                if let providerData = providerData {
-                    await userDefaultsClient.set(.videoPlayerProvider, value: providerData)
-                }
-
-                await send(.fetchSourcesOptions)
+        return .run { send in
+            if let providerData = providerData {
+                await userDefaultsClient.set(.videoPlayerProvider, value: providerData)
             }
-        )
+
+            await send(.fetchSourcesOptions)
+        }
     }
 
     private func saveEpisodeState(state: State) -> EffectTask<Action> {

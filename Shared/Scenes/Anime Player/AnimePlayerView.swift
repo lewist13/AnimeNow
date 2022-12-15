@@ -452,6 +452,20 @@ extension AnimePlayerView {
 // MARK: Sidebar overlay
 
 extension AnimePlayerView {
+    struct EpisodesOverlayViewState: Equatable {
+        let isVisible: Bool
+        let episodes: AnimePlayerReducer.LoadableEpisodes
+        let selectedEpisode: Episode.ID
+        let episodesStore: [EpisodeStore]
+
+        init(_ state: AnimePlayerReducer.State) {
+            self.isVisible = state.selectedSidebar == .episodes
+            self.episodes = state.episodes
+            self.selectedEpisode = state.selectedEpisode
+            self.episodesStore = .init()
+        }
+    }
+
     @ViewBuilder
     var sidebarOverlay: some View {
         IfLetStore(
@@ -575,35 +589,44 @@ extension AnimePlayerView {
                         ) { id in
                             viewState.send(.selectAudio(id))
                         }
+
+                    case .subtitleOptions:
+                        EmptyView()
                     }
                 } else {
                     VStack(alignment: .leading) {
                         SettingsRowView(
                             name: "Provider",
                             selected: viewState.videoPreferece.provider?.description ?? "Loading",
-                            multiSelectionable: viewState.videoPreferece.selectableProviders.count > 1
+                            selectionType: viewState.videoPreferece.selectableProviders.count > 1 ? .multi : .single
                         ) {
                             viewState.send(.selectSidebarSettings(.provider))
                         }
                         .disabled(viewState.videoPreferece.selectableProviders.count < 2)
 
                         SettingsRowView(
+                            name: "Audio",
+                            selected: viewState.videoPreferece.audio?.description ?? "Loading",
+                            selectionType: (viewState.videoPreferece.selectableAudio?.count ?? 0) > 1 ? .multi : .single
+                        ) {
+                            viewState.send(.selectSidebarSettings(.audio))
+                        }
+                        .disabled((viewState.videoPreferece.selectableAudio?.count ?? 0) < 2)
+
+                        SettingsRowView(
                             name: "Quality",
                             selected: viewState.videoPreferece.quality?.description ?? "Loading",
-                            multiSelectionable: (viewState.videoPreferece.selectableQualities?.count ?? 0) > 1
+                            selectionType: (viewState.videoPreferece.selectableQualities?.count ?? 0) > 1 ? .multi : .single
                         ) {
                             viewState.send(.selectSidebarSettings(.quality))
                         }
                         .disabled((viewState.videoPreferece.selectableQualities?.count ?? 0) < 2)
 
-                        SettingsRowView(
-                            name: "Audio",
-                            selected: viewState.videoPreferece.audio?.description ?? "Loading",
-                            multiSelectionable: (viewState.videoPreferece.selectableAudio?.count ?? 0) > 1
-                        ) {
-                            viewState.send(.selectSidebarSettings(.audio))
-                        }
-                        .disabled((viewState.videoPreferece.selectableAudio?.count ?? 0) < 2)
+//                        SettingsRowView(
+//                            name: "Subtitle Options"
+//                        ) {
+//                            
+//                        }
                     }
                 }
             }
