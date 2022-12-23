@@ -13,7 +13,7 @@ struct TestVideoPlayer: View {
 
     var body: some View {
         VideoPlayer(
-            url: url,
+            item: url == nil ? nil : .init(url: url!, title: "", animeTitle: ""),
             action: $action
         )
         .onStatusChanged {

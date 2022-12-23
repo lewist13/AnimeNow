@@ -15,11 +15,20 @@ struct AnimePlayerView: View {
     let store: Store<AnimePlayerReducer.State, AnimePlayerReducer.Action>
 
     struct VideoPlayerState: Equatable {
-        let url: URL?
+        let item: VideoPlayer.Item?
         let action: VideoPlayer.Action?
 
         init(_ state: AnimePlayerReducer.State) {
-            url = state.source?.url
+            if let url = state.source?.url {
+                item = .init(
+                    url: url,
+                    title: state.episode?.title ?? "Episode \(state.selectedEpisode)",
+                    animeTitle: state.anime.title,
+                    thumbnail: state.episode?.thumbnail?.link
+                )
+            } else {
+                item = nil
+            }
             action = state.playerAction
         }
     }
@@ -30,7 +39,7 @@ struct AnimePlayerView: View {
             observe: VideoPlayerState.init
         ) { viewStore in
             VideoPlayer(
-                url: viewStore.url,
+                item: viewStore.item,
                 action: viewStore.binding(\.$playerAction, as: \.action)
             )
             .onStatusChanged { status in

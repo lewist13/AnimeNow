@@ -5,15 +5,10 @@
 //  Created by ErrorErrorError on 10/12/22.
 //
 
-#if os(iOS)
-import UIKit
-#else
-import AppKit
-#endif
-
 import Combine
 import MediaPlayer
 import AVFoundation
+import Kingfisher
 
 extension VideoPlayer {
     public class PlayerView: PlatformView {
@@ -224,6 +219,38 @@ extension VideoPlayer.PlayerView {
 
             return .commandFailed
         }
+
+        commandCenter.skipForwardCommand.addTarget { [weak self] event in
+            guard let event = event as? MPSkipIntervalCommandEvent else {
+                return .commandFailed
+            }
+
+            guard let `self` = self else { return .commandFailed }
+
+            if self.totalDuration > 0.0 {
+                let time = CMTime(seconds: min(self.currentDuration + event.interval, self.totalDuration), preferredTimescale: 1)
+                self.seek(to: time)
+                return .success
+            }
+
+            return .commandFailed
+        }
+
+        commandCenter.skipBackwardCommand.addTarget { [weak self] event in
+            guard let event = event as? MPSkipIntervalCommandEvent else {
+                return .commandFailed
+            }
+
+            guard let `self` = self else { return .commandFailed }
+
+            if self.totalDuration > 0.0 {
+                let time = CMTime(seconds: max(self.currentDuration - event.interval, 0.0), preferredTimescale: 1)
+                self.seek(to: time)
+                return .success
+            }
+
+            return .commandFailed
+        }
     }
 
     private func observe(playerItem: AVPlayerItem?) {
@@ -291,7 +318,7 @@ extension VideoPlayer.PlayerView {
         statusDidChange?(status)
     }
 
-    private func updateNowPlaying() {
+    private func updateNowPlaying(_ item: VideoPlayer.Item? = nil) {
         let nowPlayingInfoCenter = MPNowPlayingInfoCenter.default()
         var nowPlayingInfo = nowPlayingInfoCenter.nowPlayingInfo ?? [:]
 
@@ -299,8 +326,25 @@ extension VideoPlayer.PlayerView {
         nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = self.currentDuration
         nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = self.player.rate
 
+        if let item {
+            nowPlayingInfo[MPMediaItemPropertyTitle] = item.title
+            nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = item.animeTitle
+            if let imageURL = item.thumbnail,
+               let image = ImageCache.default.retrieveImageInMemoryCache(forKey: imageURL.absoluteString, options: .none) {
+                nowPlayingInfo[MPMediaItemPropertyArtwork] = MPMediaItemArtwork(
+                    boundsSize: image.size,
+                    requestHandler: { size in
+                        image
+                    }
+                )
+            } else {
+                nowPlayingInfo[MPMediaItemPropertyArtwork] = nil
+            }
+        }
+
         nowPlayingInfoCenter.nowPlayingInfo = nowPlayingInfo
 
+        #if os(macOS)
         switch self.status {
         case .idle:
             MPNowPlayingInfoCenter.default().playbackState = .unknown
@@ -317,16 +361,17 @@ extension VideoPlayer.PlayerView {
         case .error:
             MPNowPlayingInfoCenter.default().playbackState = .unknown
         }
+        #endif
     }
 }
 
 extension VideoPlayer.PlayerView {
-    func play(for url: URL) -> Bool {
-        guard url != observingUrl else { return false }
+    func play(for item: VideoPlayer.Item) -> Bool {
+        guard item.url != observingUrl else { return false }
 
-        observingUrl = url
+        observingUrl = item.url
 
-        let asset = AVURLAsset(url: url)
+        let asset = AVURLAsset(url: item.url)
 
         let playerItem = AVPlayerItem(asset: asset)
         player.replaceCurrentItem(with: playerItem)
@@ -334,7 +379,7 @@ extension VideoPlayer.PlayerView {
 
         // Update metadata for AVAsset
 
-        self.updateNowPlaying()
+        self.updateNowPlaying(item)
 
         return true
     }
@@ -429,16 +474,16 @@ extension AVPlayer {
     }
 
     #if !os(macOS)
-    var currentImage: UIImage? {
+    var currentImage: KFCrossPlatformImage? {
         guard
             let playerItem = currentItem,
             let cgImage = try? AVAssetImageGenerator(asset: playerItem.asset).copyCGImage(at: currentTime(), actualTime: nil)
             else { return nil }
 
-        return UIImage(cgImage: cgImage)
+        return KFCrossPlatformImage(cgImage: cgImage)
     }
     #else
-    var currentImage: NSImage? {
+    var currentImage: KFCrossPlatformImage? {
         guard
             let playerItem = currentItem,
             let cgImage = try? AVAssetImageGenerator(asset: playerItem.asset).copyCGImage(at: currentTime(), actualTime: nil)
@@ -447,7 +492,7 @@ extension AVPlayer {
         }
         let width: CGFloat = CGFloat(cgImage.width)
         let height: CGFloat = CGFloat(cgImage.height)
-        return NSImage(cgImage: cgImage, size: NSMakeSize(width, height))
+        return KFCrossPlatformImage(cgImage: cgImage, size: NSMakeSize(width, height))
     }
     #endif
     

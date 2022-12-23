@@ -79,8 +79,14 @@ public struct VideoPlayer {
 
     public typealias VideoGravity = AVLayerVideoGravity
 
-    /// The URL
-    private var url: URL?
+    struct Item: Equatable {
+        let url: URL
+        let title: String
+        let animeTitle: String
+        var thumbnail: URL? = nil
+    }
+
+    private var item: Item?
 
     /// Play Binding
     @Binding private var action: Action?
@@ -109,8 +115,8 @@ public struct VideoPlayer {
     /// Video Aspect Ratio Changed
     private var onVideoGravityChangedCallback: ((VideoGravity) -> Void)?
 
-    init(url: URL?, action: Binding<Action?>) {
-        self.url = url
+    init(item: Item?, action: Binding<Action?>) {
+        self.item = item
         self._action = action
     }
 }
@@ -136,8 +142,8 @@ extension VideoPlayer: PlatformAgnosticViewRepresentable {
     }
 
     public func updatePlatformView(_ view: PlayerView, context: Context) {
-        if let url = url {
-            if view.play(for: url) {
+        if let item {
+            if view.play(for: item) {
                 // Clear observer
                 context.coordinator.clearObservers()
             }
@@ -379,7 +385,11 @@ struct VideoPlayer_Previews: PreviewProvider {
 
     static var previews: some View {
         VideoPlayer(
-            url: URL(string: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8")!,
+            item: .init(
+                url: URL(string: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8")!,
+                title: "Test Stream",
+                animeTitle: "Test Artist"
+            ),
             action: $action
         )
         .onStatusChanged {
