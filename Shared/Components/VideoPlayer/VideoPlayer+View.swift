@@ -12,6 +12,7 @@ import AppKit
 #endif
 
 import Combine
+import MediaPlayer
 import AVFoundation
 
 extension VideoPlayer {
@@ -169,6 +170,7 @@ extension VideoPlayer.PlayerView {
             queue: .main
         ) { [unowned self] time in
             self.periodicTimeChanged?(time)
+            self.updateNowPlaying()
         }
 
         #if os(macOS)
@@ -176,6 +178,52 @@ extension VideoPlayer.PlayerView {
         #endif
 
         self.playerLayer.player = player
+
+        #if os(iOS)
+        try? AVAudioSession.sharedInstance().setCategory(
+            .playback,
+            mode: .moviePlayback,
+            policy: .longFormVideo
+        )
+        #endif
+
+        let commandCenter = MPRemoteCommandCenter.shared()
+        commandCenter.playCommand.addTarget { [weak self] event in
+            guard let `self` = self else { return .commandFailed }
+
+            if self.player.rate == 0.0 {
+                self.resume()
+                return .success
+            }
+
+            return .commandFailed
+        }
+
+        commandCenter.pauseCommand.addTarget { [weak self] event in
+            guard let `self` = self else { return .commandFailed }
+            if self.player.rate > 0 {
+                self.pause()
+                return .success
+            }
+
+            return .commandFailed
+        }
+
+        commandCenter.changePlaybackPositionCommand.addTarget { [weak self] event in
+            guard let event = event as? MPChangePlaybackPositionCommandEvent else {
+                return .commandFailed
+            }
+
+            guard let `self` = self else { return .commandFailed }
+
+            if self.totalDuration > 0.0 {
+                let time = CMTime(seconds: event.positionTime, preferredTimescale: 1)
+                self.seek(to: time)
+                return .success
+            }
+
+            return .commandFailed
+        }
     }
 
     private func observe(playerItem: AVPlayerItem?) {
@@ -242,6 +290,34 @@ extension VideoPlayer.PlayerView {
         guard status != previous else { return }
         statusDidChange?(status)
     }
+
+    private func updateNowPlaying() {
+        let nowPlayingInfoCenter = MPNowPlayingInfoCenter.default()
+        var nowPlayingInfo = nowPlayingInfoCenter.nowPlayingInfo ?? [:]
+
+        nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = self.totalDuration
+        nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = self.currentDuration
+        nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = self.player.rate
+
+        nowPlayingInfoCenter.nowPlayingInfo = nowPlayingInfo
+
+        switch self.status {
+        case .idle:
+            MPNowPlayingInfoCenter.default().playbackState = .unknown
+        case .loading:
+            MPNowPlayingInfoCenter.default().playbackState = .unknown
+        case .buffering:
+            MPNowPlayingInfoCenter.default().playbackState = .stopped
+        case .readyToPlay:
+            MPNowPlayingInfoCenter.default().playbackState = .unknown
+        case .playing:
+            MPNowPlayingInfoCenter.default().playbackState = .playing
+        case .paused:
+            MPNowPlayingInfoCenter.default().playbackState = .paused
+        case .error:
+            MPNowPlayingInfoCenter.default().playbackState = .unknown
+        }
+    }
 }
 
 extension VideoPlayer.PlayerView {
@@ -255,6 +331,10 @@ extension VideoPlayer.PlayerView {
         let playerItem = AVPlayerItem(asset: asset)
         player.replaceCurrentItem(with: playerItem)
         status = .loading
+
+        // Update metadata for AVAsset
+
+        self.updateNowPlaying()
 
         return true
     }
@@ -283,6 +363,7 @@ extension VideoPlayer.PlayerView {
         observingUrl = nil
         player.replaceCurrentItem(with: nil)
         status = .idle
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
     }
 
     func destroy() {
@@ -297,6 +378,7 @@ extension VideoPlayer.PlayerView {
 
         cancellables.removeAll()
         playerItemCancellables.removeAll()
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
     }
 
     func resize(_ size: AVLayerVideoGravity) {

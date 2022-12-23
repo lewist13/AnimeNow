@@ -9,9 +9,9 @@ import OSLog
 import Foundation
 
 public final class Logger {
-    static func log(
+    static func log<M: CustomStringConvertible>(
         _ level: OSLogType = .debug,
-        _ message: String,
+        _ message: M,
         fileName: String = #file,
         functionName: String = #function,
         lineNumber: Int = #line

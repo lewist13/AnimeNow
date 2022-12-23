@@ -132,10 +132,6 @@ extension VideoPlayer: PlatformAgnosticViewRepresentable {
             DispatchQueue.main.async { onPlayedToTheEndCallback?() }
         }
 
-        #if os(iOS)
-        try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback, policy: .longFormVideo)
-        #endif
-
         return view
     }
 
