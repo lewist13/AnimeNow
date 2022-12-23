@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import ComposableArchitecture
 
 @main
 struct AnimeNowApp: App {
@@ -28,14 +29,15 @@ struct AnimeNowApp: App {
                     Text("Check for Updates...")
                 }
             }
+        }
 
-            CommandGroup(before: .systemServices) {
-                Button {
-                    
-                } label: {
-                    Text("Preferences")
-                }
-            }
+        Settings {
+            SettingsView(
+                store: appDelegate.store.scope(
+                    state: \.settings,
+                    action: AppReducer.Action.settings
+                )
+            )
         }
     }
 }

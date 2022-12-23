@@ -43,7 +43,7 @@ extension SearchReducer {
         switch action {
         case .onAppear:
             return .run { send in
-                let searchedItems: [String] = try userDefaultsClient.get(.searchedItems)?.toObject() ?? []
+                let searchedItems = userDefaultsClient.get(.searchedItems) ?? []
                 await send(.searchHistory(searchedItems))
             }
 
@@ -70,13 +70,13 @@ extension SearchReducer {
             state.loadable = .success(anime)
 
         case .searchResult(.failure(let error)):
-            print(error)
+            Logger.log(.error, error.localizedDescription)
             state.loadable = .failed
 
         case .clearSearchHistory:
             state.searched.removeAll()
             return .fireAndForget { [state] in
-                await userDefaultsClient.set(.searchedItems, value: try state.searched.toData())
+                await userDefaultsClient.set(.searchedItems, value: state.searched)
             }
 
         case .onAnimeTapped:
@@ -89,7 +89,7 @@ extension SearchReducer {
             }
             state.searched.insert(state.query, at: 0)
             return .fireAndForget { [state] in
-                await userDefaultsClient.set(.searchedItems, value: try state.searched.toData())
+                await userDefaultsClient.set(.searchedItems, value: state.searched)
             }
         }
         return .none

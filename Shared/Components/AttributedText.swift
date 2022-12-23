@@ -42,23 +42,6 @@ struct AttributedText: View {
     }
 }
 
-extension AttributedText.Options {
-    static let defaultBoxed: Self = .init(
-        fontSize: 18,
-        backgroundColor: .black.opacity(0.5),
-        backgroundRadius: 8,
-        backgroundPadding: 8
-    )
-
-    static let defaultStroke: Self = .init(
-        fontSize: 18,
-        shadowColor: .black,
-        shadowOffset: 2,
-        strokeColor: .black,
-        strokeWidth: 3
-    )
-}
-
 private struct TextViewRepresentable: PlatformAgnosticViewRepresentable {
     var text: String
     var options: AttributedText.Options

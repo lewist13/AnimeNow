@@ -27,6 +27,8 @@ public struct VideoPlayer {
         /// Start or stop PiP
         case pictureInPicture(enable: Bool)
 
+        case videoGravity(VideoGravity)
+
         case destroy
     }
 
@@ -75,6 +77,8 @@ public struct VideoPlayer {
         case failedToStart
     }
 
+    public typealias VideoGravity = AVLayerVideoGravity
+
     /// The URL
     private var url: URL?
 
@@ -101,6 +105,9 @@ public struct VideoPlayer {
 
     /// Progress Changed Callback
     private var onProgressChangedCallback: ((Double) -> Void)?
+
+    /// Video Aspect Ratio Changed
+    private var onVideoGravityChangedCallback: ((VideoGravity) -> Void)?
 
     init(url: URL?, action: Binding<Action?>) {
         self.url = url
@@ -159,6 +166,8 @@ extension VideoPlayer: PlatformAgnosticViewRepresentable {
                 context.coordinator.controller?.startPictureInPicture()
             case .pictureInPicture(enable: false):
                 context.coordinator.controller?.stopPictureInPicture()
+            case .videoGravity(let videoGravity):
+                view.videoGravity = videoGravity
             case .destroy:
                 Self.dismantlePlatformView(view, coordinator: context.coordinator)
             }
@@ -182,6 +191,7 @@ extension VideoPlayer: PlatformAgnosticViewRepresentable {
         var observerBuffer: Double?
         var observerDuration: Double?
         var observerVolume: Double?
+        var observerGravity: VideoGravity?
         var controller: AVPictureInPictureController?
 
         init(_ videoPlayer: VideoPlayer) {
@@ -204,6 +214,7 @@ extension VideoPlayer: PlatformAgnosticViewRepresentable {
             observerBuffer = nil
             observerDuration = nil
             observerVolume = nil
+            observerGravity = nil
         }
 
         func stopObserver(view: PlayerView) {
@@ -215,6 +226,7 @@ extension VideoPlayer: PlatformAgnosticViewRepresentable {
             updateBuffer(view: view)
             updateDuration(view: view)
             updateVolume(view: view)
+            updateGravity(view: view)
         }
 
         func startObserver(view: PlayerView) {
@@ -272,6 +284,18 @@ extension VideoPlayer: PlatformAgnosticViewRepresentable {
 
             observerVolume = volume
         }
+
+        func updateGravity(view: PlayerView) {
+            guard let handler = videoPlayer.onVideoGravityChangedCallback else { return }
+
+            let gravity = view.videoGravity
+
+            guard gravity != observerGravity else { return }
+
+            DispatchQueue.main.async { handler(gravity) }
+
+            observerGravity = gravity
+        }
     }
 }
 
@@ -315,6 +339,12 @@ extension VideoPlayer {
     func onProgressChanged(_ handler: @escaping (Double) -> Void) -> Self {
         var view = self
         view.onProgressChangedCallback = handler
+        return view
+    }
+
+    func onVideoGravityChanged(_ handler: @escaping (VideoGravity) -> Void) -> Self {
+        var view = self
+        view.onVideoGravityChangedCallback = handler
         return view
     }
 }

@@ -54,10 +54,14 @@ struct AnimePlayerView: View {
             .onVolumeChanged { volume in
                 viewStore.send(.playerVolume(volume))
             }
+            .onVideoGravityChanged { gravity in
+                viewStore.send(.playerGravity(gravity))
+            }
             .onAppear {
                 viewStore.send(.onAppear)
             }
             .overlay(subtitlesOverlay)
+            .ignoresSafeArea()
         }
         .frame(
             maxWidth: .infinity,
@@ -396,15 +400,43 @@ extension AnimePlayerView {
             observe: { ($0.episodes.value?.count ?? 0) > 1 }
         ) { viewState in
             if viewState.state {
-                Image("play.rectangle.on.rectangle.fill")
-                    .foregroundColor(.white)
-                    .font(.title2)
-                    .padding(4)
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        viewState.send(.toggleEpisodes)
-                    }
+                Button {
+                    viewState.send(.toggleEpisodes)
+                } label: {
+                    Image("play.rectangle.on.rectangle.fill")
+                        .foregroundColor(.white)
+                        .font(.title2)
+                        .padding(4)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
             }
+        }
+    }
+
+    @ViewBuilder
+    var videoGravityButton: some View {
+        WithViewStore(
+            store,
+            observe: { $0.playerGravity }
+        ) { viewState in
+            Button {
+                viewState.send(.toggleVideoGravity)
+            } label: {
+                Group {
+                    if viewState.state == .resizeAspect {
+                        Image(
+                            systemName: "rectangle\(DeviceUtil.isPhone ? ".portrait" : "").arrowtriangle.2.outward"
+                        )
+                    } else {
+                        Image("rectangle.center.inset.filled")
+                    }
+                }
+                .font(.title2.bold())
+                .foregroundColor(Color.white)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
         }
     }
 }
@@ -594,43 +626,39 @@ extension AnimePlayerView {
                         EmptyView()
                     }
                 } else {
-                    VStack(alignment: .leading) {
+                    VStack(alignment: .leading, spacing: 8) {
                         SettingsRowView(
                             name: "Provider",
-                            selected: viewState.videoPreferece.provider?.description ?? "Loading",
-                            selectionType: viewState.videoPreferece.selectableProviders.count > 1 ? .multi : .single
+                            text: viewState.videoPreferece.provider?.description ?? ""
                         ) {
                             viewState.send(.selectSidebarSettings(.provider))
                         }
-                        .disabled(viewState.videoPreferece.selectableProviders.count < 2)
+                        .loading(viewState.state.videoPreferece.isLoadingProviders)
+                        .multiSelection(viewState.videoPreferece.selectableProviders.count > 1)
+                        .disabled(viewState.videoPreferece.selectableProviders.count <= 1)
 
                         SettingsRowView(
                             name: "Audio",
-                            selected: viewState.videoPreferece.audio?.description ?? "Loading",
-                            selectionType: (viewState.videoPreferece.selectableAudio?.count ?? 0) > 1 ? .multi : .single
+                            text: viewState.videoPreferece.audio?.description ?? ""
                         ) {
                             viewState.send(.selectSidebarSettings(.audio))
                         }
-                        .disabled((viewState.videoPreferece.selectableAudio?.count ?? 0) < 2)
+                        .loading(viewState.state.videoPreferece.isLoadingProviders)
+                        .multiSelection(viewState.videoPreferece.selectableAudio.count > 1)
+                        .disabled(viewState.videoPreferece.selectableAudio.count <= 1)
 
                         SettingsRowView(
                             name: "Quality",
-                            selected: viewState.videoPreferece.quality?.description ?? "Loading",
-                            selectionType: (viewState.videoPreferece.selectableQualities?.count ?? 0) > 1 ? .multi : .single
+                            text: viewState.videoPreferece.quality?.description ?? ""
                         ) {
                             viewState.send(.selectSidebarSettings(.quality))
                         }
-                        .disabled((viewState.videoPreferece.selectableQualities?.count ?? 0) < 2)
-
-//                        SettingsRowView(
-//                            name: "Subtitle Options"
-//                        ) {
-//                            
-//                        }
+                        .loading(viewState.state.videoPreferece.isLoadingSources)
+                        .multiSelection(viewState.videoPreferece.selectableQualities.count > 1)
+                        .disabled(viewState.videoPreferece.selectableQualities.count <= 1)
                     }
                 }
             }
-            .disabled(viewState.videoPreferece.isLoadingProviders)
         }
         .foregroundColor(Color.white)
         .frame(

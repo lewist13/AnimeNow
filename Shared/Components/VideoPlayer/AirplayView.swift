@@ -11,7 +11,7 @@ import AVKit
 
 struct AirplayView: PlatformAgnosticViewRepresentable {
     func makeCoordinator() -> Coordinator {
-        Coordinator()
+        .init()
     }
 
     func makePlatformView(context: Context) -> AVRoutePickerView {

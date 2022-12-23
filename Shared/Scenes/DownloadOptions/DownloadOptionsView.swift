@@ -14,38 +14,36 @@ struct VideoOptionsViewState: Equatable {
     let isLoadingProviders: Bool
     let isLoadingSources: Bool
 
+    private let providers: [Provider]
+    private let sources: [Source]
+
     var isLoading: Bool {
         isLoadingProviders || isLoadingSources
     }
 
-    private let providers: [Provider]?
-    private let sources: [Source]?
-
     var provider: Provider? {
         if let selectedProvider = selectedProvider {
-            return providers?[id: selectedProvider]
+            return providers[id: selectedProvider]
         }
         return nil
     }
 
     var selectableProviders: [Provider] {
-        if let providers = providers {
-            var returnVal = [Provider]()
+        var returnVal = [Provider]()
 
-            if let selectedProvider = self.provider {
-                returnVal.append(selectedProvider)
-            }
-
-            for provider in providers {
-                if !returnVal.contains(where: { $0.description == provider.description }) {
-                    returnVal.append(provider)
-                }
-            }
-
-            return returnVal
+        if let selectedProvider = self.provider {
+            returnVal.append(selectedProvider)
         }
-
-        return []
+        
+        for provider in providers {
+            if !returnVal.contains(
+                where: { $0.description == provider.description }
+            ) {
+                returnVal.append(provider)
+            }
+        }
+        
+        return returnVal
     }
 
     struct IdentifiedQuality: Equatable, Identifiable, CustomStringConvertible {
@@ -62,16 +60,13 @@ struct VideoOptionsViewState: Equatable {
         }
     }
 
-    var selectableQualities: [IdentifiedQuality]? {
-        if let sources = sources {
-            return sources.map(IdentifiedQuality.init)
-        }
-        return nil
+    var selectableQualities: [IdentifiedQuality] {
+        return sources.map(IdentifiedQuality.init)
     }
 
     var quality: IdentifiedQuality? {
         if let selectedSource = selectedSource {
-            return selectableQualities?[id: selectedSource]
+            return selectableQualities[id: selectedSource]
         }
         return nil
     }
@@ -90,26 +85,28 @@ struct VideoOptionsViewState: Equatable {
         }
     }
 
-    var selectableAudio: [IdentifiedAudio]? {
-        if let providers = providers, let provider = provider {
-            let filtered = providers.filter { $0.description == provider.description }
-            return filtered.map(IdentifiedAudio.init)
+    var selectableAudio: [IdentifiedAudio] {
+        if let provider = provider {
+            return providers.filter {
+                $0.description == provider.description
+            }
+            .map(IdentifiedAudio.init)
         }
-        return nil
+        return []
     }
 
     var audio: IdentifiedAudio? {
-        if let provider = provider, let languages = selectableAudio {
-            return languages[id: provider.id]
+        if let provider = provider {
+            return selectableAudio[id: provider.id]
         }
         return nil
     }
 
     init(_ state: AnimePlayerReducer.State) {
         self.isLoadingProviders = !state.episodes.finished
-        self.isLoadingSources =  !state.sourcesOptions.finished
-        self.providers = state.episode?.providers
-        self.sources = state.sourcesOptions.value?.sources
+        self.isLoadingSources = !state.sourcesOptions.finished
+        self.providers = state.episode?.providers ?? []
+        self.sources = state.sourcesOptions.value?.sources ?? []
         self.selectedProvider = state.selectedProvider
         self.selectedSource = state.selectedSource
     }
@@ -117,8 +114,8 @@ struct VideoOptionsViewState: Equatable {
     init(_ state: DownloadOptionsReducer.State) {
         self.isLoadingProviders = !state.providers.finished
         self.isLoadingSources = !state.sources.finished
-        self.providers = state.providers.value
-        self.sources = state.sources.value
+        self.providers = state.providers.value ?? []
+        self.sources = state.sources.value ?? []
         self.selectedProvider = state.providerSelected
         self.selectedSource = state.sourceSelected
     }
@@ -149,36 +146,39 @@ struct DownloadOptionsView: View {
                     observe: VideoOptionsViewState.init
                 ) { viewState in
                     Group {
-                        SettingsSelectableListView(items: viewState.selectableProviders) {
-                            .init(
+                        SettingsRowExpandableListView(items: viewState.selectableProviders) {
+                            SettingsRowView(
                                 name: "Provider",
-                                selected: viewState.isLoadingProviders ? nil : viewState.provider?.description,
-                                loading: viewState.isLoadingProviders
+                                text: viewState.provider?.description ?? ""
                             )
+                            .loading(viewState.isLoadingProviders)
+                            .multiSelection(viewState.selectableProviders.count > 1)
                         } itemView: { item in
                             Text(item.description)
                         } selectedItem: {
                             viewState.send(.selectProvider($0))
                         }
-                        
-                        SettingsSelectableListView(items: viewState.selectableAudio ?? []) {
-                            .init(
+
+                        SettingsRowExpandableListView(items: viewState.selectableAudio) {
+                            SettingsRowView(
                                 name: "Audio",
-                                selected: viewState.isLoadingProviders ? nil : viewState.audio?.language,
-                                loading: viewState.isLoadingProviders
+                                text: viewState.audio?.language ?? ""
                             )
+                            .loading(viewState.isLoadingProviders)
+                            .multiSelection(viewState.selectableAudio.count > 1)
                         } itemView: { item in
                             Text(item.description)
                         } selectedItem: {
                             viewState.send(.selectProvider($0))
                         }
-                        
-                        SettingsSelectableListView(items: viewState.selectableQualities ?? []) {
-                            .init(
+
+                        SettingsRowExpandableListView(items: viewState.selectableQualities) {
+                            SettingsRowView(
                                 name: "Quality",
-                                selected: viewState.isLoadingSources ? nil : viewState.quality?.description,
-                                loading: viewState.isLoadingSources
+                                text: viewState.quality?.description ?? ""
                             )
+                            .loading(viewState.isLoadingSources)
+                            .multiSelection(viewState.selectableQualities.count > 1)
                         } itemView: { item in
                             Text(item.description)
                         } selectedItem: {

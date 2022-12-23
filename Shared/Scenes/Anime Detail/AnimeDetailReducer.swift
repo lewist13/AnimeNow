@@ -252,7 +252,7 @@ extension AnimeDetailReducer {
             state.episodes = .success(episodes)
 
         case .fetchedEpisodes(.failure(let error)):
-            print(error)
+            Logger.log(.error, error.localizedDescription)
             state.episodes = .failed
 
         case .selectedEpisode(let episodeId):

@@ -139,6 +139,7 @@ extension AnimePlayerView {
             dismissButton
             animeInfoView
             Spacer()
+            videoGravityButton
             pipButton
             airplayButton
         }

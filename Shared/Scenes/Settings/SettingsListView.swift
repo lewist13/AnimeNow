@@ -1,4 +1,4 @@
-////  SettingsListView.swift
+//  SettingsListView.swift
 //  Anime Now!
 //
 //  Created by ErrorErrorError on 11/24/22.
@@ -15,7 +15,7 @@ struct SettingsListView<I: Identifiable & CustomStringConvertible>: View {
     var body: some View {
         if let items = items {
             VStack {
-                ForEach(items) { item in
+                ForEach(items, id: \.description) { item in
                     Text(item.description)
                         .font(.callout.bold())
                         .padding(12)

@@ -9,11 +9,19 @@ import SwiftUI
 import SwiftWebVTT
 
 struct SubtitleTextView: View {
+    enum Size: CGFloat {
+        case small = 0.75
+        case normal = 1.0
+        case large = 1.15
+    }
+
     @StateObject private var viewModel = ViewModel()
 
     var url: URL? = nil
     var progress: Double = .zero
     var duration: Double = .zero
+    var size = Size.normal
+    var options: AttributedText.Options = .defaultBoxed
 
     var body: some View {
         Group {
@@ -23,10 +31,10 @@ struct SubtitleTextView: View {
 
                     AttributedText(
                         text: text,
-                        options: .defaultStroke
+                        options: options
                     )
 
-                    Spacer(minLength: 24)
+                    Spacer(minLength: size.rawValue * 24)
                         .fixedSize()
                 }
                 .frame(
@@ -39,6 +47,23 @@ struct SubtitleTextView: View {
             viewModel.updateURL($0)
         })
     }
+}
+
+extension AttributedText.Options {
+    static let defaultBoxed: Self = .init(
+        fontSize: 18,
+        backgroundColor: .black.opacity(0.5),
+        backgroundRadius: 8,
+        backgroundPadding: 8
+    )
+
+    static let defaultStroke: Self = .init(
+        fontSize: 18,
+        shadowColor: .black,
+        shadowOffset: 2,
+        strokeColor: .black,
+        strokeWidth: 3
+    )
 }
 
 extension SubtitleTextView {

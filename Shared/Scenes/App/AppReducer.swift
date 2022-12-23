@@ -69,8 +69,8 @@ struct AppReducer: ReducerProtocol {
         var home = HomeReducer.State()
         var collection = CollectionsReducer.State()
         var search = SearchReducer.State()
-        var settings = SettingsReducer.State()
         var downloads = DownloadsReducer.State()
+        var settings = SettingsReducer.State()
 
         var videoPlayer: AnimePlayerReducer.State?
         var animeDetail: AnimeDetailReducer.State?

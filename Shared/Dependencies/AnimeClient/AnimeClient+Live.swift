@@ -194,6 +194,8 @@ extension AnimeClient {
                     .episodes(
                         animeId: animeId,
                         options: .init(
+                            dub: false,
+                            provider: .gogoanime,
                             fetchFiller: true
                         )
                     )
@@ -208,6 +210,7 @@ extension AnimeClient {
                         animeId: animeId,
                         options: .init(
                             dub: true,
+                            provider: .gogoanime,
                             fetchFiller: true
                         )
                     )

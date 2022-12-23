@@ -285,6 +285,7 @@ extension AnimeDetailView {
     private struct EpisodesViewState: Equatable {
         let episodes: [Episode]?
         let compact: Bool
+        let current: Episode.ID?
 
         init(_ state: AnimeDetailReducer.State) {
             if state.isLoading {
@@ -293,6 +294,7 @@ extension AnimeDetailView {
                 self.episodes = state.episodes.value
             }
             self.compact = state.compactEpisodes
+            self.current = state.playButtonState.episodeId
         }
     }
 
@@ -333,16 +335,27 @@ extension AnimeDetailView {
                         }
                         .padding(.horizontal)
                     } else {
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            LazyHStack {
-                                ForEach(episodes, id: \.id) { episode in
-                                    generateEpisodeItem(
-                                        episode,
-                                        compact: false
-                                    )
+                        ScrollViewReader { proxy in
+                            ScrollView(
+                                .horizontal,
+                                showsIndicators: false
+                            ) {
+                                LazyHStack {
+                                    ForEach(episodes, id: \.id) { episode in
+                                        generateEpisodeItem(
+                                            episode,
+                                            compact: false
+                                        )
+                                        .id(episode.id)
+                                    }
+                                }
+                                .padding(.horizontal)
+                            }
+                            .onAppear {
+                                if let current = viewState.current {
+                                    proxy.scrollTo(current)
                                 }
                             }
-                            .padding(.horizontal)
                         }
                         .frame(height: 200)
                     }
@@ -352,10 +365,13 @@ extension AnimeDetailView {
     }
 
     struct EpisodeDownloadingViewState: Equatable {
-        var episodeStore: EpisodeStore?
-        var downloadStatus: DownloaderClient.Status?
+        let episodeStore: EpisodeStore?
+        let downloadStatus: DownloaderClient.Status?
 
-        init(_ state: AnimeDetailReducer.State, _ episodeNumber: Int) {
+        init(
+            _ state: AnimeDetailReducer.State,
+            _ episodeNumber: Int
+        ) {
             self.episodeStore = state.animeStore.value?.episodes.first(where: { $0.number == episodeNumber })
             self.downloadStatus = state.episodesStatus[id: episodeNumber]?.status
         }
@@ -368,8 +384,8 @@ extension AnimeDetailView {
     ) -> some View {
         WithViewStore(
             store,
-            observe: { state in
-                EpisodeDownloadingViewState(state, episode.number)
+            observe: {
+                EpisodeDownloadingViewState($0, episode.number)
             }
         ) { viewState in
             Group {
@@ -423,16 +439,7 @@ extension AnimeDetailView {
                 )
             }
             .contextMenu {
-                if (viewState.episodeStore?.almostFinished ?? false) {
-                    Button {
-                        viewState.send(
-                            .markEpisodeAsUnwatched(episode.number),
-                            animation: .easeInOut(duration: 0.15)
-                        )
-                    } label: {
-                        Text("Unwatch")
-                    }
-                } else {
+                if !(viewState.episodeStore?.almostFinished ?? false) {
                     Button {
                         viewState.send(
                             .markEpisodeAsWatched(episode.id),
@@ -440,6 +447,17 @@ extension AnimeDetailView {
                         )
                     } label: {
                         Text("Mark as Watched")
+                    }
+                }
+
+                if (viewState.episodeStore?.progress ?? 0) > 0 {
+                    Button {
+                        viewState.send(
+                            .markEpisodeAsUnwatched(episode.number),
+                            animation: .easeInOut(duration: 0.15)
+                        )
+                    } label: {
+                        Text("Unwatch")
                     }
                 }
 

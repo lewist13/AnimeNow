@@ -44,7 +44,6 @@ extension AnimeStore {
         for episode: any EpisodeRepresentable,
         progress: Double
     ) {
-
         var episodeInfo = EpisodeStore.findOrCreate(episode, episodes)
 
         episodeInfo.number = episode.number

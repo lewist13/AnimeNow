@@ -68,7 +68,6 @@
 		1339179C2910B28600E9E5F7 /* Popover+ViewStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1339179B2910B28600E9E5F7 /* Popover+ViewStore.swift */; };
 		133E55F829011DE200CD59DA /* AnimeNow.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 133E55F529011DE200CD59DA /* AnimeNow.xcdatamodeld */; };
 		133E55F929011DE200CD59DA /* AnimeNow.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 133E55F529011DE200CD59DA /* AnimeNow.xcdatamodeld */; };
-		13446E8128CA4AB100F815C6 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13446E7F28CA4AB100F815C6 /* SettingsView.swift */; };
 		13446E8228CA4AB100F815C6 /* SettingsReducer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13446E8028CA4AB100F815C6 /* SettingsReducer.swift */; };
 		134E0E9228D125C000A5F5E5 /* UserDefaultsClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 134E0E9128D125C000A5F5E5 /* UserDefaultsClient.swift */; };
 		134E0E9328D125C000A5F5E5 /* UserDefaultsClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 134E0E9128D125C000A5F5E5 /* UserDefaultsClient.swift */; };
@@ -103,8 +102,8 @@
 		13650F3328CFE0BF002E20DD /* AnimeClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13650F3228CFE0BF002E20DD /* AnimeClient.swift */; };
 		13650F3628D014B1002E20DD /* AnimeClient+Live.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13650F3528D014B1002E20DD /* AnimeClient+Live.swift */; };
 		13650F3828D04424002E20DD /* AnimeClient+Mock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13650F3728D04424002E20DD /* AnimeClient+Mock.swift */; };
-		136B2F5B2933E8D700FE73C6 /* SettingsSelectableListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 136B2F5A2933E8D700FE73C6 /* SettingsSelectableListView.swift */; };
-		136B2F5C2933E8D700FE73C6 /* SettingsSelectableListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 136B2F5A2933E8D700FE73C6 /* SettingsSelectableListView.swift */; };
+		136B2F5B2933E8D700FE73C6 /* SettingsRowExpandableListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 136B2F5A2933E8D700FE73C6 /* SettingsRowExpandableListView.swift */; };
+		136B2F5C2933E8D700FE73C6 /* SettingsRowExpandableListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 136B2F5A2933E8D700FE73C6 /* SettingsRowExpandableListView.swift */; };
 		1372DEC728E5337D00E35980 /* AniListAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1372DEC628E5337D00E35980 /* AniListAPI.swift */; };
 		137A818128C51C7400B69503 /* URLRouting in Frameworks */ = {isa = PBXBuildFile; productRef = 137A818028C51C7400B69503 /* URLRouting */; };
 		137A818328C51C8000B69503 /* URLRouting in Frameworks */ = {isa = PBXBuildFile; productRef = 137A818228C51C8000B69503 /* URLRouting */; };
@@ -164,6 +163,8 @@
 		13B2771A28F79FF200B4B4A3 /* KitsuAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1359668728E56ACF00EB2AFC /* KitsuAPI.swift */; };
 		13B2771B28F79FF200B4B4A3 /* ConsumetAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13E465F328E6231A001FF309 /* ConsumetAPI.swift */; };
 		13B2771C28F79FFA00B4B4A3 /* Date+Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 130ED93B28E3FD38000811A6 /* Date+Utils.swift */; };
+		13B8385D2954B8F500C7380D /* UserDefaultClient+Keys.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13B8385C2954B8F500C7380D /* UserDefaultClient+Keys.swift */; };
+		13B8385E2954B8F500C7380D /* UserDefaultClient+Keys.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13B8385C2954B8F500C7380D /* UserDefaultClient+Keys.swift */; };
 		13BA64C5290CA52C005C4A3F /* CollectionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13BA64C4290CA52C005C4A3F /* CollectionStore.swift */; };
 		13BA64C6290CA52C005C4A3F /* CollectionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13BA64C4290CA52C005C4A3F /* CollectionStore.swift */; };
 		13BAE88828F3A0AC00662C0C /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13BAE88728F3A0AC00662C0C /* SceneDelegate.swift */; };
@@ -196,6 +197,9 @@
 		13C3537F28C311B300A54E7E /* ComposableArchitecture in Frameworks */ = {isa = PBXBuildFile; productRef = 13C3537E28C311B300A54E7E /* ComposableArchitecture */; };
 		13CB97F12911B20A00E074B8 /* NotificationCenter+Async.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13CB97F02911B20A00E074B8 /* NotificationCenter+Async.swift */; };
 		13CB97F22911B20A00E074B8 /* NotificationCenter+Async.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13CB97F02911B20A00E074B8 /* NotificationCenter+Async.swift */; };
+		13D08AF22952387600FE6810 /* SettingsView+macOS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13D08AF12952387600FE6810 /* SettingsView+macOS.swift */; };
+		13D08AF42952964300FE6810 /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13D08AF32952964300FE6810 /* Log.swift */; };
+		13D08AF52952A8B000FE6810 /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13D08AF32952964300FE6810 /* Log.swift */; };
 		13D235C628E16F32004E51BB /* ComposableArchitecture+Binding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13D235C528E16F32004E51BB /* ComposableArchitecture+Binding.swift */; };
 		13D235C728E16F32004E51BB /* ComposableArchitecture+Binding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13D235C528E16F32004E51BB /* ComposableArchitecture+Binding.swift */; };
 		13D2846528CF08F500332556 /* XCTestDynamicOverlay in Frameworks */ = {isa = PBXBuildFile; productRef = 13D2846428CF08F500332556 /* XCTestDynamicOverlay */; };
@@ -221,19 +225,20 @@
 		13E512C728C79E5E00B298BA /* GraphQLModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13E512C628C79E5E00B298BA /* GraphQLModels.swift */; };
 		13E95CF02904A4B100E85F28 /* Effect+Send.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13E95CEF2904A4B100E85F28 /* Effect+Send.swift */; };
 		13E95CF12904A4B100E85F28 /* Effect+Send.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13E95CEF2904A4B100E85F28 /* Effect+Send.swift */; };
+		13F05556294B1359004BB876 /* SettingsView+iOS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13F05555294B1359004BB876 /* SettingsView+iOS.swift */; };
 		13F1BC9A29294BB600404EDB /* AddNewCollectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13F1BC9929294BB600404EDB /* AddNewCollectionView.swift */; };
 		13F1BC9C29294BC100404EDB /* AddNewCollectionReducer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13F1BC9B29294BC100404EDB /* AddNewCollectionReducer.swift */; };
 		13F2F526292FF73C003122AA /* DownloaderClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13F2F525292FF73C003122AA /* DownloaderClient.swift */; };
 		13F2F52A293000B3003122AA /* DownloaderClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13F2F525292FF73C003122AA /* DownloaderClient.swift */; };
 		13F2F52D29300583003122AA /* DownloadOptionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13F2F52C29300583003122AA /* DownloadOptionsView.swift */; };
 		13F2F52F2930058E003122AA /* DownloadOptionsReducer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13F2F52E2930058E003122AA /* DownloadOptionsReducer.swift */; };
+		13F43F3029550E1400953409 /* SettingsRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13F43F2F29550E1400953409 /* SettingsRowView.swift */; };
+		13F43F3129550E1400953409 /* SettingsRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13F43F2F29550E1400953409 /* SettingsRowView.swift */; };
 		13F52BDF2906285B00AC9315 /* View+Hovered.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13F52BDE2906285B00AC9315 /* View+Hovered.swift */; };
 		13F66A09293033860027BAB6 /* DownloadOptionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13F2F52C29300583003122AA /* DownloadOptionsView.swift */; };
 		13F66A0A293033860027BAB6 /* DownloadOptionsReducer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13F2F52E2930058E003122AA /* DownloadOptionsReducer.swift */; };
 		13F66A0C29306BDB0027BAB6 /* LifecycleReducer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13F66A0B29306BDB0027BAB6 /* LifecycleReducer.swift */; };
 		13F66A0D29306BDB0027BAB6 /* LifecycleReducer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13F66A0B29306BDB0027BAB6 /* LifecycleReducer.swift */; };
-		13F66A0F293088F70027BAB6 /* SettingsRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13F66A0E293088F70027BAB6 /* SettingsRowView.swift */; };
-		13F66A10293088F70027BAB6 /* SettingsRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13F66A0E293088F70027BAB6 /* SettingsRowView.swift */; };
 		13F66A1229308A7F0027BAB6 /* SettingsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13F66A1129308A7F0027BAB6 /* SettingsListView.swift */; };
 		13F66A1329308A7F0027BAB6 /* SettingsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13F66A1129308A7F0027BAB6 /* SettingsListView.swift */; };
 		13F76D4F292B5F0B0092723E /* AppView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13F76D4E292B5F0B0092723E /* AppView.swift */; };
@@ -290,7 +295,6 @@
 		1339179B2910B28600E9E5F7 /* Popover+ViewStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Popover+ViewStore.swift"; sourceTree = "<group>"; };
 		133E55F629011DE200CD59DA /* Model 2.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "Model 2.xcdatamodel"; sourceTree = "<group>"; };
 		133E55F729011DE200CD59DA /* Model.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Model.xcdatamodel; sourceTree = "<group>"; };
-		13446E7F28CA4AB100F815C6 /* SettingsView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		13446E8028CA4AB100F815C6 /* SettingsReducer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SettingsReducer.swift; sourceTree = "<group>"; };
 		134E0E9128D125C000A5F5E5 /* UserDefaultsClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDefaultsClient.swift; sourceTree = "<group>"; };
 		134E5AB6290E61CE00E41664 /* SubtitleTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubtitleTextView.swift; sourceTree = "<group>"; };
@@ -314,7 +318,7 @@
 		13650F3528D014B1002E20DD /* AnimeClient+Live.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AnimeClient+Live.swift"; sourceTree = "<group>"; };
 		13650F3728D04424002E20DD /* AnimeClient+Mock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AnimeClient+Mock.swift"; sourceTree = "<group>"; };
 		136540C2293540320058232F /* Model 7.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "Model 7.xcdatamodel"; sourceTree = "<group>"; };
-		136B2F5A2933E8D700FE73C6 /* SettingsSelectableListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsSelectableListView.swift; sourceTree = "<group>"; };
+		136B2F5A2933E8D700FE73C6 /* SettingsRowExpandableListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsRowExpandableListView.swift; sourceTree = "<group>"; };
 		1372DEC628E5337D00E35980 /* AniListAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AniListAPI.swift; sourceTree = "<group>"; };
 		137A818928C535BE00B69503 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		137A818A28C535BE00B69503 /* HomeReducer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeReducer.swift; sourceTree = "<group>"; };
@@ -345,6 +349,7 @@
 		13ABABB02925EC5C00593C32 /* SwiftORM */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = SwiftORM; sourceTree = "<group>"; };
 		13B2771228F7922900B4B4A3 /* VideoPlayer+View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "VideoPlayer+View.swift"; sourceTree = "<group>"; };
 		13B2771528F79EA300B4B4A3 /* PlatformViewRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlatformViewRepresentable.swift; sourceTree = "<group>"; };
+		13B8385C2954B8F500C7380D /* UserDefaultClient+Keys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UserDefaultClient+Keys.swift"; sourceTree = "<group>"; };
 		13BA64C3290C9F58005C4A3F /* Model 4.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "Model 4.xcdatamodel"; sourceTree = "<group>"; };
 		13BA64C4290CA52C005C4A3F /* CollectionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionStore.swift; sourceTree = "<group>"; };
 		13BA64C8290CC018005C4A3F /* CloudKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CloudKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.5.sdk/System/Library/Frameworks/CloudKit.framework; sourceTree = DEVELOPER_DIR; };
@@ -362,6 +367,8 @@
 		13C3536828C308A000A54E7E /* Anime Now!.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Anime Now!.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		13C3536A28C308A000A54E7E /* macOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = macOS.entitlements; sourceTree = "<group>"; };
 		13CB97F02911B20A00E074B8 /* NotificationCenter+Async.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NotificationCenter+Async.swift"; sourceTree = "<group>"; };
+		13D08AF12952387600FE6810 /* SettingsView+macOS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SettingsView+macOS.swift"; sourceTree = "<group>"; };
+		13D08AF32952964300FE6810 /* Log.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Log.swift; sourceTree = "<group>"; };
 		13D235C328E16801004E51BB /* anime-now-ios-info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "anime-now-ios-info.plist"; sourceTree = "<group>"; };
 		13D235C528E16F32004E51BB /* ComposableArchitecture+Binding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ComposableArchitecture+Binding.swift"; sourceTree = "<group>"; };
 		13D83B8428FCA8290044F04A /* AnimePlayerView+iOS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AnimePlayerView+iOS.swift"; sourceTree = "<group>"; };
@@ -376,14 +383,16 @@
 		13E4BCEF28C829A80039D880 /* AnimeDetailReducer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AnimeDetailReducer.swift; sourceTree = "<group>"; };
 		13E512C628C79E5E00B298BA /* GraphQLModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GraphQLModels.swift; sourceTree = "<group>"; };
 		13E95CEF2904A4B100E85F28 /* Effect+Send.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Effect+Send.swift"; sourceTree = "<group>"; };
+		13F05554294AFE4D004BB876 /* anime-now-macos-info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "anime-now-macos-info.plist"; sourceTree = "<group>"; };
+		13F05555294B1359004BB876 /* SettingsView+iOS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SettingsView+iOS.swift"; sourceTree = "<group>"; };
 		13F1BC9929294BB600404EDB /* AddNewCollectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddNewCollectionView.swift; sourceTree = "<group>"; };
 		13F1BC9B29294BC100404EDB /* AddNewCollectionReducer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddNewCollectionReducer.swift; sourceTree = "<group>"; };
 		13F2F525292FF73C003122AA /* DownloaderClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloaderClient.swift; sourceTree = "<group>"; };
 		13F2F52C29300583003122AA /* DownloadOptionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadOptionsView.swift; sourceTree = "<group>"; };
 		13F2F52E2930058E003122AA /* DownloadOptionsReducer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadOptionsReducer.swift; sourceTree = "<group>"; };
+		13F43F2F29550E1400953409 /* SettingsRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsRowView.swift; sourceTree = "<group>"; };
 		13F52BDE2906285B00AC9315 /* View+Hovered.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+Hovered.swift"; sourceTree = "<group>"; };
 		13F66A0B29306BDB0027BAB6 /* LifecycleReducer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LifecycleReducer.swift; sourceTree = "<group>"; };
-		13F66A0E293088F70027BAB6 /* SettingsRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsRowView.swift; sourceTree = "<group>"; };
 		13F66A1129308A7F0027BAB6 /* SettingsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsListView.swift; sourceTree = "<group>"; };
 		13F76D4E292B5F0B0092723E /* AppView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppView.swift; sourceTree = "<group>"; };
 		13FAE2E5292426F400052231 /* Set+Identifiable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Set+Identifiable.swift"; sourceTree = "<group>"; };
@@ -512,6 +521,7 @@
 				134E0E9128D125C000A5F5E5 /* UserDefaultsClient.swift */,
 				1327550528D2A11A00A6C525 /* UserDefaultsClient+Live.swift */,
 				1327550828D2A7C400A6C525 /* UserDefaultsClient+Mock.swift */,
+				13B8385C2954B8F500C7380D /* UserDefaultClient+Keys.swift */,
 			);
 			path = UserDefaultsClient;
 			sourceTree = "<group>";
@@ -578,8 +588,8 @@
 			isa = PBXGroup;
 			children = (
 				13C3535B28C3089E00A54E7E /* AppView+iOS.swift */,
-				13446E7F28CA4AB100F815C6 /* SettingsView.swift */,
 				13C1552228FB9C1D0064885D /* HomeView+iOS.swift */,
+				13F05555294B1359004BB876 /* SettingsView+iOS.swift */,
 				13D83B8428FCA8290044F04A /* AnimePlayerView+iOS.swift */,
 			);
 			path = Scenes;
@@ -710,9 +720,9 @@
 			isa = PBXGroup;
 			children = (
 				13446E8028CA4AB100F815C6 /* SettingsReducer.swift */,
-				13F66A0E293088F70027BAB6 /* SettingsRowView.swift */,
 				13F66A1129308A7F0027BAB6 /* SettingsListView.swift */,
-				136B2F5A2933E8D700FE73C6 /* SettingsSelectableListView.swift */,
+				136B2F5A2933E8D700FE73C6 /* SettingsRowExpandableListView.swift */,
+				13F43F2F29550E1400953409 /* SettingsRowView.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -787,6 +797,7 @@
 		13C3536928C308A000A54E7E /* macOS */ = {
 			isa = PBXGroup;
 			children = (
+				13F05554294AFE4D004BB876 /* anime-now-macos-info.plist */,
 				130B4BBC292D9C6D009E6176 /* Components */,
 				13F52BDB29061D8200AC9315 /* Extensions */,
 				1325FD6B2904F99100EA37D5 /* Main */,
@@ -935,6 +946,7 @@
 				13CB97F02911B20A00E074B8 /* NotificationCenter+Async.swift */,
 				132A7ED62927FDAE0039E0CC /* Color+Extension.swift */,
 				13F66A0B29306BDB0027BAB6 /* LifecycleReducer.swift */,
+				13D08AF32952964300FE6810 /* Log.swift */,
 			);
 			path = "Supporting Files";
 			sourceTree = "<group>";
@@ -945,6 +957,7 @@
 				13FC21F028C41648000F0F79 /* AppView+macOS.swift */,
 				13C1552428FB9C7E0064885D /* HomeView+macOS.swift */,
 				13D83B8628FCAA800044F04A /* AnimePlayerView+macOS.swift */,
+				13D08AF12952387600FE6810 /* SettingsView+macOS.swift */,
 			);
 			path = Scenes;
 			sourceTree = "<group>";
@@ -1101,9 +1114,10 @@
 				13650F3628D014B1002E20DD /* AnimeClient+Live.swift in Sources */,
 				1312FD6228DD7CB0004A415F /* AirplayView.swift in Sources */,
 				13E465F628E62508001FF309 /* EnimeAPI.swift in Sources */,
-				13F66A0F293088F70027BAB6 /* SettingsRowView.swift in Sources */,
+				13B8385D2954B8F500C7380D /* UserDefaultClient+Keys.swift in Sources */,
 				130B898F291728CA008CBD68 /* ScaledOnHoverModifier.swift in Sources */,
 				138DC1692924C5220093F806 /* EpisodeStore+CoreData.swift in Sources */,
+				13D08AF52952A8B000FE6810 /* Log.swift in Sources */,
 				13F2F52F2930058E003122AA /* DownloadOptionsReducer.swift in Sources */,
 				138066F328C572B50012DAFB /* SearchReducer.swift in Sources */,
 				13E4BCF128C829A80039D880 /* AnimeDetailReducer.swift in Sources */,
@@ -1113,7 +1127,7 @@
 				13820F16291429BA00CE431F /* UIApplication+Extension.swift in Sources */,
 				1327550928D2A7C400A6C525 /* UserDefaultsClient+Mock.swift in Sources */,
 				134E0E9228D125C000A5F5E5 /* UserDefaultsClient.swift in Sources */,
-				136B2F5B2933E8D700FE73C6 /* SettingsSelectableListView.swift in Sources */,
+				136B2F5B2933E8D700FE73C6 /* SettingsRowExpandableListView.swift in Sources */,
 				13077A4829200B1000DB0965 /* RepositoryClient+Live.swift in Sources */,
 				13083D1A292AB94F005AC657 /* ModalOverlayView.swift in Sources */,
 				133E55F829011DE200CD59DA /* AnimeNow.xcdatamodeld in Sources */,
@@ -1124,6 +1138,7 @@
 				13C1552328FB9C1D0064885D /* HomeView+iOS.swift in Sources */,
 				1327550628D2A11A00A6C525 /* UserDefaultsClient+Live.swift in Sources */,
 				13DF206028FBB0A900EE804D /* CollectionsReducer.swift in Sources */,
+				13F43F3029550E1400953409 /* SettingsRowView.swift in Sources */,
 				1380562128E9341A00B9B45B /* Cache.swift in Sources */,
 				13B2771328F7922900B4B4A3 /* VideoPlayer+View.swift in Sources */,
 				135D560E2926BA280096774D /* Model5ToModel6Mapping.xcmappingmodel in Sources */,
@@ -1187,12 +1202,12 @@
 				13446E8228CA4AB100F815C6 /* SettingsReducer.swift in Sources */,
 				13E4BCF028C829A80039D880 /* AnimeDetailView.swift in Sources */,
 				13643C8D291CAC200001E159 /* CollectionStoreModel4ToModel5.swift in Sources */,
+				13F05556294B1359004BB876 /* SettingsView+iOS.swift in Sources */,
 				13FC21CC28C39779000F0F79 /* RepositoryClient+Mock.swift in Sources */,
 				134FAA1C28D6FAFC00B081FE /* String+Time.swift in Sources */,
 				13F76D4F292B5F0B0092723E /* AppView.swift in Sources */,
 				13C3536F28C308A000A54E7E /* AppView+iOS.swift in Sources */,
 				132A7ED529275A0C0039E0CC /* ModalCardView.swift in Sources */,
-				13446E8128CA4AB100F815C6 /* SettingsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1202,6 +1217,7 @@
 			files = (
 				13387F9629132B1B00E0117D /* AppDelegateReducer.swift in Sources */,
 				13DF206128FBBDF100EE804D /* CollectionsReducer.swift in Sources */,
+				13D08AF42952964300FE6810 /* Log.swift in Sources */,
 				13B2771B28F79FF200B4B4A3 /* ConsumetAPI.swift in Sources */,
 				13C1550A28FB672F0064885D /* HomeReducer.swift in Sources */,
 				1304124E28FEF4C20011CE3C /* SideArrowsList.swift in Sources */,
@@ -1236,7 +1252,6 @@
 				13C1551B28FB75780064885D /* View+Redacted.swift in Sources */,
 				13C1551628FB75780064885D /* BlurView.swift in Sources */,
 				13BA64C6290CA52C005C4A3F /* CollectionStore.swift in Sources */,
-				13F66A10293088F70027BAB6 /* SettingsRowView.swift in Sources */,
 				1327550A28D2A7C400A6C525 /* UserDefaultsClient+Mock.swift in Sources */,
 				13938BAA28E0AF20001C8784 /* ImageSize.swift in Sources */,
 				137F8FA528F633CC00ECDB30 /* AniSkipAPI.swift in Sources */,
@@ -1265,7 +1280,7 @@
 				13F76D50292B5F0B0092723E /* AppView.swift in Sources */,
 				134FAA2028D6FBC200B081FE /* CMTime+String.swift in Sources */,
 				1326285A290DDB61003A9AFB /* View+Keyboard.swift in Sources */,
-				136B2F5C2933E8D700FE73C6 /* SettingsSelectableListView.swift in Sources */,
+				136B2F5C2933E8D700FE73C6 /* SettingsRowExpandableListView.swift in Sources */,
 				13D83B8828FCAAA40044F04A /* AnimePlayerView+macOS.swift in Sources */,
 				1325FD6D2904F9BC00EA37D5 /* AppDelegate.swift in Sources */,
 				1339179C2910B28600E9E5F7 /* Popover+ViewStore.swift in Sources */,
@@ -1274,8 +1289,10 @@
 				13F52BDF2906285B00AC9315 /* View+Hovered.swift in Sources */,
 				131AB5E5292F286A0065B1E2 /* CollectionStore+CoreData.swift in Sources */,
 				13A155B6290A3DDF006EB845 /* TestVideoPlayer.swift in Sources */,
+				13D08AF22952387600FE6810 /* SettingsView+macOS.swift in Sources */,
 				13CB97F22911B20A00E074B8 /* NotificationCenter+Async.swift in Sources */,
 				13C3536E28C308A000A54E7E /* AnimeNowApp.swift in Sources */,
+				13F43F3129550E1400953409 /* SettingsRowView.swift in Sources */,
 				13944BB02908D47800B947B5 /* FillAspectImage.swift in Sources */,
 				13F66A0A293033860027BAB6 /* DownloadOptionsReducer.swift in Sources */,
 				13F66A1329308A7F0027BAB6 /* SettingsListView.swift in Sources */,
@@ -1303,6 +1320,7 @@
 				134FAA1D28D6FAFC00B081FE /* String+Time.swift in Sources */,
 				13C1551528FB75780064885D /* ThumbnailItemCompactView.swift in Sources */,
 				1310E062292BF033003F47A0 /* ModalOverlayView.swift in Sources */,
+				13B8385E2954B8F500C7380D /* UserDefaultClient+Keys.swift in Sources */,
 				134E5AB8290E61CE00E41664 /* SubtitleTextView.swift in Sources */,
 				1310E063292BF033003F47A0 /* ModalOverlayReducer.swift in Sources */,
 				134F600D28FE4E790024B0D5 /* SnapCarousel.swift in Sources */,
@@ -1452,7 +1470,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.errorerrorerror.animenow;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.errorerrorerror.anime-now";
 				PRODUCT_MODULE_NAME = AnimeNow;
 				PRODUCT_NAME = "Anime Now!";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1487,7 +1505,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.errorerrorerror.animenow;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.errorerrorerror.anime-now";
 				PRODUCT_MODULE_NAME = AnimeNow;
 				PRODUCT_NAME = "Anime Now!";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1518,6 +1536,7 @@
 				ENABLE_HARDENED_RUNTIME = NO;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "macOS/anime-now-macos-info.plist";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1550,6 +1569,7 @@
 				ENABLE_HARDENED_RUNTIME = NO;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "macOS/anime-now-macos-info.plist";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

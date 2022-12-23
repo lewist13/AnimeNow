@@ -68,19 +68,6 @@ extension UserDefaultsClient.Key<Double> {
     }
 }
 
-extension UserDefaultsClient.Key {
-    static var hasShownOnboarding: UserDefaultsClient.Key<Bool> { .init("hasShownOnboarding") }
-    static var compactEpisodes: UserDefaultsClient.Key<Bool> { .init("compactEpisodes") }
-    static var videoPlayerAudioIsDub: UserDefaultsClient.Key<Bool> { .init("videoPlayerAudioIsDub") }
-
-    static var videoPlayerProvider: UserDefaultsClient.Key<Data?> { .init("videoPlayerProvider") }
-    static var videoPlayerSubtitle: UserDefaultsClient.Key<Data?> { .init("videoPlayerSubtitle") }
-    static var videoPlayerQuality: UserDefaultsClient.Key<Data?> { .init("videoPlayerQuality") }
-    static var searchedItems: UserDefaultsClient.Key<Data?> { .init("searchedItems") }
-
-    static var hasClearedAllVideos: UserDefaultsClient.Key<Bool> { .init("hasClearedAllVideos") }
-}
-
 extension UserDefaultsClient {
     func `set`(_ key: Key<Bool>, value: Bool?) async {
         await self.setBool(key.key, value ?? key.defaultValue)
@@ -96,6 +83,10 @@ extension UserDefaultsClient {
 
     func `set`(_ key: Key<Double>, value: Double?) async {
         await self.setDouble(key.key, value ?? key.defaultValue)
+    }
+
+    func `set`<T: Codable>(_ key: Key<T>, value: T?) async {
+        await self.setData(key.key, (try? value?.toData()) ?? (try? key.defaultValue.toData()))
     }
 }
 
@@ -114,6 +105,10 @@ extension UserDefaultsClient {
 
     func `get`(_ key: Key<Double>) -> Double {
         self.doubleForKey(key.key)
+    }
+
+    func `get`<T: Codable>(_ key: Key<T>) -> T? {
+        try? self.dataForKey(key.key)?.toObject()
     }
 }
 

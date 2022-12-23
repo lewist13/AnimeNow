@@ -9,8 +9,7 @@
 import ComposableArchitecture
 
 struct SettingsReducer: ReducerProtocol {
-    struct State: Equatable {
-    }
+    struct State: Equatable {}
     
     enum Action: Equatable {
         case onAppear

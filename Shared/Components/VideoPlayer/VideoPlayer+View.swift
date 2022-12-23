@@ -39,27 +39,36 @@ extension VideoPlayer {
 
         /// Play progress , value range 0-1.
         var playProgress: Double {
-            return player.playProgress
+            player.playProgress
         }
 
         /// Buffered progress, value range 0-1.
         var bufferProgress: Double {
-            return player.bufferProgress
+            player.bufferProgress
         }
 
         /// Buffered length in seconds.
         var currentBufferDuration: Double {
-            return player.currentBufferDuration
+            player.currentBufferDuration
         }
 
         /// Played length in seconds.
         var currentDuration: Double {
-            return player.currentDuration
+            player.currentDuration
         }
 
         /// Total video duration in seconds.
         var totalDuration: Double {
-            return player.totalDuration
+            player.totalDuration
+        }
+
+        var videoGravity: AVLayerVideoGravity {
+            get {
+                playerLayer.videoGravity
+            }
+            set {
+                playerLayer.videoGravity = newValue
+            }
         }
 
         private(set) var status: VideoPlayer.Status = .error {

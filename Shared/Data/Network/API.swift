@@ -69,6 +69,7 @@ enum API {
         }
 
         api.configureRequest(&request)
+        Logger.log(.debug, "Sending request to: \(String(describing: API.self)) with url: \(request)")
 
         let (data, _) = try await URLSession.shared.data(for: request)
 
@@ -84,6 +85,7 @@ enum API {
         }
 
         api.configureRequest(request: &request)
+        Logger.log(.debug, "Sending request to: \(String(describing: API.self)) with url: \(request)")
 
         let (_, response) = try await URLSession.shared.data(for: request)
 

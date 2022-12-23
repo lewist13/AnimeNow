@@ -171,6 +171,7 @@ extension AnimePlayerView {
             dismissButton
             animeInfoView
             Spacer()
+            videoGravityButton
             airplayButton
             subtitlesButton
             episodesButton

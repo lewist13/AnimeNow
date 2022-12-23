@@ -149,7 +149,7 @@ extension HomeReducer {
             state[keyPath: keyPath] = .success(anime)
 
         case .fetchedAnime(let keyPath, .failure(let error)):
-            print(error)
+            Logger.log(.error, error.localizedDescription)
             state[keyPath: keyPath] = .failed
 
         case .observingAnimesInDB(let animesInDb):
@@ -157,7 +157,8 @@ extension HomeReducer {
                 var lastWatched = [Anime.ID]()
                 var resumeWatchingEpisodes = [ResumeWatchingEpisode]()
 
-                let sortedAnimeStores = animesInDb.sorted { anime1, anime2 in
+                let sortedAnimeStores = animesInDb.filter { $0.lastModifiedEpisode != nil }
+                    .sorted { anime1, anime2 in
                     guard let lastModifiedOne = anime1.lastModifiedEpisode,
                           let lastModifiedTwo = anime2.lastModifiedEpisode else {
                         return false
@@ -168,12 +169,12 @@ extension HomeReducer {
                 for animeStore in sortedAnimeStores {
                     lastWatched.append(animeStore.id)
 
-                    guard let recentEpisodeStore = animeStore.lastModifiedEpisode, !recentEpisodeStore.almostFinished else { continue }
-                    resumeWatchingEpisodes.append(.init(animeStore: animeStore, title: animeStore.title, episodeStore: recentEpisodeStore))
+                    guard let episode = animeStore.lastModifiedEpisode, !episode.almostFinished, (episode.progress ?? 0 > 0) else { continue }
+                    resumeWatchingEpisodes.append(.init(animeStore: animeStore, title: animeStore.title, episodeStore: episode))
                 }
 
                 await send(.setResumeWatchingEpisodes(.success(resumeWatchingEpisodes)), animation: .easeInOut(duration: 0.25))
-                await send(.setLastWatchedAnimes(sortedAnimeStores.compactMap { $0.episodes.count > 0 ? $0.eraseAsRepresentable() : nil }))
+                await send(.setLastWatchedAnimes(sortedAnimeStores.map { $0.eraseAsRepresentable() }))
             }
 
         case .setResumeWatchingEpisodes(let episodes):

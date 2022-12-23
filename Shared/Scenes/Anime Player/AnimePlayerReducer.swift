@@ -87,6 +87,7 @@ struct AnimePlayerReducer: ReducerProtocol {
         var playerPiPStatus = VideoPlayer.PIPStatus.restoreUI
         var playerIsFullScreen = false
         var playerVolume = 1.0
+        var playerGravity = VideoPlayer.VideoGravity.resizeAspect
 
         init(
             anime: some AnimeRepresentable,
@@ -158,6 +159,7 @@ struct AnimePlayerReducer: ReducerProtocol {
         case stopSeeking
         case seeking(to: Double)
         case volume(to: Double)
+        case toggleVideoGravity
 
         case playerStatus(VideoPlayer.Status)
         case playerAction(VideoPlayer.Action)
@@ -168,6 +170,7 @@ struct AnimePlayerReducer: ReducerProtocol {
         case playerPlayedToEnd
         case playerVolume(Double)
         case playerIsFullScreen(Bool)
+        case playerGravity(VideoPlayer.VideoGravity)
 
         // Internal Video Player Actions
 
@@ -545,7 +548,7 @@ extension AnimePlayerReducer {
 
             state.selectedEpisode = episodeId
 
-            let lastSelectedProvider: String? = try? userDefaultsClient.get(.videoPlayerProvider)?.toObject()
+            let lastSelectedProvider = userDefaultsClient.get(.videoPlayerProvider)
             let lastSelectedIsDub = userDefaultsClient.get(.videoPlayerAudioIsDub)
 
             var providerId = state.episode?.providers.first(
@@ -592,9 +595,9 @@ extension AnimePlayerReducer {
         case .selectSubtitle(let subtitleId):
             state.selectedSubtitle = subtitleId
 
-            let subtitleData = try? state.subtitle?.lang.toData()
+            let subtitle = state.subtitle?.lang
             return .run {
-                await userDefaultsClient.set(.videoPlayerSubtitle, value: subtitleData ?? .empty)
+                await userDefaultsClient.set(.videoPlayerSubtitle, value: subtitle)
             }
 
         case .selectSidebarSettings(let section):
@@ -624,9 +627,9 @@ extension AnimePlayerReducer {
 
         case .internalSetSource(let source):
             state.selectedSource = source
-            if let qualityData = try? state.source?.quality.toData() {
+            if let quality = state.source?.quality {
                 return .run {
-                    await userDefaultsClient.set(.videoPlayerQuality, value: qualityData)
+                    await userDefaultsClient.set(.videoPlayerQuality, value: quality)
                 }
             }
 
@@ -680,8 +683,8 @@ extension AnimePlayerReducer {
         case .fetchedSourcesOptions(.success(let sources)):
             state.sourcesOptions = .success(sources)
 
-            let lastSelectedQuality: Source.Quality? = try? userDefaultsClient.get(.videoPlayerQuality)?.toObject()
-            let lastSelectedSubtitles: String? = try? userDefaultsClient.get(.videoPlayerSubtitle)?.toObject()
+            let lastSelectedQuality = userDefaultsClient.get(.videoPlayerQuality)
+            let lastSelectedSubtitles = userDefaultsClient.get(.videoPlayerSubtitle)
 
             let sourceId = sources.sources.first(where: { $0.quality == lastSelectedQuality })?.id ?? sources.sources.first?.id
             let subtitleId = sources.subtitles.first(where: { $0.lang == lastSelectedSubtitles })?.id ?? nil
@@ -714,7 +717,7 @@ extension AnimePlayerReducer {
             state.skipTimes = .success(skipTimes)
 
         case .fetchedSkipTimes(.failure(let error)):
-            print(error)
+            Logger.log(.error, error.localizedDescription)
             state.skipTimes = .failed
 
         // Video Player Actions
@@ -744,6 +747,16 @@ extension AnimePlayerReducer {
             let requestedTime = min(progress, 1.0)
             state.playerAction = .seekTo(requestedTime)
             state.playerProgress = requestedTime
+
+        case .toggleVideoGravity:
+            switch state.playerGravity {
+            case .resizeAspect:
+                state.playerAction = .videoGravity(.resizeAspectFill)
+
+            default:
+                state.playerAction = .videoGravity(.resizeAspect)
+            }
+            return hideOverlayAnimationDelay()
 
         // Internal Video Player 
         case .replayTapped:
@@ -847,6 +860,9 @@ extension AnimePlayerReducer {
         case .playerIsFullScreen(let fullscreen):
             state.playerIsFullScreen = fullscreen
 
+        case .playerGravity(let gravity):
+            state.playerGravity = gravity
+
         case .saveState:
             return self.saveEpisodeState(state: state)
 
@@ -882,16 +898,14 @@ extension AnimePlayerReducer {
     }
 
     private func internalSetProvider(_ providerId: Provider.ID?, state: inout State) -> EffectTask<Action> {
-        // Before selecting provider, save progress
-
         state.selectedProvider = providerId
         state.sourcesOptions = .idle
 
-        let providerData = try? state.provider?.description.toData()
+        let provider = state.provider?.description
 
         return .run { send in
-            if let providerData = providerData {
-                await userDefaultsClient.set(.videoPlayerProvider, value: providerData)
+            if let provider {
+                await userDefaultsClient.set(.videoPlayerProvider, value: provider)
             }
 
             await send(.fetchSourcesOptions)

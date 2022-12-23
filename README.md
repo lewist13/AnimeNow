@@ -9,7 +9,7 @@
   </p>
   <br>
   <p align="center">
-    <img src="https://img.shields.io/github/downloads/errorerrorerror/anime-now/total?color=green&style=for-the-badge"/>
+    <img src="https://img.shields.io/github/downloads/AnimeNow-Team/AnimeNow/total?color=green&style=for-the-badge"/>
     <img src="https://img.shields.io/badge/platforms-iOS%2C%20iPadOS%2C%20macOS-green?style=for-the-badge"/>
     <a href="https://discord.gg/CtVur4sQ2N">
       <img src="https://dcbadge.vercel.app/api/server/CtVur4sQ2N"/>
@@ -111,9 +111,9 @@ This app is still in its beta stages so expect random crashes, missing content, 
 
 ## Downloads 
 
-[![Latest](https://img.shields.io/github/v/release/errorerrorerror/anime-now?label=Latest&style=for-the-badge)](https://github.com/ErrorErrorError/anime-now/releases/latest)
+[![Latest](https://img.shields.io/github/v/release/AnimeNow-Team/AnimeNow?label=Latest&style=for-the-badge)](https://github.com/AnimeNow-Team/AnimeNow/releases/latest)
 
-[![Beta](https://img.shields.io/github/v/release/errorerrorerror/anime-now?include_prereleases&label=Beta&style=for-the-badge)](https://github.com/ErrorErrorError/anime-now/releases)
+[![Beta](https://img.shields.io/github/v/release/AnimeNow-Team/AnimeNow?include_prereleases&label=Beta&style=for-the-badge)](https://github.com/AnimeNow-Team/AnimeNow/releases)
 
 *Requires at least iOS 14, iPadOS 14, and macOS 11 or later.*
 
@@ -126,7 +126,7 @@ This app is still in its beta stages so expect random crashes, missing content, 
 
 _If you're not jailbroken, then you require a sideloader application in order to install this app. If you're jailbroken, all you need is an IPA and you're good to install._
 
-1. [Download the ipa file.](https://github.com/errorerrorerror/anime-now/releases/latest/)
+1. [Download the ipa file.](https://github.com/AnimeNow-Team/AnimeNow/releases/latest/)
 2. Use any sideloader app like [AltStore](https://altstore.io/) or similar to install the ipa.
 3. After installing the app, then you are free to watch your favorite anime shows :)
 
@@ -136,7 +136,7 @@ _If you're not jailbroken, then you require a sideloader application in order to
 
 <summary>macOS</summary>
 
-1. [Download the app file.](https://github.com/errorerrorerror/anime-now/releases/latest/)
+1. [Download the app file.](https://github.com/AnimeNow-Team/AnimeNow/releases/latest/)
 2. Save it in your ```Applications``` folder and make sure that you allow the app to run. If you are having issues with this, make sure you go to ```System Preferences -> Security & Privacy -> General``` and make sure ```Anime Now!``` is allowed to run.
 3. Once that is done, then you are free to watch your favorite anime shows :)
 
@@ -152,11 +152,11 @@ _TBA_
 
 ## Contributors
 
-[![](https://contrib.rocks/image?repo=errorerrorerror/anime-now)](https://github.com/errorerrorerror/anime-now/graphs/contributors)
+[![](https://contrib.rocks/image?repo=AnimeNow-Team/AnimeNow)](https://github.com/AnimeNow-Team/AnimeNow/graphs/contributors)
 
 ## License
 
-[![Licence](https://img.shields.io/github/license/errorerrorerror/anime-now?style=for-the-badge)](./LICENSE)
+[![Licence](https://img.shields.io/github/license/AnimeNow-Team/AnimeNow?style=for-the-badge)](./LICENSE)
 
 <hr style="height: 3px">
 

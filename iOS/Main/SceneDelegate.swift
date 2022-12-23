@@ -30,16 +30,16 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     func sceneWillResignActive(_ scene: UIScene) {
         viewStore.send(.appDelegate(.appDidEnterBackground))
-        print("Scene will resign active")
+        Logger.log(.info, "Scene will resign active")
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {
         viewStore.send(.appDelegate(.appWillTerminate))
-        print("Scene Did Disconnect")
+        Logger.log(.info, "Scene Did Disconnect")
     }
 
     func sceneDidEnterBackground(_ scene: UIScene) {
         viewStore.send(.appDelegate(.appDidEnterBackground))
-        print("Scene did Enter background")
+        Logger.log(.info, "Scene did Enter background")
     }
 }

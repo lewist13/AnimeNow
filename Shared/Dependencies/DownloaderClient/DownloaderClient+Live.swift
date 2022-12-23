@@ -223,7 +223,7 @@ extension DownloaderClient {
             let savedData = try Data(contentsOf: storeURL)
             downloadedContent.value = try savedData.toObject() ?? .init()
         } catch {
-            print(error)
+            Logger.log(.error, error.localizedDescription)
         }
     }
 
@@ -263,7 +263,7 @@ extension DownloaderClient {
             let data = try downloadedContent.value.toData()
             try data.write(to: storeURL)
         } catch {
-            print(error)
+            Logger.log(.error, error.localizedDescription)
         }
     }
 
