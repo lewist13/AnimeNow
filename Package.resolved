@@ -118,15 +118,6 @@
       }
     },
     {
-      "identity" : "tinygraphql",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/GetStream/TinyGraphQL",
-      "state" : {
-        "revision" : "53873794c4c7a165a1e0b83f5ffffe5739a7f8fd",
-        "version" : "1.0.0"
-      }
-    },
-    {
       "identity" : "xctest-dynamic-overlay",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/xctest-dynamic-overlay",

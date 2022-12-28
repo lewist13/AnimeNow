@@ -7,19 +7,29 @@
 
 import AVKit
 import Combine
+import SwiftUI
 import Kingfisher
 import Foundation
 import MediaPlayer
 import AVFoundation
+import ViewComponents
 
 public struct VideoPlayer {
-    private let player: AVPlayer
+    @Binding private var gravity: Gravity
+    @Binding private var pipActive: Bool
 
+    private let player: AVPlayer
     private var onPictureInPictureStatusChangedCallback: ((PIPStatus) -> Void)? = nil
     private var onVideoGravityChangedCallback: ((Gravity) -> Void)? = nil
 
-    public init(player: AVPlayer) {
+    public init(
+        player: AVPlayer,
+        gravity: Binding<Gravity>,
+        pipActive: Binding<Bool>
+    ) {
         self.player = player
+        self._gravity = gravity
+        self._pipActive = pipActive
     }
 }
 
@@ -34,24 +44,6 @@ public extension VideoPlayer {
     }
 
     typealias Gravity = AVLayerVideoGravity
-}
-
-extension VideoPlayer {
-    public func onPictureInPictureStatusChanged(
-        _ callback: @escaping (PIPStatus) -> Void
-    ) -> Self {
-        var view = self
-        view.onPictureInPictureStatusChangedCallback = callback
-        return view
-    }
-
-    public func onVideoGravityChanged(
-        _ callback: @escaping (Gravity) -> Void
-    ) -> Self {
-        var view = self
-        view.onVideoGravityChangedCallback = callback
-        return view
-    }
 }
 
 extension VideoPlayer: PlatformAgnosticViewRepresentable {
@@ -72,6 +64,17 @@ extension VideoPlayer: PlatformAgnosticViewRepresentable {
         context: Context
     ) {
         platformView.updatePlayer(player)
+        if platformView.videoGravity != gravity {
+            platformView.videoGravity = gravity
+        }
+
+        guard let pipController = context.coordinator.controller else { return }
+
+        if pipActive && !pipController.isPictureInPictureActive {
+            pipController.startPictureInPicture()
+        } else if !pipActive && pipController.isPictureInPictureActive {
+            pipController.stopPictureInPicture()
+        }
     }
 }
 
@@ -88,6 +91,7 @@ extension VideoPlayer {
         func addDelegate(_ view: PlayerView) {
             guard controller == nil else { return }
             self.controller = .init(playerLayer: view.playerLayer)
+            self.controller?.delegate = self
         }
 
         public func pictureInPictureControllerWillStartPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
@@ -96,6 +100,7 @@ extension VideoPlayer {
 
         public func pictureInPictureControllerDidStartPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
             videoPlayer.onPictureInPictureStatusChangedCallback?(.didStart)
+            videoPlayer.pipActive = true
         }
 
         public func pictureInPictureControllerWillStopPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
@@ -104,6 +109,7 @@ extension VideoPlayer {
 
         public func pictureInPictureControllerDidStopPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
             videoPlayer.onPictureInPictureStatusChangedCallback?(.didStop)
+            videoPlayer.pipActive = false
         }
 
         public func pictureInPictureController(_ pictureInPictureController: AVPictureInPictureController, restoreUserInterfaceForPictureInPictureStopWithCompletionHandler completionHandler: @escaping (Bool) -> Void) {
@@ -113,14 +119,37 @@ extension VideoPlayer {
 
         public func pictureInPictureController(_ pictureInPictureController: AVPictureInPictureController, failedToStartPictureInPictureWithError error: Error) {
             videoPlayer.onPictureInPictureStatusChangedCallback?(.failedToStart)
+            videoPlayer.pipActive = false
         }
     }
 }
 
 extension VideoPlayer {
+    public func onPictureInPictureStatusChanged(
+        _ callback: @escaping (PIPStatus) -> Void
+    ) -> Self {
+        var view = self
+        view.onPictureInPictureStatusChangedCallback = callback
+        return view
+    }
+
+    public func onVideoGravityChanged(
+        _ callback: @escaping (Gravity) -> Void
+    ) -> Self {
+        var view = self
+        view.onVideoGravityChangedCallback = callback
+        return view
+    }
+}
+
+extension VideoPlayer {
     public final class PlayerView: PlatformView {
-        var player: AVPlayer
         var playerLayer: AVPlayerLayer { layer as! AVPlayerLayer }
+
+        var player: AVPlayer? {
+            get { playerLayer.player }
+            set { playerLayer.player = newValue }
+        }
 
         #if os(iOS)
         public override class var layerClass: AnyClass { AVPlayerLayer.self }
@@ -140,9 +169,9 @@ extension VideoPlayer {
         init(
             player: AVPlayer
         ) {
-            self.player = player
             super.init(frame: .zero)
             configureInit()
+            self.player = player
         }
 
         required init?(coder: NSCoder) {
@@ -156,32 +185,11 @@ extension VideoPlayer.PlayerView {
         #if os(macOS)
         self.wantsLayer = true
         #endif
-
-        updatePlayer(self.player)
-
-        #if os(iOS)
-        try? AVAudioSession.sharedInstance().setCategory(
-            .playback,
-            mode: .moviePlayback,
-            policy: .longFormVideo
-        )
-        #endif
     }
 
     func updatePlayer(
         _ player: AVPlayer
     ) {
         self.player = player
-        self.playerLayer.player = player
-    }
-}
-
-extension VideoPlayer.PlayerView {
-    func resize(_ gravity: AVLayerVideoGravity) {
-        self.videoGravity = gravity
-    }
-
-    func pictureInPicture(_ enabled: Bool) {
-        
     }
 }

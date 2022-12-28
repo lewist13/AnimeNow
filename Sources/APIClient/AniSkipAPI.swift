@@ -5,64 +5,38 @@
 //  Created by ErrorErrorError on 10/11/22.
 //
 
-import Foundation
 import Utilities
-import URLRouting
+import Foundation
 import SharedModels
 
-public final class AniSkipAPI: APIRoutable {
-    public enum Endpoint {
-        case skipTime(
-            (Int, Int),
-            [String] = ["ed", "op", "recap", "mixed-ed", "mixed-op"],
-            String = ""
-        )
-
-        public struct Info: Decodable {
-            let malId: Int
-            let number: Int
-        }
-    }
-
-    public let router: AnyParserPrinter<URLRequestData, Endpoint> = {
-        OneOf {
-            Route(.case(Endpoint.skipTime)) {
-                Path {
-                    "skip-times"
-                    Int.parser()
-                    Int.parser()
-                }
-
-                AnyParserPrinter<URLRequestData, [String]>.init { request in
-                    request.query.fields["types"]?.compactMap { $0 == nil ? nil : String($0!) } ?? []
-                } print: { types, request in
-                    let substrings = types.map({ string -> Substring? in Substring(string) })
-                    request.query["types"] = ArraySlice(substrings)
-                }
-
-                AnyParserPrinter<URLRequestData, String>.init { request in
-                    request.query.fields["episodeLength"]?.compactMap({ $0 == nil ? nil : String($0!) }).first ?? ""
-                } print: { value, request in
-                    let substrings = Substring(value)
-                    request.query["episodeLength"] = ArraySlice([substrings])
-                }
-            }
-        }
-        .eraseToAnyParserPrinter()
-    }()
-
+public final class AniSkipAPI: APIBase {
+    public static var shared: AniSkipAPI = .init()
     public let base = URL(string: "https://api.aniskip.com/v2")!
 
-    public func configureRequest(request: inout URLRequest) {}
+    private init() { }
+}
 
-    public init() { }
+extension Request where Route == AniSkipAPI {
+    public static func skipTime(
+        malId: Int,
+        episode: Int,
+        types: [AniSkipAPI.SkipItem.SkipType] = .allCases,
+        episodeLength: Int = 0
+    ) -> Request<Route, AniSkipAPI.Response> {
+        .init(
+            path: ["skip-times", "\(malId)", "\(episode)"],
+            query: types.map { Query(name: "types", value: $0.rawValue) } + [
+                Query(name: "episodeLength", value: episodeLength)
+            ]
+        )
+    }
 }
 
 extension AniSkipAPI {
     public struct Response: Decodable {
-        let found: Bool
+        public let found: Bool
         public let results: [SkipItem]
-        let statusCode: Int
+        public let statusCode: Int
     }
 
     public struct SkipItem: Decodable {
@@ -70,7 +44,7 @@ extension AniSkipAPI {
         let episodeLength: Double
         let skipType: SkipType
 
-        public enum SkipType: String, Decodable {
+        public enum SkipType: String, Decodable, CaseIterable {
             case ed = "ed"
             case op = "op"
             case mixedEd = "mixed-ed"

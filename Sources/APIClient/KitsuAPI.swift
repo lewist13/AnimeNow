@@ -7,42 +7,16 @@
 
 import Utilities
 import Foundation
-import URLRouting
 import SharedModels
 import SociableWeaver
 
 // MARK: - Kitsu API Endpoints
 
-public final class KitsuAPI: APIRoutable {
-    public enum Endpoint: Equatable {
-        case graphql(GraphQL.Paylod)
-    }
-
-    public let router = OneOf {
-        Route(.case(Endpoint.graphql)) {
-            Method.post
-            Path {
-                "graphql"
-            }
-            Body(.json(GraphQL.Paylod.self))
-        }
-    }
-    .eraseToAnyParserPrinter()
-
+public final class KitsuAPI: APIBase {
+    public static let shared: KitsuAPI = .init()
+    private init() { }
 
     public let base = URL(string: "https://kitsu.io/api")!
-
-    public func configureRequest(request: inout URLRequest) {
-        let bodyCount = request.httpBody?.count ?? 0
-        let requestHeaders = [
-            "Content-Type": "application/json",
-            "Content-Length": "\(bodyCount)"
-        ]
-
-        for header in requestHeaders {
-            request.addValue(header.value, forHTTPHeaderField: header.key)
-        }
-    }
 }
 
 // MARK: - Kitsu Queries

@@ -56,26 +56,29 @@ public struct SeekbarView: View {
                 )
                 .clipShape(Capsule())
             }
-            .frame(width: reader.size.width, height: reader.size.height)
+            .frame(
+                width: reader.size.width,
+                height: reader.size.height
+            )
             .contentShape(Rectangle())
             .gesture(
                 DragGesture(
                     minimumDistance: 0
                 )
-                .onChanged({ value in
+                .onChanged { value in
                     if !isDragging {
                         isDragging = true
                         onEditingCallback?(true)
                     }
-                    
+
                     let locationX = value.location.x
                     let percentage = locationX / reader.size.width
                     progress = max(0, min(1.0, percentage))
-                })
-                .onEnded({ value in
+                }
+                .onEnded { value in
                     onEditingCallback?(false)
                     isDragging = false
-                })
+                }
             )
             .animation(.spring(response: 0.3), value: isDragging)
         }

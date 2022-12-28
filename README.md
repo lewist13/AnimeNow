@@ -33,7 +33,7 @@ This app is still in its beta stages so expect random crashes, missing content, 
 - [x] Download & play episodes offline
 - [x] Custom Collections
 - [ ] Third party anime tracking
-- [ ] Manga support (Maybe after over 150 stars?)
+- [ ] Manga support (Will be added in V2.0.0)
 
 ## Screenshot
 

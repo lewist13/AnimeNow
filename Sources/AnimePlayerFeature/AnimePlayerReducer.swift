@@ -87,13 +87,14 @@ public struct AnimePlayerReducer: ReducerProtocol {
         // Shared Player Properties
 
         let player: AVPlayer
-        var playerProgress: Double { player.playProgress }
+        var playerProgress: Double = 0.0
         var playerBuffered: Double { player.bufferProgress }
         var playerDuration: Double { player.totalDuration }
         var playerStatus = VideoPlayerClient.Status.idle
         var playerIsFullScreen = false
         var playerVolume: Double { player.isMuted ? 0.0 : Double(player.volume) }
-        @BindableState var playerPiPStatus = VideoPlayer.PIPStatus.restoreUI
+        var playerPiPStatus = VideoPlayer.PIPStatus.restoreUI
+        @BindableState var playerPiPActive = false
         @BindableState var playerGravity = VideoPlayer.Gravity.resizeAspect
 
         public init(
@@ -171,6 +172,7 @@ public struct AnimePlayerReducer: ReducerProtocol {
         case toggleVideoGravity
 
         case playerStatus(VideoPlayerClient.Status)
+        case playerProgress(Double)
         case playerPiPStatus(VideoPlayer.PIPStatus)
         case playerIsFullScreen(Bool)
 
@@ -191,13 +193,6 @@ public struct AnimePlayerReducer: ReducerProtocol {
     public var body: some ReducerProtocol<State, Action> {
         BindingReducer()
         Reduce(self.core)
-            ._printChanges(
-                .init(
-                    printChange: { receivedAction, oldState, newState in
-                        Logger.log(.debug, "\(receivedAction)")
-                    }
-                )
-            )
     }
 }
 
@@ -235,11 +230,13 @@ extension AnimePlayerReducer.State {
             return .loading
         } else if playerStatus == .finished ||  finishedWatching {
             return .replay
-        } else if playerStatus == .idle || playerStatus == .loading || playerStatus == .buffering {
+        } else if playerStatus == .idle || playerStatus == .loading || playerStatus == .playback(.buffering) {
             return .loading
-        } else if playerStatus == .playing {
+        } else if playerStatus == .playback(.playing) {
             return .playing
-        } else if playerStatus == .paused || playerStatus == .loaded {
+        } else if playerStatus == .playback(.paused) {
+            return .paused
+        } else if case .loaded = playerStatus {
             return .paused
         }
         return nil
@@ -347,6 +344,7 @@ extension AnimePlayerReducer {
     struct CancelAnimeFetchId: Hashable {}
     struct ObserveFullScreenNotificationId: Hashable {}
     struct VideoPlayerStatusCancellable: Hashable {}
+    struct VideoPlayerProgressCancellable: Hashable {}
 
     func core(state: inout State, action: Action) -> EffectTask<Action> {
         switch action {
@@ -426,6 +424,16 @@ extension AnimePlayerReducer {
                         }
                     }
                 )
+
+                effects.append(
+                    .run { send in
+                        await withTaskCancellation(id: VideoPlayerProgressCancellable.self) {
+                            for await progress in videoPlayerClient.progress() {
+                                await send(.playerProgress(progress))
+                            }
+                        }
+                    }
+                )
             }
             return .merge(effects)
 
@@ -445,7 +453,7 @@ extension AnimePlayerReducer {
                 .animation(AnimePlayerReducer.overlayVisibilityAnimation)
             ]
 
-            if showingOverlay && state.playerStatus == .playing {
+            if showingOverlay && state.playerStatus == .playback(.playing) {
                 // Show overlay with timeout if the video is currently playing
                 effects.append(
                     hideOverlayAnimationDelay()
@@ -547,6 +555,7 @@ extension AnimePlayerReducer {
                 self.saveEpisodeState(state: state),
                 .run { await videoPlayerClient.execute(.clear) },
                 .cancel(id: VideoPlayerStatusCancellable.self),
+                .cancel(id: VideoPlayerProgressCancellable.self),
                 .cancel(id: ObserveFullScreenNotificationId.self),
                 .cancel(id: HidePlayerOverlayDelayCancellable.self),
                 .cancel(id: CancelAnimeStoreObservable.self),
@@ -756,11 +765,7 @@ extension AnimePlayerReducer {
             }
 
         case .togglePictureInPicture:
-            if state.playerPiPStatus == .didStart {
-//                state.playerAction = .pictureInPicture(enable: false)
-            } else {
-//                state.playerAction = .pictureInPicture(enable: true)
-            }
+            state.playerPiPActive.toggle()
 
         case .backwardsTapped:
             guard state.playerDuration > 0.0 else { break }
@@ -776,7 +781,6 @@ extension AnimePlayerReducer {
             let progress = state.playerProgress + 15 / state.playerDuration
 
             let requestedTime = min(progress, 1.0)
-//            state.playerProgress = requestedTime
             return .run {
                 await videoPlayerClient.execute(.seekTo(requestedTime))
             }
@@ -784,12 +788,10 @@ extension AnimePlayerReducer {
         case .toggleVideoGravity:
             switch state.playerGravity {
             case .resizeAspect:
-                break
-//                state.playerAction = .videoGravity(.resizeAspectFill)
+                state.playerGravity = .resizeAspectFill
 
             default:
-                break
-//                state.playerAction = .videoGravity(.resizeAspect)
+                state.playerGravity = .resizeAspect
             }
             return hideOverlayAnimationDelay()
 
@@ -816,18 +818,17 @@ extension AnimePlayerReducer {
                 await videoPlayerClient.execute(.pause)
             }
 
-        case .stopSeeking:
-            let playerProgress = state.playerProgress
-            return .run { _ in
-                await videoPlayerClient.execute(.seekTo(playerProgress))
-                await videoPlayerClient.execute(.resume)
-            }
-
         case .seeking(to: let to):
             let clamped = min(1.0, max(0.0, to))
+            state.playerProgress = clamped
 
             return .run {
                 await videoPlayerClient.execute(.seekTo(clamped))
+            }
+
+        case .stopSeeking:
+            return .run { _ in
+                await videoPlayerClient.execute(.resume)
             }
 
         case .volume(to: let volume):
@@ -843,47 +844,41 @@ extension AnimePlayerReducer {
         // Player Actions Observer
 
         case .playerStatus(.finished):
+            state.playerStatus = .finished
             return self.saveEpisodeState(state: state)
 
+        case .playerStatus(.loaded(let duration)):
+            state.playerStatus = .loaded(duration: duration)
+
+            // First time duration is set and is not zero, resume progress
+            if let animeInfo = state.animeStore.value,
+               let episode = state.episode,
+               let savedEpisodeProgress = animeInfo.episodes.first(where: { $0.number ==  episode.number }),
+               !savedEpisodeProgress.almostFinished {
+                return .run { _ in
+                    await videoPlayerClient.execute(.seekTo(savedEpisodeProgress.progress ?? .zero))
+                    await videoPlayerClient.execute(.resume)
+                }
+            } else {
+                return .run { _ in
+                    await videoPlayerClient.execute(.seekTo(.zero))
+                    await videoPlayerClient.execute(.resume)
+                }
+            }
+
         case .playerStatus(let status):
-            guard status != state.playerStatus else { break }
             state.playerStatus = status
-
-            var effects = [EffectTask<Action>]()
-
-//            if status == .readyToPlay {
-//                // First time duration is set and is not zero, resume progress
-//
-//                if let animeInfo = state.animeStore.value,
-//                   let episode = state.episode,
-//                   let savedEpisodeProgress = animeInfo.episodes.first(where: { $0.number ==  episode.number }),
-//                   !savedEpisodeProgress.almostFinished {
-//                    effects.append(
-//                        .run {
-//                            await videoPlayerClient.execute(.seekTo(savedEpisodeProgress.progress ?? .zero))
-//                        }
-//                    )
-//                } else {
-//                    effects.append(
-//                        .run {
-//                            await videoPlayerClient.execute(.seekTo(.zero))
-//                        }
-//                    )
-//                }
-//            }
 
             guard !DeviceUtil.isMac else { break }
 
-            if case .playing = status, state.showPlayerOverlay {
-                effects.append(
-                    hideOverlayAnimationDelay()
-                )
+            if case .playback(.playing) = status, state.showPlayerOverlay {
+                return hideOverlayAnimationDelay()
             } else if state.showPlayerOverlay {
-                effects.append(
-                    cancelHideOverlayAnimationDelay()
-                )
+                return cancelHideOverlayAnimationDelay()
             }
-            return .merge(effects)
+
+        case .playerProgress(let progress):
+            state.playerProgress = progress
 
         case .playerPiPStatus(let status):
             state.playerPiPStatus = status
@@ -894,9 +889,6 @@ extension AnimePlayerReducer {
 
         case .playerIsFullScreen(let fullscreen):
             state.playerIsFullScreen = fullscreen
-
-//        case .playerGravity(let gravity):
-//            state.playerGravity = gravity
 
         case .saveState:
             return self.saveEpisodeState(state: state)
@@ -938,6 +930,7 @@ extension AnimePlayerReducer {
         if let source = state.source {
             let episodeTitle = state.episode?.title ?? "Episode \(state.selectedEpisode)"
             let animeTitle = state.anime.title
+            let thumbnail = (state.episode?.thumbnail ?? state.anime.posterImage.largest)?.link
             return .run { _ in
                 await userDefaultsClient.set(.videoPlayerQuality, value: source.quality)
                 await videoPlayerClient.execute(
@@ -945,11 +938,11 @@ extension AnimePlayerReducer {
                         source.url,
                         .init(
                             videoTitle: episodeTitle,
-                            videoAuthor: animeTitle
+                            videoAuthor: animeTitle,
+                            thumbnail: thumbnail
                         )
                     )
                 )
-                await videoPlayerClient.execute(.resume)
             }
         } else {
             return .run {

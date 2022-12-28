@@ -9,184 +9,117 @@ import Combine
 import APIClient
 import Utilities
 import Foundation
-import URLRouting
 import SharedModels
 import SociableWeaver
 import ComposableArchitecture
 
 extension AnimeClient {
     public static let liveValue: AnimeClient = {
+        @Dependency(\.apiClient) var apiClient
+
         let episodesCache = Cache<Anime.ID, [Episode]>()
 
-        let aniListApi = AniListAPI()
-        let consumetApi = ConsumetAPI()
-        let aniskipApi = AniSkipAPI()
+        let aniListApi = AniListAPI.shared
+        let consumetApi = ConsumetAPI.shared
+        let aniskipApi = AniSkipAPI.shared
 
         return Self {
-            let query = AniListAPI.PageQuery<AniListAPI.Media>.createQuery(
-                .init(
-                    itemArguments: AniListAPI.Media.Argument.defaults + [.sort([.TRENDING_DESC, .POPULARITY_DESC])]
-                )
-            )
-                .format()
-
-            let endpoint = AniListAPI.Endpoint.graphql(
-                .init(
-                    query: query
-                )
-            )
-
-            let response = try await API.request(
+            let response = try await apiClient.request(
                 aniListApi,
-                endpoint,
-                AniListAPI.PageQuery<AniListAPI.Media>.Response.self
+                .graphql(
+                    AniListAPI.PageQuery<AniListAPI.Media>.self,
+                    .init(
+                        itemArguments: .defaultArgs + [.sort([.TRENDING_DESC, .POPULARITY_DESC])]
+                    )
+                )
             )
 
             return response.data.Page.items
                 .map(AniListAPI.convert(from:))
         } getTopUpcomingAnime: {
-            let query = AniListAPI.PageQuery<AniListAPI.Media>.createQuery(
-                .init(
-                    itemArguments: AniListAPI.Media.Argument.defaults + [.sort([.TRENDING_DESC, .POPULARITY_DESC]), .status(.NOT_YET_RELEASED)]
-                )
-            )
-                .format()
-
-            let endpoint = AniListAPI.Endpoint.graphql(
-                .init(
-                    query: query
-                )
-            )
-
-            let response = try await API.request(
+            let response = try await apiClient.request(
                 aniListApi,
-                endpoint,
-                AniListAPI.PageQuery<AniListAPI.Media>.Response.self
+                .graphql(
+                    AniListAPI.PageQuery<AniListAPI.Media>.self,
+                    .init(
+                        itemArguments: .defaultArgs + [.sort([.TRENDING_DESC, .POPULARITY_DESC]), .status(.NOT_YET_RELEASED)]
+                    )
+                )
             )
 
             return response.data.Page.items
                 .map(AniListAPI.convert(from:))
         } getTopAiringAnime: {
-            let query = AniListAPI.PageQuery<AniListAPI.Media>.createQuery(
-                .init(
-                    itemArguments: AniListAPI.Media.Argument.defaults + [.sort([.TRENDING_DESC, .SCORE_DESC]), .status(.RELEASING)]
-                )
-            )
-                .format()
-
-            let endpoint = AniListAPI.Endpoint.graphql(
-                .init(
-                    query: query
-                )
-            )
-
-            let response = try await API.request(
+            let response = try await apiClient.request(
                 aniListApi,
-                endpoint,
-                AniListAPI.PageQuery<AniListAPI.Media>.Response.self
+                .graphql(
+                    AniListAPI.PageQuery<AniListAPI.Media>.self,
+                    .init(
+                        itemArguments: .defaultArgs + [.sort([.TRENDING_DESC, .SCORE_DESC]), .status(.RELEASING)]
+                    )
+                )
             )
 
             return response.data.Page.items
                 .map(AniListAPI.convert(from:))
         } getHighestRatedAnime: {
-            let query = AniListAPI.PageQuery<AniListAPI.Media>.createQuery(
-                .init(
-                    itemArguments: AniListAPI.Media.Argument.defaults + [.sort([.SCORE_DESC]), .status(.RELEASING) ]
-                )
-            )
-                .format()
-
-            let endpoint = AniListAPI.Endpoint.graphql(
-                .init(
-                    query: query
-                )
-            )
-
-            let response = try await API.request(
+            let response = try await apiClient.request(
                 aniListApi,
-                endpoint,
-                AniListAPI.PageQuery<AniListAPI.Media>.Response.self
+                .graphql(
+                    AniListAPI.PageQuery<AniListAPI.Media>.self,
+                    .init(
+                        itemArguments: .defaultArgs + [.sort([.SCORE_DESC]), .status(.RELEASING) ]
+                    )
+                )
             )
 
             return response.data.Page.items
                 .map(AniListAPI.convert(from:))
         } getMostPopularAnime: {
-            let query = AniListAPI.PageQuery<AniListAPI.Media>.createQuery(
-                .init(
-                    itemArguments: AniListAPI.Media.Argument.defaults + [.sort([.POPULARITY_DESC])]
-                )
-            )
-                .format()
-            let endpoint = AniListAPI.Endpoint.graphql(
-                .init(
-                    query: query
-                )
-            )
-
-            let response = try await API.request(
+            let response = try await apiClient.request(
                 aniListApi,
-                endpoint,
-                AniListAPI.PageQuery<AniListAPI.Media>.Response.self
+                .graphql(
+                    AniListAPI.PageQuery<AniListAPI.Media>.self,
+                    .init(
+                        itemArguments: .defaultArgs + [.sort([.POPULARITY_DESC])]
+                    )
+                )
             )
 
             return response.data.Page.items
                 .map(AniListAPI.convert(from:))
         } getAnimes: { animeIds in
-            let query = AniListAPI.PageQuery<AniListAPI.Media>.createQuery(
-                .init(
-                    itemArguments: AniListAPI.Media.Argument.defaults + [.idIn(animeIds)]
-                )
-            )
-                .format()
-
-            let endpoint = AniListAPI.Endpoint.graphql(
-                .init(
-                    query: query
-                )
-            )
-
-            let response = try await API.request(
+            let response = try await apiClient.request(
                 aniListApi,
-                endpoint,
-                AniListAPI.PageQuery<AniListAPI.Media>.Response.self
+                .graphql(
+                    AniListAPI.PageQuery<AniListAPI.Media>.self,
+                    .init(
+                        itemArguments: .defaultArgs + [.idIn(animeIds)]
+                    )
+                )
             )
 
             return response.data.Page.items
                 .map(AniListAPI.convert(from:))
         } getAnime: { animeId in
-            let query = AniListAPI.Media.createQuery([.id(animeId)])
-                .format()
-            let endpoint = AniListAPI.Endpoint.graphql(
-                .init(
-                    query: query
-                )
-            )
-
-            let response = try await API.request(
+            let response = try await apiClient.request(
                 aniListApi,
-                endpoint,
-                AniListAPI.Media.Response.self
+                .graphql(
+                    AniListAPI.Media.self,
+                    [.id(animeId)]
+                )
             )
 
             return AniListAPI.convert(from: response.data.Media)
         } searchAnimes: { query in
-            let query = AniListAPI.PageQuery<AniListAPI.Media>.createQuery(
-                .init(
-                    itemArguments: AniListAPI.Media.Argument.defaults + [.search(query), .sort([.POPULARITY_DESC])]
-                )
-            )
-                .format()
-
-            let endpoint = AniListAPI.Endpoint.graphql(
-                .init(
-                    query: query
-                )
-            )
-
-            let response = try await API.request(
+            let response = try await apiClient.request(
                 aniListApi,
-                endpoint,
-                AniListAPI.PageQuery<AniListAPI.Media>.Response.self
+                .graphql(
+                    AniListAPI.PageQuery<AniListAPI.Media>.self,
+                    .init(
+                        itemArguments: .defaultArgs + [.search(query), .sort([.POPULARITY_DESC])]
+                    )
+                )
             )
 
             return response.data.Page.items
@@ -196,64 +129,44 @@ extension AnimeClient {
                 return episodes
             }
 
-            async let gogoSub = try? API.request(
+            async let gogoSub = try? apiClient.request(
                 consumetApi,
-                .anilist(
-                    .episodes(
-                        animeId: animeId,
-                        options: .init(
-                            dub: false,
-                            provider: .gogoanime,
-                            fetchFiller: true
-                        )
-                    )
-                ),
-                [ConsumetAPI.Episode].self
+                .anilistEpisodes(
+                    animeId: animeId,
+                    dub: false,
+                    provider: .gogoanime,
+                    fetchFiller: true
+                )
             )
 
-            async let gogoDub = try? API.request(
+            async let gogoDub = try? apiClient.request(
                 consumetApi,
-                .anilist(
-                    .episodes(
-                        animeId: animeId,
-                        options: .init(
-                            dub: true,
-                            provider: .gogoanime,
-                            fetchFiller: true
-                        )
-                    )
-                ),
-                [ConsumetAPI.Episode].self
+                .anilistEpisodes(
+                    animeId: animeId,
+                    dub: true,
+                    provider: .gogoanime,
+                    fetchFiller: true
+                )
             )
 
-            async let zoroSub = try? API.request(
+            async let zoroSub = try? apiClient.request(
                 consumetApi,
-                .anilist(
-                    .episodes(
-                        animeId: animeId,
-                        options: .init(
-                            dub: false,
-                            provider: .zoro,
-                            fetchFiller: true
-                        )
-                    )
-                ),
-                [ConsumetAPI.Episode].self
+                .anilistEpisodes(
+                    animeId: animeId,
+                    dub: false,
+                    provider: .zoro,
+                    fetchFiller: true
+                )
             )
 
-            async let zoroDub = try? API.request(
+            async let zoroDub = try? apiClient.request(
                 consumetApi,
-                .anilist(
-                    .episodes(
-                        animeId: animeId,
-                        options: .init(
-                            dub: true,
-                            provider: .zoro,
-                            fetchFiller: true
-                        )
-                    )
-                ),
-                [ConsumetAPI.Episode].self
+                .anilistEpisodes(
+                    animeId: animeId,
+                    dub: true,
+                    provider: .zoro,
+                    fetchFiller: true
+                )
             )
 
             let episodes = await AnimeClient.mergeSources(
@@ -270,7 +183,7 @@ extension AnimeClient {
             return episodes
 
         } getSources: { provider in
-            let consumetProvider: ConsumetAPI.Endpoint.AnilistEndpoint.Provider
+            let consumetProvider: ConsumetAPI.Provider
 
             if case .gogoanime = provider {
                 consumetProvider = .gogoanime
@@ -286,26 +199,24 @@ extension AnimeClient {
                 throw Error.providerInvalidId
             }
 
-            let sourcesPublisher = ConsumetAPI.Endpoint.anilist(
-                .watch(
-                    episodeId: providerId,
-                    options: .init(
-                        dub: provider.dub ?? false,
-                        provider: consumetProvider
-                    )
-                )
-            )
-
-            let response = try await API.request(
+            let response = try await apiClient.request(
                 consumetApi,
-                sourcesPublisher,
-                ConsumetAPI.StreamingLinksPayload.self
+                .anilistWatch(
+                    episodeId: providerId,
+                    dub: provider.dub ?? false,
+                    provider: consumetProvider
+                )
             )
 
             return ConsumetAPI.convert(from: response)
         } getSkipTimes: { malId, episodeNumber in
-            let endpoint = AniSkipAPI.Endpoint.skipTime((malId, episodeNumber))
-            let response = try await API.request(aniskipApi, endpoint, AniSkipAPI.Response.self)
+            let response = try await apiClient.request(
+                aniskipApi,
+                .skipTime(
+                    malId: malId,
+                    episode: episodeNumber
+                )
+            )
             return AniSkipAPI.convert(from: response.results)
         }
     }()

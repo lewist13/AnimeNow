@@ -29,14 +29,14 @@ final class DatabaseClientLive: DatabaseClient, @unchecked Sendable {
         }
 
         pc = NSPersistentContainer(name: database, managedObjectModel: managedObjectModel)
-        pc.viewContext.mergePolicy = NSMergePolicy.mergeByPropertyObjectTrump
-        pc.loadPersistentStores { description, error in
+        pc.loadPersistentStores { [unowned self] description, error in
             if let error = error {
                 fatalError("Unable to load persistent stores: \(error)")
             }
 
             description.shouldMigrateStoreAutomatically = false
             description.shouldInferMappingModelAutomatically = true
+            pc.viewContext.mergePolicy = NSMergePolicy.mergeByPropertyObjectTrump
         }
     }
 

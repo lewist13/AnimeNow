@@ -27,16 +27,10 @@ public extension VideoPlayerClient {
         case loading
 
         /// Player can start playing
-        case loaded
+        case loaded(duration: Double)
 
-        /// Waiting for the next couple of frames to load
-        case buffering
-
-        /// Playing now
-        case playing
-
-        /// Video paused
-        case paused
+        /// Playback States
+        case playback(Playback)
 
         /// Finished Playing
         case finished
@@ -45,11 +39,17 @@ public extension VideoPlayerClient {
         case error
     }
 
+    enum Playback: Equatable, CaseIterable {
+        case buffering
+        case playing
+        case paused
+    }
+
     enum Action: Equatable {
 
         /// Play Item
 
-        case play(URL, Metadata? = nil)
+        case play(URL, Metadata)
 
         /// Resume  Video
         case resume

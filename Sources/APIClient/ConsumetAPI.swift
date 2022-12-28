@@ -6,129 +6,54 @@
 //
 
 import Foundation
-import URLRouting
 import SharedModels
 
-public final class ConsumetAPI: APIRoutable {
-    public enum Endpoint: Equatable {
-        case anilist(AnilistEndpoint)
-        case enime(EnimeEndpoint)
-
-        public enum EnimeEndpoint: Equatable {
-            case watch(episodeId: String)
-            case query(String)
-            case info(animeId: String)
-        }
-
-        public enum AnilistEndpoint: Equatable {
-            case animeInfo(animeId: Int, options: EpisodeInfo)
-            case episodes(animeId: Int, options: EpisodeInfo)
-            case watch(episodeId: String, options: WatchInfo)
-
-            public struct EpisodeInfo: Equatable {
-                var dub: Bool = false
-                var provider: Provider = .gogoanime
-                var fetchFiller = false
-
-                public init(
-                    dub: Bool = false,
-                    provider: ConsumetAPI.Endpoint.AnilistEndpoint.Provider = .gogoanime,
-                    fetchFiller: Bool = false
-                ) {
-                    self.dub = dub
-                    self.provider = provider
-                    self.fetchFiller = fetchFiller
-                }
-            }
-
-            public struct WatchInfo: Equatable {
-                var dub: Bool = false
-                var provider: Provider = .gogoanime
-
-                public init(
-                    dub: Bool = false,
-                    provider: ConsumetAPI.Endpoint.AnilistEndpoint.Provider = .gogoanime
-                ) {
-                    self.dub = dub
-                    self.provider = provider
-                }
-            }
-
-            public enum Provider: String, CaseIterable, Decodable {
-                case gogoanime
-                case zoro
-            }
-        }
-    }
+public final class ConsumetAPI: APIBase {
+    public static let shared: ConsumetAPI = .init()
 
     public let base = URL(string: "https://api.consumet.org")!
 
-    public let router = OneOf {
-        Route(.case(Endpoint.enime)) {
-            Path { "anime"; "enime" }
+    private init() { }
+}
 
-            OneOf {
-                Route(.case(Endpoint.EnimeEndpoint.query)) {
-                    Path { Parse(.string) }
-                }
-                Route(.case(Endpoint.EnimeEndpoint.info(animeId:))) {
-                    Path { "info" }
-                    Query {
-                        Field("id") { Parse(.string) }
-                    }
-                }
-                Route(.case(Endpoint.EnimeEndpoint.watch(episodeId:))) {
-                    Path { "watch" }
-                    Query {
-                        Field("episodeId") { Parse(.string) }
-                    }
-                }
-            }
-        }
-        Route(.case(Endpoint.anilist)) {
-            Path { "meta"; "anilist" }
-
-            OneOf {
-                Route(.case(Endpoint.AnilistEndpoint.animeInfo(animeId:options:))) {
-                    Path { "info"; Int.parser() }
-                    Parse(.memberwise(Endpoint.AnilistEndpoint.EpisodeInfo.init(dub:provider:fetchFiller:))) {
-                        Query {
-                            Field("dub") { Bool.parser() }
-                            Field("provider") { Endpoint.AnilistEndpoint.Provider.parser() }
-                            Field("fetchFiller") { Bool.parser() }
-                        }
-                    }
-                }
-                Route(.case(Endpoint.AnilistEndpoint.episodes(animeId:options:))) {
-                    Path { "episodes"; Int.parser() }
-                    Parse(.memberwise(Endpoint.AnilistEndpoint.EpisodeInfo.init(dub:provider:fetchFiller:))) {
-                        Query {
-                            Field("dub") { Bool.parser() }
-                            Field("provider") { Endpoint.AnilistEndpoint.Provider.parser() }
-                            Field("fetchFiller") { Bool.parser() }
-                        }
-                    }
-                }
-                Route(.case(Endpoint.AnilistEndpoint.watch(episodeId:options:))) {
-                    Path { "watch"; Parse(.string) }
-                    Parse(.memberwise(Endpoint.AnilistEndpoint.WatchInfo.init(dub:provider:))) {
-                        Query {
-                            Field("dub") { Bool.parser() }
-                            Field("provider") { Endpoint.AnilistEndpoint.Provider.parser() }
-                        }
-                    }
-                }
-            }
-        }
+extension Request where Route == ConsumetAPI {
+    public static func anilistEpisodes(
+        animeId: Int,
+        dub: Bool,
+        provider: ConsumetAPI.Provider,
+        fetchFiller: Bool = false
+    ) -> Request<Route, [ConsumetAPI.Episode]> {
+        .init(
+            path: ["meta", "anilist", "episodes", animeId],
+            query: [
+                .init(name: "dub", value: dub),
+                .init(name: "provider", value: provider.rawValue),
+                .init(name: "fetchFiller", value: fetchFiller)
+            ]
+        )
     }
-        .eraseToAnyParserPrinter()
 
-    public func configureRequest(request: inout URLRequest) {}
-
-    public init() { }
+    public static func anilistWatch(
+        episodeId: String,
+        dub: Bool,
+        provider: ConsumetAPI.Provider
+    ) -> Request<Route, ConsumetAPI.StreamingLinksPayload> {
+        .init(
+            path: ["meta", "anilist", "watch", episodeId],
+            query: [
+                .init(name: "dub", value: dub),
+                .init(name: "provider", value: provider.rawValue),
+            ]
+        )
+    }
 }
 
 extension ConsumetAPI {
+    public enum Provider: String, CaseIterable, Decodable {
+        case gogoanime
+        case zoro
+    }
+
     public struct Anime: Equatable, Decodable {
         let id: String
         let subOrDub: AudioType

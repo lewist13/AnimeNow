@@ -282,7 +282,7 @@ extension AnimePlayerView {
     var playStateView: some View {
         WithViewStore(
             store,
-            observe: { $0.playerStatus == .playing }
+            observe: { $0.playerStatus == .playback(.playing) }
         ) { viewState in
             Button {
                 viewState.send(.togglePlayback)
@@ -304,9 +304,9 @@ extension AnimePlayerView {
             observe: ProgressViewState.init
         ) { viewState in
             SeekbarView(
-                progress: .init(
-                    get: { viewState.progress },
-                    set: { viewState.send(.seeking(to: $0)) }
+                progress: viewState.binding(
+                    get: \.progress,
+                    send: { .seeking(to: $0) }
                 ),
                 buffered: viewState.state.buffered,
                 padding: 6
@@ -389,12 +389,12 @@ extension AnimePlayerView {
 
             WithViewStore(
                 store,
-                observe: { $0.playerVolume }
+                observe: \.playerVolume
             ) { viewState in
                 SeekbarView(
-                    progress: .init(
-                        get: { viewState.state },
-                        set: { viewState.send(.volume(to: $0)) }
+                    progress: viewState.binding(
+                        get: { $0 },
+                        send: { .volume(to: $0) }
                     ),
                     padding: 0
                 )
@@ -449,7 +449,7 @@ extension NSWindow.ButtonType: CaseIterable {
 
 extension AnimePlayerReducer.State {
     var canShowPlayerOverlay: Bool {
-        showPlayerOverlay || playerStatus == .paused || selectedSidebar != nil
+        showPlayerOverlay || playerStatus == .playback(.paused) || selectedSidebar != nil
     }
 
     var showSettingsOverlay: Bool? {

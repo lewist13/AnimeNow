@@ -32,7 +32,7 @@ extension GraphQLQueryObject where Argument == Void {
 
 public protocol GraphQLQuery: Decodable {
     associatedtype QueryOptions
-    associatedtype Response
+    associatedtype Response: Decodable
     static func createQuery(_ options: QueryOptions) -> Weave
 }
 
@@ -61,6 +61,14 @@ public enum GraphQL {
         public let nodes: [T]
         public let pageInfo: P
     }
+}
+
+public protocol DefaultArguments {
+    static var defaultArgs: [Self] { get }
+}
+
+extension Collection where Element: DefaultArguments {
+    public static var defaultArgs: [Element] { Element.defaultArgs }
 }
 
 extension Weave {

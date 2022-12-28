@@ -15,19 +15,39 @@ fileprivate typealias TextView = NSTextField
 public struct AttributedText: View {
     public struct Options: Hashable {
         let fontSize: CGFloat
-        var shadowColor: Color = .clear
-        var shadowOffset: CGFloat = 0
-        var strokeColor: Color = .clear
-        var strokeWidth: CGFloat = 0
-        var backgroundColor: Color = .clear
-        var backgroundRadius: CGFloat = 0
-        var backgroundPadding: CGFloat = 0
+        var shadowColor: Color
+        var shadowOffset: CGFloat
+        var strokeColor: Color
+        var strokeWidth: CGFloat
+        var backgroundColor: Color
+        var backgroundRadius: CGFloat
+        var backgroundPadding: CGFloat
+
+        public init(
+            fontSize: CGFloat,
+            shadowColor: Color = .clear,
+            shadowOffset: CGFloat = 0,
+            strokeColor: Color = .clear,
+            strokeWidth: CGFloat = 0,
+            backgroundColor: Color = .clear,
+            backgroundRadius: CGFloat = 0,
+            backgroundPadding: CGFloat = 0
+        ) {
+            self.fontSize = fontSize
+            self.shadowColor = shadowColor
+            self.shadowOffset = shadowOffset
+            self.strokeColor = strokeColor
+            self.strokeWidth = strokeWidth
+            self.backgroundColor = backgroundColor
+            self.backgroundRadius = backgroundRadius
+            self.backgroundPadding = backgroundPadding
+        }
     }
 
     let text: String
     var options: Options
 
-    init(
+    public init(
         text: String,
         options: Options
     ) {
@@ -113,7 +133,10 @@ private struct TextViewRepresentable: PlatformAgnosticViewRepresentable {
 
 struct AttributedText_Preview: PreviewProvider {
     static var previews: some View {
-        AttributedText(text: "This is a subtitle test.", options: .defaultStroke)
+        AttributedText(
+            text: "This is a subtitle test.",
+            options: .init(fontSize: 12)
+        )
             .padding(8)
             .background(Color.white)
     }

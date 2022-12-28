@@ -1,4 +1,4 @@
-////  SubtitleTextView.swift
+//  SubtitleTextView.swift
 //  Anime Now!
 //
 //  Created by ErrorErrorError on 10/30/22.
@@ -8,12 +8,13 @@
 import SwiftUI
 import Utilities
 import SwiftWebVTT
+import ViewComponents
 
 public struct SubtitleTextView: View {
     public enum Size: CGFloat {
         case small = 0.75
         case normal = 1.0
-        case large = 1.15
+        case large = 1.25
     }
 
     @StateObject private var viewModel = ViewModel()
@@ -40,21 +41,24 @@ public struct SubtitleTextView: View {
 
     public var body: some View {
         Group {
-            if let text = viewModel.vtt.value?.bounds(for: duration * progress)?.text {
+            if let cues = viewModel.vtt.value?.bounds(for: duration * progress) {
                 VStack(alignment: .center) {
                     Spacer()
 
-                    AttributedText(
-                        text: text,
-                        options: options
-                    )
+                    ForEach(cues, id: \.self) { cue in
+                        AttributedText(
+                            text: cue.text,
+                            options: options
+                        )
+                    }
 
                     Spacer(minLength: size.rawValue * 24)
                         .fixedSize()
                 }
                 .frame(
                     maxWidth: .infinity,
-                    maxHeight: .infinity
+                    maxHeight: .infinity,
+                    alignment: .center
                 )
             }
         }
@@ -141,30 +145,43 @@ extension WebVTT: Equatable {
     }
 }
 
-extension WebVTT.Cue: Equatable {
+extension WebVTT.Cue: Hashable {
     public static func == (lhs: WebVTT.Cue, rhs: WebVTT.Cue) -> Bool {
         lhs.timing == rhs.timing &&
         lhs.text == rhs.text
     }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(self.text)
+        hasher.combine(self.timing)
+    }
 }
 
-extension WebVTT.Timing: Equatable {
+extension WebVTT.Timing: Hashable {
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(start)
+        hasher.combine(end)
+    }
+    
     public static func == (lhs: WebVTT.Timing, rhs: WebVTT.Timing) -> Bool {
         lhs.start == rhs.start &&
         lhs.end == rhs.end
     }
 }
 
-struct SubtitleTextView_Previews: PreviewProvider {
-    static var previews: some View {
-        SubtitleTextView()
-            .frame(width: 1280, height: 720)
+extension WebVTT {
+    func bounds(for timeStamp: TimeInterval) -> [Cue]? {
+        cues.filter { $0.timeStart <= timeStamp && timeStamp <= $0.timeEnd }
     }
 }
 
-extension WebVTT {
-    func bounds(for timeStamp: TimeInterval) -> Cue? {
-        // TODO: parse for positions later if available
-        cues.first(where: { $0.timeStart <= timeStamp && timeStamp <= $0.timeEnd })
+struct SubtitleTextView_Previews: PreviewProvider {
+    static var previews: some View {
+        SubtitleTextView(
+            url: .init(
+                string: "https://raw.githubusercontent.com/SwiftCommunityPodcast/podcast/master/Shownotes/Episode1-Transcript.vtt"
+            )
+        )
+            .frame(width: 1280, height: 720)
     }
 }

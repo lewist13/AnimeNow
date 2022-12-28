@@ -1,4 +1,3 @@
-import SharedDependencies
 import XCTest
 
 @testable import VideoPlayerClient
@@ -9,27 +8,26 @@ final class VideoPlayerClientTests: XCTestCase {
 
         let stream = videoPlayer.status()
 
-        let playsExpectation = self.expectation(description: "Video Player Plays")
-        let pauseExpectation = self.expectation(description: "Video Player Pauses")
+        await videoPlayer.execute(
+            .play(
+                URL(string: "http://sample.vodobox.net/skate_phantom_flex_4k/skate_phantom_flex_4k.m3u8")!,
+                    .init(
+                    videoTitle: "Test Title",
+                    videoAuthor: "Test Author"
+                )
+            )
+        )
 
         for await status in stream {
             print("\(status)")
 
-            if status == .loaded {
+            if case .loaded = status {
                 await videoPlayer.execute(.resume)
-            } else if status == .playing {
-                playsExpectation.fulfill()
-            } else if status == .paused {
-                pauseExpectation.fulfill()
+            } else if status == .playback(.playing) {
+            } else if status == .playback(.paused) {
+            } else if status == .finished {
+                await videoPlayer.execute(.seekTo(0))
             }
         }
-
-        await videoPlayer.execute(
-            .play(
-                URL(string: "http://sample.vodobox.net/skate_phantom_flex_4k/skate_phantom_flex_4k.m3u8")!
-            )
-        )
-
-        await self.waitForExpectations(timeout: 20)
     }
 }

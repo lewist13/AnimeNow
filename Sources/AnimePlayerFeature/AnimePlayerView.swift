@@ -8,6 +8,7 @@
 
 import SwiftUI
 import Utilities
+import AVFoundation
 import SharedModels
 import ViewComponents
 import SettingsFeature
@@ -23,23 +24,36 @@ public struct AnimePlayerView: View {
         self.store = store
     }
 
+    private struct VideoPlayerViewStore: Equatable {
+        let player: AVPlayer
+        let gravity: VideoPlayer.Gravity
+        let pipActive: Bool
+
+        init(_ state: AnimePlayerReducer.State) {
+            player = state.player
+            gravity = state.playerGravity
+            pipActive = state.playerPiPActive
+        }
+    }
+
     public var body: some View {
         WithViewStore(
             store,
-            observe: { $0.player }
+            observe: VideoPlayerViewStore.init
         ) { viewStore in
-            VideoPlayer(player: viewStore.state)
-                .onPictureInPictureStatusChanged { status in
-                    viewStore.send(.playerPiPStatus(status))
-                }
-//                .onVideoGravityChanged { gravity in
-//                    viewStore.send(.playerGravity(gravity))
-//                }
-                .onAppear {
-                    viewStore.send(.onAppear)
-                }
-                .overlay(subtitlesOverlay)
-                .ignoresSafeArea()
+            VideoPlayer(
+                player: viewStore.state.player,
+                gravity: viewStore.binding(\.$playerGravity, as: \.gravity),
+                pipActive: viewStore.binding(\.$playerPiPActive, as: \.pipActive)
+            )
+            .onPictureInPictureStatusChanged { status in
+                viewStore.send(.playerPiPStatus(status))
+            }
+            .onAppear {
+                viewStore.send(.onAppear)
+            }
+            .overlay(subtitlesOverlay)
+            .ignoresSafeArea()
         }
         .frame(
             maxWidth: .infinity,
@@ -54,9 +68,9 @@ public struct AnimePlayerView: View {
         .ignoresSafeArea(edges: .vertical)
         .background(Color.black.edgesIgnoringSafeArea(.all))
         #if os(iOS)
-//        .prefersHomeIndicatorAutoHidden(true)
-//        .supportedOrientation(.landscape)
-//        .statusBarHidden()
+        .prefersHomeIndicatorAutoHidden(true)
+        .supportedOrientation(.landscape)
+        .statusBarHidden()
         #endif
     }
 }

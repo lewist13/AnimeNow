@@ -43,7 +43,6 @@ let package = Package(
         .package(url: "https://github.com/pointfreeco/swift-composable-architecture", exact: "0.45.0"),
         .package(url: "https://github.com/pointfreeco/xctest-dynamic-overlay.git", exact: "0.5.0"),
         .package(url: "https://github.com/pointfreeco/swiftui-navigation", exact: "0.2.0"),
-        .package(url: "https://github.com/pointfreeco/swift-url-routing", exact: "0.4.0"),
         .package(url: "https://github.com/onevcat/Kingfisher.git", exact: "7.3.2"),
         .package(url: "https://github.com/thisIsTheFoxe/SwiftWebVTT.git", exact: "0.1.0"),
         .package(url: "https://github.com/NicholasBellucci/SociableWeaver.git", exact: "0.1.12"),
@@ -76,7 +75,8 @@ let package = Package(
                 "UserDefaultsClient",
                 "VideoPlayerClient",
                 "ViewComponents",
-                .product(name: "ComposableArchitecture", package: "swift-composable-architecture")
+                .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
+                .product(name: "SwiftWebVTT", package: "SwiftWebVTT")
             ]
         ),
         .target(
@@ -209,7 +209,6 @@ let package = Package(
                 "SharedModels",
                 "Utilities",
                 .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
-                .product(name: "URLRouting", package: "swift-url-routing"),
                 .product(name: "SociableWeaver", package: "SociableWeaver")
             ]
         ),
@@ -270,11 +269,19 @@ let package = Package(
                 "DownloaderClient",
                 "SharedModels",
                 "Utilities",
-                .product(name: "Kingfisher", package: "Kingfisher"),
-                .product(name: "SwiftWebVTT", package: "SwiftWebVTT")
+                .product(name: "Kingfisher", package: "Kingfisher")
             ]
         ),
         .target(name: "AnyPublisherStream"),
-        .target(name: "Logger")
+        .target(name: "Logger"),
+
+        // Test Targets
+
+        .testTarget(
+            name: "VideoPlayerClientTests",
+            dependencies: [
+                "VideoPlayerClient"
+            ]
+        )
     ]
 )

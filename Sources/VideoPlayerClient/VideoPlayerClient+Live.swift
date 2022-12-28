@@ -7,7 +7,9 @@
 
 import AVKit
 import Combine
+import AVFAudio
 import Foundation
+import Kingfisher
 import MediaPlayer
 import AVFoundation
 import AnyPublisherStream
@@ -45,13 +47,23 @@ private class PlayerWrapper {
     let player = AVQueuePlayer()
     let statusPublisher = CurrentValueSubject<VideoPlayerClient.Status, Never>(.idle)
 
+    #if os(iOS)
+    private let session = AVAudioSession.sharedInstance()
+    #endif
+
     private var playerItemCancellables = Set<AnyCancellable>()
     private var cancellables = Set<AnyCancellable>()
     private var timerObserver: Any?
 
+    private let nowPlayingOperationQueue = OperationQueue()
+
     private var status: VideoPlayerClient.Status {
         get { statusPublisher.value }
-        set { statusPublisher.value = newValue }
+        set {
+            if statusPublisher.value != newValue {
+                statusPublisher.value = newValue
+            }
+        }
     }
 
     init() {
@@ -61,12 +73,21 @@ private class PlayerWrapper {
     private func configureInit() {
         player.automaticallyWaitsToMinimizeStalling = true
         player.preventsDisplaySleepDuringVideoPlayback = true
+        player.actionAtItemEnd = .pause
+
+        #if os(iOS)
+        try? session.setCategory(
+            .playback,
+            mode: .moviePlayback,
+            policy: .longFormVideo
+        )
+        #endif
 
         NotificationCenter.default.publisher(for: .AVPlayerItemDidPlayToEndTime)
             .compactMap { $0.object as? AVPlayerItem }
             .filter { [unowned self] item in item == self.player.currentItem }
             .sink { [unowned self] _ in
-                self.status = .finished
+                self.updateStatus(.finished)
             }
             .store(in: &cancellables)
 
@@ -76,30 +97,30 @@ private class PlayerWrapper {
             for: \.timeControlStatus
         )
         .dropFirst()
-        .filter { [unowned self] _ in self.status != .idle }
         .sink { [unowned self] status in
             switch status {
             case .waitingToPlayAtSpecifiedRate:
                 if let waiting = player.reasonForWaitingToPlay {
                     switch waiting {
                     case .noItemToPlay:
-                        self.status = .idle
+                        self.updateStatus(.idle)
 
                     case .toMinimizeStalls:
-                        self.status = .buffering
+                        self.updateStatus(.playback(.buffering))
+
                     default:
                         break
                     }
                 }
 
             case .paused:
-                self.status = .paused
+                self.updateStatus(.playback(.paused))
 
             case .playing:
-                self.status = .playing
+                self.updateStatus(.playback(.playing))
 
             default:
-                self.status = .loading
+                break
             }
         }
         .store(in: &cancellables)
@@ -114,8 +135,8 @@ private class PlayerWrapper {
 
         timerObserver = player.addPeriodicTimeObserver(
             forInterval: .init(
-                seconds: 0.25,
-                preferredTimescale: 60
+                seconds: 1,
+                preferredTimescale: 1
             ),
             queue: .main
         ) { [unowned self] time in
@@ -202,7 +223,7 @@ private class PlayerWrapper {
     private func observe(playerItem: AVPlayerItem?) {
         guard let playerItem = playerItem else {
             playerItemCancellables.removeAll()
-            self.status = .idle
+            updateStatus(.idle)
             return
         }
 
@@ -214,13 +235,15 @@ private class PlayerWrapper {
         .sink { [unowned self] status in
             switch status {
             case .unknown:
-                self.status = .idle
+                self.updateStatus(.idle)
 
             case .readyToPlay:
-                self.status = .loaded
+                // TODO: Test if duration is updated
+//                self.updateStatus(.loaded(duration: playerItem.totalDuration))
+                break
 
             case .failed:
-                self.status = .error
+                self.updateStatus(.error)
 
             default:
                 break
@@ -234,7 +257,7 @@ private class PlayerWrapper {
         .dropFirst()
         .sink { [unowned self] bufferEmpty in
             if bufferEmpty {
-                self.status = .buffering
+                self.updateStatus(.playback(.buffering))
             }
         }
         .store(in: &playerItemCancellables)
@@ -244,63 +267,73 @@ private class PlayerWrapper {
         )
         .dropFirst()
         .sink { [unowned self] canKeepUp in
-            if canKeepUp && self.status == .buffering {
-                if self.player.rate > 0 {
-                    self.status = .playing
-                } else {
-                    self.status = .paused
-                }
+            if canKeepUp && self.status == .playback(.buffering) {
+                self.updateStatus(.playback(self.player.rate > 0 ? .playing : .paused))
             }
         }
         .store(in: &playerItemCancellables)
+
+        playerItem.publisher(for: \.duration)
+            .dropFirst()
+            .sink { [unowned self] duration in
+                if duration.isValid && duration.seconds > 0.0 {
+                    self.updateStatus(.loaded(duration: duration.seconds))
+                }
+            }
+            .store(in: &playerItemCancellables)
     }
 
-    private func updateNowPlaying(_ item: VideoPlayerClient.Metadata? = nil) {
-        let nowPlayingInfoCenter = MPNowPlayingInfoCenter.default()
-        var nowPlayingInfo = nowPlayingInfoCenter.nowPlayingInfo ?? [:]
+    private func updateNowPlaying(_ metadata: VideoPlayerClient.Metadata? = nil) {
+        nowPlayingOperationQueue.addOperation { [unowned self] in
+            let nowPlayingInfoCenter = MPNowPlayingInfoCenter.default()
+            var nowPlayingInfo = nowPlayingInfoCenter.nowPlayingInfo ?? [:]
 
-        nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = self.player.totalDuration
-        nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = self.player.currentDuration
-        nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = self.player.rate
+            nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = self.player.currentItem?.totalDuration ?? self.player.totalDuration
+            nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = self.player.currentItem?.currentDuration ?? self.player.currentDuration
+            nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = self.player.rate
 
-        if let item {
-            nowPlayingInfo[MPMediaItemPropertyTitle] = item.videoTitle
-            nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = item.videoAuthor
-//            if let imageURL = item.thumbnail,
-//               let image = ImageCache.default.retrieveImageInMemoryCache(forKey: imageURL.absoluteString, options: .none) {
-//                nowPlayingInfo[MPMediaItemPropertyArtwork] = MPMediaItemArtwork(
-//                    boundsSize: image.size,
-//                    requestHandler: { size in
-//                        image
-//                    }
-//                )
-//            } else {
-//                nowPlayingInfo[MPMediaItemPropertyArtwork] = nil
-//            }
+            if let metadata {
+                nowPlayingInfo[MPMediaItemPropertyTitle] = metadata.videoTitle
+                nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = metadata.videoAuthor
+                if let imageURL = metadata.thumbnail,
+                   let image = ImageCache.default.retrieveImageInMemoryCache(
+                    forKey: imageURL.absoluteString,
+                    options: .none
+                   ) {
+                    nowPlayingInfo[MPMediaItemPropertyArtwork] = MPMediaItemArtwork(
+                        boundsSize: image.size,
+                        requestHandler: { size in
+                            image
+                        }
+                    )
+                } else {
+                    nowPlayingInfo[MPMediaItemPropertyArtwork] = nil
+                }
+            }
+
+            nowPlayingInfoCenter.nowPlayingInfo = nowPlayingInfo
+
+            #if os(macOS)
+            switch self.status {
+            case .idle:
+                MPNowPlayingInfoCenter.default().playbackState = .stopped
+            case .loading:
+                MPNowPlayingInfoCenter.default().playbackState = .playing
+            case .loaded:
+                MPNowPlayingInfoCenter.default().playbackState = .playing
+            case .playback(.buffering):
+                MPNowPlayingInfoCenter.default().playbackState = .playing
+            case .playback(.playing):
+                MPNowPlayingInfoCenter.default().playbackState = .playing
+            case .playback(.paused):
+                MPNowPlayingInfoCenter.default().playbackState = .paused
+            case .error:
+                MPNowPlayingInfoCenter.default().playbackState = .unknown
+            case .finished:
+                MPNowPlayingInfoCenter.default().playbackState = .paused
+            }
+            #endif
         }
-
-        nowPlayingInfoCenter.nowPlayingInfo = nowPlayingInfo
-
-        #if os(macOS)
-        switch self.status {
-        case .idle:
-            MPNowPlayingInfoCenter.default().playbackState = .unknown
-        case .loading:
-            MPNowPlayingInfoCenter.default().playbackState = .unknown
-        case .buffering:
-            MPNowPlayingInfoCenter.default().playbackState = .stopped
-        case .loaded:
-            MPNowPlayingInfoCenter.default().playbackState = .unknown
-        case .playing:
-            MPNowPlayingInfoCenter.default().playbackState = .playing
-        case .paused:
-            MPNowPlayingInfoCenter.default().playbackState = .paused
-        case .error:
-            MPNowPlayingInfoCenter.default().playbackState = .unknown
-        case .finished:
-            MPNowPlayingInfoCenter.default().playbackState = .unknown
-        }
-        #endif
     }
 
     func handle(_ action: VideoPlayerClient.Action) {
@@ -309,31 +342,88 @@ private class PlayerWrapper {
             let asset = AVURLAsset(url: url)
             let playerItem = AVPlayerItem(asset: asset)
             player.replaceCurrentItem(with: playerItem)
-            statusPublisher.value = .loading
+            #if os(iOS)
+            try? session.setActive(true)
+            #endif
+            updateStatus(.loading)
             updateNowPlaying(metadata)
 
         case .resume:
-            player.play()
+            if status.canChangePlayback {
+                player.play()
+            }
 
         case .pause:
-            player.pause()
+            if status.canChangePlayback {
+                player.pause()
+            }
 
         case .seekTo(let progress):
-            let time = CMTime(
-                seconds: round(progress * player.totalDuration),
-                preferredTimescale: 1
-            )
-            player.seek(to: time, toleranceBefore: .zero, toleranceAfter: .zero)
+            if status.canChangePlayback {
+                let time = CMTime(
+                    seconds: round(progress * player.totalDuration),
+                    preferredTimescale: 1
+                )
+                player.seek(to: time, toleranceBefore: .zero, toleranceAfter: .zero)
+            }
 
         case .volume(let volume):
             player.volume = Float(volume)
 
         case .clear:
+            player.pause()
             player.removeAllItems()
             playerItemCancellables.removeAll()
-            statusPublisher.value = .idle
+            updateStatus(.idle)
+            #if os(iOS)
+            try? session.setActive(false, options: .notifyOthersOnDeactivation)
+            #endif
             MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
+            #if os(macOS)
             MPNowPlayingInfoCenter.default().playbackState = .unknown
+            #endif
+        }
+    }
+
+    private func updateStatus(_ newStatus: VideoPlayerClient.Status) {
+        let oldStatus = self.status
+
+        guard oldStatus != newStatus else { return }
+
+        guard newStatus != .idle && newStatus != .error else {
+            self.status = newStatus
+            return
+        }
+
+        switch (oldStatus, newStatus) {
+        case (.idle, .loading), (.idle, .loaded):
+            self.status = newStatus
+
+        case (.loading, .loaded):
+            self.status = newStatus
+
+        case (.loaded, .playback), (.loaded, .loaded):
+            self.status = newStatus
+
+        case (.playback, .finished), (.playback, .playback):
+            self.status = newStatus
+
+        case (.finished, .playback(.playing)), (.finished, .playback(.buffering)):
+            self.status = newStatus
+
+        default:
+            break
+        }
+    }
+}
+
+extension VideoPlayerClient.Status {
+    internal var canChangePlayback: Bool {
+        switch self {
+        case .loaded, .playback, .finished:
+            return true
+        default:
+            return false
         }
     }
 }

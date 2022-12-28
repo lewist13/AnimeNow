@@ -7,38 +7,35 @@
 
 import Utilities
 import Foundation
-import URLRouting
 import SharedModels
 import SociableWeaver
 
-public final class AniListAPI: APIRoutable {
-    public enum Endpoint: Equatable {
-        case graphql(GraphQL.Paylod)
-    }
+public final class AniListAPI: APIBase {
+    public static let shared: AniListAPI = .init()
 
     public let base = URL(string: "https://graphql.anilist.co")!
 
-    public let router = OneOf {
-        Route(.case(Endpoint.graphql)) {
-            Method.post
-            Body(.json(GraphQL.Paylod.self))
+    private init() {}
+}
+
+extension Request where Route == AniListAPI {
+    public static func graphql<Q: GraphQLQuery>(
+        _ query: Q.Type,
+        _ options: Q.QueryOptions
+    ) -> Request<Route, Q.Response> {
+        let query = Q.createQuery(options)
+
+        let data = (try? GraphQL.Paylod(query: query.format()).toData()) ?? .init()
+
+        return .init(
+            method: .post(data)
+        ) { api in
+            [
+                "Content-Type": "application/json",
+                "Content-Length": data.count
+            ]
         }
     }
-    .eraseToAnyParserPrinter()
-
-    public func configureRequest(request: inout URLRequest) {
-        let bodyCount = request.httpBody?.count ?? 0
-        let requestHeaders = [
-            "Content-Type": "application/json",
-            "Content-Length": "\(bodyCount)"
-        ]
-
-        for header in requestHeaders {
-            request.addValue(header.value, forHTTPHeaderField: header.key)
-        }
-    }
-
-    public init() {}
 }
 
 // MARK: - Converters
@@ -136,9 +133,11 @@ extension AniListAPI {
     public struct PageQuery<O: GraphQLQueryObject & PageResponseObject>: GraphQLQuery {
         public typealias Response = GraphQL.Response<PageResponse<Self>>
 
-        public enum QueryArgument {
+        public enum QueryArgument: DefaultArguments {
             case page(Int = 1)
             case perPage(Int = 25)
+
+            public static var defaultArgs: [QueryArgument] { [.page(), .perPage()] }
         }
 
         public struct QueryOptions {
@@ -146,7 +145,7 @@ extension AniListAPI {
             public var itemArguments: [O.Argument]
 
             public init(
-                arguments: [QueryArgument] = [.page(), .perPage()],
+                arguments: [QueryArgument] = .defaultArgs,
                 itemArguments: [O.Argument] = []
             ) {
                 self.arguments = arguments
@@ -273,7 +272,7 @@ extension AniListAPI {
         let averageScore: Int?
         let genres: [String]
 
-        public enum Argument {
+        public enum Argument: DefaultArguments {
             case id(Int)
             case idIn([Int])
             case isAdult(Bool = false)
@@ -286,14 +285,14 @@ extension AniListAPI {
             case statusNotIn([Status])
             case search(String)
 
-            public static let defaults: [Argument] = {
+            public static let defaultArgs: [Argument] = {
                 [.isAdult(), .type(), .formatIn()]
             }()
         }
 
         public static func createQueryObject(
             _ name: String,
-            _ arguments: [Argument] = Argument.defaults
+            _ arguments: [Argument] = .defaultArgs
         ) -> Object {
             var obj = Object(name) {
                 Field(CodingKeys.id)
@@ -341,7 +340,7 @@ extension AniListAPI {
         }
 
         public static func createQuery(
-            _ arguments: [Media.Argument] = Media.Argument.defaults
+            _ arguments: [Media.Argument] = .defaultArgs
         ) -> Weave {
             enum CodingKeys: CodingKey {
                 case Media

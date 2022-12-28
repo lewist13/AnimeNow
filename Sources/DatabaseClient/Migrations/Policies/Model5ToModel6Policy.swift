@@ -18,7 +18,6 @@ class Model5ToModel6Policy: NSEntityMigrationPolicy {
         in mapping: NSEntityMapping,
         manager: NSMigrationManager
     ) throws {
-        // TODO: Add constraints
         let managedContext = manager.sourceContext
 
         if sInstance.entity.name == "CDCollectionStore" {

@@ -284,10 +284,10 @@ extension AnimePlayerView {
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
                 .background(Color.white)
-                .foregroundColor(Color.black)
+                .foregroundColor(.black)
                 .clipShape(Capsule())
                 .shadow(
-                    color: Color.black.opacity(0.5),
+                    color: .black.opacity(0.5),
                     radius: 16,
                     x: 0,
                     y: 0
@@ -326,13 +326,9 @@ extension AnimePlayerView {
                 spacing: 12
             ) {
                 SeekbarView(
-                    progress: .init(
-                        get: {
-                            viewState.progress
-                        },
-                        set: { progress in
-                            viewState.send(.seeking(to: progress))
-                        }
+                    progress: viewState.binding(
+                        get: \.progress,
+                        send: { .seeking(to: $0) }
                     ),
                     buffered: viewState.state.buffered,
                     padding: 6
