@@ -1,0 +1,112 @@
+name: Build Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      is_prerelease:
+        type: boolean
+        default: true
+        description: 'Is pre-release'
+        required: true
+
+env:
+  IOS_OUTPUT_PATH: './App/Anime Now! (iOS).ipa'
+  MACOS_OUTPUT_PATH: './App/Anime Now! (macOS).dmg'
+
+jobs:
+  build-and-deploy:
+    runs-on: macos-12
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install create-dmg
+        run: brew install create-dmg
+
+      - name: Update Build Info
+        run: |
+          echo "git_sha=$(git log --format='%h' -n 1)" >> $GITHUB_ENV
+          sed -i '' 's/\(^COMMIT = \).*/\1${{ env.git_sha }}/' ./App/MainConfig.xcconfig
+
+      - name: Update Beta Version
+        if: ${{ github.event.inputs.is_prerelease == 'true' }}
+        run: |
+          # TODO: Get the next latest prerelease build and start it from zero after 1.0.0
+          # TODO: Increment to latest version after 1.0.0 release
+          echo "beta_version=$(cat './App/MainConfig.xcconfig' | grep 'MARKETING_VERSION' | cut -f 3 -d ' ')-beta" >> $GITHUB_ENV
+          sed -i '' 's/\(^MARKETING_VERSION = \).*/\1${{ env.beta_version }}/' ./App/MainConfig.xcconfig
+          echo "version=$({ env.beta_version }}.${{ env.git_sha }}" >> $GITHUB_ENV
+
+      - name: Update Release Version
+        if: ${{ github.event.inputs.is_prerelease == 'false' }}
+        run: |
+          echo "version=$(cat './App/MainConfig.xcconfig' | grep 'MARKETING_VERSION' | cut -f 3 -d ' ')" >> $GITHUB_ENV
+
+      - name: Archive IPA
+        run: |
+          pushd App
+          xcodebuild archive \
+            -destination "generic/platform=iOS" \
+            -scheme "Anime Now! (iOS)" \
+            -archivePath "./Anime Now! (iOS).xcarchive" \
+            -xcconfig "./MainConfig.xcconfig" \
+            CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO CODE_SIGN_IDENTITY= CODE_SIGN_ENTITLEMENTS= GCC_OPTIMIZATION_LEVEL=s SWIFT_OPTIMIZATION_LEVEL=-O
+          mkdir -p "./Payload"
+          mv "./Anime Now! (iOS).xcarchive/Products/Applications/Anime Now!.app" "./Payload/Anime Now!.app"
+          zip -r "./Anime Now! (iOS).ipa" './Payload'
+          rm -rf "./Payload"
+          rm -rf "./Anime Now! (iOS).xcarchive"
+          popd
+
+      - name: Archive DMG
+        run: |
+          pushd App
+          xcodebuild archive \
+            -scheme "Anime Now! (macOS)" \
+            -archivePath "./Anime Now! (macOS).xcarchive" \
+            -xcconfig "./MainConfig.xcconfig" \
+            CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO CODE_SIGN_IDENTITY= CODE_SIGN_ENTITLEMENTS= GCC_OPTIMIZATION_LEVEL=s SWIFT_OPTIMIZATION_LEVEL=-O
+
+          create-dmg \
+            --volname "Anime Now!" \
+            --background "../Misc/Media/dmg_background.png" \
+            --window-pos 200 120 \
+            --window-size 660 400 \
+            --icon-size 160 \
+            --icon "Anime Now!.app" 180 170 \
+            --hide-extension "Anime Now!.app" \
+            --app-drop-link 480 170 \
+            --no-internet-enable \
+            "./Anime Now! (macOS).dmg" \
+            "./Anime Now! (macOS).xcarchive/Products/Applications/"
+          popd
+
+      - name: Set Release Info
+        run: |
+          echo "message_title=v${{ env.version }}" >> $GITHUB_ENV
+          echo "tag_version=${{ env.version }}" >> $GITHUB_ENV
+
+      - name: Set Prerelease Message
+        if: ${{ github.event.inputs.is_prerelease == 'true' }}
+        run: |
+          echo "message_body=This is a build of the current state of main repo. There might be some issues and error so I do not guarantee its usability." >> $GITHUB_ENV
+
+      - name: Set Release Changelog Message
+        if: ${{ github.event.inputs.is_prerelease == 'true' }}
+        run: |
+          echo "message_body=TODO" >> $GITHUB_ENV          
+
+      - name: Release to GitHub
+        uses: softprops/action-gh-release@v1
+        with:
+          fail_on_unmatched_files: false
+          files: |
+            ${{ env.IOS_OUTPUT_PATH }}
+            ${{ env.MACOS_OUTPUT_PATH }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          generate_release_notes: ${{ github.event.inputs.is_prerelease == 'true' }}
+          prerelease: ${{ github.event.inputs.is_prerelease == 'true' }}
+          body: ${{ env.message_body }}
+          name: ${{ env.message_title }}
+          tag_name: '${{ env.tag_version }}'

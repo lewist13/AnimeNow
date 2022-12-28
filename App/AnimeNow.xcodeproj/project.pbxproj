@@ -203,7 +203,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 13C3535628C3089E00A54E7E /* Build configuration list for PBXProject "Anime Now!" */;
+			buildConfigurationList = 13C3535628C3089E00A54E7E /* Build configuration list for PBXProject "AnimeNow" */;
 			compatibilityVersion = "Xcode 13.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -302,6 +302,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -364,6 +365,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
@@ -523,7 +525,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		13C3535628C3089E00A54E7E /* Build configuration list for PBXProject "Anime Now!" */ = {
+		13C3535628C3089E00A54E7E /* Build configuration list for PBXProject "AnimeNow" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				13C3537528C308A000A54E7E /* Debug */,

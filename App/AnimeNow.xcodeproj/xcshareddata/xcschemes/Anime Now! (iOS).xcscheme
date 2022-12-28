@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "13C3536728C308A000A54E7E"
+               BlueprintIdentifier = "13C3536128C308A000A54E7E"
                BuildableName = "Anime Now!.app"
-               BlueprintName = "Anime Now! (macOS)"
+               BlueprintName = "Anime Now! (iOS)"
                ReferencedContainer = "container:Anime Now!.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -44,15 +44,24 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "13C3536728C308A000A54E7E"
+            BlueprintIdentifier = "13C3536128C308A000A54E7E"
             BuildableName = "Anime Now!.app"
-            BlueprintName = "Anime Now! (macOS)"
-            ReferencedContainer = "container:Anime Now!.xcodeproj">
+            BlueprintName = "Anime Now! (iOS)"
+            ReferencedContainer = "container:AnimeNow.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
+      <MacroExpansion>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "13C3536128C308A000A54E7E"
+            BuildableName = "Anime Now!.app"
+            BlueprintName = "Anime Now! (iOS)"
+            ReferencedContainer = "container:Anime Now!.xcodeproj">
+         </BuildableReference>
+      </MacroExpansion>
    </LaunchAction>
    <ProfileAction
-      buildConfiguration = "Release"
+      buildConfiguration = "Debug"
       shouldUseLaunchSchemeArgsEnv = "YES"
       savedToolIdentifier = ""
       useCustomWorkingDirectory = "NO"
@@ -61,9 +70,9 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "13C3536728C308A000A54E7E"
+            BlueprintIdentifier = "13C3536128C308A000A54E7E"
             BuildableName = "Anime Now!.app"
-            BlueprintName = "Anime Now! (macOS)"
+            BlueprintName = "Anime Now! (iOS)"
             ReferencedContainer = "container:Anime Now!.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

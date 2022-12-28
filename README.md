@@ -21,6 +21,7 @@
 Anime Now! provides a way to view your favorite anime shows built with SwiftUI and TCA (The Composable Architecture).
 
 ## DISCLAIMER
+
 This app is still in its beta stages so expect random crashes, missing content, and features.
 
 ## Features
@@ -109,13 +110,13 @@ This app is still in its beta stages so expect random crashes, missing content, 
   </tbody>
 </table>
 
-## Downloads 
+## Downloads
 
-[![Latest](https://img.shields.io/github/v/release/AnimeNow-Team/AnimeNow?label=Latest&style=for-the-badge)](https://github.com/AnimeNow-Team/AnimeNow/releases/latest)
+[![Latest](https://img.shields.io/github/v/release/AnimeNow-Team/AnimeNow?label=Latest\&style=for-the-badge)](https://github.com/AnimeNow-Team/AnimeNow/releases/latest)
 
-[![Beta](https://img.shields.io/github/v/release/AnimeNow-Team/AnimeNow?include_prereleases&label=Beta&style=for-the-badge)](https://github.com/AnimeNow-Team/AnimeNow/releases)
+[![Beta](https://img.shields.io/github/v/release/AnimeNow-Team/AnimeNow?include_prereleases\&label=Beta\&style=for-the-badge)](https://github.com/AnimeNow-Team/AnimeNow/releases)
 
-*Requires at least iOS 14, iPadOS 14, and macOS 11 or later.*
+_Requires at least iOS 14, iPadOS 14, and macOS 11 or later._
 
 ## Installation
 
@@ -137,7 +138,7 @@ _If you're not jailbroken, then you require a sideloader application in order to
 <summary>macOS</summary>
 
 1. [Download the app file.](https://github.com/AnimeNow-Team/AnimeNow/releases/latest/)
-2. Save it in your ```Applications``` folder and make sure that you allow the app to run. If you are having issues with this, make sure you go to ```System Preferences -> Security & Privacy -> General``` and make sure ```Anime Now!``` is allowed to run.
+2. Save it in your `Applications` folder and make sure that you allow the app to run. If you are having issues with this, make sure you go to `System Preferences -> Security & Privacy -> General` and make sure `Anime Now!` is allowed to run.
 3. Once that is done, then you are free to watch your favorite anime shows :)
 
 </details>
