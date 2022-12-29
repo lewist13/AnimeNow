@@ -24,9 +24,13 @@ jobs:
       - name: Install create-dmg
         run: brew install create-dmg
 
-      - name: Update Build Info
+      - name: Get Build Info
         run: |
           echo "git_sha=$(git log --format='%h' -n 1)" >> $GITHUB_ENV
+          echo "semantic_version=$(cat ./App/MainConfig.xcconfig | grep 'MARKETING_VERSION' | cut -f 3 -d ' ')" >> $GITHUB_ENV
+
+      - name: Update Commit Version
+        run: |
           sed -i '' 's/\(^COMMIT = \).*/\1${{ env.git_sha }}/' ./App/MainConfig.xcconfig
 
       - name: Update Beta Version
@@ -34,14 +38,8 @@ jobs:
         run: |
           # TODO: Get the next latest prerelease build and start it from zero after 1.0.0
           # TODO: Increment to latest version after 1.0.0 release
-          echo "beta_version=$(cat ./App/MainConfig.xcconfig | grep 'MARKETING_VERSION' | cut -f 3 -d ' ')-beta" >> $GITHUB_ENV
-          sed -i '' 's/\(^MARKETING_VERSION = \).*/\1${{ env.beta_version }}/' ./App/MainConfig.xcconfig
-          echo "version=${{ env.beta_version }}.${{ env.git_sha }}" >> $GITHUB_ENV
-
-      - name: Update Release Version
-        if: ${{ github.event.inputs.is_prerelease == 'false' }}
-        run: |
-          echo "version=$(cat ./App/MainConfig.xcconfig | grep 'MARKETING_VERSION' | cut -f 3 -d ' ')" >> $GITHUB_ENV
+          sed -i '' 's/\(^MARKETING_VERSION = \).*/\1${{ env.semantic_version }}-beta/' ./App/MainConfig.xcconfig
+          echo "semantic_version=${{ env.semantic_version }}-beta.${{ env.git_sha }}" >> $GITHUB_ENV
 
       - name: Archive IPA
         run: |
@@ -82,18 +80,17 @@ jobs:
             "./Anime Now! (macOS).xcarchive/Products/Applications/"
           popd
 
-      - name: Set Release Info
+      - name: Set Pre/Release Info
         run: |
-          echo "message_title=v${{ env.version }}" >> $GITHUB_ENV
-          echo "tag_version=${{ env.version }}" >> $GITHUB_ENV
+          echo "message_title=v${{ env.semantic_version }}" >> $GITHUB_ENV
 
       - name: Set Prerelease Message
         if: ${{ github.event.inputs.is_prerelease == 'true' }}
         run: |
           echo "message_body=This is a build of the current state of main repo. There might be some issues and error so I do not guarantee its usability." >> $GITHUB_ENV
 
-      - name: Set Release Changelog Message
-        if: ${{ github.event.inputs.is_prerelease == 'true' }}
+      - name: Set Release Message
+        if: ${{ github.event.inputs.is_prerelease == 'false' }}
         run: |
           echo "message_body=TODO" >> $GITHUB_ENV          
 
@@ -109,4 +106,4 @@ jobs:
           prerelease: ${{ github.event.inputs.is_prerelease == 'true' }}
           body: ${{ env.message_body }}
           name: ${{ env.message_title }}
-          tag_name: ${{ env.tag_version }}
+          tag_name: ${{ env.semantic_version }}
