@@ -34,14 +34,14 @@ jobs:
         run: |
           # TODO: Get the next latest prerelease build and start it from zero after 1.0.0
           # TODO: Increment to latest version after 1.0.0 release
-          echo "beta_version=$(cat './App/MainConfig.xcconfig' | grep 'MARKETING_VERSION' | cut -f 3 -d ' ')-beta" >> $GITHUB_ENV
+          echo "beta_version=$(cat ./App/MainConfig.xcconfig | grep 'MARKETING_VERSION' | cut -f 3 -d ' ')-beta" >> $GITHUB_ENV
           sed -i '' 's/\(^MARKETING_VERSION = \).*/\1${{ env.beta_version }}/' ./App/MainConfig.xcconfig
-          echo "version=$({ env.beta_version }}.${{ env.git_sha }}" >> $GITHUB_ENV
+          echo "version=${{ env.beta_version }}.${{ env.git_sha }}" >> $GITHUB_ENV
 
       - name: Update Release Version
         if: ${{ github.event.inputs.is_prerelease == 'false' }}
         run: |
-          echo "version=$(cat './App/MainConfig.xcconfig' | grep 'MARKETING_VERSION' | cut -f 3 -d ' ')" >> $GITHUB_ENV
+          echo "version=$(cat ./App/MainConfig.xcconfig | grep 'MARKETING_VERSION' | cut -f 3 -d ' ')" >> $GITHUB_ENV
 
       - name: Archive IPA
         run: |
