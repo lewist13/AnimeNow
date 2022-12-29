@@ -407,7 +407,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.errorerrorerror.anime-now";
+				PRODUCT_BUNDLE_IDENTIFIER = com.errorerrorerror.animenow;
 				PRODUCT_MODULE_NAME = AnimeNow;
 				PRODUCT_NAME = "Anime Now!";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -442,7 +442,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.errorerrorerror.anime-now";
+				PRODUCT_BUNDLE_IDENTIFIER = com.errorerrorerror.animenow;
 				PRODUCT_MODULE_NAME = AnimeNow;
 				PRODUCT_NAME = "Anime Now!";
 				PROVISIONING_PROFILE_SPECIFIER = "";

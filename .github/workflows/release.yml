@@ -109,4 +109,4 @@ jobs:
           prerelease: ${{ github.event.inputs.is_prerelease == 'true' }}
           body: ${{ env.message_body }}
           name: ${{ env.message_title }}
-          tag_name: '${{ env.tag_version }}'
+          tag_name: ${{ env.tag_version }}
