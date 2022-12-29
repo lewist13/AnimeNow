@@ -11,6 +11,7 @@ import Foundation
 import ComposableArchitecture
 
 public protocol APIClient {
+    @discardableResult
     func request<A: APIBase, O>(
         _ api: A,
         _ request: Request<A, O>,
@@ -84,46 +85,6 @@ public struct Request<Route: APIBase, O: Decodable> {
                 return "GET"
             case .post(let data):
                 return "POST: \(String(data: data, encoding: .utf8) ?? "Unknown")"
-            }
-        }
-    }
-}
-
-extension URLSession {
-    func data(for request: URLRequest) async throws -> (Data, URLResponse) {
-        if #available(iOS 15, macOS 12.0, *) {
-           return try await self.data(for: request, delegate: nil)
-        } else {
-            return try await withCheckedThrowingContinuation { continuation in
-                let task = self.dataTask(with: request) { data, response, error in
-                    guard let data = data, let response = response else {
-                        let error = error ?? URLError(.badServerResponse)
-                        return continuation.resume(throwing: error)
-                    }
-
-                    continuation.resume(returning: (data, response))
-                }
-
-                task.resume()
-            }
-        }
-    }
-
-    func data(from url: URL) async throws -> (Data, URLResponse) {
-        if #available(iOS 15, macOS 12.0, *) {
-           return try await self.data(from: url, delegate: nil)
-        } else {
-            return try await withCheckedThrowingContinuation { continuation in
-                let task = self.dataTask(with: url) { data, response, error in
-                    guard let data = data, let response = response else {
-                        let error = error ?? URLError(.badServerResponse)
-                        return continuation.resume(throwing: error)
-                    }
-
-                    continuation.resume(returning: (data, response))
-                }
-
-                task.resume()
             }
         }
     }

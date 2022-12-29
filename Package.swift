@@ -76,6 +76,7 @@ let package = Package(
                 "VideoPlayerClient",
                 "ViewComponents",
                 .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
+                .product(name: "Kingfisher", package: "Kingfisher"),
                 .product(name: "SwiftWebVTT", package: "SwiftWebVTT")
             ]
         ),
@@ -244,7 +245,8 @@ let package = Package(
             name: "VideoPlayerClient",
             dependencies: [
                 "AnyPublisherStream",
-                .product(name: "ComposableArchitecture", package: "swift-composable-architecture")
+                .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
+                .product(name: "Kingfisher", package: "Kingfisher")
             ]
         ),
 

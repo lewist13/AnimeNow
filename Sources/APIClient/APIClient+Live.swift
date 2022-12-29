@@ -16,37 +16,46 @@ public class APIClientLive: APIClient {
         _ request: Request<A, O>,
         _ decoder: JSONDecoder = .init()
     ) async throws -> O {
-        guard var components = URLComponents(url: api.base, resolvingAgainstBaseURL: true) else {
-            throw URLError(.badURL)
+        do {
+            guard var components = URLComponents(url: api.base, resolvingAgainstBaseURL: true) else {
+                throw URLError(.badURL)
+            }
+
+            components.path += request.path.isEmpty ? "" : "/" + request.path.map(\.description).joined(separator: "/")
+            components.queryItems = request.query
+
+            guard let url = components.url else {
+                throw URLError(.unsupportedURL)
+            }
+
+            var urlRequest = URLRequest(url: url)
+            urlRequest.httpMethod = request.method.stringValue
+
+            if case .post(let data) = request.method {
+                urlRequest.httpBody = data
+            }
+
+            request.headers?(api).forEach { (key, value) in
+                urlRequest.setValue(value.description, forHTTPHeaderField: key)
+            }
+
+            urlRequest.setHeaders()
+
+            let (data, _) = try await URLSession.shared.data(for: urlRequest)
+            return try decoder.decode(O.self, from: data)
+        } catch {
+            Logger.log(
+                .error,
+                "\(String(describing: A.self)) - \(request) failed with error: \(error)"
+            )
+            throw error
         }
+    }
+}
 
-        components.path += request.path.isEmpty ? "" : "/" + request.path.map(\.description).joined(separator: "/")
-        components.queryItems = request.query
-
-        guard let url = components.url else {
-            throw URLError(.unsupportedURL)
-        }
-
-        var urlRequest = URLRequest(url: url)
-        urlRequest.httpMethod = request.method.stringValue
-
-        if case .post(let data) = request.method {
-            urlRequest.httpBody = data
-        }
-
-        request.headers?(api).forEach { (key, value) in
-            urlRequest.setValue(value.description, forHTTPHeaderField: key)
-        }
-
-        urlRequest.setHeaders()
-
-        Logger.log(
-            .debug,
-            "\(String(describing: A.self)) - request: \(urlRequest)"
-        )
-
-        let (data, _) = try await URLSession.shared.data(for: urlRequest)
-        return try decoder.decode(O.self, from: data)
+extension Request: CustomStringConvertible {
+    public var description: String {
+        return "/\(path.map(\.description).joined(separator: "/"))"
     }
 }
 
@@ -83,5 +92,45 @@ extension URLRequest {
             "\(executable)/\(appVersion) (\(bundle); commit:\(appCommit)) \(osName) \(osVersion)",
             forHTTPHeaderField: "User-Agent"
         )
+    }
+}
+
+extension URLSession {
+    func data(for request: URLRequest) async throws -> (Data, URLResponse) {
+        if #available(iOS 15, macOS 12.0, *) {
+           return try await self.data(for: request, delegate: nil)
+        } else {
+            return try await withCheckedThrowingContinuation { continuation in
+                let task = self.dataTask(with: request) { data, response, error in
+                    guard let data = data, let response = response else {
+                        let error = error ?? URLError(.badServerResponse)
+                        return continuation.resume(throwing: error)
+                    }
+
+                    continuation.resume(returning: (data, response))
+                }
+
+                task.resume()
+            }
+        }
+    }
+
+    func data(from url: URL) async throws -> (Data, URLResponse) {
+        if #available(iOS 15, macOS 12.0, *) {
+           return try await self.data(from: url, delegate: nil)
+        } else {
+            return try await withCheckedThrowingContinuation { continuation in
+                let task = self.dataTask(with: url) { data, response, error in
+                    guard let data = data, let response = response else {
+                        let error = error ?? URLError(.badServerResponse)
+                        return continuation.resume(throwing: error)
+                    }
+
+                    continuation.resume(returning: (data, response))
+                }
+
+                task.resume()
+            }
+        }
     }
 }

@@ -1,3 +1,4 @@
+//
 //  SubtitleTextView.swift
 //  Anime Now!
 //
@@ -17,50 +18,88 @@ public struct SubtitleTextView: View {
         case large = 1.25
     }
 
+    public struct Options: Hashable {
+        let fontSize: Size
+        var shadowColor: Color
+        var shadowOffset: CGFloat
+        var strokeColor: Color
+        var strokeWidth: CGFloat
+        var backgroundColor: Color
+        var backgroundRadius: CGFloat
+        var backgroundPadding: CGFloat
+
+        public init(
+            fontSize: Size = .normal,
+            shadowColor: Color = .clear,
+            shadowOffset: CGFloat = 0,
+            strokeColor: Color = .clear,
+            strokeWidth: CGFloat = 0,
+            backgroundColor: Color = .clear,
+            backgroundRadius: CGFloat = 0,
+            backgroundPadding: CGFloat = 0
+        ) {
+            self.fontSize = fontSize
+            self.shadowColor = shadowColor
+            self.shadowOffset = shadowOffset
+            self.strokeColor = strokeColor
+            self.strokeWidth = strokeWidth
+            self.backgroundColor = backgroundColor
+            self.backgroundRadius = backgroundRadius
+            self.backgroundPadding = backgroundPadding
+        }
+    }
+
     @StateObject private var viewModel = ViewModel()
 
     var url: URL? = nil
     var progress: Double = .zero
     var duration: Double = .zero
-    var size = Size.normal
-    var options: AttributedText.Options = .defaultBoxed
+    var options: Options = .defaultBoxed
 
     public init(
         url: URL? = nil,
         progress: Double = .zero,
         duration: Double = .zero,
-        size: Size = .normal,
-        options: AttributedText.Options = .defaultBoxed
+        options: Options = .defaultBoxed
     ) {
         self.url = url
         self.progress = progress
         self.duration = duration
-        self.size = size
         self.options = options
     }
 
     public var body: some View {
-        Group {
-            if let cues = viewModel.vtt.value?.bounds(for: duration * progress) {
-                VStack(alignment: .center) {
-                    Spacer()
+        GeometryReader { reader in
+            VStack(
+                alignment: .center,
+                spacing: 0
+            ) {
+                Spacer()
 
-                    ForEach(cues, id: \.self) { cue in
-                        AttributedText(
-                            text: cue.text,
-                            options: options
+                if let cue = viewModel.vtt.value?.bounds(for: progress * duration)?.first {
+                    Text(cue.text)
+                        .font(
+                            .system(
+                                size: (DeviceUtil.isPhone ? 0.05 : 0.04) *
+                                    reader.size.height *
+                                    options.fontSize.rawValue,
+                                weight: .semibold
+                            )
                         )
-                    }
-
-                    Spacer(minLength: size.rawValue * 24)
-                        .fixedSize()
+                        .multilineTextAlignment(.center)
+                        .padding(options.backgroundPadding)
+                        .background(
+                            options.backgroundColor
+                                .cornerRadius(options.backgroundRadius)
+                        )
                 }
-                .frame(
-                    maxWidth: .infinity,
-                    maxHeight: .infinity,
-                    alignment: .center
-                )
+                Spacer(minLength: reader.size.height * 0.075)
+                    .fixedSize()
             }
+            .frame(
+                maxWidth: .infinity,
+                maxHeight: .infinity
+            )
         }
         .onChange(of: url, perform: {
             viewModel.updateURL($0)
@@ -68,16 +107,14 @@ public struct SubtitleTextView: View {
     }
 }
 
-extension AttributedText.Options {
+extension SubtitleTextView.Options {
     public static let defaultBoxed: Self = .init(
-        fontSize: 18,
         backgroundColor: .black.opacity(0.5),
         backgroundRadius: 8,
         backgroundPadding: 8
     )
 
     public static let defaultStroke: Self = .init(
-        fontSize: 18,
         shadowColor: .black,
         shadowOffset: 2,
         strokeColor: .black,
@@ -180,7 +217,9 @@ struct SubtitleTextView_Previews: PreviewProvider {
         SubtitleTextView(
             url: .init(
                 string: "https://raw.githubusercontent.com/SwiftCommunityPodcast/podcast/master/Shownotes/Episode1-Transcript.vtt"
-            )
+            ),
+            progress: 0.2,
+            duration: 1.0
         )
             .frame(width: 1280, height: 720)
     }
