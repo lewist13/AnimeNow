@@ -1,0 +1,25 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "FlyingFox",
+        "repositoryURL": "https://github.com/swhitty/FlyingFox.git",
+        "state": {
+          "branch": null,
+          "revision": "8ef9eddda8f4ea370233454eded2ceded1fb76ee",
+          "version": "0.10.0"
+        }
+      },
+      {
+        "package": "swift-nio",
+        "repositoryURL": "https://github.com/apple/swift-nio",
+        "state": {
+          "branch": null,
+          "revision": "51c3fc2e4a0fcdf4a25089b288dd65b73df1b0ef",
+          "version": "2.37.0"
+        }
+      }
+    ]
+  },
+  "version": 1
+}
