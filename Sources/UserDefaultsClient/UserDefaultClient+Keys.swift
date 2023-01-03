@@ -19,4 +19,6 @@ extension UserDefaultsClient.Key {
     public static var searchedItems: UserDefaultsClient.Key<[String]> { .init("searchedItems", defaultValue: []) }
 
     public static var hasClearedAllVideos: UserDefaultsClient.Key<Bool> { .init("hasClearedAllVideos") }
+
+    public static var canEnableDiscord: UserDefaultsClient.Key<Bool> { .init("canEnableDiscord") }
 }

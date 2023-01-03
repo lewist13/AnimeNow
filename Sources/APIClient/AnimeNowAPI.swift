@@ -8,13 +8,19 @@
 
 import Foundation
 
-final class AnimeNowAPI: APIBase {
-    static var shared: AnimeNowAPI = .init()
+public final class AnimeNowAPI: APIBase {
+    public static var shared: AnimeNowAPI = .init()
 
-    var base = URL(string: "https://api.animenow.app")!
+    public var discordClientKey: String {
+        ""
+    }
+
+    private init() { }
+
+    public let base = URL(string: "https://api.animenow.app")!
 }
 
 // Endpoint
 
-extension Request where Route == AnimeNowAPI {
+public extension Request where Route == AnimeNowAPI {
 }

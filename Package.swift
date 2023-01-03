@@ -27,7 +27,9 @@ let package = Package(
         /// Clients
         .library(name: "APIClient", targets: ["APIClient"]),
         .library(name: "AnimeClient", targets: ["AnimeClient"]),
+        .library(name: "ChromeCastClient", targets: ["ChromeCastClient"]),
         .library(name: "DatabaseClient", targets: ["DatabaseClient"]),
+        .library(name: "DiscordClient", targets: ["DiscordClient"]),
         .library(name: "DownloaderClient", targets: ["DownloaderClient"]),
         .library(name: "VideoPlayerClient", targets: ["VideoPlayerClient"]),
         .library(name: "UserDefaultsClient", targets: ["UserDefaultsClient"]),
@@ -46,7 +48,9 @@ let package = Package(
         .package(url: "https://github.com/onevcat/Kingfisher.git", exact: "7.3.2"),
         .package(url: "https://github.com/thisIsTheFoxe/SwiftWebVTT.git", exact: "0.1.0"),
         .package(url: "https://github.com/NicholasBellucci/SociableWeaver.git", exact: "0.1.12"),
-        .package(url: "https://github.com/apple/swift-collections.git", exact: "1.0.3")
+        .package(url: "https://github.com/apple/swift-collections.git", exact: "1.0.3"),
+        .package(path: "Sources/SwordRPC"),
+        .package(path: "Sources/OpenCastSwift")
     ],
     targets: [
         /// Features
@@ -85,8 +89,10 @@ let package = Package(
             dependencies: [
                 "AnimePlayerFeature",
                 "AnimeDetailFeature",
+                "ChromeCastClient",
                 "CollectionsFeature",
                 "DatabaseClient",
+                "DiscordClient",
                 "DownloaderClient",
                 "DownloadsFeature",
                 "HomeFeature",
@@ -211,6 +217,21 @@ let package = Package(
                 "Utilities",
                 .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
                 .product(name: "SociableWeaver", package: "SociableWeaver")
+            ]
+        ),
+        .target(
+            name: "ChromeCastClient",
+            dependencies: [
+                .byName(name: "OpenCastSwift"),
+                .product(name: "ComposableArchitecture", package: "swift-composable-architecture")
+            ]
+        ),
+        .target(
+            name: "DiscordClient",
+            dependencies: [
+                "APIClient",
+                .product(name: "SwordRPC", package: "SwordRPC"),
+                .product(name: "ComposableArchitecture", package: "swift-composable-architecture")
             ]
         ),
         .target(

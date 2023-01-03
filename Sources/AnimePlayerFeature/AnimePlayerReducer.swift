@@ -65,14 +65,14 @@ public struct AnimePlayerReducer: ReducerProtocol {
     }
 
     public struct State: Equatable {
-        let anime: AnyAnimeRepresentable
+        public let anime: AnyAnimeRepresentable
 
         var episodes = LoadableEpisodes.idle
         var sourcesOptions = LoadableSourcesOptions.idle
         var animeStore = Loadable<AnimeStore>.idle
         var skipTimes = Loadable<[SkipTime]>.idle
 
-        var selectedEpisode: Episode.ID
+        public var selectedEpisode: Episode.ID
         var selectedProvider: Provider.ID?
         var selectedSource: Source.ID?
         var selectedSidebar: Sidebar?
@@ -87,9 +87,9 @@ public struct AnimePlayerReducer: ReducerProtocol {
         // Shared Player Properties
 
         let player: AVPlayer
-        var playerProgress: Double = 0.0
+        public fileprivate(set) var playerProgress: Double = 0.0
         var playerBuffered: Double { player.bufferProgress }
-        var playerDuration: Double { player.totalDuration }
+        public var playerDuration: Double { player.totalDuration }
         var playerStatus = VideoPlayerClient.Status.idle
         var playerIsFullScreen = false
         var playerVolume: Double { player.isMuted ? 0.0 : Double(player.volume) }
@@ -246,7 +246,7 @@ extension AnimePlayerReducer.State {
 // MARK: Episode Properties
 
 extension AnimePlayerReducer.State {
-    var episode: AnyEpisodeRepresentable? {
+    public var episode: AnyEpisodeRepresentable? {
         if let episodes = episodes.value {
             return episodes[id: selectedEpisode]
         }

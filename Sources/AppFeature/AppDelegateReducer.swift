@@ -6,6 +6,7 @@
 //
 
 import SharedModels
+import DiscordClient
 import DatabaseClient
 import DownloaderClient
 import UserDefaultsClient
@@ -24,6 +25,7 @@ public struct AppDelegateReducer: ReducerProtocol {
         Reduce(self.core)
     }
 
+    @Dependency(\.discordClient) var discordClient
     @Dependency(\.downloaderClient) var downloaderClient
     @Dependency(\.userDefaultsClient) var userDefaultsClient
     @Dependency(\.databaseClient) var databaseClient
@@ -46,6 +48,14 @@ extension AppDelegateReducer {
                     .run { _ in
                         await downloaderClient.reset()
                         await userDefaultsClient.set(.hasClearedAllVideos, value: true)
+                    }
+                )
+            }
+
+            if userDefaultsClient.get(.canEnableDiscord) {
+                effects.append(
+                    .run {
+                        try await discordClient.setActive(true)
                     }
                 )
             }

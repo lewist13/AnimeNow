@@ -7,16 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1318EEE628D5374C00EB85FA /* AVKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1318EEE528D5374B00EB85FA /* AVKit.framework */; };
-		1318EEE828D5375100EB85FA /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1318EEE728D5375100EB85FA /* AVFoundation.framework */; };
 		1325FD6D2904F9BC00EA37D5 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1325FD6C2904F9BC00EA37D5 /* AppDelegate.swift */; };
 		136A08C629581714005375CF /* AppFeature in Frameworks */ = {isa = PBXBuildFile; productRef = 136A08C529581714005375CF /* AppFeature */; };
 		13820F16291429BA00CE431F /* UIApplication+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13820F15291429BA00CE431F /* UIApplication+Extension.swift */; };
 		13BAE88828F3A0AC00662C0C /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13BAE88728F3A0AC00662C0C /* SceneDelegate.swift */; };
 		13BAE88A28F3A22F00662C0C /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13BAE88928F3A22F00662C0C /* AppDelegate.swift */; };
 		13BAE88C28F3A66100662C0C /* AnimeNowHostingController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13BAE88B28F3A66100662C0C /* AnimeNowHostingController.swift */; };
-		13C1551E28FB7F300064885D /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 13C1551D28FB7F300064885D /* AVFoundation.framework */; };
-		13C1552028FB7F380064885D /* AVKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 13C1551F28FB7F380064885D /* AVKit.framework */; };
 		13C3536E28C308A000A54E7E /* AnimeNowApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13C3535A28C3089E00A54E7E /* AnimeNowApp.swift */; };
 		13EF1C492959A2CE00DDE449 /* AppFeature in Frameworks */ = {isa = PBXBuildFile; productRef = 13EF1C482959A2CE00DDE449 /* AppFeature */; };
 		13F83DBD2959AC5000B403F4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13F83DBC2959AC5000B403F4 /* Assets.xcassets */; };
@@ -24,18 +20,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		1318EEE528D5374B00EB85FA /* AVKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.5.sdk/System/Library/Frameworks/AVKit.framework; sourceTree = DEVELOPER_DIR; };
-		1318EEE728D5375100EB85FA /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.5.sdk/System/Library/Frameworks/AVFoundation.framework; sourceTree = DEVELOPER_DIR; };
 		1325FD6C2904F9BC00EA37D5 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		1373A7702957D2C0005CFA32 /* AnimeNow-App */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = "AnimeNow-App"; path = ..; sourceTree = "<group>"; };
 		13820F15291429BA00CE431F /* UIApplication+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIApplication+Extension.swift"; sourceTree = "<group>"; };
 		13938BAB28E0CADD001C8784 /* MainConfig.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = MainConfig.xcconfig; sourceTree = "<group>"; };
-		13BA64C8290CC018005C4A3F /* CloudKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CloudKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.5.sdk/System/Library/Frameworks/CloudKit.framework; sourceTree = DEVELOPER_DIR; };
 		13BAE88728F3A0AC00662C0C /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		13BAE88928F3A22F00662C0C /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		13BAE88B28F3A66100662C0C /* AnimeNowHostingController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimeNowHostingController.swift; sourceTree = "<group>"; };
-		13C1551D28FB7F300064885D /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
-		13C1551F28FB7F380064885D /* AVKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVKit.framework; path = System/Library/Frameworks/AVKit.framework; sourceTree = SDKROOT; };
 		13C3535A28C3089E00A54E7E /* AnimeNowApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimeNowApp.swift; sourceTree = "<group>"; };
 		13C3536228C308A000A54E7E /* Anime Now!.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Anime Now!.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		13C3536828C308A000A54E7E /* Anime Now!.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Anime Now!.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -50,9 +41,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1318EEE828D5375100EB85FA /* AVFoundation.framework in Frameworks */,
 				136A08C629581714005375CF /* AppFeature in Frameworks */,
-				1318EEE628D5374C00EB85FA /* AVKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -60,9 +49,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				13C1551E28FB7F300064885D /* AVFoundation.framework in Frameworks */,
 				13EF1C492959A2CE00DDE449 /* AppFeature in Frameworks */,
-				13C1552028FB7F380064885D /* AVKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -133,11 +120,6 @@
 		13FC21D628C39FA5000F0F79 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				13BA64C8290CC018005C4A3F /* CloudKit.framework */,
-				13C1551F28FB7F380064885D /* AVKit.framework */,
-				1318EEE728D5375100EB85FA /* AVFoundation.framework */,
-				13C1551D28FB7F300064885D /* AVFoundation.framework */,
-				1318EEE528D5374B00EB85FA /* AVKit.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -475,10 +457,6 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "macOS/anime-now-macos-info.plist";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-				);
 				MACOSX_DEPLOYMENT_TARGET = 11.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.errorerrorerror.anime-now";
 				PRODUCT_MODULE_NAME = AnimeNow;
@@ -508,10 +486,6 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "macOS/anime-now-macos-info.plist";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-				);
 				MACOSX_DEPLOYMENT_TARGET = 11.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.errorerrorerror.anime-now";
 				PRODUCT_MODULE_NAME = AnimeNow;

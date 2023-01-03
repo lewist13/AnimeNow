@@ -18,6 +18,7 @@ import CollectionsFeature
 import AnimeDetailFeature
 
 import DatabaseClient
+import DiscordClient
 import DownloaderClient
 import VideoPlayerClient
 
@@ -118,8 +119,9 @@ public struct AppReducer: ReducerProtocol {
     }
 
     @Dependency(\.mainQueue) var mainQueue
-    @Dependency(\.videoPlayerClient) var videoPlayerClient
+    @Dependency(\.discordClient) var discordClient
     @Dependency(\.databaseClient) var databaseClient
+    @Dependency(\.videoPlayerClient) var videoPlayerClient
     @Dependency(\.downloaderClient) var downloaderClient
 
     public var body: some ReducerProtocol<State, Action> {
@@ -174,6 +176,12 @@ extension AppReducer {
 
         case .setVideoPlayer(let item):
             state.videoPlayer = item
+            if item == nil {
+                print("Close player")
+                return .run {
+                    await discordClient.setActivity(nil)
+                }
+            }
 
         case .setAnimeDetail(let animeMaybe):
             if let anime = animeMaybe, state.animeDetail == nil {
@@ -250,6 +258,25 @@ extension AppReducer {
                 animation: .easeInOut(duration: 0.25)
             )
 
+        case .videoPlayer(.playerStatus(let status)):
+            struct ThrottleStatus: Hashable { }
+            if let videoState = state.videoPlayer {
+                let isPlaying = status == .playback(.playing)
+                return .run {
+                    await discordClient.setActivity(
+                        .watching(
+                            .init(
+                                name: videoState.anime.title,
+                                episode: videoState.episode?.title ?? "Episode \(videoState.selectedEpisode)",
+                                image: (videoState.episode?.thumbnail?.link ?? videoState.anime.posterImage.largest?.link)?.absoluteString ?? "logo",
+                                progress: isPlaying ? videoState.playerProgress : 0,
+                                duration: isPlaying ? videoState.playerDuration : 0
+                            )
+                        )
+                    )
+                }
+            }
+
         case .videoPlayer(.close):
             return .action(
                 .setVideoPlayer(nil)
@@ -274,13 +301,15 @@ extension AppReducer {
             }
 
         case .appDelegate(.appDidFinishLaunching):
-            return .run { send in
-                let downloadCounts = downloaderClient.count()
-
-                for await count in downloadCounts {
-                    await send(.setDownloadingCount(count))
+            return .merge(
+                .run { send in
+                    let downloadCounts = downloaderClient.count()
+                    
+                    for await count in downloadCounts {
+                        await send(.setDownloadingCount(count))
+                    }
                 }
-            }
+            )
 
         case .setModalOverlay(let overlay):
             state.modalOverlay = overlay
