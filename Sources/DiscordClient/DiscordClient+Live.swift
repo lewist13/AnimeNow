@@ -15,10 +15,9 @@ import ComposableArchitecture
 
 extension DiscordClient {
     public static let liveValue: Self = {
-        let animeNowAPI = AnimeNowAPI.shared
-
         let sword = SwordRPC(
-            appId: animeNowAPI.discordClientKey
+            appId: AnimeNowAPI.discordClientKey,
+            maxRetryCount: 0
         )
 
         return .init(

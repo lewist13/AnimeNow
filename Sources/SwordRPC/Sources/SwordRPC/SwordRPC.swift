@@ -44,10 +44,11 @@ public class SwordRPC {
         taskRunner = Task {
             await connect()
 
-            while retryCount < maxRetryCount {
+            while retryCount < maxRetryCount || maxRetryCount == 0 {
                 print("[SwordRPC] - Will retry to reconnect to Discord client in \(retryDuration) seconds")
                 try await Task.sleep(nanoseconds: .init((retryDuration) * 1_000_000_000))
                 await connect()
+                retryCount += 1
             }
 
             if retryCount > 0 {
