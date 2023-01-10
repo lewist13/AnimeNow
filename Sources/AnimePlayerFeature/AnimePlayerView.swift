@@ -12,15 +12,14 @@ import AVFoundation
 import SharedModels
 import ViewComponents
 import SettingsFeature
+import AnimeStreamLogic
 import DownloadOptionsFeature
 import ComposableArchitecture
 
 public struct AnimePlayerView: View {
     let store: StoreOf<AnimePlayerReducer>
 
-    public init(
-        store: StoreOf<AnimePlayerReducer>
-    ) {
+    public init(store: StoreOf<AnimePlayerReducer>) {
         self.store = store
     }
 
@@ -146,10 +145,10 @@ extension AnimePlayerView {
 
             if isMovie {
                 self.title = state.anime.title
-                self.header = (state.episodes.value?.count ?? 0) > 1 ? "E\(state.selectedEpisode)" : nil
+                self.header = (state.stream.streamingProvider?.episodes.count ?? 0) > 1 ? "E\(state.stream.selectedEpisode)" : nil
             } else {
                 self.title = state.episode?.title ?? "Loading..."
-                self.header = "E\(state.selectedEpisode) \u{2022} \(state.anime.title)"
+                self.header = "E\(state.stream.selectedEpisode) \u{2022} \(state.anime.title)"
             }
         }
     }
@@ -228,7 +227,7 @@ extension AnimePlayerView {
                             .black,
                             .white
                         ) {
-                            viewState.send(.selectEpisode(id))
+                            viewState.send(.stream(.selectEpisode(id)))
                         }
 
                     case .none:
@@ -344,9 +343,9 @@ extension AnimePlayerView {
     var subtitlesButton: some View {
         WithViewStore(
             store,
-            observe: { ($0.sourcesOptions.value?.subtitles.count ?? 0) > 0}
+            observe: { $0.stream.sourceOptions.map(\.subtitles) }
         ) { viewStore in
-            if viewStore.state {
+            if (viewStore.value?.count ?? 0) > 0 {
                 Image(systemName: "captions.bubble.fill")
                     .foregroundColor(Color.white)
                     .font(.title2)
@@ -378,7 +377,7 @@ extension AnimePlayerView {
                 .contentShape(Rectangle())
                 .onTapGesture {
                     if let nextEpisode = viewState.state {
-                        viewState.send(.selectEpisode(nextEpisode.id))
+                        viewState.send(.stream(.selectEpisode(nextEpisode.id)))
                     }
                 }
                 .disabled(viewState.state == nil)
@@ -389,7 +388,7 @@ extension AnimePlayerView {
     var episodesButton: some View {
         WithViewStore(
             store,
-            observe: { ($0.episodes.value?.count ?? 0) > 1 }
+            observe: { ($0.stream.streamingProvider?.episodes.count ?? 0) > 1 }
         ) { viewState in
             if viewState.state {
                 Button {
@@ -442,7 +441,7 @@ extension AnimePlayerView {
         let duration: Double
 
         init(_ state: AnimePlayerReducer.State) {
-            if let subtitles = state.sourcesOptions.value?.subtitles,
+            if let subtitles = state.stream.sourceOptions.value?.subtitles,
                let selected = state.selectedSubtitle,
                let subtitle = subtitles[id: selected] {
                 self.subtitle = subtitle.url
@@ -478,14 +477,14 @@ extension AnimePlayerView {
 extension AnimePlayerView {
     struct EpisodesOverlayViewState: Equatable {
         let isVisible: Bool
-        let episodes: AnimePlayerReducer.LoadableEpisodes
+        let episodes: [AnyEpisodeRepresentable]
         let selectedEpisode: Episode.ID
         let episodesStore: [EpisodeStore]
 
         init(_ state: AnimePlayerReducer.State) {
             self.isVisible = state.selectedSidebar == .episodes
-            self.episodes = state.episodes
-            self.selectedEpisode = state.selectedEpisode
+            self.episodes = state.stream.streamingProvider?.episodes.map { $0.eraseAsRepresentable() } ?? []
+            self.selectedEpisode = state.stream.selectedEpisode
             self.episodesStore = .init()
         }
     }
@@ -560,7 +559,7 @@ extension AnimePlayerView {
 extension AnimePlayerView {
     private struct SettingsViewState: Equatable {
         let selectedSetting: AnimePlayerReducer.Sidebar.SettingsState.Section?
-        let videoPreferece: VideoOptionsViewState
+        let stream: AnimeStreamViewState
 
         init(_ state: AnimePlayerReducer.State) {
             if case .settings(let item) = state.selectedSidebar {
@@ -569,7 +568,7 @@ extension AnimePlayerView {
                 self.selectedSetting = nil
             }
 
-            videoPreferece = .init(state)
+            stream = .init(state.stream)
         }
     }
 }
@@ -592,62 +591,74 @@ extension AnimePlayerView {
                     switch item {
                     case .provider:
                         SettingsListView(
-                            items: viewState.videoPreferece.selectableProviders,
-                            selected: viewState.state.videoPreferece.selectedProvider
+                            items: viewState.stream.availableProviders.items,
+                            selected: viewState.stream.availableProviders.selected
                         ) { id in
-                            viewState.send(.selectProvider(id))
-                        }
-
-                    case .quality:
-                        SettingsListView(
-                            items: viewState.state.videoPreferece.selectableQualities,
-                            selected: viewState.state.videoPreferece.selectedSource
-                        ) { id in
-                            viewState.send(.selectSource(id))
+                            if viewState.stream.availableProviders.selected != id {
+                                viewState.send(.stream(.selectProvider(id)))
+                            }
                         }
 
                     case .audio:
                         SettingsListView(
-                            items: viewState.state.videoPreferece.selectableAudio,
-                            selected: viewState.state.videoPreferece.selectedProvider
+                            items: viewState.stream.links.items,
+                            selected: viewState.stream.links.selected
                         ) { id in
-                            viewState.send(.selectAudio(id))
+                            if viewState.stream.links.selected != id {
+                                viewState.send(.stream(.selectLink(id)))
+                            }
+                        }
+
+                    case .quality:
+                        SettingsListView(
+                            items: viewState.stream.sources.items,
+                            selected: viewState.stream.sources.selected
+                        ) { id in
+                            if viewState.stream.sources.selected != id {
+                                viewState.send(.stream(.selectSource(id)))
+                            }
                         }
 
                     case .subtitleOptions:
                         EmptyView()
                     }
                 } else {
-                    VStack(alignment: .leading, spacing: 8) {
+                    LazyVStack(alignment: .leading, spacing: 8) {
                         SettingsRowView(
                             name: "Provider",
-                            text: viewState.videoPreferece.provider?.description ?? ""
+                            text: viewState.stream.availableProviders.item?.name ??
+                                (viewState.stream.availableProviders.items.count > 0 ? "Not Selected" : "Unavailable")
                         ) {
                             viewState.send(.selectSidebarSettings(.provider))
                         }
-                        .loading(viewState.state.videoPreferece.isLoadingProviders)
-                        .multiSelection(viewState.videoPreferece.selectableProviders.count > 1)
-                        .disabled(viewState.videoPreferece.selectableProviders.count <= 1)
+                        .multiSelection(viewState.stream.availableProviders.items.count > 1)
+                        .disabled(viewState.stream.availableProviders.items.count <= 1)
 
                         SettingsRowView(
                             name: "Audio",
-                            text: viewState.videoPreferece.audio?.description ?? ""
+                            text: viewState.stream.links.item?.audio.description ??
+                                (viewState.stream.links.items.count > 0 ? "Not Selected" : "Unavailable")
                         ) {
                             viewState.send(.selectSidebarSettings(.audio))
                         }
-                        .loading(viewState.state.videoPreferece.isLoadingProviders)
-                        .multiSelection(viewState.videoPreferece.selectableAudio.count > 1)
-                        .disabled(viewState.videoPreferece.selectableAudio.count <= 1)
+                        .loading(viewState.stream.loadingLink)
+                        .multiSelection(viewState.stream.links.items.count > 1)
+                        .disabled(viewState.stream.links.items.count <= 1)
 
                         SettingsRowView(
                             name: "Quality",
-                            text: viewState.videoPreferece.quality?.description ?? ""
+                            text: viewState.stream.sources.item?.quality.description ??
+                                (viewState.stream.sources.items.count > 0 ? "Not Selected" : "Unavailable")
                         ) {
                             viewState.send(.selectSidebarSettings(.quality))
                         }
-                        .loading(viewState.state.videoPreferece.isLoadingSources)
-                        .multiSelection(viewState.videoPreferece.selectableQualities.count > 1)
-                        .disabled(viewState.videoPreferece.selectableQualities.count <= 1)
+                        .loading(
+                            viewState.stream.loadingLink ?
+                                true : viewState.stream.links.items.count > 0 ?
+                                viewState.stream.loadingSource : false
+                        )
+                        .multiSelection(viewState.stream.sources.items.count > 1)
+                        .disabled(viewState.stream.sources.items.count <= 1)
                     }
                 }
             }
@@ -664,11 +675,11 @@ extension AnimePlayerView {
 
 extension AnimePlayerView {
     struct SubtitlesViewState: Equatable {
-        let subtitles: [Source.Subtitle]?
-        let selected: Source.Subtitle.ID?
+        let subtitles: [SourcesOptions.Subtitle]?
+        let selected: SourcesOptions.Subtitle.ID?
 
         init(_ state: AnimePlayerReducer.State) {
-            self.subtitles = state.sourcesOptions.value?.subtitles
+            self.subtitles = state.stream.sourceOptions.value?.subtitles
             self.selected = state.selectedSubtitle
         }
     }
@@ -719,19 +730,6 @@ extension AnimePlayerView {
     }
 }
 
-extension VideoOptionsViewState {
-    init(_ state: AnimePlayerReducer.State) {
-        self.init(
-            isLoadingProviders: !state.episodes.finished,
-            isLoadingSources: !state.sourcesOptions.finished,
-            providers: state.episode?.providers ?? [],
-            sources: state.sourcesOptions.value?.sources ?? [],
-            selectedProvider: state.selectedProvider,
-            selectedSource: state.selectedSource
-        )
-    }
-}
-
 struct VideoPlayerView_Previews: PreviewProvider {
     static var previews: some View {
         if #available(iOS 15.0, macOS 12.0, *) {
@@ -740,7 +738,11 @@ struct VideoPlayerView_Previews: PreviewProvider {
                     initialState: .init(
                         player: .init(),
                         anime: Anime.narutoShippuden,
-                        episodes: .init(Episode.demoEpisodes.map({ $0.eraseAsRepresentable() })),
+                        availableProviders: .init(items: []),
+                        streamingProvider: .init(
+                            name: "Offline",
+                            episodes: Episode.demoEpisodes
+                        ),
                         selectedEpisode: Episode.demoEpisodes.first!.id
                     ),
                     reducer: AnimePlayerReducer()

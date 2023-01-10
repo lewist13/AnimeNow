@@ -87,9 +87,11 @@ public struct AppView: View {
                 store.scope(
                     state: \.animeDetail,
                     action: AppReducer.Action.animeDetail
-                ),
-                then: AnimeDetailView.init
-            )
+                )
+            ) {
+                AnimeDetailView(store: $0)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
         )
         .overlay(
             IfLetStore(

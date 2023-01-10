@@ -213,14 +213,14 @@ extension AnimePlayerView {
                             Spacer()
                         }
 
-                        if let episodes = viewState.episodes.value, episodes.count > 0 {
+                        if viewState.episodes.count > 0 {
                             ScrollViewReader { proxy in
                                 ScrollView(
                                     .horizontal,
                                     showsIndicators: false
                                 ) {
                                     LazyHStack {
-                                        ForEach(episodes) { episode in
+                                        ForEach(viewState.episodes) { episode in
                                             ThumbnailItemBigView(
                                                 episode: episode,
                                                 progress: viewState.episodesStore.first(where: { $0.number == episode.number })?.progress,
@@ -229,7 +229,7 @@ extension AnimePlayerView {
                                             )
                                             .onTapGesture {
                                                 if viewState.selectedEpisode != episode.id {
-                                                    viewState.send(.selectEpisode(episode.id))
+                                                    viewState.send(.stream(.selectEpisode(episode.id)))
                                                 }
                                             }
                                             .id(episode.id)
@@ -255,8 +255,6 @@ extension AnimePlayerView {
                                     }
                                 }
                             }
-                        } else if viewState.episodes.isLoading {
-                            loadingView
                         }
 
                         Spacer()
@@ -362,7 +360,7 @@ struct VideoPlayerViewiOS_Previews: PreviewProvider {
                     initialState: .init(
                         player: .init(),
                         anime: Anime.narutoShippuden,
-                        episodes: .init(Episode.demoEpisodes.map({ $0.eraseAsRepresentable() })),
+                        availableProviders: .init(items: []),
                         selectedEpisode: Episode.demoEpisodes.first!.id
                     ),
                     reducer: AnimePlayerReducer()

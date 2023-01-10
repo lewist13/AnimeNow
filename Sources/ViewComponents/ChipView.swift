@@ -7,30 +7,36 @@
 
 import SwiftUI
 
-public struct ChipView<Label: View>: View {
+public struct ChipView<Accessory: View>: View {
     let text: String
-    var image: (() -> Label)?
+    var accessory: (() -> Accessory)?
 
     public init(
         text: String,
-        image: (() -> Label)? = nil
+        accessory: (() -> Accessory)? = nil
     ) {
         self.text = text
-        self.image = image
+        self.accessory = accessory
     }
 
     public var body: some View {
         HStack(
             alignment: .center,
-            spacing: 4
+            spacing: 8
         ) {
-            image?()
+            accessory?()
             Text(text)
         }
         .padding(.horizontal)
         .padding(.vertical, 10)
-        .background(Color.gray.opacity(0.25))
+        .background(Capsule().foregroundColor(.gray).opacity(0.25))
         .clipShape(Capsule())
+    }
+}
+
+extension ChipView where Accessory == EmptyView {
+    public init(text: String) {
+        self.init(text: text, accessory: nil)
     }
 }
 
@@ -38,14 +44,8 @@ struct ChipView_Previews: PreviewProvider {
     static var previews: some View {
         ChipView(
             text: "2021",
-            image: { Image(systemName: "star.fill") }
+            accessory: { Image(systemName: "star.fill") }
         )
         .preferredColorScheme(.dark)
-    }
-}
-
-extension ChipView where Label == EmptyView {
-    public init(text: String) {
-        self.init(text: text, image: nil)
     }
 }

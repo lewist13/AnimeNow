@@ -23,7 +23,7 @@ public extension NSPersistentContainer {
         } else {
             return try await withUnsafeThrowingContinuation { continuation in
                 continuation.resume(
-                    with: .init(catching: { try context.execute(action) })
+                    with: .init { try context.execute(action) }
                 )
             }
         }

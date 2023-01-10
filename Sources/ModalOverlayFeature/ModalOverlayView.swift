@@ -16,9 +16,7 @@ import ComposableArchitecture
 public struct ModalOverlayView: View {
     let store: StoreOf<ModalOverlayReducer>
 
-    public init(
-        store: StoreOf<ModalOverlayReducer>
-    ) {
+    public init(store: StoreOf<ModalOverlayReducer>) {
         self.store = store
     }
 

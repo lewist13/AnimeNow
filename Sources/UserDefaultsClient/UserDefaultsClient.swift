@@ -108,7 +108,7 @@ public extension UserDefaultsClient {
     }
 
     func `get`<T: Codable>(_ key: Key<T>) -> T? {
-        try? self.dataForKey(key.key)?.toObject()
+        try? self.dataForKey(key.key)?.toObject() ?? key.defaultValue
     }
 }
 

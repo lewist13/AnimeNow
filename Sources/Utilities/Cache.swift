@@ -31,6 +31,13 @@ public final class Cache<Key: Hashable, Value> {
         wrapped.setObject(entry, forKey: WrappedKey(key))
         keyTracker.keys.insert(key)
     }
+
+    public func update(_ value: Value, forKey key: Key) {
+        if self.value(forKey: key) != nil {
+            removeValue(forKey: key)
+        }
+        insert(value, forKey: key)
+    }
     
     public func value(forKey key: Key) -> Value? {
         guard let entry = wrapped.object(forKey: WrappedKey(key)) else {

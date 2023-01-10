@@ -20,7 +20,6 @@ public struct VideoPlayer {
 
     private let player: AVPlayer
     private var onPictureInPictureStatusChangedCallback: ((PIPStatus) -> Void)? = nil
-    private var onVideoGravityChangedCallback: ((Gravity) -> Void)? = nil
 
     public init(
         player: AVPlayer,
@@ -132,14 +131,6 @@ extension VideoPlayer {
         view.onPictureInPictureStatusChangedCallback = callback
         return view
     }
-
-    public func onVideoGravityChanged(
-        _ callback: @escaping (Gravity) -> Void
-    ) -> Self {
-        var view = self
-        view.onVideoGravityChangedCallback = callback
-        return view
-    }
 }
 
 extension VideoPlayer {
@@ -166,11 +157,11 @@ extension VideoPlayer {
             }
         }
 
-        init(
-            player: AVPlayer
-        ) {
+        init(player: AVPlayer) {
             super.init(frame: .zero)
-            configureInit()
+            #if os(macOS)
+            self.wantsLayer = true
+            #endif
             self.player = player
         }
 
@@ -181,15 +172,7 @@ extension VideoPlayer {
 }
 
 extension VideoPlayer.PlayerView {
-    private func configureInit() {
-        #if os(macOS)
-        self.wantsLayer = true
-        #endif
-    }
-
-    func updatePlayer(
-        _ player: AVPlayer
-    ) {
+    func updatePlayer(_ player: AVPlayer) {
         self.player = player
     }
 }

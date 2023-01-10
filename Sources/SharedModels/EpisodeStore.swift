@@ -7,13 +7,13 @@
 
 import Foundation
 
-public struct EpisodeStore: EpisodeRepresentable, Hashable, Codable {
+public struct EpisodeStore: EpisodeRepresentable, Hashable, Codable, Identifiable {
     public var id = UUID()
     public var number: Int = 0
     public var title: String = ""
     public var thumbnail: ImageSize? = nil
     public var isFiller: Bool { false }
-    public var providers: [Provider] { [] }
+    public var links: Set<EpisodeLink> { [] }
 
     // Database Only
 

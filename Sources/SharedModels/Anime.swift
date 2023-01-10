@@ -147,7 +147,7 @@ public extension Anime {
     )
 
     static let attackOnTitan = Anime(
-        id: 1,
+        id: 16498,
         malId: 0,
         title: "Attack on Titan",
         description: "Centuries ago, mankind was slaughtered to near extinction by monstrous humanoid creatures called titans.",

@@ -5,141 +5,16 @@
 //  
 
 import SwiftUI
+import Utilities
 import SharedModels
 import SettingsFeature
+import AnimeStreamLogic
 import ComposableArchitecture
-
-public struct VideoOptionsViewState: Equatable {
-    public let selectedProvider: Provider.ID?
-    public let selectedSource: Source.ID?
-
-    public let isLoadingProviders: Bool
-    public let isLoadingSources: Bool
-
-    private let providers: [Provider]
-    private let sources: [Source]
-
-    public var isLoading: Bool {
-        isLoadingProviders || isLoadingSources
-    }
-
-    public var provider: Provider? {
-        if let selectedProvider = selectedProvider {
-            return providers[id: selectedProvider]
-        }
-        return nil
-    }
-
-    public var selectableProviders: [Provider] {
-        var returnVal = [Provider]()
-
-        if let selectedProvider = self.provider {
-            returnVal.append(selectedProvider)
-        }
-        
-        for provider in providers {
-            if !returnVal.contains(
-                where: { $0.description == provider.description }
-            ) {
-                returnVal.append(provider)
-            }
-        }
-        
-        return returnVal
-    }
-
-    public struct IdentifiedQuality: Equatable, Identifiable, CustomStringConvertible {
-        public let id: Source.ID
-        public let quality: Source.Quality
-
-        init(_ source: Source) {
-            self.id = source.id
-            self.quality = source.quality
-        }
-
-        public var description: String {
-            quality.description
-        }
-    }
-
-    public var selectableQualities: [IdentifiedQuality] {
-        return sources.map(IdentifiedQuality.init)
-    }
-
-    public var quality: IdentifiedQuality? {
-        if let selectedSource = selectedSource {
-            return selectableQualities[id: selectedSource]
-        }
-        return nil
-    }
-
-    public struct IdentifiedAudio: Equatable, Identifiable, CustomStringConvertible {
-        public let id: Provider.ID
-        public let language: String
-
-        public init(_ provider: Provider) {
-            self.id = provider.id
-            self.language = (provider.dub ?? false) ? "English" : "Japanese"
-        }
-
-        public var description: String {
-            language
-        }
-    }
-
-    public var selectableAudio: [IdentifiedAudio] {
-        if let provider = provider {
-            return providers.filter {
-                $0.description == provider.description
-            }
-            .map(IdentifiedAudio.init)
-        }
-        return []
-    }
-
-    public var audio: IdentifiedAudio? {
-        if let provider = provider {
-            return selectableAudio[id: provider.id]
-        }
-        return nil
-    }
-
-    public init(
-        isLoadingProviders: Bool,
-        isLoadingSources: Bool,
-        providers: [Provider],
-        sources: [Source],
-        selectedProvider: Provider.ID? = nil,
-        selectedSource: Source.ID? = nil
-    ) {
-        self.isLoadingProviders = isLoadingProviders
-        self.isLoadingSources = isLoadingSources
-        self.providers = providers
-        self.sources = sources
-        self.selectedProvider = selectedProvider
-        self.selectedSource = selectedSource
-    }
-}
-
-extension VideoOptionsViewState {
-    init(_ state: DownloadOptionsReducer.State) {
-        self.init(
-            isLoadingProviders: !state.providers.finished,
-            isLoadingSources: !state.sources.finished,
-            providers: state.providers.value ?? [],
-            sources: state.sources.value ?? [],
-            selectedProvider: state.providerSelected,
-            selectedSource: state.sourceSelected
-        )
-    }
-}
 
 public struct DownloadOptionsView: View {
     let store: StoreOf<DownloadOptionsReducer>
 
-    public init(
-        store: StoreOf<DownloadOptionsReducer>
-    ) {
+    public init(store: StoreOf<DownloadOptionsReducer>) {
         self.store = store
     }
 
@@ -162,46 +37,49 @@ public struct DownloadOptionsView: View {
             LazyVStack(spacing: 8) {
                 WithViewStore(
                     store,
-                    observe: VideoOptionsViewState.init
+                    observe: { AnimeStreamViewState($0.stream) }
                 ) { viewState in
                     Group {
-                        SettingsRowExpandableListView(items: viewState.selectableProviders) {
+                        SettingsRowExpandableListView(items: viewState.availableProviders.items) {
                             SettingsRowView(
                                 name: "Provider",
-                                text: viewState.provider?.description ?? ""
+                                text: viewState.availableProviders.item?.name ?? (viewState.availableProviders.items.count > 0 ? "Not Selected" : "Unavailable")
                             )
-                            .loading(viewState.isLoadingProviders)
-                            .multiSelection(viewState.selectableProviders.count > 1)
+                            .multiSelection(viewState.availableProviders.items.count > 1)
                         } itemView: { item in
-                            Text(item.description)
+                            Text(item.name)
                         } selectedItem: {
-                            viewState.send(.selectProvider($0))
+                            viewState.send(.animeStream(.selectProvider($0)))
                         }
 
-                        SettingsRowExpandableListView(items: viewState.selectableAudio) {
+                        SettingsRowExpandableListView(items: viewState.links.items) {
                             SettingsRowView(
                                 name: "Audio",
-                                text: viewState.audio?.language ?? ""
+                                text: viewState.links.item?.audioDescription ?? (viewState.links.items.count > 0 ? "Not Selected" : "Unavailable")
                             )
-                            .loading(viewState.isLoadingProviders)
-                            .multiSelection(viewState.selectableAudio.count > 1)
+                            .loading(viewState.loadingLink)
+                            .multiSelection(viewState.links.items.count > 1)
                         } itemView: { item in
-                            Text(item.description)
+                            Text(item.audioDescription)
                         } selectedItem: {
-                            viewState.send(.selectProvider($0))
+                            viewState.send(.animeStream(.selectLink($0)))
                         }
 
-                        SettingsRowExpandableListView(items: viewState.selectableQualities) {
+                        SettingsRowExpandableListView(items: viewState.sources.items) {
                             SettingsRowView(
                                 name: "Quality",
-                                text: viewState.quality?.description ?? ""
+                                text: viewState.sources.item?.quality.description ?? (viewState.sources.items.count > 0 ? "Not Selected" : "Unavailable")
                             )
-                            .loading(viewState.isLoadingSources)
-                            .multiSelection(viewState.selectableQualities.count > 1)
+                            .loading(
+                                viewState.loadingLink ?
+                                    true : viewState.links.items.count > 0 ?
+                                    viewState.loadingSource : false
+                            )
+                            .multiSelection(viewState.sources.items.count > 1)
                         } itemView: { item in
-                            Text(item.description)
+                            Text(item.quality.description)
                         } selectedItem: {
-                            viewState.send(.selectSource($0))
+                            viewState.send(.animeStream(.selectSource($0)))
                         }
                     }
                     .animation(.easeInOut, value: viewState.state)
@@ -240,9 +118,14 @@ struct DownloadOptionsView_Previews: PreviewProvider {
             store: .init(
                 initialState: .init(
                     anime: Anime.attackOnTitan,
-                    episode: Episode.placeholder
+                    episodeId: 1,
+                    availableProviders: .init(
+                        items: [
+                            .init(name: "Gogoanime")
+                        ]
+                    )
                 ),
-                reducer: EmptyReducer()
+                reducer: DownloadOptionsReducer()
             )
         )
         .padding(24)

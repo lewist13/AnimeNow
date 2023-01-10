@@ -36,6 +36,7 @@ let package = Package(
 
         /// Other
         .library(name: "AnyPublisherStream", targets: ["AnyPublisherStream"]),
+        .library(name: "AnimeStreamLogic", targets: ["AnimeStreamLogic"]),
         .library(name: "SharedModels", targets: ["SharedModels"]),
         .library(name: "Utilities", targets: ["Utilities"]),
         .library(name: "ViewComponents", targets: ["ViewComponents"]),
@@ -58,6 +59,7 @@ let package = Package(
             name: "AnimeDetailFeature",
             dependencies: [
                 "AnimeClient",
+                "AnimeStreamLogic",
                 "DatabaseClient",
                 "DownloaderClient",
                 "Logger",
@@ -73,6 +75,7 @@ let package = Package(
             name: "AnimePlayerFeature",
             dependencies: [
                 "AnimeClient",
+                "AnimeStreamLogic",
                 "DatabaseClient",
                 "DownloadOptionsFeature",
                 "Logger",
@@ -120,6 +123,7 @@ let package = Package(
             name: "DownloadOptionsFeature",
             dependencies: [
                 "AnimeClient",
+                "AnimeStreamLogic",
                 "DownloaderClient",
                 "SettingsFeature",
                 "SharedModels",
@@ -266,12 +270,25 @@ let package = Package(
             name: "VideoPlayerClient",
             dependencies: [
                 "AnyPublisherStream",
+                "SharedModels",
+                "Utilities",
+                "Logger",
                 .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
                 .product(name: "Kingfisher", package: "Kingfisher")
             ]
         ),
 
         /// Other
+        .target(
+            name: "AnimeStreamLogic",
+            dependencies: [
+                "AnimeClient",
+                "SharedModels",
+                "Utilities",
+                "UserDefaultsClient",
+                .product(name: "ComposableArchitecture", package: "swift-composable-architecture")
+            ]
+        ),
         .target(
             name: "SharedModels",
             dependencies: [
@@ -299,7 +316,12 @@ let package = Package(
         .target(name: "Logger"),
 
         // Test Targets
-
+        .testTarget(
+            name: "AnimeClientTests",
+            dependencies: [
+                "AnimeClient"
+            ]
+        ),
         .testTarget(
             name: "VideoPlayerClientTests",
             dependencies: [

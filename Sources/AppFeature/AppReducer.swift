@@ -92,10 +92,11 @@ public struct AppReducer: ReducerProtocol {
 
         var videoPlayer: AnimePlayerReducer.State?
         var animeDetail: AnimeDetailReducer.State?
-
         var modalOverlay: ModalOverlayReducer.State?
 
         var totalDownloadsCount = 0
+
+        var animeProviders = [ProviderInfo]()
 
         public init() { }
     }
@@ -115,9 +116,11 @@ public struct AppReducer: ReducerProtocol {
         case videoPlayer(AnimePlayerReducer.Action)
         case animeDetail(AnimeDetailReducer.Action)
         case modalOverlay(ModalOverlayReducer.Action)
+        case fetchedAnimeProviders(TaskResult<[ProviderInfo]>)
         case binding(BindingAction<State>)
     }
 
+    @Dependency(\.apiClient) var apiClient
     @Dependency(\.mainQueue) var mainQueue
     @Dependency(\.discordClient) var discordClient
     @Dependency(\.databaseClient) var databaseClient
@@ -196,16 +199,19 @@ extension AppReducer {
             return .action(
                 .setAnimeDetail(
                     .init(
-                        anime: anime
+                        anime: anime,
+                        availableProviders: state.animeProviders
                     )
                 ),
                 animation: .interactiveSpring(response: 0.35, dampingFraction: 1.0)
             )
+
         case let .collection(.onAnimeTapped(anime)):
             return .action(
                 .setAnimeDetail(
                     .init(
-                        anime: anime
+                        anime: anime,
+                        availableProviders: state.animeProviders
                     )
                 ),
                 animation: .interactiveSpring(response: 0.35, dampingFraction: 1.0)
@@ -213,7 +219,12 @@ extension AppReducer {
 
         case let .home(.anyAnimeTapped(anime)):
             return .action(
-                .setAnimeDetail(.init(anime: anime)),
+                .setAnimeDetail(
+                    .init(
+                        anime: anime,
+                        availableProviders: state.animeProviders
+                    )
+                ),
                 animation: .interactiveSpring(response: 0.35, dampingFraction: 1.0)
             )
 
@@ -223,18 +234,20 @@ extension AppReducer {
                     .init(
                         player: videoPlayerClient.player(),
                         anime: resumeWatching.animeStore,
+                        availableProviders: .init(items: state.animeProviders),
                         selectedEpisode: Episode.ID(resumeWatching.episodeStore.number)
                     )
                 )
             )
 
-        case let .animeDetail(.play(anime, episodes, selected)):
+        case let .animeDetail(.play(anime, streamingProvider, selected)):
             return .action(
                 .setVideoPlayer(
                     .init(
                         player: videoPlayerClient.player(),
                         anime: anime,
-                        episodes: episodes,
+                        availableProviders: .init(items: state.animeProviders, selected: streamingProvider.name),
+                        streamingProvider: streamingProvider,
                         selectedEpisode: selected
                     )
                 )
@@ -246,7 +259,11 @@ extension AppReducer {
                     .init(
                         player: videoPlayerClient.player(),
                         anime: anime,
-                        episodes: episodes,
+                        availableProviders: .init(items: [.init(name: "Offline")], selected: "Offline"),
+                        streamingProvider: .init(
+                            name: "Offline",
+                            episodes: episodes.map { .init(title: $0.title, number: $0.number, description: "", isFiller: false, links: $0.links) }
+                        ),
                         selectedEpisode: selected
                     )
                 )
@@ -267,7 +284,7 @@ extension AppReducer {
                         .watching(
                             .init(
                                 name: videoState.anime.title,
-                                episode: videoState.episode?.title ?? "Episode \(videoState.selectedEpisode)",
+                                episode: videoState.episode?.title ?? "Episode \(videoState.stream.selectedEpisode)",
                                 image: (videoState.episode?.thumbnail?.link ?? videoState.anime.posterImage.largest?.link)?.absoluteString ?? "logo",
                                 progress: isPlaying ? videoState.playerProgress : 0,
                                 duration: isPlaying ? videoState.playerDuration : 0
@@ -304,10 +321,15 @@ extension AppReducer {
             return .merge(
                 .run { send in
                     let downloadCounts = downloaderClient.count()
-                    
+
                     for await count in downloadCounts {
                         await send(.setDownloadingCount(count))
                     }
+                },
+                .run {
+                    await .fetchedAnimeProviders(
+                        TaskResult { try await apiClient.request(.consumetAPI, .listProviders(of: .ANIME)) }
+                    )
                 }
             )
 
@@ -327,14 +349,16 @@ extension AppReducer {
                 animation: .spring(response: 0.35, dampingFraction: 1)
             )
 
-        case .animeDetail(.downloadEpisode(let episode)):
-            guard let anime = state.animeDetail?.anime.value else { break }
+        case .animeDetail(.downloadEpisode(let episodeId)):
+            guard let availableProviders = state.animeDetail?.stream.availableProviders,
+                  let anime = state.animeDetail?.anime.value else { break }
             return .action(
                 .setModalOverlay(
                     .downloadOptions(
                         .init(
                             anime: anime,
-                            episode: episode
+                            episodeId: episodeId,
+                            availableProviders: availableProviders
                         )
                     )
                 ),
@@ -361,10 +385,12 @@ extension AppReducer {
             }
 
         case .modalOverlay(.downloadOptions(.downloadClicked)):
-            if case let .downloadOptions(downloadState) = state.modalOverlay, let source = downloadState.source {
+            if case let .downloadOptions(downloadState) = state.modalOverlay,
+               let episode = downloadState.stream.episode?.eraseAsRepresentable(),
+               let source = downloadState.stream.source {
                 let downloadItem = DownloaderClient.Request(
-                    anime: downloadState.anime.eraseAsRepresentable(),
-                    episode: downloadState.episode.eraseAsRepresentable(),
+                    anime: downloadState.anime,
+                    episode: episode,
                     source: source
                 )
                 downloaderClient.download(downloadItem)
@@ -391,6 +417,13 @@ extension AppReducer {
 
         case .modalOverlay(.onClose):
             return .action(.setModalOverlay(nil), animation: .spring(response: 0.35, dampingFraction: 1))
+
+        case .fetchedAnimeProviders(.success(let providers)):
+            state.animeProviders = providers
+
+        case .fetchedAnimeProviders(.failure(let error)):
+            state.animeProviders = []
+            print(error)
 
         default:
             break

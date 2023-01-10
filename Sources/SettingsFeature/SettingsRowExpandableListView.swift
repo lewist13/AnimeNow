@@ -38,6 +38,7 @@ public struct SettingsRowExpandableListView<T: Equatable & Identifiable, I: View
                         expand.toggle()
                     }
                 }
+                .disabled(items.count <= 1)
 
             if expand {
                 ForEach(items, id: \.id) { item in

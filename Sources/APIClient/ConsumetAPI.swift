@@ -20,15 +20,15 @@ extension Request where Route == ConsumetAPI {
     public static func anilistEpisodes(
         animeId: Int,
         dub: Bool,
-        provider: ConsumetAPI.Provider,
-        fetchFiller: Bool = false
+        provider: String,
+        fetchFiller: Bool = true
     ) -> Request<Route, [ConsumetAPI.Episode]> {
         .init(
             path: ["meta", "anilist", "episodes", animeId],
             query: [
-                .init(name: "dub", value: dub),
-                .init(name: "provider", value: provider.rawValue),
-                .init(name: "fetchFiller", value: fetchFiller)
+                .init(name: "dub", dub),
+                .init(name: "provider", provider.lowercased()),
+                .init(name: "fetchFiller", fetchFiller)
             ]
         )
     }
@@ -36,22 +36,33 @@ extension Request where Route == ConsumetAPI {
     public static func anilistWatch(
         episodeId: String,
         dub: Bool,
-        provider: ConsumetAPI.Provider
+        provider: String
     ) -> Request<Route, ConsumetAPI.StreamingLinksPayload> {
         .init(
             path: ["meta", "anilist", "watch", episodeId],
             query: [
-                .init(name: "dub", value: dub),
-                .init(name: "provider", value: provider.rawValue),
+                .init(name: "dub", dub),
+                .init(name: "provider", provider),
+            ]
+        )
+    }
+
+    public static func listProviders(
+        of type: ConsumetAPI.ProviderType = .ANIME
+    ) -> Request<Route, [ProviderInfo]> {
+        .init(
+            path: ["utils", "providers"],
+            query: [
+                .init(name: "type", type.rawValue)
             ]
         )
     }
 }
 
 extension ConsumetAPI {
-    public enum Provider: String, CaseIterable, Decodable {
-        case gogoanime
-        case zoro
+    public enum ProviderType: String {
+        case ANIME
+        case MANGA
     }
 
     public struct Anime: Equatable, Decodable {
@@ -68,6 +79,7 @@ extension ConsumetAPI {
         public let id: String
         public let number: Int
         public let title: String?
+        public let type: String?
         public let image: String?
         public let description: String?
         public let isFiller: Bool?
@@ -82,8 +94,9 @@ extension ConsumetAPI {
 
     public struct StreamingLink: Decodable {
         let url: String
-        let isM3U8: Bool
-        let quality: String
+        let isM3U8: Bool?
+        let isDASH: Bool?
+        let quality: String?
     }
 
     public struct Subtitle: Decodable {
@@ -97,50 +110,74 @@ extension ConsumetAPI {
     }
 }
 
+extension Source.Quality {
+    fileprivate init?(
+        _ quality: String
+    ) {
+        if let matched = Self.allCases.first(where: { $0.description.localizedCaseInsensitiveContains(quality) }) {
+            self = matched
+            return
+        }
+
+        if quality.localizedCaseInsensitiveContains("default") {
+            self = .auto
+            return
+        } else if quality.localizedCaseInsensitiveContains("backup") {
+            self = .autoalt
+            return
+        }
+        return nil
+    }
+}
+
 // MARK: - Converters
 
 extension ConsumetAPI {
     public static func convert(from payload: StreamingLinksPayload) -> SharedModels.SourcesOptions {
-        let sources: [SharedModels.Source] = zip(payload.sources.indices, payload.sources)
-            .compactMap { (index, streamingLink) in
-                let quality: Source.Quality
+        var sources: [SharedModels.Source] = []
 
-                if streamingLink.quality == "default" {
-                    quality = .auto
-                } else if streamingLink.quality == "backup" {
-                    quality = .autoalt
-                } else if streamingLink.quality == "1080p" {
-                    quality = .teneightyp
-                } else if streamingLink.quality == "720p" {
-                    quality = .seventwentyp
-                } else if streamingLink.quality == "480p" {
-                    quality = .foureightyp
-                } else if streamingLink.quality == "270p" {
-                    quality = .twoseventyp
-                } else if streamingLink.quality == "144p" {
-                    quality = .onefourtyfourp
+        payload.sources.forEach { link in
+            guard let quality = Source.Quality(link.quality ?? "default") else {
+                return
+            }
+
+            guard let url = URL(string: link.url) else { return }
+
+            if let source = sources.first(where: { $0.url.absoluteString == link.url }) {
+                if source.quality <= quality {
+                    sources.removeAll(where: { $0.url.absoluteString == link.url })
                 } else {
-                    quality = .autoalt
+                    return
                 }
+            }
 
-                guard let url = URL(string: streamingLink.url) else { return nil }
+            var format = Source.Format.m3u8
 
-                return SharedModels.Source(
-                    id: index,
+            if link.isDASH == true {
+                format = .mpd
+            }
+
+            sources.append(
+                .init(
                     url: url,
-                    quality: quality
+                    quality: quality,
+                    format: format,
+                    headers: payload.headers
+                )
+            )
+        }
+
+        let subtitles: [SharedModels.SourcesOptions.Subtitle] = (payload.subtitles ?? [])
+            .compactMap { subtitle in
+                guard let url = URL(string: subtitle.url),
+                        subtitle.lang != "Thumbnails" else { return nil }
+                return SharedModels.SourcesOptions.Subtitle(
+                    url: url,
+                    lang: subtitle.lang
                 )
             }
 
-        let subtitles: [SharedModels.Source.Subtitle] = payload.subtitles?.enumerated().compactMap({ index, subtitle in
-            guard let url = URL(string: subtitle.url), subtitle.lang != "Thumbnails" else { return nil }
-            return SharedModels.Source.Subtitle(
-                id: index,
-                url: url,
-                lang: subtitle.lang
-            )
-        }) ?? []
-        return .init(sources, subtitles: subtitles)
+        return .init(sources.sorted(by: \.quality), subtitles: subtitles)
     }
 
     public static func convert(from episodes: [ConsumetAPI.Episode]) -> [SharedModels.Episode] {
@@ -156,10 +193,12 @@ extension ConsumetAPI {
             thumbnail = nil
         }
 
+        let title = (episode.title?.isEmpty ?? true) ? "Episode \(episode.number)" : episode.title ?? "Episode \(episode.number)"
+
         return SharedModels.Episode(
-            title: episode.title ?? "Untitled",
+            title: title,
             number: episode.number,
-            description: episode.description ?? "No description available for this episode.",
+            description: episode.description ?? "Description is not available for this episode.",
             thumbnail: thumbnail,
             isFiller: episode.isFiller ?? false
         )

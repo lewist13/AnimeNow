@@ -26,7 +26,7 @@ public struct SettingsListView<I: Identifiable & CustomStringConvertible>: View 
     public var body: some View {
         if let items = items {
             VStack {
-                ForEach(items, id: \.description) { item in
+                ForEach(items, id: \.id) { item in
                     Text(item.description)
                         .font(.callout.bold())
                         .padding(12)

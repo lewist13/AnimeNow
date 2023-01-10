@@ -40,13 +40,13 @@ public struct SeekbarView: View {
 
                     Color(white: 0.25)
                         .frame(
-                            width: buffered * reader.size.width,
+                            width: max(0, buffered * reader.size.width),
                             alignment: .leading
                         )
 
                     Color.white
                         .frame(
-                            width: progress * reader.size.width,
+                            width: max(0, progress * reader.size.width),
                             alignment: .leading
                         )
                 }

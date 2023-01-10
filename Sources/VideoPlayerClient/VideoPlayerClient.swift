@@ -6,6 +6,7 @@
 
 import Foundation
 import AVFoundation
+import SharedModels
 import ComposableArchitecture
 
 public struct VideoPlayerClient {
@@ -48,8 +49,9 @@ public extension VideoPlayerClient {
     enum Action: Equatable {
 
         /// Play Item
+        /// Thos requires url and metadata and optional referer (if the video requires it)
 
-        case play(URL, Metadata)
+        case play(Payload)
 
         /// Resume  Video
         case resume
@@ -65,6 +67,20 @@ public extension VideoPlayerClient {
 
         /// Clear Video Player
         case clear
+    }
+
+    struct Payload: Equatable {
+        let source: Source
+        let metadata: Metadata
+
+        // TODO: Add subtitles to parse
+        public init(
+            source: Source,
+            metadata: VideoPlayerClient.Metadata
+        ) {
+            self.source = source
+            self.metadata = metadata
+        }
     }
 
     struct Metadata: Equatable {

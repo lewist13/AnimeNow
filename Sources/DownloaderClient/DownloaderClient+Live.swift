@@ -139,7 +139,7 @@ extension DownloaderClient {
             downloadedContentQueue.addOperation {
                 if var anime = downloadedContent.value.first(where: { $0.id == animeId }) {
                     if let episode = anime.episodes.first(where: { $0.number == episodeNumber }) {
-                        if case .offline(url: let url) = episode.providers.first {
+                        if case .offline(let url) = episode.links.first {
                             try? FileManager.default.removeItem(at: url)
                         }
 

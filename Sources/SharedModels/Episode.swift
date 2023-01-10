@@ -11,11 +11,66 @@ public protocol EpisodeRepresentable: Hashable, Identifiable {
     var number: Int { get }
     var title: String { get }
     var thumbnail: ImageSize? { get }
-    var providers: [Provider] { get }
     var isFiller: Bool { get }
+    var links: Set<EpisodeLink> { get }
 
     func isEqualTo(_ item: some EpisodeRepresentable) -> Bool
     func eraseAsRepresentable() -> AnyEpisodeRepresentable
+}
+
+public enum EpisodeLink: Hashable, Identifiable, CustomStringConvertible {
+    public var id: String {
+        switch self {
+        case .stream(id: let id, audio: let audio):
+            return "\(id)-\(audio)"
+        case .offline(url: let url):
+            return "\(url.description)"
+        }
+    }
+
+    public var description: String { audioDescription }
+
+    case stream(id: String, audio: Audio)
+    case offline(url: URL)
+
+    public var audio: Audio {
+        switch self {
+        case .stream(_, let audio):
+            return audio
+        default:
+            return .sub
+        }
+    }
+
+    public var audioDescription: String {
+        switch self {
+        case .stream(_, let audio):
+            return audio.description
+        case .offline:
+            return "Unknown"
+        }
+    }
+
+    public enum Audio: Hashable, CustomStringConvertible, Codable {
+        case sub
+        case dub
+        case custom(String)
+
+        public var isDub: Bool {
+            self != .sub
+        }
+
+        public var description: String {
+            switch self {
+            case .sub:
+                return "Sub"
+            case .dub:
+                return "Dub"
+            case .custom(let custom):
+                return custom
+            }
+        }
+    }
 }
 
 extension EpisodeRepresentable where Self: Equatable {
@@ -31,7 +86,7 @@ extension EpisodeRepresentable {
     }
 }
 
-public struct AnyEpisodeRepresentable: EpisodeRepresentable {
+public struct AnyEpisodeRepresentable: EpisodeRepresentable, Identifiable {
     private let episode: any EpisodeRepresentable
 
     public var id: Int {
@@ -50,12 +105,12 @@ public struct AnyEpisodeRepresentable: EpisodeRepresentable {
         episode.thumbnail
     }
 
-    public var providers: [Provider] {
-        episode.providers
-    }
-
     public var isFiller: Bool {
         episode.isFiller
+    }
+
+    public var links: Set<EpisodeLink> {
+        episode.links
     }
 
     init(_ episode: some EpisodeRepresentable) {
@@ -79,58 +134,23 @@ public struct Episode: EpisodeRepresentable {
     public let number: Int
     public let description: String
     public let thumbnail: ImageSize?
-    public var providers = [Provider]()
     public let isFiller: Bool
+    public var links: Set<EpisodeLink>
 
     public init(
         title: String,
         number: Int,
         description: String,
         thumbnail: ImageSize? = nil,
-        providers: [Provider] = [Provider](),
-        isFiller: Bool
+        isFiller: Bool,
+        links: Set<EpisodeLink> = .init()
     ) {
         self.title = title
         self.number = number
         self.description = description
         self.thumbnail = thumbnail
-        self.providers = providers
         self.isFiller = isFiller
-    }
-}
-
-public enum Provider: Hashable, Identifiable, CustomStringConvertible, Codable {
-    case gogoanime(id: String, dub: Bool)
-    case zoro(id: String, dub: Bool = false)
-    case offline(url: URL)
-
-    public var id: String? {
-        switch self {
-        case .gogoanime(let id, _), .zoro(let id, _):
-            return id
-        default:
-            return nil
-        }
-    }
-
-    public var dub: Bool? {
-        switch self {
-        case .gogoanime(_, let dub), .zoro(_, let dub):
-            return dub
-        default:
-            return nil
-        }
-    }
-
-    public var description: String {
-        switch self {
-        case .gogoanime:
-            return "Gogoanime"
-        case .zoro:
-            return "Zoro"
-        case .offline:
-            return "Offline"
-        }
+        self.links = links
     }
 }
 
@@ -149,7 +169,6 @@ public extension Episode {
             number: 1,
             description: "An older and stronger Naruto returns from his two and a half years of training with Jiraiya. When he gets back he finds that many things have changed since he left. From Konohamaru becoming a Gennin and being under the supervision of Ebisu to Tsunade's, the Fifth Hokage, being added to the great stone faces. Now the tasks of starting things where they were left has begun. And what new danger does Jiraiya know about?",
             thumbnail: .original(URL(string: "https://artworks.thetvdb.com/banners/episodes/79824/320623.jpg")!),
-            providers: [.gogoanime(id: "12345", dub: false), .gogoanime(id: "123456", dub: true)],
             isFiller: false
         ),
         .init(

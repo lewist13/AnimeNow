@@ -71,7 +71,7 @@ extension DownloaderClient {
 
         public var status: Status
 
-        public var providers: [Provider] {
+        public var links: Set<EpisodeLink> {
             switch status {
             case .downloaded(location: let url):
                 return [.offline(url: url)]

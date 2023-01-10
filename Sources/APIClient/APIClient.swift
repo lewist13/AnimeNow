@@ -12,7 +12,7 @@ import ComposableArchitecture
 
 public protocol APIClient {
     @discardableResult
-    func request<A: APIBase, O>(
+    func request<A: APIBase, O: Decodable>(
         _ api: A,
         _ request: Request<A, O>,
         _ decoder: JSONDecoder
@@ -20,8 +20,9 @@ public protocol APIClient {
 }
 
 extension APIClient {
-    public func request<A: APIBase, O>(
-        _ api: A,
+    @discardableResult
+    public func request<A: APIBase, O: Decodable>(
+        _ api: A = A.shared,
         _ request: Request<A, O>,
         _ decoder: JSONDecoder = .init()
     ) async throws -> O {
@@ -45,18 +46,30 @@ public protocol APIBase {
     var base: URL { get }
 }
 
+extension APIBase {
+    public static var animeNowAPI: AnimeNowAPI { AnimeNowAPI.shared }
+    public static var aniListAPI: AniListAPI { AniListAPI.shared }
+    public static var aniSkipAPI: AniSkipAPI { AniSkipAPI.shared }
+    public static var consumetAPI: ConsumetAPI { ConsumetAPI.shared }
+    public static var kitsuAPI: KitsuAPI { KitsuAPI.shared }
+    
+}
+
+public struct EmptyResponse: Decodable {}
+
+public typealias NoResponseRequest<Route: APIBase> = Request<Route, EmptyResponse>
+
 typealias Query = URLQueryItem
 
 extension URLQueryItem {
-    init(name: String, value: Bool) {
+    init<C: CustomStringConvertible>(
+        name: String,
+        _ value: C
+    ) {
         self.init(
             name: name,
             value: value.description
         )
-    }
-
-    init(name: String, value: Int) {
-        self.init(name: name, value: value.description)
     }
 }
 

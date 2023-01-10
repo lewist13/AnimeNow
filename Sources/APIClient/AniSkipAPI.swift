@@ -25,8 +25,8 @@ extension Request where Route == AniSkipAPI {
     ) -> Request<Route, AniSkipAPI.Response> {
         .init(
             path: ["skip-times", "\(malId)", "\(episode)"],
-            query: types.map { Query(name: "types", value: $0.rawValue) } + [
-                Query(name: "episodeLength", value: episodeLength)
+            query: types.map { .init(name: "types", $0.rawValue) } + [
+                .init(name: "episodeLength", episodeLength)
             ]
         )
     }

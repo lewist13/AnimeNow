@@ -12,6 +12,7 @@ import Foundation
 import AnimeClient
 import SharedModels
 import DatabaseClient
+import AnimeStreamLogic
 import DownloaderClient
 import UserDefaultsClient
 import ComposableArchitecture
@@ -21,7 +22,7 @@ public struct AnimeDetailReducer: ReducerProtocol {
     public struct State: Equatable {
         public let animeId: Anime.ID
         public var anime: Loadable<Anime> = .idle
-        public var episodes = Loadable<[Episode]>.idle
+        public var stream: AnimeStreamLogic.State
         public var animeStore = Loadable<AnimeStore>.idle
         public var collectionStores = Loadable<[CollectionStore]>.idle
         public var episodesStatus = Set<DownloaderClient.EpisodeStorage>([])
@@ -30,37 +31,44 @@ public struct AnimeDetailReducer: ReducerProtocol {
         public init(
             animeId: Anime.ID,
             anime: Loadable<Anime> = .idle,
-            episodes: Loadable<[Episode]> = .idle
+            availableProviders: [ProviderInfo]
         ) {
             self.animeId = animeId
             self.anime = anime
-            self.episodes = episodes
+            self.stream = .init(
+                animeId: animeId,
+                episodeId: -1,
+                availableProviders: .init(
+                    items: availableProviders
+                )
+            )
         }
     }
 
     public enum Action: Equatable {
         case onAppear
+        case retryAnimeFetch
         case tappedFavorite
         case addToCollectionToggle
         case closeButtonPressed
         case close
-        case playResumeButtonClicked
         case toggleCompactEpisodes
         case tappedCollectionList
         case showCollectionsList(Anime.ID, Set<CollectionStore>)
         case markEpisodeAsWatched(Episode.ID)
         case markEpisodeAsUnwatched(Int)
-        case fetchedEpisodes(TaskResult<[Episode]>)
         case fetchedAnime(TaskResult<Anime>)
         case selectedEpisode(Episode.ID)
-        case downloadEpisode(Episode)
+        case downloadEpisode(Episode.ID)
         case episodesStatus(Set<DownloaderClient.EpisodeStorage>)
         case removeDownload(Episode.ID)
         case retryDownload(Episode.ID)
         case cancelDownload(Int)
-        case play(anime: Anime, episodes: [Episode], selected: Episode.ID)
+        case play(anime: Anime, episodes: AnimeStreamingProvider, selected: Episode.ID)
         case fetchedAnimeFromDB([AnimeStore])
         case fetchedCollectionStores([CollectionStore])
+
+        case stream(AnimeStreamLogic.Action)
     }
 
     @Dependency(\.mainQueue) var mainQueue
@@ -72,139 +80,60 @@ public struct AnimeDetailReducer: ReducerProtocol {
     public init() { }
 
     public var body: some ReducerProtocol<State, Action> {
+        Scope(state: \.stream, action: /Action.stream) {
+            AnimeStreamLogic()
+        }
         Reduce(self.core)
+            ._printChanges(.actionLabels)
     }
 }
 
 extension AnimeDetailReducer.State {
     public init(
-        anime: any AnimeRepresentable
+        anime: some AnimeRepresentable,
+        availableProviders: [ProviderInfo]
     ) {
-        self.animeId = anime.id
-
-        if let anime = anime as? Anime {
-            self.anime = .success(anime)
-        }
-    }
-}
-
-extension AnimeDetailReducer {
-    enum PlayButtonState: Equatable {
-        case unavailable
-        case comingSoon
-        case playFromBeginning(EpisodePlayback)
-        case playNextEpisode(EpisodePlayback)
-        case resumeEpisode(EpisodePlayback)
-
-        var isAvailable: Bool {
-            switch self {
-            case .unavailable, .comingSoon:
-                return false
-            default:
-                return true
-            }
-        }
-
-        var episodeId: Episode.ID? {
-            switch self {
-            case .playFromBeginning(let info), .playNextEpisode(let info), .resumeEpisode(let info):
-                return info.id
-            default:
-                return nil
-            }
-        }
-
-        var stringValue: String {
-            switch self {
-            case .unavailable:
-                return "Unavailable"
-            case .comingSoon:
-                return "Coming Soon"
-            case .playFromBeginning(let info):
-                return "Play \(info.format == .movie ? "Movie" : "")"
-            case .playNextEpisode(let info):
-                return "Play E\(info.episodeNumber ?? 0)"
-            case .resumeEpisode(let info):
-                if info.format == .movie {
-                    return "Resume Movie"
-                } else {
-                    return "Resume E\(info.episodeNumber ?? 0)"
-                }
-            }
-        }
-
-        struct EpisodePlayback: Equatable {
-            let id: Episode.ID
-            let format: Anime.Format
-            var episodeNumber: Int?
-        }
+        self.init(
+            animeId: anime.id,
+            anime: anime as? Anime != nil ? .success(anime as! Anime) : .idle,
+            availableProviders: availableProviders
+        )
     }
 }
 
 extension AnimeDetailReducer.State {
-    var playButtonState: AnimeDetailReducer.PlayButtonState {
-        guard let anime = anime.value else {
-            return .unavailable
-        }
-
-        guard anime.status != .upcoming else {
-            return .comingSoon
-        }
-
-        guard let episodes = episodes.value,
-              let firstEpisode = episodes.first else {
-            return .unavailable
-        }
-
-        let episodesProgress = animeStore.value?.episodes
-        let lastUpdatedProgress = episodesProgress?.sorted(by: \.lastUpdatedProgress).last
-
-        if let lastUpdatedProgress = lastUpdatedProgress,
-           let episode = episodes.first(where: { $0.number == lastUpdatedProgress.number }) {
-            if !lastUpdatedProgress.almostFinished {
-                return .resumeEpisode(
-                    .init(
-                        id: episode.id,
-                        format: anime.format,
-                        episodeNumber: episode.number
-                    )
-                )
-            } else if lastUpdatedProgress.almostFinished,
-                      episodes.last != episode,
-                      let nextEpisode = episodes.first(where: { $0.number == (lastUpdatedProgress.number + 1) }) {
-                return .playNextEpisode(
-                    .init(
-                        id: nextEpisode.id,
-                        format: anime.format,
-                        episodeNumber: nextEpisode.number
-                    )
-                )
-            }
-        }
-
-        return .playFromBeginning(
-            .init(
-                id: firstEpisode.id,
-                format: anime.format,
-                episodeNumber: firstEpisode.number
-            )
-        )
+    var isLoadingAnime: Bool {
+        guard let anime = anime.value else { return !anime.finished }
+        return anime.status != .upcoming && (!animeStore.finished || !collectionStores.finished)
     }
 
-    var isLoading: Bool {
-        guard let anime = anime.value else { return !anime.finished }
-        return anime.status != .upcoming && (!episodes.finished || !animeStore.finished || !collectionStores.finished)
+    var isLoadingEpisodes: Bool {
+        !episodes.finished
     }
 
     var isInACollection: Bool {
         guard let collections = collectionStores.value else { return false }
         return collections.contains(where: { $0.animes.contains(where: { animeStore in animeStore.id == animeId }) } )
     }
+
+    var streamingProvider: Loadable<AnimeStreamingProvider>? {
+        if let selected = stream.availableProviders.item {
+            return stream.streamingProviders[selected.id]
+        }
+        return .idle
+    }
+
+    var episodes: Loadable<[Episode]> {
+        if let streamingProvider {
+            return streamingProvider.map(\.episodes)
+        }
+        return .idle
+    }
 }
 
 extension AnimeDetailReducer {
-    struct CancelAnimeFetchingId: Hashable {}
-    struct CancelFetchingEpisodesId: Hashable {}
+    struct FetchingAnimeCancellable: Hashable {}
+    struct FetchingEpisodesCancellable: Hashable {}
     struct CancelObservingAnimeDB: Hashable {}
     struct CancelObservingCollections: Hashable {}
     struct AddToCollectionDebounce: Hashable {}
@@ -216,19 +145,16 @@ extension AnimeDetailReducer {
         case .onAppear:
             state.compactEpisodes = userDefaultsClient.get(.compactEpisodes)
 
-            guard state.anime.value != nil else {
-                if !state.anime.hasInitialized {
-                    return self.fetchAnime(&state)
-                }
-                break
+            if !state.anime.hasInitialized {
+                return fetchAnime(&state)
+            } else if case .success = state.anime {
+                return startObservations(&state)
             }
-
-            return self.fetchEpisodesAndStore(&state)
 
         case .tappedFavorite:
             guard var animeStore = state.animeStore.value else { break }
             animeStore.isFavorite.toggle()
-
+            
             return .run { [animeStore] _ in
                 try await withTaskCancellation(id: FavoritesDebouce.self, cancelInFlight: true) {
                     if !(try await databaseClient.update(animeStore.id, \AnimeStore.isFavorite, animeStore.isFavorite)) {
@@ -259,24 +185,12 @@ extension AnimeDetailReducer {
                 }
             }
 
-        case .playResumeButtonClicked:
-            if let episodeId = state.playButtonState.episodeId {
-                return .action(.selectedEpisode(episodeId))
-            }
-
-        case .fetchedEpisodes(.success(let episodes)):
-            state.episodes = .success(episodes)
-
-        case .fetchedEpisodes(.failure(let error)):
-            Logger.log(.error, error.localizedDescription)
-            state.episodes = .failed
-
         case .selectedEpisode(let episodeId):
-            guard let anime = state.anime.value else { break }
+            guard let anime = state.anime.value, let streamingProvider = state.streamingProvider?.value else { break }
             return .init(
                 value: .play(
                     anime: anime,
-                    episodes: state.episodes.value ?? [],
+                    episodes: streamingProvider,
                     selected: episodeId
                 )
             )
@@ -300,9 +214,14 @@ extension AnimeDetailReducer {
                 try await databaseClient.update(episodeStore.id, \EpisodeStore.progress, nil)
             }
 
+        case .retryAnimeFetch:
+            if state.anime.finished {
+                return fetchAnime(&state)
+            }
+
         case .fetchedAnime(.success(let anime)):
             state.anime = .success(anime)
-            return self.fetchEpisodesAndStore(&state)
+            return self.startObservations(&state)
 
         case .fetchedAnime(.failure):
             state.anime = .failed
@@ -326,8 +245,9 @@ extension AnimeDetailReducer {
 
         case .closeButtonPressed:
             return .concatenate(
-                .cancel(id: CancelAnimeFetchingId.self),
-                .cancel(id: CancelFetchingEpisodesId.self),
+                .action(.stream(.destroy)),
+                .cancel(id: FetchingAnimeCancellable.self),
+                .cancel(id: FetchingEpisodesCancellable.self),
                 .cancel(id: CancelObservingAnimeDB.self),
                 .cancel(id: CancelObservingCollections.self),
                 .cancel(id: CancelObservingDownloadState.self),
@@ -369,34 +289,34 @@ extension AnimeDetailReducer {
             return .run {
                 await downloaderClient.cancel(animeId, episodeNumber)
             }
+
+        case .stream:
+            break
         }
         return .none
     }
+}
 
+extension AnimeDetailReducer {
     private func fetchAnime(_ state: inout State) -> EffectTask<Action> {
         let animeId = state.animeId
         state.anime = .loading
 
         return .run { send in
-            await withTaskCancellation(id: CancelAnimeFetchingId.self, cancelInFlight: true) {
+            await withTaskCancellation(id: FetchingAnimeCancellable.self, cancelInFlight: true) {
                 await send(.fetchedAnime(.init { try await animeClient.getAnime(animeId) }))
             }
         }
     }
 
-    private func fetchEpisodesAndStore(_ state: inout State) -> EffectTask<Action> {
+    private func startObservations(_ state: inout State) -> EffectTask<Action> {
         guard let anime = state.anime.value else { return .none }
         let animeId = anime.id
         var effects = [EffectTask<Action>]()
 
-        if anime.status != .upcoming && !state.episodes.hasInitialized {
-            state.episodes = .loading
-
+        if anime.status != .upcoming {
             effects.append(
-                .run {
-                    await .fetchedEpisodes(.init { try await animeClient.getEpisodes(animeId) })
-                }
-                    .cancellable(id: CancelFetchingEpisodesId.self)
+                .action(.stream(.initialize))
             )
 
             effects.append(

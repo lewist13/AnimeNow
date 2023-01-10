@@ -6,6 +6,7 @@
 //  
 
 import AVKit
+import Logger
 import Combine
 import AVFAudio
 import Foundation
@@ -37,7 +38,7 @@ extension VideoPlayerClient {
                     }
                 }
             },
-            execute: wrapper.handle,
+            execute: { action in Task.detached { wrapper.handle(action) } },
             player: { wrapper.player }
         )
     }()
@@ -50,6 +51,8 @@ private class PlayerWrapper {
     #if os(iOS)
     private let session = AVAudioSession.sharedInstance()
     #endif
+
+    private var loaderDelegate: BaseResourceLoaderDelegate?
 
     private var playerItemCancellables = Set<AnyCancellable>()
     private var cancellables = Set<AnyCancellable>()
@@ -243,6 +246,7 @@ private class PlayerWrapper {
                 break
 
             case .failed:
+                Logger.log(.error, "Player error: - \(playerItem.errorLog().debugDescription)")
                 self.updateStatus(.error)
 
             default:
@@ -295,17 +299,19 @@ private class PlayerWrapper {
             if let metadata {
                 nowPlayingInfo[MPMediaItemPropertyTitle] = metadata.videoTitle
                 nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = metadata.videoAuthor
-                if let imageURL = metadata.thumbnail,
-                   let image = ImageCache.default.retrieveImageInMemoryCache(
-                    forKey: imageURL.absoluteString,
-                    options: .none
-                   ) {
-                    nowPlayingInfo[MPMediaItemPropertyArtwork] = MPMediaItemArtwork(
-                        boundsSize: image.size,
-                        requestHandler: { size in
-                            image
-                        }
-                    )
+                nowPlayingInfo[MPMediaItemPropertyAlbumArtist] = "Anime Now!"
+                if let imageURL = metadata.thumbnail {
+                    if let image = ImageCache.default.retrieveImageInMemoryCache(
+                        forKey: imageURL.absoluteString,
+                        options: .none
+                    ) {
+                        nowPlayingInfo[MPMediaItemPropertyArtwork] = MPMediaItemArtwork(
+                            boundsSize: image.size,
+                            requestHandler: { _ in image }
+                        )
+                    } else {
+                        nowPlayingInfo[MPMediaItemPropertyArtwork] = nil
+                    }
                 } else {
                     nowPlayingInfo[MPMediaItemPropertyArtwork] = nil
                 }
@@ -338,15 +344,38 @@ private class PlayerWrapper {
 
     func handle(_ action: VideoPlayerClient.Action) {
         switch action {
-        case .play(let url, let metadata):
-            let asset = AVURLAsset(url: url)
+        case .play(let payload):
+            let headers = payload.source.headers ?? [:]
+            let url: URL
+
+            if payload.source.format == .mpd {
+                url = payload.source.url.change(scheme: DASHResourceLoader.customPlaylistScheme)
+            } else {
+                url = payload.source.url
+            }
+
+            let asset = AVURLAsset(
+                url: url,
+                options: ["AVURLAssetHTTPHeaderFieldsKey": headers]
+            )
+
+            if payload.source.format == .mpd {
+                let loaderDelegate = BaseResourceLoaderDelegate(loader: DASHResourceLoader())
+                asset.resourceLoader.setDelegate(
+                    loaderDelegate,
+                    queue: loaderDelegate.queue
+                )
+
+                self.loaderDelegate = loaderDelegate
+            }
+
             let playerItem = AVPlayerItem(asset: asset)
             player.replaceCurrentItem(with: playerItem)
             #if os(iOS)
             try? session.setActive(true)
             #endif
             updateStatus(.loading)
-            updateNowPlaying(metadata)
+            updateNowPlaying(payload.metadata)
 
         case .resume:
             if status.canChangePlayback {

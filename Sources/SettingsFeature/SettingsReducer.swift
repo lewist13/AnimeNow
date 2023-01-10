@@ -9,14 +9,15 @@
 import ComposableArchitecture
 
 public struct SettingsReducer: ReducerProtocol {
-    public init() { }
+    public init() {}
 
     public struct State: Equatable {
         public init() {
         }
     }
-    
+
     public enum Action: Equatable {
+        case initialize
         case onAppear
     }
 

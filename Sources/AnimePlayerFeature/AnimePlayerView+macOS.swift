@@ -180,55 +180,55 @@ extension AnimePlayerView {
             store,
             observe: EpisodesOverlayViewState.init
         ) { viewState in
-            if viewState.isVisible {
-                if let episodes = viewState.episodes.value, episodes.count > 0 {
-                    LazyVStack(alignment: .leading) {
-                        Text("Up Next")
-                            .font(.title2.bold())
-                            .padding(.horizontal, 24)
+            if viewState.isVisible && viewState.episodes.count > 0 {
+                LazyVStack(alignment: .leading) {
+                    Text("Up Next")
+                        .font(.title2.bold())
+                        .padding(.horizontal, 24)
 
-                        ScrollViewReader { proxy in
-                            ScrollView(
-                                .horizontal,
-                                showsIndicators: true
-                            ) {
-                                LazyHStack(alignment: .bottom) {
-                                    ForEach(episodes) { episode in
-                                        ThumbnailItemBigView(
-                                            episode: episode,
-                                            progress: viewState.episodesStore.first(where: { $0.number == episode.number })?.progress,
-                                            nowPlaying: episode.id == viewState.selectedEpisode,
-                                            progressSize: 8
-                                        )
-                                        .frame(height: 200)
-                                        .onTapGesture {
-                                            if viewState.selectedEpisode != episode.id {
-                                                viewState.send(.selectEpisode(episode.id))
-                                            }
+                    ScrollViewReader { proxy in
+                        ScrollView(
+                            .horizontal,
+                            showsIndicators: true
+                        ) {
+                            LazyHStack(alignment: .bottom) {
+                                ForEach(viewState.episodes) { episode in
+                                    ThumbnailItemBigView(
+                                        episode: episode,
+                                        progress: viewState.episodesStore.first(where: { $0.number == episode.number })?.progress,
+                                        nowPlaying: episode.id == viewState.selectedEpisode,
+                                        progressSize: 8
+                                    )
+                                    .frame(height: 200)
+                                    .onTapGesture {
+                                        if viewState.selectedEpisode != episode.id {
+                                            viewState.send(
+                                                .stream(
+                                                    .selectEpisode(episode.id)
+                                                )
+                                            )
                                         }
-                                        .id(episode.id)
                                     }
+                                    .id(episode.id)
                                 }
-                                .padding([.horizontal, .bottom], 24)
-                                .onAppear {
-                                    proxy.scrollTo(viewState.selectedEpisode, anchor: .leading)
-                                    viewState.send(.pause)
-                                }
-                                .onDisappear(perform: {
-                                    viewState.send(.play)
-                                })
-                                .onChange(
-                                    of: viewState.selectedEpisode
-                                ) { newValue in
-                                    withAnimation {
-                                        proxy.scrollTo(newValue, anchor: .leading)
-                                    }
+                            }
+                            .padding([.horizontal, .bottom], 24)
+                            .onAppear {
+                                proxy.scrollTo(viewState.selectedEpisode, anchor: .leading)
+                                viewState.send(.pause)
+                            }
+                            .onDisappear(perform: {
+                                viewState.send(.play)
+                            })
+                            .onChange(
+                                of: viewState.selectedEpisode
+                            ) { newValue in
+                                withAnimation {
+                                    proxy.scrollTo(newValue, anchor: .leading)
                                 }
                             }
                         }
                     }
-                } else if viewState.episodes.isLoading {
-                    loadingView
                 }
             }
         }
@@ -432,7 +432,15 @@ struct VideoPlayerViewMacOS_Previews: PreviewProvider {
                 initialState: .init(
                     player: .init(),
                     anime: Anime.narutoShippuden,
-                    episodes: .init(Episode.demoEpisodes.map({ $0.eraseAsRepresentable() })),
+                    availableProviders: .init(
+                        items: [
+                            .init(name: "Gogoanime")
+                        ]
+                    ),
+                    streamingProvider: .init(
+                        name: "Gogoanime",
+                        episodes: Episode.demoEpisodes
+                    ),
                     selectedEpisode: Episode.demoEpisodes.first!.id
                 ),
                 reducer: AnimePlayerReducer()

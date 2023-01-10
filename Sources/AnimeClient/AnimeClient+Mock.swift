@@ -5,6 +5,7 @@
 //  Created by ErrorErrorError on 9/12/22.
 //
 
+import SharedModels
 import ComposableArchitecture
 
 extension AnimeClient {
@@ -24,11 +25,13 @@ extension AnimeClient {
         throw AnimeClient.Error.providerNotAvailable
     } searchAnimes: { _ in
         []
-    } getEpisodes: { _ in
-        []
-    } getSources: { _ in
-        .init([], subtitles: [])
-    } getSkipTimes: { _, _ in
+    } getEpisodes: { _,_  in
+        .init(name: "", episodes: [Episode(title: "", number: 0, description: "", isFiller: true)])
+    } getSources: { _,_ in
+        .init([])
+    } getSkipTimes: { _,_  in
+            .init()
+    } getAnimeProviders: {
         []
     }
 }
