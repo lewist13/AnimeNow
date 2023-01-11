@@ -98,7 +98,7 @@ public struct SourcesOptions: Hashable {
     }
 
     public struct Subtitle: Hashable, Identifiable {
-        public var id: String { lang }
+        public var id: String { url.absoluteString }
         public let url: URL
         public let lang: String
 
