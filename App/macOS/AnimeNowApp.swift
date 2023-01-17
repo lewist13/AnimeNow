@@ -40,6 +40,7 @@ struct AnimeNowApp: App {
                     action: AppReducer.Action.settings
                 )
             )
+            .frame(width: 325, height: 550)
         }
     }
 }

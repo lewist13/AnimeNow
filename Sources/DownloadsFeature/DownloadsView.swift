@@ -22,7 +22,7 @@ public struct DownloadsView: View {
     }
 
     public var body: some View {
-        StackNavigation(title: "Downloads") {
+        StackNavigation(title: DeviceUtil.isMac ? nil : "Downloads") {
             WithViewStore(
                 store,
                 observe: \.animes.count

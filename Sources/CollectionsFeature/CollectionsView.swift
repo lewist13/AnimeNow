@@ -22,7 +22,7 @@ public struct CollectionsView: View {
     }
 
     public var body: some View {
-        StackNavigation(title: "My Collections") {
+        StackNavigation(title: DeviceUtil.isMac ? nil : "My Collections") {
             ScrollView(.vertical) {
                 ExtraTopSafeAreaInset()
                 Spacer(minLength: 8)

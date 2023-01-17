@@ -15,10 +15,8 @@ extension UserDefaultsClient.Key {
 
     public static var hasClearedAllVideos: UserDefaultsClient.Key<Bool> { .init("hasClearedAllVideos") }
 
-    public static var canEnableDiscord: UserDefaultsClient.Key<Bool> { .init("canEnableDiscord") }
-
     public static var videoPlayerAudio: UserDefaultsClient.Key<EpisodeLink.Audio> { .init("videoPlayerAudio", defaultValue: .sub) }
-    public static var videoPlayerProvider: UserDefaultsClient.Key<ProviderInfo.ID?> { .init("videoPlayerProvider", defaultValue: nil) }
-    public static var videoPlayerSubtitle: UserDefaultsClient.Key<String> { .init("videoPlayerSubtitle", defaultValue: "") }
+//    public static var videoPlayerProvider: UserDefaultsClient.Key<ProviderInfo.ID> { .init("videoPlayerProvider", defaultValue: "Gogoanime") }
+    public static var videoPlayerSubtitle: UserDefaultsClient.Key<String?> { .init("videoPlayerSubtitle", defaultValue: nil) }
     public static var videoPlayerQuality: UserDefaultsClient.Key<Source.Quality?> { .init("videoPlayerQuality", defaultValue: nil) }
 }

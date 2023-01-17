@@ -11,9 +11,7 @@ import ComposableArchitecture
 public struct NewCollectionView: View {
     let store: StoreOf<NewCollectionReducer>
 
-    public init(
-        store: StoreOf<NewCollectionReducer>
-    ) {
+    public init(store: StoreOf<NewCollectionReducer>) {
         self.store = store
     }
 

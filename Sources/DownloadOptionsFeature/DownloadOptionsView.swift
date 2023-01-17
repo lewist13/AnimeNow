@@ -34,52 +34,39 @@ public struct DownloadOptionsView: View {
                     .foregroundColor(.gray)
             }
 
-            LazyVStack(spacing: 8) {
+            ScrollView {
                 WithViewStore(
                     store,
                     observe: { AnimeStreamViewState($0.stream) }
                 ) { viewState in
-                    Group {
-                        SettingsRowExpandableListView(items: viewState.availableProviders.items) {
-                            SettingsRowView(
-                                name: "Provider",
-                                text: viewState.availableProviders.item?.name ?? (viewState.availableProviders.items.count > 0 ? "Not Selected" : "Unavailable")
-                            )
-                            .multiSelection(viewState.availableProviders.items.count > 1)
-                        } itemView: { item in
-                            Text(item.name)
-                        } selectedItem: {
+                    SettingsGroupView {
+                        SettingsRowView.listSelection(
+                            name: "Provider",
+                            selectable: viewState.availableProviders
+                        ) {
                             viewState.send(.animeStream(.selectProvider($0)))
+                        } itemView: {
+                            Text($0.name)
                         }
 
-                        SettingsRowExpandableListView(items: viewState.links.items) {
-                            SettingsRowView(
-                                name: "Audio",
-                                text: viewState.links.item?.audioDescription ?? (viewState.links.items.count > 0 ? "Not Selected" : "Unavailable")
-                            )
-                            .loading(viewState.loadingLink)
-                            .multiSelection(viewState.links.items.count > 1)
-                        } itemView: { item in
-                            Text(item.audioDescription)
-                        } selectedItem: {
+                        SettingsRowView.listSelection(
+                            name: "Audio",
+                            selectable: viewState.links,
+                            loading: viewState.loadingLink
+                        ) {
                             viewState.send(.animeStream(.selectLink($0)))
+                        } itemView: {
+                            Text($0.description)
                         }
 
-                        SettingsRowExpandableListView(items: viewState.sources.items) {
-                            SettingsRowView(
-                                name: "Quality",
-                                text: viewState.sources.item?.quality.description ?? (viewState.sources.items.count > 0 ? "Not Selected" : "Unavailable")
-                            )
-                            .loading(
-                                viewState.loadingLink ?
-                                    true : viewState.links.items.count > 0 ?
-                                    viewState.loadingSource : false
-                            )
-                            .multiSelection(viewState.sources.items.count > 1)
-                        } itemView: { item in
-                            Text(item.quality.description)
-                        } selectedItem: {
+                        SettingsRowView.listSelection(
+                            name: "Quality",
+                            selectable: viewState.sources,
+                            loading: viewState.loadingLink || viewState.links.items.count > 0 && viewState.loadingSource
+                        ) {
                             viewState.send(.animeStream(.selectSource($0)))
+                        } itemView: {
+                            Text($0.quality.description)
                         }
                     }
                     .animation(.easeInOut, value: viewState.state)

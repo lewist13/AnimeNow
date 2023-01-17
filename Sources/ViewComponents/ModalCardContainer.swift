@@ -1,4 +1,4 @@
-//  ModalCardView.swift
+//  ModalCardContainer.swift
 //  Anime Now!
 //
 //  Created by ErrorErrorError on 11/18/22.
@@ -8,28 +8,28 @@
 import SwiftUI
 import Utilities
 
-public struct ModalCardView<Content: View, ShapeType: ShapeStyle>: View {
+public struct ModalCardContainer<Content: View>: View {
+    private let corners: CGFloat = 38.5
+    private let continuous: Bool = true
+    private let innerPadding: CGFloat = 20.0
+    private let outerPadding: CGFloat = 6.0
+    private let style = Color(white: 0.12, opacity: 1.0)
+
     let onDismiss: (() -> Void)?
-    var options: Set<ModalCardOptions>
-    let style: ModalCardStyle<ShapeType>
-    let content: Content
+    let content: () -> Content
 
     @GestureState private var viewOffset: CGFloat = 0.0
 
-    var isiPad: Bool {
+    var isLargeDisplay: Bool {
         DeviceUtil.isPad || DeviceUtil.isMac
     }
 
     public init(
         onDismiss: (() -> Void)? = nil,
-        options: Set<ModalCardOptions> = [],
-        style: ModalCardStyle<ShapeType> = .init(),
         content: @escaping () -> Content
     ) {
         self.onDismiss = onDismiss
-        self.options = options
-        self.style = style
-        self.content = content()
+        self.content = content
     }
 
     public var body: some View {
@@ -50,7 +50,7 @@ public struct ModalCardView<Content: View, ShapeType: ShapeStyle>: View {
                 }
             }
             .zIndex(2)
-            .transition(isiPad ? .opacity.combined(with: .offset(x: 0, y: 200)) : .move(edge: .bottom))
+            .transition(isLargeDisplay ? .opacity.combined(with: .offset(x: 0, y: 200)) : .move(edge: .bottom))
         }
         .animation(.spring(response: 0.35, dampingFraction: 1), value: viewOffset)
     }
@@ -58,7 +58,7 @@ public struct ModalCardView<Content: View, ShapeType: ShapeStyle>: View {
     private var container: some View {
         VStack {
             Spacer()
-            if isiPad {
+            if isLargeDisplay {
                 card
                     .aspectRatio(1.0, contentMode: .fit)
                     .fixedSize()
@@ -71,50 +71,47 @@ public struct ModalCardView<Content: View, ShapeType: ShapeStyle>: View {
 
     private var cardShape: some Shape {
         RoundedRectangle(
-            cornerSize: style.cornerSize,
+            cornerSize: .init(width: corners, height: corners),
             style: .continuous
         )
     }
 
     private var card: some View {
         VStack(alignment: .trailing, spacing: 0) {
-            if !options.contains(.hideDismissButton) {
-                Button(action: dismiss) {
-                    ZStack {
-                        Circle()
-                            .fill(Color(white: 0.19))
-                        Image(systemName: "xmark")
-                            .resizable()
-                            .scaledToFit()
-                            .font(Font.body.weight(.bold))
-                            .scaleEffect(0.416)
-                            .foregroundColor(Color(white: 0.62))
-                    }
+            Button(action: dismiss) {
+                ZStack {
+                    Circle()
+                        .fill(Color(white: 0.19))
+                    Image(systemName: "xmark")
+                        .resizable()
+                        .scaledToFit()
+                        .font(Font.body.weight(.bold))
+                        .scaleEffect(0.416)
+                        .foregroundColor(Color(white: 0.62))
                 }
-                .buttonStyle(.plain)
-                .frame(width: 24, height: 24)
             }
+            .buttonStyle(.plain)
+            .frame(width: 24, height: 24)
 
             HStack {
                 Spacer()
-                content
-                    .padding([.horizontal, options.contains(.hideDismissButton) ? .vertical : .bottom], 14)
+                content()
+                    .padding([.horizontal, .bottom], 14)
                 Spacer()
             }
         }
-        .padding(style.innerPadding)
-        .background(cardShape.fill(style.style))
+        .padding(innerPadding)
+        .background(cardShape.fill(style))
         .clipShape(cardShape)
         .offset(x: 0, y: viewOffset/pow(2, abs(viewOffset)/500+1))
-        .padding(style.outerPadding)
+        .padding(outerPadding)
         .gesture(
-            options.contains(.disableDrag) ? nil :
-                DragGesture()
+            DragGesture()
                 .updating($viewOffset) { value, state, transaction in
                     state = value.translation.height
                 }
                 .onEnded() { value in
-                    if value.predictedEndTranslation.height > 175 && !options.contains(.disableDragToDismiss) {
+                    if value.predictedEndTranslation.height > 175 {
                         dismiss()
                     }
                 }
@@ -128,84 +125,15 @@ public struct ModalCardView<Content: View, ShapeType: ShapeStyle>: View {
     }
 }
 
-extension ModalCardView where ShapeType == Color {
-    init(
-        onDismiss: (() -> Void)? = nil,
-        options: Set<ModalCardOptions> = [],
-        content: @escaping () -> Content
-    ) {
-        self.onDismiss = onDismiss
-        self.options = options
-        self.style = .init()
-        self.content = content()
-    }
-}
-
-/// A struct thtat defines the style of a `SlideOverCard`
-
-public struct ModalCardStyle<S: ShapeStyle> {
-    /// Initialize a style with a single value for corner radius
-    public init(
-        corners: CGFloat = 38.5,
-        continuous: Bool = true,
-        innerPadding: CGFloat = 20.0,
-        outerPadding: CGFloat = 6.0,
-        style: S = Color(white: 0.12, opacity: 1.0)
-    ) {
-        self.init(
-            corners: CGSize(width: corners, height: corners),
-            continuous: continuous,
-            innerPadding: innerPadding,
-            outerPadding: outerPadding,
-            style: style
-        )
-    }
-        
-    /// Initialize a style with a custom corner size
-    public init(
-        corners: CGSize,
-        continuous: Bool = true,
-        innerPadding: CGFloat = 20.0,
-        outerPadding: CGFloat = 6.0,
-        style: S = Color(white: 0.12, opacity: 1.0)
-    ) {
-        self.cornerSize = corners
-        self.continuous = continuous
-        self.innerPadding = innerPadding
-        self.outerPadding = outerPadding
-        self.style = style
-    }
-        
-    let cornerSize: CGSize
-    let continuous: Bool
-        
-    let innerPadding: CGFloat
-    let outerPadding: CGFloat
-        
-    let style: S
-}
-
-/// A structure that defines interaction options of a `SlideOverCard`
-
-public enum ModalCardOptions: CaseIterable {
-    case disableDrag
-    case disableDragToDismiss
-    case hideDismissButton
-}
-
 extension View {
-    public func slideOverCard<Content: View, ShapeType: ShapeStyle>(
+    public func slideOverCard<Content: View>(
         onDismiss: (() -> Void)? = nil,
-        options: Set<ModalCardOptions> = [],
-        style: ModalCardStyle<ShapeType> = .init(),
         @ViewBuilder content: @escaping () -> Content
     ) -> some View {
         return ZStack {
             self
-            ModalCardView(
-                onDismiss: onDismiss,
-                options: options,
-                style: style
+            ModalCardContainer(
+                onDismiss: onDismiss
             ) {
                 content()
             }
@@ -215,7 +143,7 @@ extension View {
 
 struct ModalCardView_Previews: PreviewProvider {
     static var previews: some View {
-        ModalCardView() {
+        ModalCardContainer() {
             VStack(alignment: .center, spacing: 25) {
                 VStack {
                     Text("Large title").font(.system(size: 28, weight: .bold))

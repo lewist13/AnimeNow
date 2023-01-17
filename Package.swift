@@ -31,6 +31,7 @@ let package = Package(
         .library(name: "DatabaseClient", targets: ["DatabaseClient"]),
         .library(name: "DiscordClient", targets: ["DiscordClient"]),
         .library(name: "DownloaderClient", targets: ["DownloaderClient"]),
+        .library(name: "FileClient", targets: ["FileClient"]),
         .library(name: "VideoPlayerClient", targets: ["VideoPlayerClient"]),
         .library(name: "UserDefaultsClient", targets: ["UserDefaultsClient"]),
 
@@ -43,9 +44,9 @@ let package = Package(
         .library(name: "Logger", targets: ["Logger"])
     ],
     dependencies: [
-        .package(url: "https://github.com/pointfreeco/swift-composable-architecture", exact: "0.45.0"),
-        .package(url: "https://github.com/pointfreeco/xctest-dynamic-overlay.git", exact: "0.5.0"),
-        .package(url: "https://github.com/pointfreeco/swiftui-navigation", exact: "0.2.0"),
+        .package(url: "https://github.com/pointfreeco/swift-composable-architecture", exact: "0.49.2"),
+        .package(url: "https://github.com/pointfreeco/xctest-dynamic-overlay.git", exact: "0.8.1"),
+        .package(url: "https://github.com/pointfreeco/swiftui-navigation", exact: "0.5.0"),
         .package(url: "https://github.com/onevcat/Kingfisher.git", exact: "7.3.2"),
         .package(url: "https://github.com/thisIsTheFoxe/SwiftWebVTT.git", exact: "0.1.0"),
         .package(url: "https://github.com/NicholasBellucci/SociableWeaver.git", exact: "0.1.12"),
@@ -98,6 +99,7 @@ let package = Package(
                 "DiscordClient",
                 "DownloaderClient",
                 "DownloadsFeature",
+                "FileClient",
                 "HomeFeature",
                 "ModalOverlayFeature",
                 "SearchFeature",
@@ -198,7 +200,12 @@ let package = Package(
         .target(
             name: "SettingsFeature",
             dependencies: [
+                "DiscordClient",
+                "FileClient",
+                "UserDefaultsClient",
+                "SharedModels",
                 "Utilities",
+                "ViewComponents",
                 .product(name: "ComposableArchitecture", package: "swift-composable-architecture")
             ]
         ),
@@ -256,6 +263,12 @@ let package = Package(
                 "Logger",
                 "Utilities",
                 "SharedModels",
+                .product(name: "ComposableArchitecture", package: "swift-composable-architecture")
+            ]
+        ),
+        .target(
+            name: "FileClient",
+            dependencies: [
                 .product(name: "ComposableArchitecture", package: "swift-composable-architecture")
             ]
         ),

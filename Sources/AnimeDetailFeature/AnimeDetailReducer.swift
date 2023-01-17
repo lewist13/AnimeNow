@@ -31,16 +31,14 @@ public struct AnimeDetailReducer: ReducerProtocol {
         public init(
             animeId: Anime.ID,
             anime: Loadable<Anime> = .idle,
-            availableProviders: [ProviderInfo]
+            availableProviders: Selectable<ProviderInfo>
         ) {
             self.animeId = animeId
             self.anime = anime
             self.stream = .init(
                 animeId: animeId,
                 episodeId: -1,
-                availableProviders: .init(
-                    items: availableProviders
-                )
+                availableProviders: availableProviders
             )
         }
     }
@@ -91,7 +89,7 @@ public struct AnimeDetailReducer: ReducerProtocol {
 extension AnimeDetailReducer.State {
     public init(
         anime: some AnimeRepresentable,
-        availableProviders: [ProviderInfo]
+        availableProviders: Selectable<ProviderInfo>
     ) {
         self.init(
             animeId: anime.id,

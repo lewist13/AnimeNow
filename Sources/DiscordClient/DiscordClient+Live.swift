@@ -21,6 +21,28 @@ extension DiscordClient {
         )
 
         return .init(
+            status: {
+                .init { continuation in
+                    let task = Task.detached {
+                        while true {
+                            if sword.isRunning {
+                                if sword.isConnected {
+                                    continuation.yield(.connected)
+                                } else {
+                                    continuation.yield(.failed)
+                                }
+                            } else {
+                                continuation.yield(.offline)
+                            }
+                            try? await Task.sleep(nanoseconds: 1000000000 * 5)
+                        }
+                    }
+
+                    continuation.onTermination = { _ in
+                        task.cancel()
+                    }
+                }
+            },
             isActive: sword.isRunning,
             isConnected: sword.isConnected
         ) { active in
@@ -52,7 +74,7 @@ extension DiscordClient {
 
                 var button = RichPresence.Button()
                 button.label = "Watch Now"
-                button.url = "animenow://watch"
+                button.url = "https://animenow.app"
                 presence.buttons.append(button)
 
                 sword.setPresence(presence)

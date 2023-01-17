@@ -498,15 +498,16 @@ extension AnimeDetailView {
                 HStack {
                     Spacer()
 
-                    ContextButton(items: viewState.providers.items
-                        .map {
-                            .init(
-                                name: $0.name,
-                                image: $0.logo != nil ? .init(string: $0.logo!) : nil
-                            )
-                        }
-                    ) { item in
-                        viewState.send(.stream(.selectProvider(item)))
+                    ContextButton(
+                        items: viewState.providers.items
+                            .map {
+                                .init(
+                                    name: $0.name,
+                                    image: $0.logo != nil ? .init(string: $0.logo!) : nil
+                                )
+                            }
+                    ) {
+                        viewState.send(.stream(.selectProvider($0)))
                     } label: {
                         HStack {
                             if let logo = viewState.providers.item?.logo {
@@ -768,11 +769,13 @@ struct AnimeDetailView_Previews: PreviewProvider {
             store: .init(
                 initialState: .init(
                     animeId: 127230,
-                    availableProviders: [
-                        .init(name: "Gogoanime"),
-                        .init(name: "Zoro"),
-                        .init(name: "Kamyroll")
-                    ]
+                    availableProviders: .init(
+                        items: [
+                            .init(name: "Gogoanime"),
+                            .init(name: "Zoro"),
+                            .init(name: "Kamyroll")
+                        ]
+                    )
                 ),
                 reducer: AnimeDetailReducer()
             )

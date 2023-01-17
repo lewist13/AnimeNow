@@ -10,14 +10,14 @@ import SwiftUI
 import OrderedCollections
 
 public struct StackNavigation<Buttons: View, Content: View>: View {
-    var title: String = ""
+    let title: String?
     var content: () -> Content
     var buttons: (() -> Buttons)? = nil
 
     @StateObject var stack = StackNavigationObservable()
 
     public init(
-        title: String = "",
+        title: String? = nil,
         content: @escaping () -> Content,
         buttons: (() -> Buttons)? = nil
     ) {
@@ -30,7 +30,7 @@ public struct StackNavigation<Buttons: View, Content: View>: View {
         #if os(iOS)
         NavigationView {
             content()
-                .navigationTitle(title)
+                .navigationTitle(title ?? "")
                 .toolbar {
                     buttons?()
                 }
@@ -64,10 +64,19 @@ public struct StackNavigation<Buttons: View, Content: View>: View {
 
                 last.destination()
             } else {
-                buttons?()
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-                    .padding(.horizontal)
-                    .padding(.vertical, 8)
+                HStack {
+                    if let title {
+                        Text(title)
+                            .font(.largeTitle.weight(.bold))
+                    }
+
+                    Spacer()
+
+                    buttons?()
+                }
+                .padding(.horizontal)
+                .padding(.vertical, 8)
+                .fixedSize(horizontal: false, vertical: false)
 
                 content()
             }
@@ -79,7 +88,7 @@ public struct StackNavigation<Buttons: View, Content: View>: View {
 
 public extension StackNavigation where Buttons == EmptyView {
     init(
-        title: String,
+        title: String?,
         @ViewBuilder content: @escaping () -> Content
     ) {
         self.title = title

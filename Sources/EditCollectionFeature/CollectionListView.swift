@@ -99,7 +99,7 @@ extension EditCollectionView {
 
 struct EditCollectionView_Preview: PreviewProvider {
     static var previews: some View {
-        ModalCardView {
+        ModalCardContainer {
             EditCollectionView(
                 store: .init(
                     initialState: .init(

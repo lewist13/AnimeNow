@@ -22,6 +22,8 @@ import DiscordClient
 import DownloaderClient
 import VideoPlayerClient
 
+import Logger
+import Utilities
 import SharedModels
 
 import ComposableArchitecture
@@ -29,13 +31,10 @@ import ComposableArchitecture
 public struct AppReducer: ReducerProtocol {
     public init() { }
 
-    enum Route: String, CaseIterable {
-        case home
-        case search
-        case collection
-        case downloads
+    public enum Route: String, CaseIterable {
+        case home, search, collection, downloads, settings
 
-        var isIconSystemImage: Bool {
+        public var isIconSystemImage: Bool {
             switch self {
             case .collection:
                 return false
@@ -44,7 +43,7 @@ public struct AppReducer: ReducerProtocol {
             }
         }
 
-        var icon: String {
+        public var icon: String {
             switch self {
             case .home:
                 return "house"
@@ -54,10 +53,12 @@ public struct AppReducer: ReducerProtocol {
                 return "arrow.down"
             case .collection:
                 return "rectangle.stack.badge.play"
+            case .settings:
+                return "gearshape"
             }
         }
 
-        var selectedIcon: String {
+        public var selectedIcon: String {
             switch self {
             case .home:
                 return "house.fill"
@@ -67,36 +68,39 @@ public struct AppReducer: ReducerProtocol {
                 return self.icon
             case .collection:
                 return "rectangle.stack.badge.play.fill"
+            case .settings:
+                return "gearshape.fill"
             }
         }
 
-        var title: String {
+        public var title: String {
             .init(self.rawValue.prefix(1).capitalized + self.rawValue.dropFirst())
         }
 
-        static var allCases: [AppReducer.Route] {
+        public static var allCases: [AppReducer.Route] {
+            #if os(macOS)
             return [.home, .search, .collection, .downloads]
+            #else
+            return [.home, .search, .collection, .downloads, .settings]
+            #endif
         }
+
     }
 
     public struct State: Equatable {
-        @BindableState var route = Route.home
+        @BindableState public var route = Route.home
 
-        var appDelegate = AppDelegateReducer.State()
-
-        var home = HomeReducer.State()
-        var collection = CollectionsReducer.State()
-        var search = SearchReducer.State()
-        var downloads = DownloadsReducer.State()
+        public var home = HomeReducer.State()
+        public var collection = CollectionsReducer.State()
+        public var search = SearchReducer.State()
+        public var downloads = DownloadsReducer.State()
         public var settings = SettingsReducer.State()
 
-        var videoPlayer: AnimePlayerReducer.State?
-        var animeDetail: AnimeDetailReducer.State?
-        var modalOverlay: ModalOverlayReducer.State?
+        public var videoPlayer: AnimePlayerReducer.State?
+        public var animeDetail: AnimeDetailReducer.State?
+        public var modalOverlay: ModalOverlayReducer.State?
 
-        var totalDownloadsCount = 0
-
-        var animeProviders = [ProviderInfo]()
+        public var totalDownloadsCount = 0
 
         public init() { }
     }
@@ -124,11 +128,11 @@ public struct AppReducer: ReducerProtocol {
     @Dependency(\.mainQueue) var mainQueue
     @Dependency(\.discordClient) var discordClient
     @Dependency(\.databaseClient) var databaseClient
-    @Dependency(\.videoPlayerClient) var videoPlayerClient
     @Dependency(\.downloaderClient) var downloaderClient
+    @Dependency(\.videoPlayerClient) var videoPlayerClient
 
     public var body: some ReducerProtocol<State, Action> {
-        Scope(state: \.appDelegate, action: /Action.appDelegate) {
+        Scope(state: \.settings.userSettings, action: /Action.appDelegate) {
             AppDelegateReducer()
         }
 
@@ -154,7 +158,7 @@ public struct AppReducer: ReducerProtocol {
 
         BindingReducer()
 
-        Reduce(self.core)
+        Reduce(core)
             .ifLet(\.videoPlayer, action: /Action.videoPlayer) {
                 AnimePlayerReducer()
             }
@@ -164,6 +168,8 @@ public struct AppReducer: ReducerProtocol {
             .ifLet(\.modalOverlay, action: /Action.modalOverlay) {
                 ModalOverlayReducer()
             }
+
+        Reduce(discordRichPresence)
     }
 }
 
@@ -176,136 +182,12 @@ extension AppReducer.State {
 extension AppReducer {
     func core(state: inout State, action: Action) -> EffectTask<Action> {
         switch action {
-
-        case .setVideoPlayer(let item):
-            state.videoPlayer = item
-            if item == nil {
-                print("Close player")
-                return .run {
-                    await discordClient.setActivity(nil)
-                }
-            }
-
-        case .setAnimeDetail(let animeMaybe):
-            if let anime = animeMaybe, state.animeDetail == nil {
-                // Allow only replacing anime detail one at a time
-                state.animeDetail = anime
-            } else if animeMaybe == nil {
-                state.animeDetail = nil
-            }
-
-        case let .home(.animeTapped(anime)),
-             let .search(.onAnimeTapped(anime)):
-            return .action(
-                .setAnimeDetail(
-                    .init(
-                        anime: anime,
-                        availableProviders: state.animeProviders
-                    )
-                ),
-                animation: .interactiveSpring(response: 0.35, dampingFraction: 1.0)
-            )
-
-        case let .collection(.onAnimeTapped(anime)):
-            return .action(
-                .setAnimeDetail(
-                    .init(
-                        anime: anime,
-                        availableProviders: state.animeProviders
-                    )
-                ),
-                animation: .interactiveSpring(response: 0.35, dampingFraction: 1.0)
-            )
-
-        case let .home(.anyAnimeTapped(anime)):
-            return .action(
-                .setAnimeDetail(
-                    .init(
-                        anime: anime,
-                        availableProviders: state.animeProviders
-                    )
-                ),
-                animation: .interactiveSpring(response: 0.35, dampingFraction: 1.0)
-            )
-
-        case let .home(.resumeWatchingTapped(resumeWatching)):
-            return .action(
-                .setVideoPlayer(
-                    .init(
-                        player: videoPlayerClient.player(),
-                        anime: resumeWatching.animeStore,
-                        availableProviders: .init(items: state.animeProviders),
-                        selectedEpisode: Episode.ID(resumeWatching.episodeStore.number)
-                    )
-                )
-            )
-
-        case let .animeDetail(.play(anime, streamingProvider, selected)):
-            return .action(
-                .setVideoPlayer(
-                    .init(
-                        player: videoPlayerClient.player(),
-                        anime: anime,
-                        availableProviders: .init(items: state.animeProviders, selected: streamingProvider.name),
-                        streamingProvider: streamingProvider,
-                        selectedEpisode: selected
-                    )
-                )
-            )
-
-        case let .downloads(.playEpisode(anime, episodes, selected)):
-            return .action(
-                .setVideoPlayer(
-                    .init(
-                        player: videoPlayerClient.player(),
-                        anime: anime,
-                        availableProviders: .init(items: [.init(name: "Offline")], selected: "Offline"),
-                        streamingProvider: .init(
-                            name: "Offline",
-                            episodes: episodes.map { .init(title: $0.title, number: $0.number, description: "", isFiller: false, links: $0.links) }
-                        ),
-                        selectedEpisode: selected
-                    )
-                )
-            )
-
-        case .animeDetail(.close):
-            return .action(
-                .setAnimeDetail(nil),
-                animation: .easeInOut(duration: 0.25)
-            )
-
-        case .videoPlayer(.playerStatus(let status)):
-            struct ThrottleStatus: Hashable { }
-            if let videoState = state.videoPlayer {
-                let isPlaying = status == .playback(.playing)
-                return .run {
-                    await discordClient.setActivity(
-                        .watching(
-                            .init(
-                                name: videoState.anime.title,
-                                episode: videoState.episode?.title ?? "Episode \(videoState.stream.selectedEpisode)",
-                                image: (videoState.episode?.thumbnail?.link ?? videoState.anime.posterImage.largest?.link)?.absoluteString ?? "logo",
-                                progress: isPlaying ? videoState.playerProgress : 0,
-                                duration: isPlaying ? videoState.playerDuration : 0
-                            )
-                        )
-                    )
-                }
-            }
-
-        case .videoPlayer(.close):
-            return .action(
-                .setVideoPlayer(nil)
-            )
-
         case .appDelegate(.appDidEnterBackground):
-            let videoStoreUp = state.videoPlayer != nil
-            return .run { send in
-                if videoStoreUp {
+            if state.videoPlayer != nil {
+                return .run { send in
                     await send(.videoPlayer(.saveState))
                 }
-            }
+        }
 
         case .appDelegate(.appWillTerminate):
             return .run { send in
@@ -318,19 +200,136 @@ extension AppReducer {
             }
 
         case .appDelegate(.appDidFinishLaunching):
-            return .merge(
-                .run { send in
-                    let downloadCounts = downloaderClient.count()
+            state.settings.animeProviders = .loading
+            return .run { send in
+                await withTaskGroup(of: Void.self) { group in
+                    group.addTask {
+                        let downloadCounts = downloaderClient.count()
 
-                    for await count in downloadCounts {
-                        await send(.setDownloadingCount(count))
+                        for await count in downloadCounts {
+                            await send(.setDownloadingCount(count))
+                        }
                     }
-                },
-                .run {
-                    await .fetchedAnimeProviders(
-                        TaskResult { try await apiClient.request(.consumetAPI, .listProviders(of: .ANIME)) }
-                    )
+
+                    group.addTask {
+                        await send(
+                            .fetchedAnimeProviders(
+                                .init { try await apiClient.request(.consumetAPI, .listProviders(of: .ANIME)) }
+                            )
+                        )
+                    }
                 }
+            }
+
+        case .setVideoPlayer(let item):
+            state.videoPlayer = item
+            
+        case .setAnimeDetail(let animeMaybe):
+            if let anime = animeMaybe, state.animeDetail == nil {
+                // Allow only replacing anime detail one at a time
+                state.animeDetail = anime
+            } else if animeMaybe == nil {
+                state.animeDetail = nil
+            }
+
+        case let .home(.animeTapped(anime)),
+            let .search(.onAnimeTapped(anime)):
+            return .action(
+                .setAnimeDetail(
+                    .init(
+                        anime: anime,
+                        availableProviders: state.settings.selectableAnimeProviders
+                    )
+                ),
+                animation: .interactiveSpring(response: 0.35, dampingFraction: 1.0)
+            )
+
+        case let .collection(.onAnimeTapped(anime)):
+            return .action(
+                .setAnimeDetail(
+                    .init(
+                        anime: anime,
+                        availableProviders: state.settings.selectableAnimeProviders
+                    )
+                ),
+                animation: .interactiveSpring(response: 0.35, dampingFraction: 1.0)
+            )
+
+        case let .home(.anyAnimeTapped(anime)):
+            return .action(
+                .setAnimeDetail(
+                    .init(
+                        anime: anime,
+                        availableProviders: state.settings.selectableAnimeProviders
+                    )
+                ),
+                animation: .interactiveSpring(response: 0.35, dampingFraction: 1.0)
+            )
+
+        case let .home(.resumeWatchingTapped(resumeWatching)):
+            return .action(
+                .setVideoPlayer(
+                    .init(
+                        player: videoPlayerClient.player(),
+                        anime: resumeWatching.animeStore,
+                        availableProviders: state.settings.selectableAnimeProviders,
+                        selectedEpisode: Episode.ID(resumeWatching.episodeStore.number)
+                    )
+                )
+            )
+
+        case let .animeDetail(.play(anime, streamingProvider, selected)):
+            return .action(
+                .setVideoPlayer(
+                    .init(
+                        player: videoPlayerClient.player(),
+                        anime: anime,
+                        availableProviders: .init(
+                            items: state.settings.animeProviders.value ?? [],
+                            selected: streamingProvider.name
+                        ),
+                        streamingProvider: streamingProvider,
+                        selectedEpisode: selected
+                    )
+                )
+            )
+
+        case let .downloads(.playEpisode(anime, episodes, selected)):
+            return .action(
+                .setVideoPlayer(
+                    .init(
+                        player: videoPlayerClient.player(),
+                        anime: anime,
+                        availableProviders: .init(
+                            items: [.init(name: "Offline")],
+                            selected: "Offline"
+                        ),
+                        streamingProvider: .init(
+                            name: "Offline",
+                            episodes: episodes.map {
+                                .init(
+                                    title: $0.title,
+                                    number: $0.number,
+                                    description: "",
+                                    isFiller: false,
+                                    links: $0.links
+                                )
+                            }
+                        ),
+                        selectedEpisode: selected
+                    )
+                )
+            )
+
+        case .animeDetail(.close):
+            return .action(
+                .setAnimeDetail(nil),
+                animation: .easeInOut(duration: 0.25)
+            )
+
+        case .videoPlayer(.close):
+            return .action(
+                .setVideoPlayer(nil)
             )
 
         case .setModalOverlay(let overlay):
@@ -419,16 +418,27 @@ extension AppReducer {
             return .action(.setModalOverlay(nil), animation: .spring(response: 0.35, dampingFraction: 1))
 
         case .fetchedAnimeProviders(.success(let providers)):
-            state.animeProviders = providers
+            state.settings.animeProviders = .success(providers)
 
-        case .fetchedAnimeProviders(.failure(let error)):
-            state.animeProviders = []
-            print(error)
+        case .fetchedAnimeProviders(.failure):
+            state.settings.animeProviders = .failed
+            Logger.log(.error, "Failed to load anime providers from Consumet.")
 
         default:
             break
         }
 
         return .none
+    }
+}
+
+extension TaskResult {
+    var loadable: Loadable<Success> {
+        switch self {
+        case .success(let sendable):
+            return .success(sendable)
+        case .failure:
+            return .failed
+        }
     }
 }

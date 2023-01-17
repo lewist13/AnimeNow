@@ -41,23 +41,25 @@ public class SwordRPC {
 
     public func start() {
         stop()
-        taskRunner = Task {
-            await connect()
+        taskRunner = Task.detached { [weak self] in
+            guard let `self` = self else { return }
+            await self.connect()
 
-            while retryCount < maxRetryCount || maxRetryCount == 0 {
-                print("[SwordRPC] - Will retry to reconnect to Discord client in \(retryDuration) seconds")
-                try await Task.sleep(nanoseconds: .init((retryDuration) * 1_000_000_000))
-                await connect()
-                retryCount += 1
+            while self.retryCount < self.maxRetryCount || self.maxRetryCount == 0 {
+                print("[SwordRPC] - Will retry to reconnect to Discord client in \(self.retryDuration) seconds")
+                try await Task.sleep(nanoseconds: .init((self.retryDuration) * 1_000_000_000))
+                await self.connect()
+                self.retryCount += 1
             }
 
-            if retryCount > 0 {
+            if self.retryCount > 0 {
                 print("[SwordRPC] - Max retries reached trying to connect to Discord.")
             }
         }
     }
 
     public func stop() {
+        setPresence(nil)
         taskRunner?.cancel()
         taskRunner = nil
         try? discordSocket?.close()

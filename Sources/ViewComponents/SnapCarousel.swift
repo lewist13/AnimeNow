@@ -10,7 +10,6 @@ import SwiftUI
 import Foundation
 import IdentifiedCollections
 
-// To for acepting List....
 public struct SnapCarousel<Content: View, T: Identifiable>: View {
 
     /// Properties....

@@ -10,6 +10,7 @@ import Foundation
 import ComposableArchitecture
 
 public struct DiscordClient {
+    public let status: () -> AsyncStream<Status>
     public let isActive: Bool
     public let isConnected: Bool
     public let setActive: (Bool) async throws -> Void
@@ -17,6 +18,12 @@ public struct DiscordClient {
 }
 
 extension DiscordClient {
+    public enum Status: String, Equatable {
+        case connected = "Connected"
+        case failed = "Failed"
+        case offline = "Offline"
+    }
+
     public var isSupported: Bool {
         #if os(macOS)
         true

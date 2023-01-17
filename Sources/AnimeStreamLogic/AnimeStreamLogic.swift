@@ -39,8 +39,13 @@ extension AnimeStreamViewState {
     public init(_ state: AnimeStreamLogic.State) {
         self.init(
             availableProviders: state.availableProviders,
-            links: .init(items: state.episode?.links.sorted(by: \.audioDescription) ?? .init(), selected: state.selectedLink),
-            qualities: .init(items: state.sourceOptions.value?.sources ?? [], selected: state.selectedSource),
+            links: .init(
+                items: state.episode?.links.sorted(by: \.description) ?? .init(),
+                selected: state.selectedLink
+            ),
+            qualities: .init(
+                items: state.sourceOptions.value?.sources ?? [], selected: state.selectedSource
+            ),
             loadingLink: state.loadingProvider,
             loadingSource: !state.sourceOptions.finished
         )
@@ -142,10 +147,7 @@ extension AnimeStreamLogic {
     func core(_ state: inout State, _ action: Action) -> EffectTask<Action> {
         switch action {
         case .initialize:
-            state.availableProviders.selected =
-                state.availableProviders.selected ??
-                userDefaultsClient.get(.videoPlayerProvider) ??
-                state.availableProviders.items.first?.id
+            state.availableProviders.selected = state.availableProviders.selected ?? "Gogoanime"
             return fetchStreamingProvider(&state)
 
         case .fetchedProvider(let provider):

@@ -28,7 +28,7 @@ public enum EpisodeLink: Hashable, Identifiable, CustomStringConvertible {
         }
     }
 
-    public var description: String { audioDescription }
+    public var description: String { audio.description }
 
     case stream(id: String, audio: Audio)
     case offline(url: URL)
@@ -39,15 +39,6 @@ public enum EpisodeLink: Hashable, Identifiable, CustomStringConvertible {
             return audio
         default:
             return .sub
-        }
-    }
-
-    public var audioDescription: String {
-        switch self {
-        case .stream(_, let audio):
-            return audio.description
-        case .offline:
-            return "Unknown"
         }
     }
 

@@ -8,6 +8,7 @@
 import SwiftUI
 import HomeFeature
 import SearchFeature
+import SettingsFeature
 import CollectionsFeature
 import DownloadsFeature
 import AnimeDetailFeature
@@ -18,9 +19,7 @@ import ComposableArchitecture
 public struct AppView: View {
     let store: StoreOf<AppReducer>
 
-    public init(
-        store: StoreOf<AppReducer>
-    ) {
+    public init(store: StoreOf<AppReducer>) {
         self.store = store
     }
 
@@ -62,6 +61,14 @@ public struct AppView: View {
                     store: store.scope(
                         state: \.downloads,
                         action: AppReducer.Action.downloads
+                    )
+                )
+
+            case .settings:
+                SettingsView(
+                    store: store.scope(
+                        state: \.settings,
+                        action: AppReducer.Action.settings
                     )
                 )
             }

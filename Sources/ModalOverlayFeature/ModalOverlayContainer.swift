@@ -21,7 +21,7 @@ public struct ModalOverlayView: View {
     }
 
     public var body: some View {
-        ModalCardView(
+        ModalCardContainer(
             onDismiss: { ViewStore(store).send(.onClose) }
         ) {
             SwitchStore(store) {

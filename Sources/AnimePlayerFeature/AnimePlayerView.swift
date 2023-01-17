@@ -208,16 +208,14 @@ extension AnimePlayerView {
                     case .some(.skipRecap(to: let end)),
                             .some(.skipOpening(to: let end)),
                             .some(.skipEnding(to: let end)):
-                        
+
                         actionButtonBase(
                             "forward.fill",
                             viewState.state.action?.title ?? "",
                             .white,
                             .init(white: 0.25)
                         ) {
-                            viewState.send(.startSeeking)
                             viewState.send(.seeking(to: end))
-                            viewState.send(.stopSeeking)
                         }
 
                     case .some(.nextEpisode(let id)):
