@@ -59,11 +59,23 @@ extension AnimePlayerView {
                 viewState.send(.isHoveringPlayer(event == .mouseEntered))
             }
         }
-        .onReceive(
-            ViewStore(store).publisher.canShowPlayerOverlay
-        ) { showOverlay in
+        .onReceive(ViewStore(store).publisher.canShowPlayerOverlay) { showOverlay in
             showOverlay ? NSCursor.unhide() : NSCursor.setHiddenUntilMouseMoves(true)
+            NSWindow.ButtonType.allCases
+                .forEach {
+                    NSApp.mainWindow?
+                        .standardWindowButton($0)?
+                        .isHidden = !showOverlay
+                }
         }
+        .onReceive(ViewStore(store).publisher.playerIsFullScreen) { fullScreen in
+            NSWindow.ButtonType.allCases
+                .forEach {
+                    NSApp.mainWindow?
+                        .standardWindowButton($0)?
+                        .isHidden = !fullScreen
+                }
+        } 
         .onKeyDown { key in
             let viewStore = ViewStore(store)
             switch key {
@@ -78,22 +90,6 @@ extension AnimePlayerView {
             case .upArrow:
                 viewStore.send(.volume(to: viewStore.playerVolume + 0.10))
             }
-        }
-        .onReceive(ViewStore(store).publisher.playerIsFullScreen) { isFullScreen in
-            NSWindow.ButtonType.allCases
-                .forEach {
-                    NSApp.mainWindow?
-                        .standardWindowButton($0)?
-                        .isHidden = !isFullScreen
-                }
-        }
-        .onAppear {
-            NSWindow.ButtonType.allCases
-                .forEach {
-                    NSApp.mainWindow?
-                        .standardWindowButton($0)?
-                        .isHidden = true
-                }
         }
         .onDisappear {
             NSWindow.ButtonType.allCases

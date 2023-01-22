@@ -11,7 +11,7 @@
   <p align="center">
     <img src="https://img.shields.io/github/downloads/AnimeNow-Team/AnimeNow/total?color=green&style=for-the-badge"/>
     <img src="https://img.shields.io/badge/platforms-iOS%2C%20iPadOS%2C%20macOS-green?style=for-the-badge"/>
-    <a href="https://discord.gg/CtVur4sQ2N">
+    <a href="https://discord.gg/R5v8Sa3WHE">
       <img src="https://dcbadge.vercel.app/api/server/CtVur4sQ2N"/>
     </a>
   </p>

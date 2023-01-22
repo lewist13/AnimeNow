@@ -97,7 +97,7 @@ public struct SettingsView: View {
                                 .buttonStyle(.plain)
 
                                 Button {
-                                    openURL(.init(string: "https://discord.gg/CtVur4sQ2N")!)
+                                    openURL(.init(string: "https://discord.gg/R5v8Sa3WHE")!)
                                 } label: {
                                     HStack {
                                         Awesome.Brand.discord.image
