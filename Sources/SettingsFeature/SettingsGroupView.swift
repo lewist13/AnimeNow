@@ -12,8 +12,10 @@ public struct SettingsGroupView<Label: View, Items: View>: View {
     let label: () -> Label
     let items: () -> Items
 
+    private var padding = 12.0
+
     public init(
-        label: @escaping () -> Label,
+        @ViewBuilder label: @escaping () -> Label,
         @ViewBuilder items: @escaping () -> Items
     ) {
         self.label = label
@@ -21,25 +23,40 @@ public struct SettingsGroupView<Label: View, Items: View>: View {
     }
 
     public var body: some View {
-        LazyVStack(alignment: .leading, spacing: 0) {
+        LazyVStack(
+            alignment: .leading,
+            spacing: 0
+        ) {
             label()
+            divider
             LazyVStack(spacing: 1) {
                 items()
             }
-            .background(Color(white: 0.3))
-            .cornerRadius(12)
         }
+        .background(Color(white: 0.2))
+        .cornerRadius(padding)
+    }
+
+    @ViewBuilder
+    private var divider: some View {
+        Rectangle()
+            .frame(height: 1)
+            .foregroundColor(.gray.opacity(0.15))
+            .fixedSize(horizontal: false, vertical: true)
+            .padding(.horizontal, padding)
     }
 }
 
 public struct GroupLabel: View {
     let title: String
+    let padding = 12.0
 
     public var body: some View {
         Text(title)
             .font(.headline.bold())
-            .foregroundColor(Color(white: 0.65))
-            .padding(12)
+            .foregroundColor(.white)
+            .padding(padding)
+            .padding(.vertical, 4)
     }
 }
 

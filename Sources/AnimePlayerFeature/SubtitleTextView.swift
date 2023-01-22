@@ -161,7 +161,7 @@ extension SubtitleTextView {
 
                     self?.updateState(.success(try parser.parse()))
                 } catch {
-                    self?.updateState(.failed)
+                    self?.updateState(.failed(error))
                 }
             }
 

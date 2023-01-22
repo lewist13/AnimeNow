@@ -13,8 +13,7 @@ import ComposableArchitecture
 public class APIClientLive: APIClient {
     public func request<A: APIBase, O: Decodable>(
         _ api: A,
-        _ request: Request<A, O>,
-        _ decoder: JSONDecoder = .init()
+        _ request: Request<A, O>
     ) async throws -> O {
         do {
             guard var components = URLComponents(url: api.base, resolvingAgainstBaseURL: true) else {
@@ -42,7 +41,7 @@ public class APIClientLive: APIClient {
             urlRequest.setHeaders()
 
             let (data, _) = try await URLSession.shared.data(for: urlRequest)
-            return try decoder.decode(O.self, from: data)
+            return try request.decoder.decode(O.self, from: data)
         } catch {
             Logger.log(
                 .error,

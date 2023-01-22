@@ -34,7 +34,7 @@ public struct SearchReducer: ReducerProtocol {
     public enum Action: Equatable {
         case onAppear
         case searchQueryChanged(String)
-        case searchResult(TaskResult<[Anime]>)
+        case searchResult(Loadable<[Anime]>)
         case searchHistory([String])
         case clearSearchHistory
         case onAnimeTapped(Anime)
@@ -81,12 +81,8 @@ extension SearchReducer {
                 }
             }
 
-        case .searchResult(.success(let anime)):
-            state.loadable = .success(anime)
-
-        case .searchResult(.failure(let error)):
-            Logger.log(.error, error.localizedDescription)
-            state.loadable = .failed
+        case .searchResult(let loadable):
+            state.loadable = loadable
 
         case .clearSearchHistory:
             state.searched.removeAll()

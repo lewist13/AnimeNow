@@ -25,6 +25,8 @@ extension AnimeClient {
         throw AnimeClient.Error.providerNotAvailable
     } searchAnimes: { _ in
         []
+    } getRecentlyUpdated: {
+        []
     } getEpisodes: { _,_  in
         .init(name: "", episodes: [Episode(title: "", number: 0, description: "", isFiller: true)])
     } getSources: { _,_ in

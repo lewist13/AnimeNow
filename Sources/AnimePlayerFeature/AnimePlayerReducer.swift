@@ -144,7 +144,7 @@ public struct AnimePlayerReducer: ReducerProtocol {
 
         case fetchedAnimeInfoStore([AnimeStore])
         case fetchSkipTimes
-        case fetchedSkipTimes(TaskResult<[SkipTime]>)
+        case fetchedSkipTimes(Loadable<[SkipTime]>)
 
         // Sidebar Actions
 
@@ -637,12 +637,8 @@ extension AnimePlayerReducer {
             }
             .cancellable(id: FetchSkipTimesCancellable.self, cancelInFlight: true)
 
-        case .fetchedSkipTimes(.success(let skipTimes)):
-            state.skipTimes = .success(skipTimes)
-
-        case .fetchedSkipTimes(.failure(let error)):
-            Logger.log(.error, error.localizedDescription)
-            state.skipTimes = .failed
+        case .fetchedSkipTimes(let loadable):
+            state.skipTimes = loadable
 
         // Video Player Actions
 
@@ -856,7 +852,7 @@ extension AnimePlayerReducer {
             progress: progress
         )
 
-        return .fireAndForget { [animeStore] in
+        return .run { [animeStore] in
             try await databaseClient.insert(animeStore)
         }
     }

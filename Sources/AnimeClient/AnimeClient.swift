@@ -18,6 +18,7 @@ public struct AnimeClient {
     public let getAnimes: @Sendable ([Anime.ID]) async throws -> [Anime]
     public let getAnime: @Sendable (Anime.ID) async throws -> Anime
     public let searchAnimes: @Sendable (String) async throws -> [Anime]
+    public let getRecentlyUpdated: @Sendable () async throws -> [UpdatedAnimeEpisode]
     public let getEpisodes: @Sendable (Anime.ID, ProviderInfo) async -> AnimeStreamingProvider
     public let getSources: @Sendable (String, EpisodeLink) async throws -> SourcesOptions
     public let getSkipTimes: @Sendable (Int, Int) async throws -> [SkipTime]

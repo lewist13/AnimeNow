@@ -74,7 +74,7 @@ extension SettingsRowView {
             accessory: nil
         )
     }
-    
+
     public init(
         name: String,
         tapped: @escaping () -> Void
@@ -86,7 +86,7 @@ extension SettingsRowView {
             Image(systemName: "chevron.forward")
         }
     }
-    
+
     public init(
         name: String,
         text: String,
@@ -100,7 +100,7 @@ extension SettingsRowView {
                 .font(.footnote.bold())
         }
     }
-    
+
     public init(
         name: String,
         active: Binding<Bool>
@@ -152,7 +152,7 @@ extension SettingsRowView {
                             itemView(item)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .padding(.horizontal)
-                                .padding(.vertical, 10)
+                                .padding(.vertical, 8)
                                 .contentShape(Rectangle())
                                 .onTapGesture {
                                     withAnimation {

@@ -72,14 +72,17 @@ public extension VideoPlayerClient {
     struct Payload: Equatable {
         let source: Source
         let metadata: Metadata
+        let subtitles: [SourcesOptions.Subtitle]
 
         // TODO: Add subtitles to parse
         public init(
             source: Source,
-            metadata: VideoPlayerClient.Metadata
+            metadata: VideoPlayerClient.Metadata,
+            subtitles: [SourcesOptions.Subtitle] = []
         ) {
             self.source = source
             self.metadata = metadata
+            self.subtitles = subtitles
         }
     }
 

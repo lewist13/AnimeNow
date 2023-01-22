@@ -305,7 +305,7 @@ extension AnimePlayerView {
         ) { viewState in
             SeekbarView(
                 progress: viewState.binding(
-                    get: \.progress,
+                    get: { $0.isLoaded ? $0.progress : 0 },
                     send: { .seeking(to: $0) }
                 ),
                 buffered: viewState.state.buffered,

@@ -25,7 +25,7 @@ extension UserDefaultsClient {
         let key: String
         let defaultValue: T
 
-        init(_ key: String, defaultValue: T) {
+        public init(_ key: String, defaultValue: T) {
             self.key = key
             self.defaultValue = defaultValue
         }
@@ -35,7 +35,7 @@ extension UserDefaultsClient {
 // Bool
 
 extension UserDefaultsClient.Key<Bool> {
-    init(_ key: String) {
+    public init(_ key: String) {
         self.key = key
         self.defaultValue = false
     }
@@ -44,7 +44,7 @@ extension UserDefaultsClient.Key<Bool> {
 // Data
 
 extension UserDefaultsClient.Key<Data?> {
-    init(_ key: String) {
+    public init(_ key: String) {
         self.key = key
         self.defaultValue = nil
     }
@@ -53,7 +53,7 @@ extension UserDefaultsClient.Key<Data?> {
 // Int
 
 extension UserDefaultsClient.Key<Int> {
-    init(_ key: String) {
+    public init(_ key: String) {
         self.key = key
         self.defaultValue = 0
     }
@@ -62,7 +62,7 @@ extension UserDefaultsClient.Key<Int> {
 // Double
 
 extension UserDefaultsClient.Key<Double> {
-    init(_ key: String) {
+    public init(_ key: String) {
         self.key = key
         self.defaultValue = 0
     }
@@ -92,11 +92,11 @@ public extension UserDefaultsClient {
 
 public extension UserDefaultsClient {
     func `get`(_ key: Key<Bool>) -> Bool {
-        self.boolForKey(key.key)
+        self.boolForKey(key.key) || key.defaultValue
     }
 
     func `get`(_ key: Key<Data?>) -> Data? {
-        self.dataForKey(key.key)
+        self.dataForKey(key.key) ?? key.defaultValue
     }
 
     func `get`(_ key: Key<Int>) -> Int {
@@ -107,7 +107,11 @@ public extension UserDefaultsClient {
         self.doubleForKey(key.key)
     }
 
-    func `get`<T: Codable>(_ key: Key<T>) -> T? {
+    func `get`<T: Codable>(_ key: Key<T>) -> T {
+        (try? self.dataForKey(key.key)?.toObject()) ?? key.defaultValue
+    }
+
+    func `get`<T: Codable>(_ key: Key<T?>) -> T? {
         try? self.dataForKey(key.key)?.toObject() ?? key.defaultValue
     }
 }

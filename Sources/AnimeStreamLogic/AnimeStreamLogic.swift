@@ -240,22 +240,21 @@ extension AnimeStreamLogic {
         if let provider = state.streamingProvider,
            let episode = state.episode {
 
-            var preferredLink: EpisodeLink.ID?
-
-            if let audio = userDefaultsClient.get(.videoPlayerAudio) {
-                preferredLink = episode.links.first { audio == $0.audio }?.id ?? (audio.isDub ? episode.links.first { $0.audio.isDub }?.id : nil)
-            }
+            let preferredAudio = userDefaultsClient.get(.videoPlayerAudio)
+            var preferredLink: EpisodeLink.ID? = episode.links
+                .first { preferredAudio == $0.audio }?.id ?? (preferredAudio.isDub ? episode.links.first { $0.audio.isDub }?.id : nil)
 
             state.selectedLink = state.selectedLink ?? preferredLink ?? episode.links.first?.id
 
             if let link = state.link {
-                return .run { send in
-                    await withTaskCancellation(id: FetchSourceOptionsCancellable.self, cancelInFlight: true) {
-                        do {
-                            await send(.fetchedSources(.success(try await animeClient.getSources(provider.name, link))))
-                        } catch {
-                            await send(.fetchedSources(.failed))
-                        }
+                return .run {
+                    await withTaskCancellation(
+                        id: FetchSourceOptionsCancellable.self,
+                        cancelInFlight: true
+                    ) {
+                        await .fetchedSources(
+                            .init { try await animeClient.getSources(provider.name, link) }
+                        )
                     }
                 }
             }

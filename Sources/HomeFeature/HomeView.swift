@@ -71,7 +71,8 @@ public struct HomeView: View {
                                 )
                             )
 
-                            resumeWatchingEpisodes(
+                            listAnyEpisodes(
+                                title: "Resume Watching",
                                 isLoading: viewStore.isLoading,
                                 store: store.scope(
                                     state: \.resumeWatching
@@ -83,6 +84,14 @@ public struct HomeView: View {
                                 isLoading: viewStore.isLoading,
                                 store: store.scope(
                                     state: \.lastWatchedAnime
+                                )
+                            )
+
+                            listAnyEpisodes(
+                                title: "Recently Updated",
+                                isLoading: viewStore.isLoading,
+                                store: store.scope(
+                                    state: \.recentlyUpdated
                                 )
                             )
 
@@ -287,7 +296,7 @@ extension HomeView {
                                     anime: anime
                                 )
                                 .onTapGesture {
-                                    viewStore.send(.anyAnimeTapped(anime))
+                                    viewStore.send(.anyAnimeTapped(id: anime.id))
                                 }
                                 .disabled(isLoading)
                             }
@@ -317,33 +326,33 @@ extension HomeView {
 
 extension HomeView {
     @ViewBuilder
-    func resumeWatchingEpisodes(
+    func listAnyEpisodes(
+        title: String,
         isLoading: Bool,
-        store: Store<HomeReducer.LoadableEpisodes, HomeReducer.Action>
+        store: Store<Loadable<[HomeReducer.AnyWatchAnimeEpisode]>, HomeReducer.Action>
     ) -> some View {
-        WithViewStore(
-            store,
-            observe: { $0 }
+        LoadableViewStore(
+            loadable: store
         ) { viewStore in
-            Group {
-                if let items = viewStore.state.value, items.count > 0, !isLoading {
-                    VStack(alignment: .leading) {
-                        headerText("Resume Watching")
+            if viewStore.count > 0 && !isLoading {
+                VStack(alignment: .leading) {
+                    headerText(title)
 
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            LazyHStack(alignment: .center) {
-                                ForEach(items, id: \.id) { item in
-                                    ThumbnailItemBigView(
-                                        episode: item.episodeStore,
-                                        animeTitle: item.animeStore.title,
-                                        progress: item.episodeStore.progress,
-                                        progressSize: 6
-                                    )
-                                    .frame(height: DeviceUtil.isPhone ? 150 : 225)
-                                    .onTapGesture {
-                                        viewStore.send(.resumeWatchingTapped(item))
-                                    }
-                                    .contextMenu {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        LazyHStack(alignment: .center) {
+                            ForEach(viewStore.state, id: \.id) { item in
+                                ThumbnailItemBigView(
+                                    episode: item.episode,
+                                    animeTitle: item.anime.title,
+                                    progress: item.episodeStore?.progress,
+                                    progressSize: 6
+                                )
+                                .frame(height: DeviceUtil.isPhone ? 150 : 225)
+                                .onTapGesture {
+                                    viewStore.send(.watchEpisodeTapped(item))
+                                }
+                                .contextMenu {
+                                    if item.episodeStore != nil {
                                         Button {
                                             viewStore.send(.markAsWatched(item))
                                         } label: {
@@ -352,22 +361,18 @@ extension HomeView {
                                                 systemImage: "eye.fill"
                                             )
                                         }
+                                    }
 
-                                        Button {
-                                            viewStore.send(.anyAnimeTapped(item.animeStore.eraseAsRepresentable()))
-                                        } label: {
-                                            Text(
-                                                "More Details"
-                                            )
-                                        }
+                                    Button {
+                                        viewStore.send(.anyAnimeTapped(id: item.anime.id))
+                                    } label: {
+                                        Text("More Details")
                                     }
                                 }
                             }
-                            .padding(.horizontal)
                         }
+                        .padding(.horizontal)
                     }
-                } else {
-                    EmptyView()
                 }
             }
         }
@@ -392,12 +397,12 @@ struct HomeView_Previews: PreviewProvider {
         HomeView(
             store: .init(
                 initialState: .init(
-                    topTrendingAnime: .failed,
-                    topUpcomingAnime: .failed,
-                    highestRatedAnime: .failed,
-                    mostPopularAnime: .failed,
-                    resumeWatching: .failed,
-                    lastWatchedAnime: .failed
+                    topTrendingAnime: .idle,
+                    topUpcomingAnime: .idle,
+                    highestRatedAnime: .idle,
+                    mostPopularAnime: .idle,
+                    resumeWatching: .idle,
+                    lastWatchedAnime: .idle
                 ),
                 reducer: HomeReducer()
             )

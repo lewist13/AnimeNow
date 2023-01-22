@@ -51,6 +51,8 @@ let package = Package(
         .package(url: "https://github.com/thisIsTheFoxe/SwiftWebVTT.git", exact: "0.1.0"),
         .package(url: "https://github.com/NicholasBellucci/SociableWeaver.git", exact: "0.1.12"),
         .package(url: "https://github.com/apple/swift-collections.git", exact: "1.0.3"),
+        .package(url: "https://github.com/CoreOffice/XMLCoder.git", exact: "0.15.0"),
+        .package(url: "https://github.com/LiveUI/Awesome", exact: "2.4.0"),
         .package(path: "Sources/SwordRPC"),
         .package(path: "Sources/OpenCastSwift")
     ],
@@ -68,6 +70,7 @@ let package = Package(
                 "UserDefaultsClient",
                 "Utilities",
                 "ViewComponents",
+                .product(name: "Awesome", package: "Awesome"),
                 .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
                 .product(name: "Kingfisher", package: "Kingfisher")
             ]
@@ -206,6 +209,7 @@ let package = Package(
                 "SharedModels",
                 "Utilities",
                 "ViewComponents",
+                .product(name: "Awesome", package: "Awesome"),
                 .product(name: "ComposableArchitecture", package: "swift-composable-architecture")
             ]
         ),
@@ -287,7 +291,8 @@ let package = Package(
                 "Utilities",
                 "Logger",
                 .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
-                .product(name: "Kingfisher", package: "Kingfisher")
+                .product(name: "Kingfisher", package: "Kingfisher"),
+                .product(name: "XMLCoder", package: "XMLCoder")
             ]
         ),
 

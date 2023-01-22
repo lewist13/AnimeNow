@@ -52,8 +52,6 @@ private class PlayerWrapper {
     private let session = AVAudioSession.sharedInstance()
     #endif
 
-    private var loaderDelegate: BaseResourceLoaderDelegate?
-
     private var playerItemCancellables = Set<AnyCancellable>()
     private var cancellables = Set<AnyCancellable>()
     private var timerObserver: Any?
@@ -345,32 +343,9 @@ private class PlayerWrapper {
     func handle(_ action: VideoPlayerClient.Action) {
         switch action {
         case .play(let payload):
-            let headers = payload.source.headers ?? [:]
-            let url: URL
+            let videoPlayerItem = VideoPlayerItem(payload)
 
-            if payload.source.format == .mpd {
-                url = payload.source.url.change(scheme: DASHResourceLoader.customPlaylistScheme)
-            } else {
-                url = payload.source.url
-            }
-
-            let asset = AVURLAsset(
-                url: url,
-                options: ["AVURLAssetHTTPHeaderFieldsKey": headers]
-            )
-
-            if payload.source.format == .mpd {
-                let loaderDelegate = BaseResourceLoaderDelegate(loader: DASHResourceLoader())
-                asset.resourceLoader.setDelegate(
-                    loaderDelegate,
-                    queue: loaderDelegate.queue
-                )
-
-                self.loaderDelegate = loaderDelegate
-            }
-
-            let playerItem = AVPlayerItem(asset: asset)
-            player.replaceCurrentItem(with: playerItem)
+            player.replaceCurrentItem(with: videoPlayerItem)
             #if os(iOS)
             try? session.setActive(true)
             #endif
@@ -393,6 +368,7 @@ private class PlayerWrapper {
                     seconds: round(progress * player.totalDuration),
                     preferredTimescale: 1
                 )
+
                 player.seek(to: time, toleranceBefore: .zero, toleranceAfter: .zero)
             }
 

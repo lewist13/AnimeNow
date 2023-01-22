@@ -130,6 +130,8 @@ public protocol PageResponseObject {
 }
 
 extension AniListAPI {
+    public typealias PageMediaQuery = PageQuery<AniListAPI.Media>
+
     public struct PageQuery<O: GraphQLQueryObject & PageResponseObject>: GraphQLQuery {
         public typealias Response = GraphQL.Response<PageResponse<Self>>
 

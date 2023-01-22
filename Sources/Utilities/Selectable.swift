@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  Selectable.swift
 //  
 //
 //  Created by ErrorErrorError on 1/4/23.
@@ -9,6 +9,8 @@
 import Foundation
 
 public struct Selectable<E: Identifiable> {
+    public var selected: E.ID?
+
     public init(
         items: [E],
         selected: E.ID? = nil
@@ -22,8 +24,6 @@ public struct Selectable<E: Identifiable> {
             if item == nil { selected = nil }
         }
     }
-
-    public var selected: E.ID?
 
     public var item: E? {
         if let selected {

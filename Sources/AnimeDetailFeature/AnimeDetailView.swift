@@ -7,6 +7,7 @@
 //
 
 import SwiftUI
+import Awesome
 import Utilities
 import Kingfisher
 import SharedModels
@@ -448,11 +449,13 @@ extension AnimeDetailView {
         let providers: Selectable<ProviderInfo>
         let episodes: Loadable<[Episode]>
         let compact: Bool
+        let ascendingOrder: Bool
 
         init(_ state: AnimeDetailReducer.State) {
             self.providers = state.stream.availableProviders
             self.episodes = state.episodes
             self.compact = state.compactEpisodes
+            self.ascendingOrder = state.episodesAscendingOrder
         }
     }
 
@@ -492,12 +495,34 @@ extension AnimeDetailView {
                         }
                         .font(.body.bold())
                     }
+
+                    HStack(spacing: 8) {
+                        Awesome.Solid.sortAmountDownAlt.image
+                            .size(20)
+                            .foregroundColor(viewState.ascendingOrder ? .white : .gray)
+                            .onTapGesture {
+                                viewState.send(
+                                    .toggleEpisodeOrder,
+                                    animation: .easeInOut(duration: 0.25)
+                                )
+                            }
+                            .disabled(viewState.ascendingOrder)
+
+                        Awesome.Solid.sortAmountUp.image
+                            .size(20)
+                            .foregroundColor(!viewState.ascendingOrder ? .white : .gray)
+                            .onTapGesture {
+                                viewState.send(
+                                    .toggleEpisodeOrder,
+                                    animation: .easeInOut(duration: 0.25)
+                                )
+                            }
+                            .disabled(!viewState.ascendingOrder)
+                    }
                 }
                 .padding(.horizontal)
 
                 HStack {
-                    Spacer()
-
                     ContextButton(
                         items: viewState.providers.items
                             .map {
@@ -516,7 +541,7 @@ extension AnimeDetailView {
                                     .aspectRatio(contentMode: .fit)
                                     .frame(width: 18, height: 18)
                             }
-                            
+
                             Text(viewState.providers.item?.name ?? "Not Selected")
                                 .foregroundColor(.white)
 
@@ -533,14 +558,20 @@ extension AnimeDetailView {
                         .clipShape(Capsule())
                         .fixedSize()
                     }
+
+                    Spacer()
+
+                    // TODO: Add option for selecting a list of episodes
+
                 }
                 .padding(.horizontal)
+
                 LoadableView(
                     loadable: viewState.episodes
                 ) { episodes in
                     if episodes.count > 0 {
                         generateEpisodesContainer(
-                            episodes,
+                            viewState.ascendingOrder ? episodes : episodes.reversed().map { $0 },
                             viewState.compact
                         )
                     } else {

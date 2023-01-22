@@ -27,6 +27,7 @@ public struct AnimeDetailReducer: ReducerProtocol {
         public var collectionStores = Loadable<[CollectionStore]>.idle
         public var episodesStatus = Set<DownloaderClient.EpisodeStorage>([])
         public var compactEpisodes = false
+        public var episodesAscendingOrder = true
 
         public init(
             animeId: Anime.ID,
@@ -51,11 +52,12 @@ public struct AnimeDetailReducer: ReducerProtocol {
         case closeButtonPressed
         case close
         case toggleCompactEpisodes
+        case toggleEpisodeOrder
         case tappedCollectionList
         case showCollectionsList(Anime.ID, Set<CollectionStore>)
         case markEpisodeAsWatched(Episode.ID)
         case markEpisodeAsUnwatched(Int)
-        case fetchedAnime(TaskResult<Anime>)
+        case fetchedAnime(Loadable<Anime>)
         case selectedEpisode(Episode.ID)
         case downloadEpisode(Episode.ID)
         case episodesStatus(Set<DownloaderClient.EpisodeStorage>)
@@ -142,6 +144,7 @@ extension AnimeDetailReducer {
         switch action {
         case .onAppear:
             state.compactEpisodes = userDefaultsClient.get(.compactEpisodes)
+            state.episodesAscendingOrder = userDefaultsClient.get(.episodesAscendingOrder)
 
             if !state.anime.hasInitialized {
                 return fetchAnime(&state)
@@ -217,12 +220,9 @@ extension AnimeDetailReducer {
                 return fetchAnime(&state)
             }
 
-        case .fetchedAnime(.success(let anime)):
-            state.anime = .success(anime)
-            return self.startObservations(&state)
-
-        case .fetchedAnime(.failure):
-            state.anime = .failed
+        case .fetchedAnime(let loaded):
+            state.anime = loaded
+            if case .success = loaded { return startObservations(&state) }
 
         case .fetchedAnimeFromDB(let animesMatched):
             guard let anime = state.anime.value else { break }
@@ -236,6 +236,13 @@ extension AnimeDetailReducer {
 
             return .run { [state] in
                 await userDefaultsClient.set(.compactEpisodes, value: state.compactEpisodes)
+            }
+
+        case .toggleEpisodeOrder:
+            state.episodesAscendingOrder.toggle()
+
+            return .run { [state] in
+                await userDefaultsClient.set(.episodesAscendingOrder, value: state.episodesAscendingOrder)
             }
 
         case .play:

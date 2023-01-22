@@ -69,9 +69,7 @@ public struct ContextButton<Label: View>: View {
             .background(
                 GeometryReader { geometryProxy in
                     Spacer()
-                        .onChange(
-                            of: geometryProxy.frame(in: .global)
-                        ) { newValue in
+                        .onChange(of: geometryProxy.frame(in: .global)) { newValue in
                             menu.frame = newValue
                         }
                 }

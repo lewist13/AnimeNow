@@ -5,6 +5,7 @@
 //  
 //
 
+import Utilities
 import FileClient
 import SharedModels
 import DiscordClient
@@ -21,7 +22,7 @@ public struct AppDelegateReducer: ReducerProtocol {
         case appDidFinishLaunching
         case appDidEnterBackground
         case appWillTerminate
-        case userSettingsLoaded(TaskResult<UserSettings>)
+        case userSettingsLoaded(Loadable<UserSettings>)
     }
 
     public var body: some ReducerProtocol<State, Action> {
@@ -70,7 +71,7 @@ extension AppDelegateReducer {
             }
 
         case .userSettingsLoaded(let result):
-            state = (try? result.value) ?? state
+            state = result.value ?? state
             return .run { [state] send in
                 try await discordClient.setActive(state.discordEnabled)
             }

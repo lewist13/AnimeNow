@@ -11,7 +11,7 @@ public enum Loadable<T> {
     case idle
     case loading
     case success(T)
-    case failed
+    case failed(Error)
 }
 
 extension Loadable {
@@ -42,6 +42,22 @@ extension Loadable {
         }
     }
 
+    public var successful: Bool {
+        switch self {
+        case .success: return true
+        default: return false
+        }
+    }
+
+    public var failed: Bool {
+        switch self {
+        case .failed:
+            return true
+        default:
+            return false
+        }
+    }
+
     public var value: T? {
         if case .success(let value) = self {
             return value
@@ -57,10 +73,33 @@ extension Loadable {
             return .loading
         case .success(let item):
             return .success(mapped(item))
-        case .failed:
-            return .failed
+        case .failed(let error):
+            return .failed(error)
         }
     }
 }
 
-extension Loadable: Equatable where T: Equatable {}
+extension Loadable: Equatable where T: Equatable {
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        switch (lhs, rhs) {
+        case let (.success(lhs), .success(rhs)):
+            return lhs == rhs
+        case let (.failed(lhs), .failed(rhs)):
+            return String(reflecting: lhs) == String(reflecting: rhs)
+        case (.loading, .loading), (.idle, .idle):
+            return true
+        default:
+            return false
+        }
+    }
+}
+
+extension Loadable {
+    public init(capture body: @Sendable () async throws -> T) async {
+      do {
+        self = .success(try await body())
+      } catch {
+        self = .failed(error)
+      }
+    }
+}

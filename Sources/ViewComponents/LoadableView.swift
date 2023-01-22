@@ -72,11 +72,13 @@ extension LoadableView where Loading == EmptyView, Failed == EmptyView, Idle == 
         loadable: Loadable<T>,
         @ViewBuilder loadedView: @escaping (T) -> Loaded
     ) {
-        self.loadable = loadable
-        self.loadedView = loadedView
-        self.failedView =  { EmptyView() }
-        self.loadingView = { EmptyView() }
-        self.idleView = { EmptyView() }
+        self.init(
+            loadable: loadable,
+            loadedView: loadedView,
+            failedView: { EmptyView() },
+            loadingView: { EmptyView() },
+            idleView: { EmptyView() }
+        )
     }
 }
 
@@ -87,25 +89,27 @@ extension LoadableView where Loading == Idle {
         @ViewBuilder failedView: @escaping () -> Failed,
         @ViewBuilder waitingView: @escaping () -> Idle
     ) {
-        self.loadable = loadable
-        self.loadedView = loadedView
-        self.failedView = failedView
-        self.loadingView = waitingView
-        self.idleView = waitingView
+        self.init(
+            loadable: loadable,
+            loadedView: loadedView,
+            failedView: failedView,
+            loadingView: waitingView,
+            idleView: waitingView
+        )
     }
 }
 
 public struct LoadableStore<T: Equatable, Action, Loaded: View, Failed: View, Loading: View, Idle: View>: View {
     let store: Store<Loadable<T>, Action>
     let loadedView: (Store<T, Action>) -> Loaded
-    let failedView: (Store<Void, Action>) -> Failed
+    let failedView: (Store<Error, Action>) -> Failed
     let loadingView: (Store<Void, Action>) -> Loading
     let idleView: (Store<Void, Action>) -> Idle
 
     public init(
         store: Store<Loadable<T>, Action>,
         @ViewBuilder loadedView: @escaping (Store<T, Action>) -> Loaded,
-        @ViewBuilder failedView: @escaping (Store<Void, Action>) -> Failed,
+        @ViewBuilder failedView: @escaping (Store<Error, Action>) -> Failed,
         @ViewBuilder loadingView: @escaping (Store<Void, Action>) -> Loading,
         @ViewBuilder idleView: @escaping (Store<Void, Action>) -> Idle
     ) {
@@ -143,7 +147,7 @@ extension LoadableStore where Loading == Idle {
     public init(
         store: Store<Loadable<T>, Action>,
         @ViewBuilder loadedView: @escaping (Store<T, Action>) -> Loaded,
-        @ViewBuilder failedView: @escaping (Store<Void, Action>) -> Failed,
+        @ViewBuilder failedView: @escaping (Store<Error, Action>) -> Failed,
         @ViewBuilder waitingView: @escaping (Store<Void, Action>) -> Idle
     ) {
         self.store = store
@@ -151,5 +155,72 @@ extension LoadableStore where Loading == Idle {
         self.failedView = failedView
         self.loadingView = waitingView
         self.idleView = waitingView
+    }
+}
+
+public struct LoadableViewStore<T: Equatable, Action, Loaded: View, Failed: View, Loading: View, Idle: View>: View {
+    let store: Store<Loadable<T>, Action>
+    let loadedView: (ViewStore<T, Action>) -> Loaded
+    let failedView: (ViewStore<Void, Action>) -> Failed
+    let loadingView: (ViewStore<Void, Action>) -> Loading
+    let idleView: (ViewStore<Void, Action>) -> Idle
+
+    public var body: some View {
+        LoadableStore(
+            store: store
+        ) { store in
+            WithViewStore(
+                store,
+                observe: { $0 },
+                content: loadedView
+            )
+        } failedView: { store in
+            WithViewStore(
+                store.stateless,
+                content: failedView
+            )
+        } loadingView: { store in
+            WithViewStore(
+                store,
+                content: loadingView
+            )
+        } idleView: { store in
+            WithViewStore(
+                store,
+                content: idleView
+            )
+        }
+    }
+}
+
+extension LoadableViewStore where Loading == EmptyView, Failed == EmptyView, Idle == EmptyView {
+    public init(
+        loadable: Store<Loadable<T>, Action>,
+        @ViewBuilder loadedView: @escaping (ViewStore<T, Action>) -> Loaded
+    ) {
+        self.init(
+            store: loadable,
+            loadedView: loadedView,
+            failedView: { _ in EmptyView() },
+            loadingView: { _ in EmptyView() },
+            idleView: { _ in EmptyView() }
+        )
+    }
+}
+
+extension LoadableViewStore where Loading == Idle {
+    public init(
+        loadable: Store<Loadable<T>, Action>,
+        @ViewBuilder loadedView: @escaping (ViewStore<T, Action>) -> Loaded,
+        @ViewBuilder failedView: @escaping (ViewStore<Void, Action>) -> Failed,
+        @ViewBuilder waitingView: @escaping (ViewStore<Void, Action>) -> Idle
+    ) {
+        self.init(
+            store: loadable,
+            loadedView: loadedView,
+            failedView: failedView,
+            loadingView: waitingView,
+            idleView: waitingView
+        )
     }
 }

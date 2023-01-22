@@ -14,20 +14,8 @@ public protocol APIClient {
     @discardableResult
     func request<A: APIBase, O: Decodable>(
         _ api: A,
-        _ request: Request<A, O>,
-        _ decoder: JSONDecoder
+        _ request: Request<A, O>
     ) async throws -> O
-}
-
-extension APIClient {
-    @discardableResult
-    public func request<A: APIBase, O: Decodable>(
-        _ api: A = A.shared,
-        _ request: Request<A, O>,
-        _ decoder: JSONDecoder = .init()
-    ) async throws -> O {
-        try await self.request(api, request, decoder)
-    }
 }
 
 private enum APIClientKey: DependencyKey {
@@ -52,7 +40,7 @@ extension APIBase {
     public static var aniSkipAPI: AniSkipAPI { AniSkipAPI.shared }
     public static var consumetAPI: ConsumetAPI { ConsumetAPI.shared }
     public static var kitsuAPI: KitsuAPI { KitsuAPI.shared }
-    
+    public static var enimeAPI: EnimeAPI { EnimeAPI.shared }
 }
 
 public struct EmptyResponse: Decodable {}
@@ -78,6 +66,7 @@ public struct Request<Route: APIBase, O: Decodable> {
     var query: [URLQueryItem]? = nil
     var method: Method = .get
     var headers: ((Route) -> [String: CustomStringConvertible])? = nil
+    var decoder: JSONDecoder = .init()
 
     enum Method: CustomStringConvertible {
         case get

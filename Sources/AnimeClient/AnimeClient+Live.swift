@@ -23,78 +23,72 @@ extension AnimeClient {
             let response = try await apiClient.request(
                 .aniListAPI,
                 .graphql(
-                    AniListAPI.PageQuery<AniListAPI.Media>.self,
+                    AniListAPI.PageMediaQuery.self,
                     .init(
                         itemArguments: .defaultArgs + [.sort([.TRENDING_DESC, .POPULARITY_DESC])]
                     )
                 )
             )
-
             return response.data.Page.items
                 .map(AniListAPI.convert(from:))
         } getTopUpcomingAnime: {
             let response = try await apiClient.request(
                 .aniListAPI,
                 .graphql(
-                    AniListAPI.PageQuery<AniListAPI.Media>.self,
+                    AniListAPI.PageMediaQuery.self,
                     .init(
                         itemArguments: .defaultArgs + [.sort([.TRENDING_DESC, .POPULARITY_DESC]), .status(.NOT_YET_RELEASED)]
                     )
                 )
             )
-
             return response.data.Page.items
                 .map(AniListAPI.convert(from:))
         } getTopAiringAnime: {
             let response = try await apiClient.request(
                 .aniListAPI,
                 .graphql(
-                    AniListAPI.PageQuery<AniListAPI.Media>.self,
+                    AniListAPI.PageMediaQuery.self,
                     .init(
                         itemArguments: .defaultArgs + [.sort([.TRENDING_DESC, .SCORE_DESC]), .status(.RELEASING)]
                     )
                 )
             )
-
             return response.data.Page.items
                 .map(AniListAPI.convert(from:))
         } getHighestRatedAnime: {
             let response = try await apiClient.request(
                 .aniListAPI,
                 .graphql(
-                    AniListAPI.PageQuery<AniListAPI.Media>.self,
+                    AniListAPI.PageMediaQuery.self,
                     .init(
                         itemArguments: .defaultArgs + [.sort([.SCORE_DESC]), .status(.RELEASING) ]
                     )
                 )
             )
-
             return response.data.Page.items
                 .map(AniListAPI.convert(from:))
         } getMostPopularAnime: {
             let response = try await apiClient.request(
                 .aniListAPI,
                 .graphql(
-                    AniListAPI.PageQuery<AniListAPI.Media>.self,
+                    AniListAPI.PageMediaQuery.self,
                     .init(
                         itemArguments: .defaultArgs + [.sort([.POPULARITY_DESC])]
                     )
                 )
             )
-
             return response.data.Page.items
                 .map(AniListAPI.convert(from:))
         } getAnimes: { animeIds in
             let response = try await apiClient.request(
                 .aniListAPI,
                 .graphql(
-                    AniListAPI.PageQuery<AniListAPI.Media>.self,
+                    AniListAPI.PageMediaQuery.self,
                     .init(
                         itemArguments: .defaultArgs + [.idIn(animeIds)]
                     )
                 )
             )
-
             return response.data.Page.items
                 .map(AniListAPI.convert(from:))
         } getAnime: { animeId in
@@ -105,21 +99,22 @@ extension AnimeClient {
                     [.id(animeId)]
                 )
             )
-
             return AniListAPI.convert(from: response.data.Media)
         } searchAnimes: { query in
             let response = try await apiClient.request(
                 .aniListAPI,
                 .graphql(
-                    AniListAPI.PageQuery<AniListAPI.Media>.self,
+                    AniListAPI.PageMediaQuery.self,
                     .init(
                         itemArguments: .defaultArgs + [.search(query), .sort([.POPULARITY_DESC])]
                     )
                 )
             )
-
             return response.data.Page.items
                 .map(AniListAPI.convert(from:))
+        } getRecentlyUpdated: {
+            let updated = try await apiClient.request(.enimeAPI, .recentEpisodes())
+            return updated.data.map(EnimeAPI.convert)
         } getEpisodes: { animeId, provider in
             if let episodesCached = cachedStreamingProviders.value(forKey: "\(animeId)-\(provider.name)") {
                 return episodesCached

@@ -120,7 +120,7 @@ public struct AppReducer: ReducerProtocol {
         case videoPlayer(AnimePlayerReducer.Action)
         case animeDetail(AnimeDetailReducer.Action)
         case modalOverlay(ModalOverlayReducer.Action)
-        case fetchedAnimeProviders(TaskResult<[ProviderInfo]>)
+        case fetchedAnimeProviders(Loadable<[ProviderInfo]>)
         case binding(BindingAction<State>)
     }
 
@@ -255,25 +255,25 @@ extension AppReducer {
                 animation: .interactiveSpring(response: 0.35, dampingFraction: 1.0)
             )
 
-        case let .home(.anyAnimeTapped(anime)):
+        case let .home(.anyAnimeTapped(animeId)):
             return .action(
                 .setAnimeDetail(
                     .init(
-                        anime: anime,
+                        animeId: animeId,
                         availableProviders: state.settings.selectableAnimeProviders
                     )
                 ),
                 animation: .interactiveSpring(response: 0.35, dampingFraction: 1.0)
             )
 
-        case let .home(.resumeWatchingTapped(resumeWatching)):
+        case let .home(.watchEpisodeTapped(resumeWatching)):
             return .action(
                 .setVideoPlayer(
                     .init(
                         player: videoPlayerClient.player(),
-                        anime: resumeWatching.animeStore,
+                        anime: resumeWatching.anime,
                         availableProviders: state.settings.selectableAnimeProviders,
-                        selectedEpisode: Episode.ID(resumeWatching.episodeStore.number)
+                        selectedEpisode: Episode.ID(resumeWatching.episode.number)
                     )
                 )
             )
@@ -417,28 +417,17 @@ extension AppReducer {
         case .modalOverlay(.onClose):
             return .action(.setModalOverlay(nil), animation: .spring(response: 0.35, dampingFraction: 1))
 
-        case .fetchedAnimeProviders(.success(let providers)):
-            state.settings.animeProviders = .success(providers)
+        case .fetchedAnimeProviders(let loadable):
+            state.settings.animeProviders = loadable
 
-        case .fetchedAnimeProviders(.failure):
-            state.settings.animeProviders = .failed
-            Logger.log(.error, "Failed to load anime providers from Consumet.")
+            if loadable.failed {
+                Logger.log(.error, "Failed to load anime providers from Consumet.")
+            }
 
         default:
             break
         }
 
         return .none
-    }
-}
-
-extension TaskResult {
-    var loadable: Loadable<Success> {
-        switch self {
-        case .success(let sendable):
-            return .success(sendable)
-        case .failure:
-            return .failed
-        }
     }
 }

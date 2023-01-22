@@ -1,16 +1,19 @@
 //
-//  SettingsView+iOS.swift
+//  SettingsView.swift
 //  Anime Now!
 //
 //  Created by ErrorErrorError on 12/15/22.  
 //
 
+import Awesome
 import SwiftUI
 import DiscordClient
 import ViewComponents
 import ComposableArchitecture
 
 public struct SettingsView: View {
+    @Environment(\.openURL) var openURL
+
     let store: StoreOf<SettingsReducer>
 
     public init(store: StoreOf<SettingsReducer>) {
@@ -28,23 +31,15 @@ public struct SettingsView: View {
                         SettingsGroupView(title: "General") {
                             SettingsRowView.listSelection(
                                 name: "Preferred Provider",
-                                selectable: viewStore.selectableAnimeProviders,
-                                onSelectedItem: {
-                                    viewStore.send(
-                                        .binding(
-                                            .set(\.$userSettings.preferredProvider, $0)
-                                        )
-                                    )
-                                },
-                                itemView: { item in
-                                    Text(item.description)
-                                }
-                            )
-
-                            SettingsRowView(
-                                name: "About"
+                                selectable: viewStore.selectableAnimeProviders
                             ) {
-
+                                viewStore.send(
+                                    .binding(
+                                        .set(\.$userSettings.preferredProvider, $0)
+                                    )
+                                )
+                            } itemView: { item in
+                                Text(item.description)
                             }
                         }
 
@@ -69,8 +64,94 @@ public struct SettingsView: View {
                                 value: viewStore.state
                             )
                         }
+
+                        SettingsGroupView(title: "About") {
+                            VStack(spacing: 12) {
+                                Button {
+                                    openURL(.init(string: "https://github.com/AnimeNow-Team/AnimeNow")!)
+                                } label: {
+                                    HStack {
+                                        Awesome.Brand.github.image
+                                            .foregroundColor(.white)
+                                            .size(24)
+
+                                        Text("GitHub")
+                                            .font(.body.weight(.bold))
+                                            .foregroundColor(.white)
+                                    }
+                                    .padding(12)
+                                    .background(
+                                        RoundedRectangle(
+                                            cornerRadius: 12,
+                                            style: .continuous
+                                        )
+                                        .foregroundColor(
+                                            .init(
+                                                red: 0.09,
+                                                green: 0.08,
+                                                blue: 0.08
+                                            )
+                                        )
+                                    )
+                                }
+                                .buttonStyle(.plain)
+
+                                Button {
+                                    openURL(.init(string: "https://discord.gg/CtVur4sQ2N")!)
+                                } label: {
+                                    HStack {
+                                        Awesome.Brand.discord.image
+                                            .foregroundColor(.white)
+                                            .size(24)
+
+                                        Text("Join our Discord")
+                                            .font(.body.weight(.bold))
+                                            .foregroundColor(.white)
+                                    }
+                                    .padding(12)
+                                    .background(
+                                        RoundedRectangle(
+                                            cornerRadius: 12,
+                                            style: .continuous
+                                        )
+                                        .foregroundColor(
+                                            .init(
+                                                .sRGB,
+                                                red: 0.447058823529412,
+                                                green: 0.537254901960784,
+                                                blue: 0.854901960784314
+                                            )
+                                        )
+                                    )
+                                }
+                                .buttonStyle(.plain)
+                                
+                                Button {
+                                    openURL(.init(string: "https://www.buymeacoffee.com/animenow")!)
+                                } label: {
+                                    Text("☕ Buy me a coffee")
+                                        .font(.body.weight(.bold))
+                                        .foregroundColor(.black)
+                                        .padding(12)
+                                        .background(
+                                            RoundedRectangle(
+                                                cornerRadius: 12,
+                                                style: .continuous
+                                            )
+                                            .foregroundColor(.yellow)
+                                        )
+                                }
+                                .buttonStyle(.plain)
+                            }
+                            .padding()
+                        }
                     }
                     .padding(.horizontal)
+
+                    Text("Made with ❤️")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundColor(.gray)
+                        .padding()
                 }
             }
             .onAppear {
@@ -89,5 +170,7 @@ struct SettingsView_Previews: PreviewProvider {
             )
         )
         .preferredColorScheme(.dark)
+        .frame(width: 300)
+        .fixedSize()
     }
 }
