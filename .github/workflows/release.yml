@@ -95,15 +95,31 @@ jobs:
           echo "message_body=TODO" >> $GITHUB_ENV          
 
       - name: Release to GitHub
+        id: release
         uses: softprops/action-gh-release@v1
         with:
-          fail_on_unmatched_files: false
+          fail_on_unmatched_files: true
           files: |
             ${{ env.IOS_OUTPUT_PATH }}
             ${{ env.MACOS_OUTPUT_PATH }}
           token: ${{ secrets.GITHUB_TOKEN }}
-          generate_release_notes: ${{ github.event.inputs.is_prerelease == 'true' }}
+          generate_release_notes: true
           prerelease: ${{ github.event.inputs.is_prerelease == 'true' }}
           body: ${{ env.message_body }}
           name: ${{ env.message_title }}
           tag_name: ${{ env.semantic_version }}
+
+      - name: Notify Discord Beta Webhook
+        if: ${{ github.event.inputs.is_prerelease == 'true' }}
+        uses:  sarisia/actions-status-discord@v1.11.0
+        with:
+          webhook: ${{ secrets.PRERELEASE_DISCORD_WEBHOOK }}
+          username: GitHub Bot
+          avatar_url: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
+          title: Version `${{ env.semantic_version }}` now available!
+          description: |
+            Click [here](${{ fromJSON(steps.release.outputs.assets)[0].browser_download_url }}) to download for iOS!
+            Click [here](${{ fromJSON(steps.release.outputs.assets)[1].browser_download_url }}) to download for macOS!
+
+            View full changelogs [here](${{ steps.release.outputs.url }}).
+          content: "<@&${{ secrets.BETA_ROLE_ID }}>"
