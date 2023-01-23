@@ -196,13 +196,13 @@ extension AnimeClient {
     ) -> [Episode] {
         var episodes = [Episode]()
 
-        let primary = sub
-        let secondary = dub
+        let primary = sub.sorted(by: \.number)
+        let secondary = dub.sorted(by: \.number)
 
-        var primaryIndex = 0
-        var secondaryIndex = 0
-
-        let maxEpisodesCount = max(primary.count, secondary.count)
+        let maxEpisodesCount = max(
+            primary.last?.number ?? primary.count,
+            secondary.last?.number ?? secondary.count
+        )
 
         for mainInx in 0..<maxEpisodesCount {
             let episodeNumber = mainInx + 1
@@ -210,27 +210,21 @@ extension AnimeClient {
 
             var mainEpisodeInfo: ConsumetAPI.Episode?
 
-            if primaryIndex < primary.count {
-                let episode = primary[primaryIndex]
-                if episode.number == episodeNumber {
-                    mainEpisodeInfo = episode
-                    providers.insert(.stream(id: episode.id, audio: .sub))
-                    primaryIndex += 1
+            primary.filter({ $0.number == episodeNumber })
+                .forEach {
+                    if mainEpisodeInfo == nil { mainEpisodeInfo = $0 }
+                    providers.insert(.stream(id: $0.id, audio: .sub))
                 }
-            }
 
-            if secondaryIndex < secondary.count {
-                let episode = secondary[secondaryIndex]
-                if episode.number == episodeNumber {
-                    mainEpisodeInfo = mainEpisodeInfo ?? episode
-                    if let type = episode.type {
-                        providers.insert(.stream(id: episode.id, audio: .custom(type)))
+            secondary.filter({ $0.number == episodeNumber })
+                .forEach {
+                    if mainEpisodeInfo == nil { mainEpisodeInfo = $0 }
+                    if let type = $0.type {
+                        providers.insert(.stream(id: $0.id, audio: .custom(type)))
                     } else {
-                        providers.insert(.stream(id: episode.id, audio: .dub))
+                        providers.insert(.stream(id: $0.id, audio: .dub))
                     }
-                    secondaryIndex += 1
                 }
-            }
 
             guard let mainEpisodeInfo = mainEpisodeInfo else { continue }
 
