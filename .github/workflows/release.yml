@@ -8,7 +8,10 @@ on:
         default: true
         description: 'Is pre-release'
         required: true
-
+      message_body:
+        description: 'Message body'
+        default: 'This is a beta build of the current repo. There might be some issues or error with it so I do not guarantee its usability.'
+        required: true
 env:
   IOS_OUTPUT_PATH: './App/Anime Now! (iOS).ipa'
   MACOS_OUTPUT_PATH: './App/Anime Now! (macOS).dmg'
@@ -84,16 +87,6 @@ jobs:
         run: |
           echo "message_title=v${{ env.semantic_version }}" >> $GITHUB_ENV
 
-      - name: Set Prerelease Message
-        if: ${{ github.event.inputs.is_prerelease == 'true' }}
-        run: |
-          echo "message_body=This is a build of the current state of main repo. There might be some issues and error so I do not guarantee its usability." >> $GITHUB_ENV
-
-      - name: Set Release Message
-        if: ${{ github.event.inputs.is_prerelease == 'false' }}
-        run: |
-          echo "message_body=TODO" >> $GITHUB_ENV          
-
       - name: Release to GitHub
         id: release
         uses: softprops/action-gh-release@v1
@@ -105,7 +98,6 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           generate_release_notes: true
           prerelease: ${{ github.event.inputs.is_prerelease == 'true' }}
-          body: ${{ env.message_body }}
+          body: ${{ inputs.message_body }}
           name: ${{ env.message_title }}
           tag_name: ${{ env.semantic_version }}
-
