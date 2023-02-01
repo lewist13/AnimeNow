@@ -15,7 +15,7 @@ extension UserDefaultsClient.Key {
     public static var searchedItems: UserDefaultsClient.Key<[String]> { .init("searchedItems", defaultValue: []) }
 
     public static var compactEpisodes: UserDefaultsClient.Key<Bool> { .init("compactEpisodes") }
-    public static var episodesAscendingOrder: UserDefaultsClient.Key<Bool> { .init("episodesAscendingOrder", defaultValue: true) }
+    public static var episodesDescendingOrder: UserDefaultsClient.Key<Bool> { .init("episodesDescendingOrder") }
 
     public static var videoPlayerAudio: UserDefaultsClient.Key<EpisodeLink.Audio> { .init("videoPlayerAudio", defaultValue: .sub) }
     public static var videoPlayerSubtitle: UserDefaultsClient.Key<String?> { .init("videoPlayerSubtitle", defaultValue: nil) }

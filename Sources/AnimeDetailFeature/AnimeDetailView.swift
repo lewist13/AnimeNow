@@ -455,7 +455,7 @@ extension AnimeDetailView {
             self.providers = state.stream.availableProviders
             self.episodes = state.episodes
             self.compact = state.compactEpisodes
-            self.ascendingOrder = state.episodesAscendingOrder
+            self.ascendingOrder = !state.episodesDescendingOrder
         }
     }
 

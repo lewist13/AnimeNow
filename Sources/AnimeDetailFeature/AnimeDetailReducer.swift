@@ -27,7 +27,7 @@ public struct AnimeDetailReducer: ReducerProtocol {
         public var collectionStores = Loadable<[CollectionStore]>.idle
         public var episodesStatus = Set<DownloaderClient.EpisodeStorage>([])
         public var compactEpisodes = false
-        public var episodesAscendingOrder = true
+        public var episodesDescendingOrder = true
 
         public init(
             animeId: Anime.ID,
@@ -144,7 +144,7 @@ extension AnimeDetailReducer {
         switch action {
         case .onAppear:
             state.compactEpisodes = userDefaultsClient.get(.compactEpisodes)
-            state.episodesAscendingOrder = userDefaultsClient.get(.episodesAscendingOrder)
+            state.episodesDescendingOrder = userDefaultsClient.get(.episodesDescendingOrder)
 
             if !state.anime.hasInitialized {
                 return fetchAnime(&state)
@@ -239,10 +239,10 @@ extension AnimeDetailReducer {
             }
 
         case .toggleEpisodeOrder:
-            state.episodesAscendingOrder.toggle()
+            state.episodesDescendingOrder.toggle()
 
             return .run { [state] in
-                await userDefaultsClient.set(.episodesAscendingOrder, value: state.episodesAscendingOrder)
+                await userDefaultsClient.set(.episodesDescendingOrder, value: state.episodesDescendingOrder)
             }
 
         case .play:

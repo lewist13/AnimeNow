@@ -92,7 +92,7 @@ public extension UserDefaultsClient {
 
 public extension UserDefaultsClient {
     func `get`(_ key: Key<Bool>) -> Bool {
-        self.boolForKey(key.key) || key.defaultValue
+        self.boolForKey(key.key)
     }
 
     func `get`(_ key: Key<Data?>) -> Data? {
