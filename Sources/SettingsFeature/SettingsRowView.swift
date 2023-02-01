@@ -16,12 +16,12 @@ public struct SettingsRowView<Accessory: View>: View {
     private var loading = false
     private var multiSelection = false
     private var cornerRadius = 0.0
-    private let height = 64.0
+    private let height = 58.0
 
     public var body: some View {
         HStack {
             Text(name)
-                .font(.callout.bold())
+                .font(.system(size: 13, weight: .bold))
 
             Spacer()
 
@@ -41,7 +41,7 @@ public struct SettingsRowView<Accessory: View>: View {
         .padding(.horizontal, height / 4)
         .frame(height: height)
         .font(.callout)
-        .foregroundColor(loading ? Color.gray : Color.white)
+        .foregroundColor(loading ? .gray : .white)
         .background(Color(white: 0.2))
         .cornerRadius(cornerRadius)
         .contentShape(Rectangle())

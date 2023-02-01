@@ -64,6 +64,7 @@ public struct AnimeStreamLogic: ReducerProtocol {
         public var selectedLink: EpisodeLink.ID?
         public var sourceOptions = Loadable<SourcesOptions>.idle
         public var selectedSource: Source.ID?
+        public var selectedSubtitle: SourcesOptions.Subtitle.ID? = nil
 
         public init(
             animeId: Anime.ID,
@@ -84,6 +85,7 @@ public struct AnimeStreamLogic: ReducerProtocol {
         case selectEpisode(Episode.ID)
         case selectProvider(ProviderInfo.ID)
         case selectLink(EpisodeLink.ID)
+        case selectSubtitle(SourcesOptions.Subtitle.ID?)
         case fetchedProvider(AnimeStreamingProvider)
         case fetchedSources(Loadable<SourcesOptions>)
         case selectSource(Source.ID)
@@ -138,6 +140,13 @@ extension AnimeStreamLogic.State {
         }
         return nil
     }
+
+    public var subtitle: SourcesOptions.Subtitle? {
+        if let selectedSubtitle, let subtitles = sourceOptions.value?.subtitles {
+            return subtitles[id: selectedSubtitle]
+        }
+        return nil
+    }
 }
 
 extension AnimeStreamLogic {
@@ -163,13 +172,21 @@ extension AnimeStreamLogic {
                 preferredQuality = loadable.value?.sources.first { $0.quality == quality }?.id
             }
 
+            var preferredSubtitles: SourcesOptions.Subtitle.ID?
+
+            if let subtitle = userDefaultsClient.get(.videoPlayerSubtitle) {
+                preferredSubtitles = loadable.value?.subtitles.first { subtitle.localizedCaseInsensitiveContains($0.lang) }?.id
+            }
+
             state.selectedSource = state.selectedSource ?? preferredQuality ?? loadable.value?.sources.first?.id
+            state.selectedSubtitle = state.selectedSubtitle ?? preferredSubtitles
 
         case .selectEpisode(let episodeId):
             if state.selectedEpisode != episodeId {
                 state.selectedEpisode = episodeId
                 state.selectedLink = nil
                 state.selectedSource = nil
+                state.selectedSubtitle = nil
                 state.sourceOptions = .idle
                 return fetchLinkOptions(&state)
             }
@@ -179,6 +196,7 @@ extension AnimeStreamLogic {
                 state.availableProviders.selected = providerId
                 state.selectedSource = nil
                 state.selectedLink = nil
+                state.selectedSubtitle = nil
                 state.sourceOptions = .idle
                 return fetchStreamingProvider(&state)
             }
@@ -187,6 +205,7 @@ extension AnimeStreamLogic {
             if state.selectedLink != episodeLink {
                 state.selectedLink = episodeLink
                 state.selectedSource = nil
+                state.selectedSubtitle = nil
                 state.sourceOptions = .idle
                 let audio = state.link?.audio
                 return .merge(
@@ -204,6 +223,14 @@ extension AnimeStreamLogic {
                 return .run {
                     await userDefaultsClient.set(.videoPlayerQuality, value: quality)
                 }
+            }
+
+        case .selectSubtitle(let subtitleId):
+            state.selectedSubtitle = subtitleId
+
+            let subtitle = state.subtitle?.lang
+            return .run {
+                await userDefaultsClient.set(.videoPlayerSubtitle, value: subtitle)
             }
 
         case .destroy:
@@ -241,7 +268,7 @@ extension AnimeStreamLogic {
            let episode = state.episode {
 
             let preferredAudio = userDefaultsClient.get(.videoPlayerAudio)
-            var preferredLink: EpisodeLink.ID? = episode.links
+            let preferredLink: EpisodeLink.ID? = episode.links
                 .first { preferredAudio == $0.audio }?.id ?? (preferredAudio.isDub ? episode.links.first { $0.audio.isDub }?.id : nil)
 
             state.selectedLink = state.selectedLink ?? preferredLink ?? episode.links.first?.id

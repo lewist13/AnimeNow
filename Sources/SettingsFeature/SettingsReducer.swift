@@ -6,6 +6,7 @@
 //  Copyright © 2022. All rights reserved.
 //
 
+import Build
 import Utilities
 import FileClient
 import SharedModels
@@ -27,6 +28,8 @@ public struct SettingsReducer: ReducerProtocol {
         public var supportsDiscord = false
         public var discordStatus = DiscordClient.Status.offline
 
+        public var buildVersion = "Unknown"
+
         // MARK: User Settings
 
         @BindableState public var userSettings = UserSettings()
@@ -40,6 +43,7 @@ public struct SettingsReducer: ReducerProtocol {
         case binding(BindingAction<State>)
     }
 
+    @Dependency(\.build) var build
     @Dependency(\.fileClient) var fileClient
     @Dependency(\.discordClient) var discordClient
     @Dependency(\.userDefaultsClient) var userDefaultsClient
@@ -76,6 +80,7 @@ extension SettingsReducer {
     private func core(state: inout State, action: Action) -> EffectTask<Action> {
         switch action {
         case .onAppear:
+            state.buildVersion = "\(build.version()) (\(build.gitSha()))"
             return .merge(
                 self.setupDiscord(&state)
             )

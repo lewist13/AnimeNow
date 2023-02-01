@@ -439,9 +439,7 @@ extension AnimePlayerView {
         let duration: Double
 
         init(_ state: AnimePlayerReducer.State) {
-            if let subtitles = state.stream.sourceOptions.value?.subtitles,
-               let selected = state.selectedSubtitle,
-               let subtitle = subtitles[id: selected] {
+            if let subtitle = state.stream.subtitle {
                 self.subtitle = subtitle.url
             } else {
                 self.subtitle = nil
@@ -673,12 +671,13 @@ extension AnimePlayerView {
 
 extension AnimePlayerView {
     struct SubtitlesViewState: Equatable {
-        let subtitles: [SourcesOptions.Subtitle]?
-        let selected: SourcesOptions.Subtitle.ID?
+        let selectable: Selectable<SourcesOptions.Subtitle>
 
         init(_ state: AnimePlayerReducer.State) {
-            self.subtitles = state.stream.sourceOptions.value?.subtitles
-            self.selected = state.selectedSubtitle
+            self.selectable = .init(
+                items: state.stream.sourceOptions.value?.subtitles ?? [],
+                selected: state.stream.selectedSubtitle
+            )
         }
     }
 
@@ -690,33 +689,32 @@ extension AnimePlayerView {
                 showsIndicators: false
             ) {
                 WithViewStore(
-                    store.scope(
-                        state: SubtitlesViewState.init
-                    )
+                    store,
+                    observe:  SubtitlesViewState.init
                 ) { viewStore in
                     LazyVStack {
                         Text("None")
                             .font(.callout.bold())
                             .padding(12)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .background((viewStore.selected == nil) ? Color.red : Color.clear)
+                            .background(viewStore.selectable.selected == nil ? Color.red : Color.clear)
                             .contentShape(Rectangle())
                             .onTapGesture {
-                                viewStore.send(.selectSubtitle(nil))
+                                viewStore.send(.stream(.selectSubtitle(nil)))
                             }
                             .cornerRadius(12)
 
-                        ForEach(viewStore.subtitles ?? []) { subtitle in
+                        ForEach(viewStore.selectable.items) { subtitle in
                             Text(subtitle.lang)
                                 .font(.callout.bold())
                                 .padding(12)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .background(
-                                    subtitle.id == viewStore.selected ? Color.red : Color.clear
+                                    subtitle.id == viewStore.selectable.selected ? Color.red : Color.clear
                                 )
                                 .contentShape(Rectangle())
                                 .onTapGesture {
-                                    viewStore.send(.selectSubtitle(subtitle.id))
+                                    viewStore.send(.stream(.selectSubtitle(subtitle.id)))
                                 }
                                 .cornerRadius(12)
                         }

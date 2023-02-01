@@ -41,6 +41,7 @@ let package = Package(
         .library(name: "SharedModels", targets: ["SharedModels"]),
         .library(name: "Utilities", targets: ["Utilities"]),
         .library(name: "ViewComponents", targets: ["ViewComponents"]),
+        .library(name: "Build", targets: ["Build"]),
         .library(name: "Logger", targets: ["Logger"])
     ],
     dependencies: [
@@ -203,6 +204,7 @@ let package = Package(
         .target(
             name: "SettingsFeature",
             dependencies: [
+                "Build",
                 "DiscordClient",
                 "FileClient",
                 "UserDefaultsClient",
@@ -259,6 +261,12 @@ let package = Package(
             ],
             resources: [
                 .copy("Resources/AnimeNow.xcdatamodeld")
+            ]
+        ),
+        .target(
+            name: "Build",
+            dependencies: [
+                .product(name: "ComposableArchitecture", package: "swift-composable-architecture")
             ]
         ),
         .target(

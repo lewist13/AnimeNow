@@ -58,8 +58,7 @@ extension SearchReducer {
         switch action {
         case .onAppear:
             return .run { send in
-                let searchedItems = userDefaultsClient.get(.searchedItems) ?? []
-                await send(.searchHistory(searchedItems))
+                await send(.searchHistory(userDefaultsClient.get(.searchedItems)))
             }
 
         case .searchHistory(let items):

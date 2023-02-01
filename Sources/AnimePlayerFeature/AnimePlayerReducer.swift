@@ -72,7 +72,6 @@ public struct AnimePlayerReducer: ReducerProtocol {
         var skipTimes = Loadable<[SkipTime]>.idle
 
         var selectedSidebar: Sidebar? = nil
-        var selectedSubtitle: SourcesOptions.Subtitle.ID? = nil
 
         var showPlayerOverlay = true
 
@@ -125,8 +124,6 @@ public struct AnimePlayerReducer: ReducerProtocol {
         case selectSidebarSettings(Sidebar.SettingsState.Section?)
         case closeSidebar
         case saveState
-
-        case selectSubtitle(SourcesOptions.Subtitle.ID?)
 
         case stream(AnimeStreamLogic.Action)
 
@@ -298,13 +295,6 @@ extension AnimePlayerReducer.State {
            let index = episodes.index(id: episode.id),
            (index + 1) < episodes.count {
             return episodes[index + 1]
-        }
-        return nil
-    }
-
-    var subtitle: SourcesOptions.Subtitle? {
-        if let selectedSubtitle, let subtitles = stream.sourceOptions.value?.subtitles {
-            return subtitles[id: selectedSubtitle]
         }
         return nil
     }
@@ -573,14 +563,6 @@ extension AnimePlayerReducer {
                 .internalSetSidebar(nil),
                 animation: .easeInOut(duration: 0.25)
             )
-
-        case .selectSubtitle(let subtitleId):
-            state.selectedSubtitle = subtitleId
-
-            let subtitle = state.subtitle?.lang
-            return .run {
-                await userDefaultsClient.set(.videoPlayerSubtitle, value: subtitle)
-            }
 
         case .selectSidebarSettings(let section):
             return .action(.sidebarSettingsSection(section))

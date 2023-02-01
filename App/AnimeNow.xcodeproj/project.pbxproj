@@ -27,6 +27,7 @@
 		13BAE88728F3A0AC00662C0C /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		13BAE88928F3A22F00662C0C /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		13BAE88B28F3A66100662C0C /* AnimeNowHostingController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimeNowHostingController.swift; sourceTree = "<group>"; };
+		13BB8DF2298323F7006E39BA /* iOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = iOS.entitlements; sourceTree = "<group>"; };
 		13C3535A28C3089E00A54E7E /* AnimeNowApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimeNowApp.swift; sourceTree = "<group>"; };
 		13C3536228C308A000A54E7E /* Anime Now!.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Anime Now!.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		13C3536828C308A000A54E7E /* Anime Now!.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Anime Now!.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -108,11 +109,12 @@
 		13FC21C128C3960E000F0F79 /* iOS */ = {
 			isa = PBXGroup;
 			children = (
+				13820F14291429A800CE431F /* Extensions */,
 				13D235C328E16801004E51BB /* anime-now-ios-info.plist */,
 				13BAE88928F3A22F00662C0C /* AppDelegate.swift */,
 				13BAE88728F3A0AC00662C0C /* SceneDelegate.swift */,
 				13BAE88B28F3A66100662C0C /* AnimeNowHostingController.swift */,
-				13820F14291429A800CE431F /* Extensions */,
+				13BB8DF2298323F7006E39BA /* iOS.entitlements */,
 			);
 			path = iOS;
 			sourceTree = "<group>";
@@ -373,6 +375,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = iOS/iOS.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = A6HC4Y86NJ;
@@ -408,6 +411,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = iOS/iOS.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = A6HC4Y86NJ;
