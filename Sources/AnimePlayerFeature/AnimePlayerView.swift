@@ -59,9 +59,28 @@ public struct AnimePlayerView: View {
             maxHeight: .infinity,
             alignment: .center
         )
-        .onTapGesture {
-            ViewStore(store.stateless).send(.playerTapped)
-        }
+        .overlay(
+            HStack(spacing: 0) {
+                Color.clear
+                    .contentShape(Rectangle())
+                    .onTapGesture(count: 2) {
+                        ViewStore(store.stateless).send(.backwardsTapped)
+                    }
+                Color.clear
+                    .contentShape(Rectangle())
+                    .onTapGesture(count: 2) {
+                        ViewStore(store.stateless).send(.forwardsTapped)
+                    }
+            }
+            .onTapGesture {
+                ViewStore(store.stateless).send(.playerTapped)
+            }
+            .frame(
+                maxWidth: .infinity,
+                maxHeight: .infinity,
+                alignment: .center
+            )
+        )
         .overlay(errorOverlay)
         .overlay(playerControlsOverlay)
         .ignoresSafeArea(edges: .vertical)
