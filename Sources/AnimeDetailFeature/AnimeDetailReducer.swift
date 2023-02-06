@@ -56,7 +56,10 @@ public struct AnimeDetailReducer: ReducerProtocol {
         case tappedCollectionList
         case showCollectionsList(Anime.ID, Set<CollectionStore>)
         case markEpisodeAsWatched(Episode.ID)
+        case markAllEpisodesAsWatched
+        case isCompletedCollection
         case markEpisodeAsUnwatched(Int)
+        case markAllEpisodeAsUnwatched
         case fetchedAnime(Loadable<Anime>)
         case selectedEpisode(Episode.ID)
         case downloadEpisode(Episode.ID)
@@ -208,6 +211,37 @@ extension AnimeDetailReducer {
                 try await databaseClient.insert(animeStore)
             }
 
+        case .markAllEpisodesAsWatched:
+            guard var episodeStore = state.animeStore.value,
+                  let episodes = state.episodes.value else { break }
+            
+            var allEpisodesWatched: Bool = true
+            for episode in episodes {
+                let episodeInfo = EpisodeStore.findOrCreate(episode, episodeStore.episodes)
+                if episodeInfo.progress ?? 0.0 < 1.0 {
+                    episodeStore.updateProgress(for: episode, progress: 1.0)
+                } else {
+                    allEpisodesWatched = false
+                }
+            }
+            
+            if allEpisodesWatched {
+                return .run { [episodeStore] in
+                    try await databaseClient.insert(episodeStore)
+                }
+            } else {
+                break
+            }
+            
+        case .isCompletedCollection:
+            guard let animeStore = state.animeStore.value,
+                  let collectionStores = state.collectionStores.value else { break }
+            
+            if let completedCollection = collectionStores.first(where: { $0.title == .completed}),
+               completedCollection.animes.contains(where: { $0.id == animeStore.id}) {
+                return .action(.markAllEpisodesAsWatched)
+            }
+            
         case .markEpisodeAsUnwatched(let episodeNumber):
             guard let episodeStore = state.animeStore.value?.episodes.first(where: { $0.number == episodeNumber }) else { break }
 
@@ -215,6 +249,20 @@ extension AnimeDetailReducer {
                 try await databaseClient.update(episodeStore.id, \EpisodeStore.progress, nil)
             }
 
+        case .markAllEpisodeAsUnwatched:
+            guard var episodeStore = state.animeStore.value,
+                  let episodes = state.episodes.value else {
+                break
+            }
+            
+            for episode in episodes {
+                episodeStore.updateProgress(for: episode, progress: 0.0)
+            }
+            
+            return .run { [episodeStore] in
+                try await databaseClient.insert(episodeStore)
+            }
+            
         case .retryAnimeFetch:
             if state.anime.finished {
                 return fetchAnime(&state)
@@ -230,6 +278,7 @@ extension AnimeDetailReducer {
 
         case .fetchedCollectionStores(let collectionStores):
             state.collectionStores = .success(collectionStores)
+            return .action(.isCompletedCollection)
 
         case .toggleCompactEpisodes:
             state.compactEpisodes.toggle()

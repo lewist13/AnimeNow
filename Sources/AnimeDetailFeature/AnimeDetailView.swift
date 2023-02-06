@@ -729,10 +729,21 @@ extension AnimeDetailView {
                             animation: .easeInOut(duration: 0.15)
                         )
                     } label: {
-                        Text("Mark as Watched")
+                        Text("Mark as watched")
                     }
                 }
-
+                
+                if !(viewState.episodeStore?.almostFinished ?? false) {
+                    Button {
+                        viewState.send(
+                            .markAllEpisodesAsWatched,
+                            animation: .easeInOut(duration: 0.15)
+                        )
+                    } label: {
+                        Text("Mark all as watched")
+                    }
+                }
+                
                 if (viewState.episodeStore?.progress ?? 0) > 0 {
                     Button {
                         viewState.send(
@@ -743,7 +754,18 @@ extension AnimeDetailView {
                         Text("Unwatch")
                     }
                 }
-
+                
+                if (viewState.episodeStore?.progress ?? 0) > 0 {
+                    Button {
+                        viewState.send(
+                            .markAllEpisodeAsUnwatched,
+                            animation: .easeInOut(duration: 0.15)
+                        )
+                    } label: {
+                        Text("Mark all as unwatched")
+                    }
+                }
+                
                 if case .downloaded = viewState.downloadStatus {
                     Button {
                         viewState.send(.removeDownload(episode.number))
